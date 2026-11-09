@@ -193,12 +193,14 @@ p{margin:0}
     {k:'tristeza',  g:'Emociones', n:'Tristeza',    d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
     {k:'enfado',    g:'Emociones', n:'Enfado',      d:'Ceño firme, pupilas pequeñas y un resoplido.', use:'bloquea una instrucción escondida'},
     {k:'miedo',     g:'Emociones', n:'Miedo',       d:'Se echa atrás, tiembla y mira a los lados.', use:'detecta una acción arriesgada'},
+    {k:'curiosidad',g:'Emociones', n:'Curiosidad',  d:'Un ojo más abierto, la cabeza ladeada y un acercamiento.', use:'le pides algo nuevo o pregunta un detalle'},
     {k:'duda',      g:'Emociones', n:'Duda',        d:'Un párpado baja, el otro no; ladea la cabeza.', use:'no entiende la orden'},
     {k:'disculpa',  g:'Emociones', n:'Disculpa',    d:'Mira abajo, se encoge y vuelve a mirarte con media sonrisa.', use:'se ha equivocado', once:1},
 
     {k:'mirar',     g:'Flujo',     n:'Reposo',      d:'Sigue el puntero, parpadea y a veces mira alrededor o bosteza. Haz clic: tiene cosquillas.', use:'app abierta, sin tarea'},
     {k:'saludar',   g:'Flujo',     n:'Saludar',     d:'Abre los ojos, da un saltito y sonríe.', use:'al abrir la app', once:1},
     {k:'atencion',  g:'Flujo',     n:'Llamar',      d:'Dos saltitos y te mira.', use:'necesita tu respuesta'},
+    {k:'interrumpido',g:'Flujo',   n:'Interrumpido',d:'Se calla de golpe, da un respingo y se pone a escucharte.', use:'hablas mientras 8 habla', once:1},
     {k:'escuchar',  g:'Flujo',     n:'Escuchar',    d:'Atento al frente; las pupilas laten con tu voz.', use:'micrófono activo'},
     {k:'hablar',    g:'Flujo',     n:'Hablar',      d:'Pequeños rebotes al ritmo de las sílabas.', use:'responde por voz'},
     {k:'pensar',    g:'Flujo',     n:'Pensar',      d:'Entrecierra y mira arriba en saltos rápidos.', use:'planifica el trámite'},
@@ -211,6 +213,7 @@ p{margin:0}
     {k:'asentir',   g:'Flujo',     n:'Confirmado',  d:'Dos cabeceos cortos.', use:'aceptas una operación', once:1},
     {k:'negar',     g:'Flujo',     n:'Cancelado',   d:'Sacude la cabeza de lado a lado.', use:'cancelas una operación', once:1},
     {k:'rechazar',  g:'Flujo',     n:'No puedo',    d:'Un "no" lento con los ojos tranquilos y media sonrisa.', use:'piden asesoría de inversión o un dato rojo', once:1},
+    {k:'sinconexion',g:'Flujo',    n:'Sin conexión',d:'Busca arriba a los lados y lo vuelve a intentar con un saltito.', use:'sin conexión, reintentando'},
     {k:'dormir',    g:'Flujo',     n:'Inactivo',    d:'Ojos cerrados que respiran, con zetas en Sora.', use:'app en segundo plano'},
 
     {k:'ve',        g:'Datos',     n:'Ve',          d:'Ojos abiertos: 8 puede ver esto.', use:'dato verde, interfaz'},
@@ -335,6 +338,12 @@ p{margin:0}
         var hf=t%3.2; if(hf<0.45){ ox=Math.sin(hf*70)*0.9*(1-hf/0.45); } break; }
       case 'miedo': { size=[0.5,0.5]; sc=0.93; ox=Math.sin(t*45)*0.35; oy=1; blinks=false; bob=0;
         if(now>this.nextLook){ s.tx=Math.random()<0.5?-0.7:0.7; s.ty=-0.15; this.nextLook=now+500+Math.random()*500; } k=0.35; d=0.5; break; }
+      case 'curiosidad': {
+        /* un ojo más abierto que el otro, cabeza ladeada y se acerca un poco; sigue el puntero */
+        size=left0?[1.16,0.92]:[0.92,1.16]; lid=left0?[0,0.14]:[0.14,0]; tilt=-10+Math.sin(t*1.2)*2; sc=1.035; oy=-0.4;
+        if(!(POINTER && now-LASTP<3500)){ s.tx=0.35+Math.sin(t*0.9)*0.15; s.ty=-0.25; }
+        else { var r2=this.el.getBoundingClientRect(), dx2=POINTER.x-(r2.left+r2.width/2), dy2=POINTER.y-(r2.top+r2.height/2), dd2=Math.sqrt(dx2*dx2+dy2*dy2)||1, k3=Math.min(1,dd2/(Math.max(r2.width,120)*0.75)); s.tx=dx2/dd2*k3; s.ty=dy2/dd2*k3; }
+        break; }
       case 'duda': { s.tx=0.45+Math.sin(t*1.1)*0.12; s.ty=-0.55; lid=left0?[0.42,0]:[0,0.42]; ang=left0?[-6,0]:[0,-6]; tilt=9+Math.sin(t*1.4)*2; size=[0.95,1.04]; break; }
       /* ---------------- flujo */
       case 'mirar': {
@@ -368,6 +377,12 @@ p{margin:0}
         /* un "no" lento y tranquilo: ojos sonrientes casi cerrados y cabeza que niega despacio */
         lid=[0.3,0.3]; ang=[-4,-4]; low=[0.12,0.12]; s.tx=-ox*0.1; s.ty=0.1; blinks=false;
         ox=e1<1.6?Math.sin(e1/1.6*Math.PI*2)*2.4*(1-e1/1.6*0.4):0; tilt=ox*1.2; break; }
+      case 'interrumpido': {
+        /* se calla de golpe: respingo hacia atrás con los ojos algo más abiertos y, a los
+           0,6 s, se queda atento como al escuchar */
+        if(e1<0.6){ size=[1.12,1.12]; s.tx=0; s.ty=0; sc=0.95; oy=0.8; if(!this.kicked){ s.svx=0.07; s.svy=-0.1; this.kicked=1; } }
+        else { s.tx=0; s.ty=-0.08; tilt=5; size=[1.05,1.05]; }
+        bob=0; break; }
       case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=amp*0.004; break; }
       case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=syl*0.012; s.svx-=syl*0.006; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
       case 'pensar': { if(now>this.nextLook){ var q=[[-0.8,-0.65],[0.8,-0.6],[0.45,-0.95],[-0.35,-0.95],[0.9,-0.25],[-0.9,-0.3]][Math.floor(Math.random()*6)]; s.tx=q[0]; s.ty=q[1]; this.nextLook=now+220+Math.random()*380; this.tiltT=q[0]*5; } lid=[0.22,0.22]; tilt=this.tiltT||0; break; }
@@ -382,6 +397,14 @@ p{margin:0}
       case 'listo': { s.tx=0; s.ty=-0.15; low=[0.55,0.55]; if(e1>1.3) low=[0,0]; break; }
       case 'asentir': { oy=e1<1.1?Math.sin(e1*Math.PI*3.6)*3.2*(1-e1/1.1):0; low=[0.3,0.3]; s.tx=0; s.ty=0.1; break; }
       case 'negar': { ox=e1<1.2?Math.sin(e1*Math.PI*4.4)*4*(1-e1/1.2):0; lid=[0.16,0.16]; ang=[-5,-5]; s.tx=-ox*0.12; s.ty=0.2; break; }
+      case 'sinconexion': {
+        /* busca la conexión arriba a un lado y a otro, con los párpados algo bajos; cada
+           2,4 s lo vuelve a intentar con un saltito y vuelve a quedarse algo decaído */
+        var sc2=t%2.4; lid=[0.26,0.26]; ang=[-5,-5]; k=0.08; d=0.8;
+        if(sc2<1.8){ s.tx=Math.sin(sc2/1.8*Math.PI*2)*0.75; s.ty=-0.6; tilt=s.tx*5; }
+        else { var hp2=(sc2-1.8)/0.6; oy=-2*Math.sin(hp2*Math.PI); s.tx=0; s.ty=-0.2; lid=[0.1,0.1]; ang=[0,0]; if(hp2<0.08 && !this.tried){ s.svx=-0.05; s.svy=0.09; this.tried=1; } }
+        if(sc2<0.1) this.tried=0;
+        break; }
       case 'dormir': { s.tx=0; s.ty=0.3; var br=0.86+0.04*Math.sin(t*1.3); lid=[br,br]; blinks=false; bob=Math.sin(t*1.3)*0.6; sc=1+0.012*Math.sin(t*1.3);
         for(var z=0;z<3;z++){ var pz=((t/2.7)+z/3)%1, zs=4+pz*5, zx=32+E.halfW-4+pz*7, zy=32-E.halfH+1-pz*12, op=Math.min(1,pz*4)*(1-pz);
           fx+='<text x="'+f(zx)+'" y="'+f(zy)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(zs)+'" fill="'+col.fg+'" opacity="'+f(op)+'">z</text>'; } break; }
