@@ -111,33 +111,37 @@ Las variables están en `brand/tokens.css` y la guía completa en `docs/marca.ht
 - **Tokens visuales:** siempre en Plex Mono, con comillas ‹ ›, fondo cobalto suave.
 - **Tono:** preciso y tranquilo. Sin superlativos, exclamaciones ni emojis.
 
-## Logo: los ojos (8)
+## 8, el agente (los ojos)
 
-Los ojos son el agente y se llama **8**, que se lee 8 o Eight. La referencia viva de sus estados es `docs/ojos.html`.
+El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). Sus ojos son el logo. La referencia viva y el código de todas las animaciones están en `docs/ojos.html`; la guía en `docs/marca.html`.
 
+- **Construcción:** el 8 de Sora 700 con su anillo inferior reflejado arriba (los dos huecos iguales), girado 90°. Los huecos son los ojos, con pupilas redondas. El script mide el glifo real en un canvas.
+- **Movimiento:** muelles amortiguados en mirada, párpados, tamaño e inclinación; la cabeza sigue a la mirada con retraso; transición con anticipación y parpadeo en cada cambio de estado; gestos sueltos en reposo.
+- **Parpadeo:** en almendra, como un ojo real: cierra desde las esquinas en 70 ms, cerrado 30 ms, abre en 160 ms. Parte de la pose de la emoción. No parpadea con los ojos ya cerrados (risa, inactivo, no ve).
+- **Solo ojos:** nada de manos, vendas, iconos ni adornos tipo emoji. La única excepción son las "z" en Sora de inactivo.
+- **Emociones (10):** alegría, risa, agradecer, sorpresa, tristeza, enfado, miedo, curiosidad, duda, disculpa.
+- **Flujo (18):** reposo, saludar, llamar, interrumpido, escuchar, hablar, pensar, leer, cargando, pedir permiso, esperar, mirar a otro lado (mientras el usuario escribe su clave u OTP), listo, confirmado, cancelado, no puedo (asesoría de inversión o dato rojo), sin conexión, inactivo.
+- **Datos:** 8 **ve** (verde) o **no ve** (ámbar y rojo), con una sola cara para no ver: los huecos se cierran en dos asteriscos macizos. La diferencia entre ámbar y rojo la muestra la interfaz (chip de token frente a etiqueta "nunca sale"), nunca los ojos.
+- **Tamaño:** a partir de 32 px se distinguen todas las caras; por debajo, 8 va siempre animado.
+- **En la app:** hablar y escuchar deben moverse con el volumen real de la voz y del micrófono.
+- **Archivos:** logos trazados, icono de app y favicon en `brand/logo/`.
 
-La implementación de referencia es el `<script>` de `docs/logo.html`.
+### Decisiones tomadas
 
-- **Construcción:** el 8 de Sora con su anillo inferior reflejado arriba, de modo que los dos huecos son iguales, y girado 90°. Los dos huecos son los ojos. El script mide el glifo real de Sora en un canvas y coloca pupilas y párpados en los huecos.
-- **Comportamiento**, inspirado en GrokBot:
-  - Todo con muelles amortiguados.
-  - Pupilas redondas con escorzo hacia el borde.
-  - Cabeza que sigue a la mirada con retraso.
-  - Parpadeos simples, dobles y guiños.
-  - Estados: mirar (sigue el puntero), pensar (entrecierra y mira arriba), cargando (se encoge en tres puntos), listo (rebote y ojos sonrientes), sorpresa, sueño y proteger dato.
-- **Sistema de estados de los datos:** 8 **ve** (verde) o **no ve** (ámbar y rojo). Hay una sola cara para no ver, porque el agente no ve ni un token ni un dato que nunca sale; la diferencia entre ámbar y rojo se muestra en la interfaz (chip de token frente a etiqueta "nunca sale"), no en los ojos. Cara de "no ve" por defecto: los huecos de los ojos se cierran y quedan recortados en forma de asterisco.
-- **24 opciones animadas de "no ver"**, sin vendas: manos, manos espiando, telón, bóveda, cerradura, candado, asteriscos, contraseña, ojos apretados, mirar a otro lado, ojos en blanco, dormido, gafas de sol, persiana, cremallera, pixelado, niebla, huella, tokens, almohadilla, binario, glitch, escudo y texto tachado.
+- [x] Cara de "no ve": asteriscos, una sola para ámbar y rojo.
+- [x] Paleta y fuentes de `docs/plan.html` unificadas con la marca.
+- [x] Nombre Priv8 revisado: hay un registro "PRIV8" de Orchid en EE. UU. (clases 35/41, eventos) y "priv8" es jerga de exploits. Para la hackathon se mantiene, escrito siempre "Priv8 CUA". Antes de un uso comercial: búsqueda en EUIPO, OEPM y WIPO (clases 9, 36 y 42).
 
 ### Decisiones pendientes
 
-- [ ] Confirmar la cara de "no ve" (propuesta: asteriscos). Ya no hay una cara para tokenizado y otra para nunca sale.
-- [ ] Comprobar que el nombre Priv8 no choca con otra marca.
-- [ ] Unificar la paleta de `docs/plan.html` con la de la marca (el plan usa un azul anterior, `#2F43D0`).
+- [ ] Pronunciación de "Priv8": la guía propone "práivet" (como *private*).
 
 ## Archivos
 
 - `docs/plan.html`: plan completo del proyecto (problema, protocolo, arquitectura, rúbrica, fases, demo).
 - `docs/marca.html`: guía de marca.
-- `docs/logo.html`: logo de los ojos, interactivo, con todo el código de animación.
+- `docs/ojos.html`: 8 en vivo, con todas las emociones, estados y el código de animación.
+- `docs/logo.html`: exploración antigua del logo (sustituida, se conserva como archivo).
+- `brand/logo/`: logos trazados, icono de app (16 a 512 px) y favicon.
 - `brand/tokens.css`: variables de marca para la app, la consola y la banca simulada.
 - `bases/bases-hackathon.pdf`: bases y rúbrica oficiales.
