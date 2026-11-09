@@ -1,0 +1,315 @@
+<title>Marca Priv8</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: guía de marca en láminas; la portada es el logo sobre Noche. Paleta: Noche (seriedad), Cobalto (confianza y acción), Niebla (aire), semánticos aparte. */
+:root{
+  --noche:#0B1B33; --cobalto:#2D45D6; --cobalto-claro:#8FA2FF; --niebla:#EEF2F8; --pizarra:#5A6478; --linea:#D6DCE8;
+  --token-bg:#E4E9FD; --token-fg:#2236B5; --seguro:#1F8A5B; --aviso:#A86400; --bloqueo:#C23A2E;
+  --bg:#F6F8FB; --paper:#FFFFFF; --fg:#0B1B33; --muted:#5A6478; --line:#D6DCE8; --accent:#2D45D6;
+  --f-display:"Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#08121F; --paper:#0F1D33; --fg:#E9EEF7; --muted:#9DA8BC; --line:#22324D; --accent:#8FA2FF; --token-bg:#1C2A55; --token-fg:#BFCBFF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08121F; --paper:#0F1D33; --fg:#E9EEF7; --muted:#9DA8BC; --line:#22324D; --accent:#8FA2FF; --token-bg:#1C2A55; --token-fg:#BFCBFF; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:32px 64px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);margin:0;line-height:1.1;text-wrap:balance}
+h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:700;letter-spacing:-.015em}
+h3{font-size:1.02rem;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lead{color:var(--muted);max-width:64ch}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:clamp(20px,3.4vw,36px);display:flex;flex-direction:column;gap:22px}
+.head{display:flex;flex-direction:column;gap:8px}
+
+/* COVER (fixed brand world: always Noche) */
+.cover{background:#0B1B33;color:#FFFFFF;border-radius:20px;padding:clamp(28px,6vw,72px);display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:32px;align-items:center;position:relative;overflow:hidden}
+.cover .k{font-family:var(--f-mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:#8FA2FF}
+.cover h1{font-size:clamp(2rem,4.6vw,3.4rem);font-weight:700;letter-spacing:-.02em;margin-top:18px}
+.cover p{color:#B9C3D6;margin-top:14px;max-width:46ch}
+.cover .bars{display:flex;flex-direction:column;gap:10px}
+.cover .bars span{height:14px;border-radius:4px;background:#1A2E52}
+.cover .bars span:nth-child(2){width:72%;background:#2D45D6}
+.cover .bars span:nth-child(3){width:86%}
+.cover .bars span:nth-child(4){width:54%}
+.cover .bars .t{height:auto;background:none;font-family:var(--f-mono);font-size:.82rem;color:#BFCBFF}
+
+/* LOGOS */
+.logos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.lg{border-radius:14px;padding:28px 20px;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;min-height:180px;border:1px solid var(--line)}
+.lg.light{background:#FFFFFF} .lg.dark{background:#0B1B33;border-color:#0B1B33} .lg.brand{background:#2D45D6;border-color:#2D45D6}
+.lg svg{max-width:100%;height:auto}
+.lg small{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+.lg.light small{color:#5A6478} .lg.dark small,.lg.brand small{color:#C9D2F5}
+.anatomy{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.an{border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.an p{font-size:.9rem;color:var(--muted)}
+
+/* COLORS */
+.colors{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.sw{border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.sw .chip{height:110px;display:flex;align-items:flex-end;padding:12px;font-family:var(--f-mono);font-size:.74rem;font-weight:600}
+.sw .info{padding:12px;display:flex;flex-direction:column;gap:4px;background:var(--paper)}
+.sw .info b{font-family:var(--f-display);font-weight:600}
+.sw .info code{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
+.sw .info span{font-size:.82rem;color:var(--muted)}
+.ratio{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.ratio i{display:block}
+.sem{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sm{border-radius:12px;padding:14px;display:flex;gap:10px;align-items:center;font-size:.9rem;border:1px solid var(--line);background:var(--paper)}
+.sm .d{width:16px;height:16px;border-radius:50%;flex:none}
+.sm code{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);margin-left:auto}
+
+/* TYPE */
+.types{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.ty{border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.ty .big{font-size:3.2rem;line-height:1}
+.ty p{font-size:.88rem;color:var(--muted)}
+.scale{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:18px}
+.scale div{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px;align-items:baseline}
+.scale code{font-family:var(--f-mono);font-size:.76rem;color:var(--muted)}
+
+/* COMPONENTS */
+.comps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cp{border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.btns{display:flex;flex-wrap:wrap;gap:10px}
+.btn{font-family:var(--f-body);font-weight:600;font-size:.92rem;border-radius:10px;padding:10px 16px;border:1px solid transparent;cursor:pointer}
+.btn.pri{background:var(--accent);color:#FFFFFF}
+:root[data-theme="dark"] .btn.pri{color:#0B1B33}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.pri{color:#0B1B33}}
+.btn.sec{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.dan{background:transparent;color:var(--bloqueo);border-color:var(--bloqueo)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tok{font-family:var(--f-mono);font-size:.84rem;background:var(--token-bg);color:var(--token-fg);padding:3px 8px;border-radius:6px;font-weight:600;white-space:nowrap}
+.toks{display:flex;flex-wrap:wrap;gap:8px}
+.badge{font-family:var(--f-mono);font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+.row{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:12px;align-items:center;font-size:.88rem;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .t{font-family:var(--f-mono);color:var(--muted);font-size:.78rem}
+.consent{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+
+/* VOICE */
+.voice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.vc{border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
+.vc ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.vc .lbl{font-family:var(--f-mono);font-size:.74rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.vc.yes .lbl{color:var(--seguro)} .vc.no .lbl{color:var(--bloqueo)}
+.tags{display:flex;flex-direction:column;gap:10px}
+.tg{font-family:var(--f-display);font-size:1.15rem;font-weight:600;padding:14px 18px;border-left:3px solid var(--accent);background:var(--bg);border-radius:0 10px 10px 0}
+
+/* CODE */
+.codewrap{position:relative}
+pre{margin:0;background:#0B1B33;color:#D9E0EF;border-radius:12px;padding:18px;font-family:var(--f-mono);font-size:.8rem;line-height:1.65;overflow-x:auto}
+pre .c{color:#7F8BA3} pre .v{color:#8FA2FF}
+.copy{position:absolute;top:10px;right:10px;font-family:var(--f-mono);font-size:.74rem;background:#1A2E52;color:#FFFFFF;border:0;border-radius:8px;padding:6px 10px;cursor:pointer}
+.copy:focus-visible{outline:2px solid #8FA2FF;outline-offset:2px}
+
+@media (max-width:900px){
+  .colors{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .types,.logos,.anatomy{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:700px){
+  .cover,.comps,.voice{grid-template-columns:minmax(0,1fr)}
+  .colors{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sem{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<div class="wrap">
+
+<!-- COVER -->
+<header class="cover">
+  <div>
+    <svg width="260" height="70" viewBox="0 0 260 70" role="img" aria-label="Logotipo Priv8">
+      <rect x="0" y="5" width="60" height="60" rx="14" fill="#2D45D6"/>
+      <circle cx="30" cy="24" r="9" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+      <circle cx="30" cy="46" r="11" fill="none" stroke="#FFFFFF" stroke-width="5"/>
+      <rect x="15" y="32.5" width="30" height="5" rx="2.5" fill="#0B1B33"/>
+      <text x="76" y="50" font-family="Sora, sans-serif" font-weight="700" font-size="38" fill="#FFFFFF" letter-spacing="-1">Priv8</text>
+      <text x="196" y="50" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="15" fill="#8FA2FF" letter-spacing="2">CUA</text>
+    </svg>
+    <span class="k" style="display:block;margin-top:28px">Guía de marca · v1</span>
+    <h1>Privacidad que un banco firmaría.</h1>
+    <p>Sobria, precisa y moderna. Una marca que se pueda poner al lado del logo de un banco sin desentonar, y que deje claro que aquí los datos no salen.</p>
+  </div>
+  <div class="bars" aria-hidden="true">
+    <span class="t">‹IBAN_1·propio›</span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+</header>
+
+<!-- LOGO -->
+<section class="panel">
+  <div class="head">
+    <span class="eyebrow">01 · Logotipo</span>
+    <h2>Un 8 hecho de dos anillos cerrados</h2>
+    <p class="lead">El símbolo es un 8 formado por dos anillos, como eslabones de una cadena: algo cerrado y seguro. La barra que cruza el centro es una barra de redacción, el gesto de tapar un dato.</p>
+  </div>
+  <div class="logos">
+    <div class="lg light">
+      <svg width="220" height="60" viewBox="0 0 260 70" role="img" aria-label="Priv8 sobre fondo claro"><rect x="0" y="5" width="60" height="60" rx="14" fill="#2D45D6"/><circle cx="30" cy="24" r="9" fill="none" stroke="#FFFFFF" stroke-width="5"/><circle cx="30" cy="46" r="11" fill="none" stroke="#FFFFFF" stroke-width="5"/><rect x="15" y="32.5" width="30" height="5" rx="2.5" fill="#0B1B33"/><text x="76" y="50" font-family="Sora, sans-serif" font-weight="700" font-size="38" fill="#0B1B33" letter-spacing="-1">Priv8</text><text x="196" y="50" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="15" fill="#2D45D6" letter-spacing="2">CUA</text></svg>
+      <small>Principal · fondo claro</small>
+    </div>
+    <div class="lg dark">
+      <svg width="220" height="60" viewBox="0 0 260 70" role="img" aria-label="Priv8 sobre fondo oscuro"><rect x="0" y="5" width="60" height="60" rx="14" fill="#2D45D6"/><circle cx="30" cy="24" r="9" fill="none" stroke="#FFFFFF" stroke-width="5"/><circle cx="30" cy="46" r="11" fill="none" stroke="#FFFFFF" stroke-width="5"/><rect x="15" y="32.5" width="30" height="5" rx="2.5" fill="#0B1B33"/><text x="76" y="50" font-family="Sora, sans-serif" font-weight="700" font-size="38" fill="#FFFFFF" letter-spacing="-1">Priv8</text><text x="196" y="50" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="15" fill="#8FA2FF" letter-spacing="2">CUA</text></svg>
+      <small>Principal · fondo Noche</small>
+    </div>
+    <div class="lg brand">
+      <svg width="64" height="64" viewBox="0 0 60 60" role="img" aria-label="Símbolo Priv8"><rect x="0" y="0" width="60" height="60" rx="14" fill="#FFFFFF"/><circle cx="30" cy="19" r="9" fill="none" stroke="#2D45D6" stroke-width="5"/><circle cx="30" cy="41" r="11" fill="none" stroke="#2D45D6" stroke-width="5"/><rect x="15" y="27.5" width="30" height="5" rx="2.5" fill="#0B1B33"/></svg>
+      <small>Símbolo · icono de app y avatar</small>
+    </div>
+  </div>
+  <div class="anatomy">
+    <div class="an"><h3>Nombre</h3><p>"Priv8" sin espacio. "CUA" separado, en mayúsculas y monoespaciada: es la categoría, no parte del nombre.</p></div>
+    <div class="an"><h3>Espacio libre</h3><p>Alrededor del logo, como mínimo la altura del anillo superior del 8. Nada dentro de ese margen.</p></div>
+    <div class="an"><h3>Tamaño mínimo</h3><p>Logo completo: 96 px de ancho. Por debajo, solo el símbolo, a partir de 20 px.</p></div>
+  </div>
+</section>
+
+<!-- COLOR -->
+<section class="panel">
+  <div class="head">
+    <span class="eyebrow">02 · Color</span>
+    <h2>Noche y Cobalto: seriedad y confianza</h2>
+    <p class="lead">El azul es el color que más asocia la gente con banca y seguridad, así que encaja sin explicarse. Lo hacemos moderno con un cobalto intenso en vez del azul marino apagado de siempre, y lo anclamos con un Noche casi negro.</p>
+  </div>
+  <div class="colors">
+    <div class="sw"><div class="chip" style="background:#0B1B33;color:#FFFFFF">Aa</div><div class="info"><b>Noche</b><code>#0B1B33</code><span>Textos, fondos oscuros, seriedad</span></div></div>
+    <div class="sw"><div class="chip" style="background:#2D45D6;color:#FFFFFF">Aa</div><div class="info"><b>Cobalto</b><code>#2D45D6</code><span>Marca, acciones, enlaces</span></div></div>
+    <div class="sw"><div class="chip" style="background:#8FA2FF;color:#0B1B33">Aa</div><div class="info"><b>Cobalto claro</b><code>#8FA2FF</code><span>Cobalto sobre fondo oscuro</span></div></div>
+    <div class="sw"><div class="chip" style="background:#EEF2F8;color:#0B1B33">Aa</div><div class="info"><b>Niebla</b><code>#EEF2F8</code><span>Fondos y superficies</span></div></div>
+    <div class="sw"><div class="chip" style="background:#5A6478;color:#FFFFFF">Aa</div><div class="info"><b>Pizarra</b><code>#5A6478</code><span>Texto secundario</span></div></div>
+  </div>
+  <div class="head" style="gap:10px">
+    <h3>Proporción de uso</h3>
+    <div class="ratio" role="img" aria-label="Proporción: 60% Niebla y blanco, 25% Noche, 12% Cobalto, 3% semánticos"><i style="width:60%;background:#EEF2F8"></i><i style="width:25%;background:#0B1B33"></i><i style="width:12%;background:#2D45D6"></i><i style="width:3%;background:#C23A2E"></i></div>
+    <p class="lead" style="font-size:.88rem">60% Niebla y blanco · 25% Noche · 12% Cobalto · 3% colores de estado. El Cobalto se reserva para lo que importa: la acción principal y la marca.</p>
+  </div>
+  <div class="sem">
+    <div class="sm"><span class="d" style="background:#1F8A5B"></span><b>Seguro</b><span class="lead" style="font-size:.85rem">dato protegido</span><code>#1F8A5B</code></div>
+    <div class="sm"><span class="d" style="background:#A86400"></span><b>Aviso</b><span class="lead" style="font-size:.85rem">revelar un dato</span><code>#A86400</code></div>
+    <div class="sm"><span class="d" style="background:#C23A2E"></span><b>Bloqueado</b><span class="lead" style="font-size:.85rem">nunca sale</span><code>#C23A2E</code></div>
+  </div>
+</section>
+
+<!-- TYPE -->
+<section class="panel">
+  <div class="head">
+    <span class="eyebrow">03 · Tipografía</span>
+    <h2>Tres familias, cada una con su trabajo</h2>
+    <p class="lead">Las tres son de Google Fonts y de uso libre. IBM Plex viene del mundo empresarial y transmite rigor; Sora aporta el toque moderno en titulares.</p>
+  </div>
+  <div class="types">
+    <div class="ty"><span class="eyebrow">Titulares</span><span class="big" style="font-family:var(--f-display);font-weight:700">Sora</span><p>Geométrica y moderna. Pesos 600 y 700. Solo en titulares, logo y cifras grandes.</p></div>
+    <div class="ty"><span class="eyebrow">Texto</span><span class="big" style="font-family:var(--f-body);font-weight:500">Plex Sans</span><p>Sobria y muy legible en pantallas y documentos. Pesos 400 a 600 para todo el texto.</p></div>
+    <div class="ty"><span class="eyebrow">Tokens y código</span><span class="big" style="font-family:var(--f-mono);font-weight:600;font-size:2.6rem">Plex Mono</span><p>Para tokens, datos técnicos y código. Es la voz del protocolo.</p></div>
+  </div>
+  <div class="scale" aria-label="Escala tipográfica">
+    <div><code>Display · 48</code><span style="font-family:var(--f-display);font-weight:700;font-size:clamp(2rem,4vw,3rem);letter-spacing:-.02em;line-height:1.05">Tus datos no salen.</span></div>
+    <div><code>Título · 28</code><span style="font-family:var(--f-display);font-weight:700;font-size:1.75rem">El agente trabaja a ciegas</span></div>
+    <div><code>Subtítulo · 18</code><span style="font-family:var(--f-display);font-weight:600;font-size:1.125rem">Protocolo de privacidad para agentes</span></div>
+    <div><code>Texto · 16</code><span>Cada dato sensible se sustituye por un token antes de llegar al modelo.</span></div>
+    <div><code>Token · 14</code><span><span class="tok">‹IMPORTE_1·positivo›</span></span></div>
+  </div>
+</section>
+
+<!-- COMPONENTS -->
+<section class="panel">
+  <div class="head">
+    <span class="eyebrow">04 · Componentes</span>
+    <h2>Cómo se ve en la app y la consola</h2>
+  </div>
+  <div class="comps">
+    <div class="cp"><h3>Botones</h3><div class="btns"><button class="btn pri" type="button" id="b1">Confirmar transferencia</button><button class="btn sec" type="button" id="b2">Revisar</button><button class="btn dan" type="button" id="b3">Revelar dato</button></div><p class="lead" style="font-size:.86rem">Uno principal por pantalla. Revelar un dato siempre con el estilo de riesgo.</p></div>
+    <div class="cp"><h3>Tokens</h3><div class="toks"><span class="tok">‹IBAN_1·propio›</span><span class="tok">‹PERSONA_2›</span><span class="tok">‹IMPORTE_3·positivo›</span><span class="tok">‹DNI_USUARIO›</span></div><p class="lead" style="font-size:.86rem">Siempre en Plex Mono, fondo Cobalto suave y comillas angulares ‹ ›. Es el elemento más reconocible de la marca.</p></div>
+    <div class="cp"><h3>Consola de auditoría</h3>
+      <div>
+        <div class="row"><span class="t">12:04:31</span><span>Enviado al agente: <span class="tok">‹SALDO_1›</span></span><span class="badge" style="background:#DFF2E7;color:#1F8A5B">Seguro</span></div>
+        <div class="row"><span class="t">12:04:33</span><span>Patrón IBAN sin tokenizar detectado</span><span class="badge" style="background:#FBE5E3;color:#C23A2E">Bloqueado</span></div>
+        <div class="row"><span class="t">12:04:40</span><span>Transferencia preparada</span><span class="badge" style="background:#FCEFD9;color:#A86400">Confirmar</span></div>
+      </div>
+    </div>
+    <div class="cp"><h3>Aviso de revelación</h3>
+      <div class="consent"><span class="badge" style="background:#FCEFD9;color:#A86400;align-self:flex-start">No recomendado</span><b style="font-family:var(--f-display)">¿Enviar al agente el saldo de la cuenta ···1332?</b><span class="lead" style="font-size:.88rem">Saldrá hacia el proveedor del modelo durante esta sesión. Puedo comprobar si tienes saldo suficiente sin enviarlo.</span><div class="btns"><button class="btn pri" type="button" id="b4">Comprobar sin enviar</button><button class="btn sec" type="button" id="b5">Revelar solo esta vez</button></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VOICE -->
+<section class="panel">
+  <div class="head">
+    <span class="eyebrow">05 · Tono</span>
+    <h2>Hablamos como un buen director de riesgos</h2>
+    <p class="lead">Seguro, preciso y tranquilo. Nunca alarmista ni gracioso con los datos de nadie.</p>
+  </div>
+  <div class="voice">
+    <div class="vc yes"><span class="lbl">Así sí</span><ul><li>"Tu saldo no ha salido del dispositivo."</li><li>"Se ha bloqueado un dato antes de enviarse."</li><li>"Esta acción necesita tu confirmación."</li><li>Cifras concretas y verbos claros.</li></ul></div>
+    <div class="vc no"><span class="lbl">Así no</span><ul><li>"¡Tus datos están 100% seguros!"</li><li>"Privacidad de nivel militar."</li><li>"Hemos pillado a la IA cotilleando."</li><li>Exclamaciones, superlativos y emojis.</li></ul></div>
+  </div>
+  <div class="tags">
+    <span class="tg">El agente hace el trámite. Nunca ve tus datos.</span>
+    <span class="tg">Visa y Google resolvieron cómo paga un agente. Nosotros, qué ve mientras trabaja.</span>
+    <span class="tg">Privacidad que se demuestra, no que se promete.</span>
+  </div>
+</section>
+
+<!-- TOKENS CSS -->
+<section class="panel">
+  <div class="head">
+    <span class="eyebrow">06 · Para el equipo</span>
+    <h2>Variables listas para copiar</h2>
+    <p class="lead">Pegadlas en la app de referencia, la consola y la banca simulada para que todo tenga la misma marca.</p>
+  </div>
+  <div class="codewrap">
+    <button class="copy" type="button" id="copyBtn">Copiar</button>
+<pre id="cssCode"><span class="c">/* Priv8 · variables de marca */</span>
+<span class="c">/* Fuentes: Sora 600/700, IBM Plex Sans 400/500/600, IBM Plex Mono 400/600 (Google Fonts) */</span>
+:root {
+  --p8-noche: <span class="v">#0B1B33</span>;
+  --p8-cobalto: <span class="v">#2D45D6</span>;
+  --p8-cobalto-claro: <span class="v">#8FA2FF</span>;
+  --p8-niebla: <span class="v">#EEF2F8</span>;
+  --p8-pizarra: <span class="v">#5A6478</span>;
+  --p8-linea: <span class="v">#D6DCE8</span>;
+  --p8-token-bg: <span class="v">#E4E9FD</span>;
+  --p8-token-fg: <span class="v">#2236B5</span>;
+  --p8-seguro: <span class="v">#1F8A5B</span>;
+  --p8-aviso: <span class="v">#A86400</span>;
+  --p8-bloqueo: <span class="v">#C23A2E</span>;
+  --p8-font-display: "Sora", system-ui, sans-serif;
+  --p8-font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --p8-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --p8-radius: 10px;
+}</pre>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var btn=document.getElementById('copyBtn');
+  var pre=document.getElementById('cssCode');
+  btn.addEventListener('click',function(){
+    var text=pre.innerText;
+    function fallback(){
+      var r=document.createRange();r.selectNodeContents(pre);
+      var s=window.getSelection();s.removeAllRanges();s.addRange(r);
+      btn.textContent='Seleccionado';
+    }
+    try{
+      navigator.clipboard.writeText(text).then(function(){btn.textContent='Copiado';},fallback);
+    }catch(e){fallback();}
+    setTimeout(function(){btn.textContent='Copiar';},2000);
+  });
+})();
+</script>

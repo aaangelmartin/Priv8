@@ -1,0 +1,40 @@
+/* Priv8 · variables de marca
+   Fuentes (Google Fonts): Sora 600/700, IBM Plex Sans 400/500/600, IBM Plex Mono 400/600
+   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap"> */
+:root {
+  /* Color */
+  --p8-noche: #0B1B33;          /* seriedad: textos y fondos oscuros */
+  --p8-cobalto: #2D45D6;        /* marca, acciones, enlaces */
+  --p8-cobalto-claro: #8FA2FF;  /* cobalto sobre fondo oscuro */
+  --p8-niebla: #EEF2F8;         /* fondos y superficies */
+  --p8-pizarra: #5A6478;        /* texto secundario */
+  --p8-linea: #D6DCE8;          /* bordes */
+
+  /* Tokens (datos tokenizados) */
+  --p8-token-bg: #E4E9FD;
+  --p8-token-fg: #2236B5;
+
+  /* Estados de los datos */
+  --p8-seguro: #1F8A5B;         /* verde · libre */
+  --p8-aviso: #A86400;          /* ámbar · tokenizado */
+  --p8-bloqueo: #C23A2E;        /* rojo · nunca sale */
+
+  /* Tipografía */
+  --p8-font-display: "Sora", system-ui, sans-serif;
+  --p8-font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --p8-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* Forma */
+  --p8-radius: 10px;
+}
+
+/* Token tal como se muestra en la app y la consola: ‹IBAN_1·propio› */
+.p8-token {
+  font-family: var(--p8-font-mono);
+  font-weight: 600;
+  background: var(--p8-token-bg);
+  color: var(--p8-token-fg);
+  padding: 0.12em 0.45em;
+  border-radius: 6px;
+  white-space: nowrap;
+}
