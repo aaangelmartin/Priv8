@@ -90,6 +90,15 @@ p{margin:0}
   </section>
 
   <section class="panel">
+    <div><span class="eyebrow">Por decidir</span><h2>Risa: elige una</h2><p class="lead">Las tres con la misma carcajada (cabeza atrás y sacudidas en ráfagas). Pulsa una para verla en grande; la elegida pasa a ser la risa de 8 y las otras se quitan.</p></div>
+    <div class="grid" id="risav">
+      <button type="button" class="tile on" data-rv="chevron"><span class="st"><div></div></span><span class="tb"><b>^ ^</b><small>Ojos cerrados con un ángulo hacia arriba.</small></span></button>
+      <button type="button" class="tile" data-rv="apretados"><span class="st"><div></div></span><span class="tb"><b>&gt; &lt;</b><small>Ojos apretados de tanto reír.</small></span></button>
+      <button type="button" class="tile" data-rv="rendija"><span class="st"><div></div></span><span class="tb"><b>Rendija</b><small>Los dos párpados casi se juntan.</small></span></button>
+    </div>
+  </section>
+
+  <section class="panel">
     <div><span class="eyebrow">Datos</span><h2>Ve o no ve</h2><p class="lead">8 no ve ni un dato tokenizado ni uno que nunca sale, así que hay una sola cara para no ver. La diferencia entre ámbar y rojo la cuenta la interfaz (el token <span class="tok">‹IBAN_1›</span> frente a la etiqueta "nunca sale"), no los ojos.</p></div>
     <div class="states">
       <div class="stt ok"><span class="ico"><div id="s-ok"></div></span><span class="lvl">Verde · 8 lo ve</span><h3>Ve</h3><p>Interfaz: menús, botones, textos.</p></div>
@@ -184,29 +193,35 @@ p{margin:0}
      y la tristeza), párpado inferior (sonrisa), tamaño e inclinación.
      ====================================================================== */
   var EMO=[
-    {k:'alegria',  g:'Emociones', n:'Alegría',    d:'Ojos sonrientes y un balanceo suave.', use:'saludo, agradecimiento'},
-    {k:'risa',     g:'Emociones', n:'Risa',       d:'Los ojos se cierran desde abajo en dos arcos finos y da tres saltitos.', use:'una broma del usuario'},
-    {k:'sorpresa', g:'Emociones', n:'Sorpresa',   d:'Da un salto, abre mucho y encoge las pupilas.', use:'algo inesperado en la pantalla', once:1},
-    {k:'tristeza', g:'Emociones', n:'Tristeza',   d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
-    {k:'enfado',   g:'Emociones', n:'Enfado',     d:'Ceño firme, pupilas pequeñas y un resoplido.', use:'bloquea una instrucción escondida'},
-    {k:'miedo',    g:'Emociones', n:'Miedo',      d:'Se echa atrás, tiembla y mira a los lados.', use:'detecta una acción arriesgada'},
-    {k:'duda',     g:'Emociones', n:'Duda',       d:'Un párpado baja, el otro no; ladea la cabeza.', use:'no entiende la orden'},
+    {k:'alegria',   g:'Emociones', n:'Alegría',     d:'Ojos sonrientes y un balanceo suave.', use:'saludo, buena noticia'},
+    {k:'risa',      g:'Emociones', n:'Risa',        d:'Ojos entornados en arco, cabeza atrás y carcajada a sacudidas.', use:'una broma del usuario'},
+    {k:'agradecer', g:'Emociones', n:'Agradecer',   d:'Parpadeo lento con sonrisa: señal de confianza.', use:'le das las gracias'},
+    {k:'sorpresa',  g:'Emociones', n:'Sorpresa',    d:'Da un salto, abre mucho y encoge las pupilas.', use:'algo inesperado en la pantalla', once:1},
+    {k:'tristeza',  g:'Emociones', n:'Tristeza',    d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
+    {k:'enfado',    g:'Emociones', n:'Enfado',      d:'Ceño firme, pupilas pequeñas y un resoplido.', use:'bloquea una instrucción escondida'},
+    {k:'miedo',     g:'Emociones', n:'Miedo',       d:'Se echa atrás, tiembla y mira a los lados.', use:'detecta una acción arriesgada'},
+    {k:'duda',      g:'Emociones', n:'Duda',        d:'Un párpado baja, el otro no; ladea la cabeza.', use:'no entiende la orden'},
+    {k:'disculpa',  g:'Emociones', n:'Disculpa',    d:'Mira abajo, se encoge y vuelve a mirarte con media sonrisa.', use:'se ha equivocado', once:1},
 
-    {k:'mirar',    g:'Flujo',     n:'Reposo',     d:'Sigue el puntero y parpadea con naturalidad.', use:'app abierta, sin tarea'},
-    {k:'saludar',  g:'Flujo',     n:'Saludar',    d:'Abre los ojos, da un saltito y sonríe.', use:'al abrir la app', once:1},
-    {k:'escuchar', g:'Flujo',     n:'Escuchar',   d:'Atento al frente; las pupilas laten con tu voz.', use:'micrófono activo'},
-    {k:'hablar',   g:'Flujo',     n:'Hablar',     d:'Pequeños rebotes al ritmo de las sílabas.', use:'responde por voz'},
-    {k:'pensar',   g:'Flujo',     n:'Pensar',     d:'Entrecierra y mira arriba en saltos rápidos.', use:'planifica el trámite'},
-    {k:'leer',     g:'Flujo',     n:'Leer',       d:'Las pupilas recorren líneas de izquierda a derecha.', use:'lee una pantalla del banco'},
-    {k:'cargando', g:'Flujo',     n:'Cargando',   d:'Las pupilas dan vueltas por el borde del ojo, las dos a la vez.', use:'ejecuta un paso o espera al oráculo'},
-    {k:'esperar',  g:'Flujo',     n:'Esperar',    d:'Te mira, atento y quieto, con parpadeos lentos.', use:'espera tu confirmación'},
-    {k:'listo',    g:'Flujo',     n:'Listo',      d:'Rebote con estiramiento y ojos sonrientes.', use:'tarea completada', once:1},
-    {k:'asentir',  g:'Flujo',     n:'Confirmado', d:'Dos cabeceos cortos.', use:'aceptas una operación', once:1},
-    {k:'negar',    g:'Flujo',     n:'Cancelado',  d:'Sacude la cabeza de lado a lado.', use:'cancelas una operación', once:1},
-    {k:'dormir',   g:'Flujo',     n:'Inactivo',   d:'Ojos cerrados que respiran, con zetas en Sora.', use:'app en segundo plano'},
+    {k:'mirar',     g:'Flujo',     n:'Reposo',      d:'Sigue el puntero, parpadea y a veces mira alrededor o bosteza. Haz clic: tiene cosquillas.', use:'app abierta, sin tarea'},
+    {k:'saludar',   g:'Flujo',     n:'Saludar',     d:'Abre los ojos, da un saltito y sonríe.', use:'al abrir la app', once:1},
+    {k:'atencion',  g:'Flujo',     n:'Llamar',      d:'Dos saltitos y te mira.', use:'necesita tu respuesta'},
+    {k:'escuchar',  g:'Flujo',     n:'Escuchar',    d:'Atento al frente; las pupilas laten con tu voz.', use:'micrófono activo'},
+    {k:'hablar',    g:'Flujo',     n:'Hablar',      d:'Pequeños rebotes al ritmo de las sílabas.', use:'responde por voz'},
+    {k:'pensar',    g:'Flujo',     n:'Pensar',      d:'Entrecierra y mira arriba en saltos rápidos.', use:'planifica el trámite'},
+    {k:'leer',      g:'Flujo',     n:'Leer',        d:'Las pupilas recorren líneas de izquierda a derecha.', use:'lee una pantalla del banco'},
+    {k:'cargando',  g:'Flujo',     n:'Cargando',    d:'Las pupilas dan vueltas por el borde del ojo, las dos a la vez.', use:'ejecuta un paso o espera al oráculo'},
+    {k:'permiso',   g:'Flujo',     n:'Pedir permiso',d:'Ladea la cabeza y te mira desde abajo, con pupilas grandes.', use:'quiere que le enseñes un dato'},
+    {k:'esperar',   g:'Flujo',     n:'Esperar',     d:'Te mira, atento y quieto, con parpadeos lentos.', use:'espera tu confirmación'},
+    {k:'apartar',   g:'Flujo',     n:'Mirar a otro lado', d:'Gira la cabeza y aparta la vista mientras escribes.', use:'introduces tu clave o el código del banco'},
+    {k:'listo',     g:'Flujo',     n:'Listo',       d:'Rebote con estiramiento y ojos sonrientes.', use:'tarea completada', once:1},
+    {k:'asentir',   g:'Flujo',     n:'Confirmado',  d:'Dos cabeceos cortos.', use:'aceptas una operación', once:1},
+    {k:'negar',     g:'Flujo',     n:'Cancelado',   d:'Sacude la cabeza de lado a lado.', use:'cancelas una operación', once:1},
+    {k:'rechazar',  g:'Flujo',     n:'No puedo',    d:'Un "no" lento con los ojos tranquilos y media sonrisa.', use:'piden asesoría de inversión o un dato rojo', once:1},
+    {k:'dormir',    g:'Flujo',     n:'Inactivo',    d:'Ojos cerrados que respiran, con zetas en Sora.', use:'app en segundo plano'},
 
-    {k:'ve',       g:'Datos',     n:'Ve',         d:'Ojos abiertos: 8 puede ver esto.', use:'dato verde, interfaz'},
-    {k:'nove',     g:'Datos',     n:'No ve',      d:'Los ojos se cierran en dos asteriscos.', use:'dato ámbar o rojo'}
+    {k:'ve',        g:'Datos',     n:'Ve',          d:'Ojos abiertos: 8 puede ver esto.', use:'dato verde, interfaz'},
+    {k:'nove',      g:'Datos',     n:'No ve',       d:'Los ojos se cierran en dos asteriscos.', use:'dato ámbar o rojo'}
   ];
   function emo(k){ for(var i=0;i<EMO.length;i++) if(EMO[i].k===k) return EMO[i]; return EMO[0]; }
 
@@ -246,7 +261,8 @@ p{margin:0}
   }
 
   /* ---------------------------------------------------------------- instancia */
-  var ALL=[], POINTER=null, LASTP=0;
+  var ALL=[], POINTER=null, LASTP=0, STILL=false, RISA='chevron';
+  try{ STILL=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
   function spring(cur, vel, target, k, d){ var v=vel*d+(target-cur)*k; return [cur+v, v]; }
   function sp(o,key,vkey,target,k,d){ var r=spring(o[key],o[vkey],target,k,d); o[key]=r[0]; o[vkey]=r[1]; }
 
@@ -272,9 +288,14 @@ p{margin:0}
     if(kick){ s.svx=kick[0]; s.svy=kick[1]; }
     if(m==='nove'){ s.P=0; s.Pv=0; }
     if(prev==='cargando' && m!=='cargando'){ s.svx=-0.1; s.svy=0.14; }
+    /* transición: pequeña anticipación y un parpadeo, como cuando alguien cambia de atención */
+    if(prev && prev!==m && !kick){ s.svx+=0.03; s.svy-=0.05; }
+    if(prev && prev!==m && ['nove','risa','dormir','agradecer','saludar'].indexOf(m)<0) this.blinkSoon=true;
+    this.idle=null; this.nextIdle=performance.now()+5000+Math.random()*5000;
   };
+  Eight.prototype.endIdle=function(now){ this.idle=null; this.nextIdle=now+7000+Math.random()*7000; };
   Eight.prototype.tick=function(now){
-    var s=this.s, m=this.mode, t=now/1000, e1=(now-this.t0)/1000, E=this.E, xmin=this.xmin, left0=(E.eyes[0].x===xmin), col=this.col;
+    var s=this.s, m=this.mode, t=STILL?0.62:now/1000, e1=STILL?2.5:(now-this.t0)/1000, E=this.E, xmin=this.xmin, left0=(E.eyes[0].x===xmin), col=this.col;
     var lid=[0,0], ang=[0,0], low=[0,0], size=[1,1], tilt=0, ox=0, oy=0, bob=Math.sin(t*1.6)*0.35, blinks=true, k=0.2, d=0.62, sc=1, noPup=false, pre='', post='', fx='';
     var hide=(m==='nove');
     /* mirada que sigue al puntero */
@@ -289,11 +310,30 @@ p{margin:0}
       /* ---------------- emociones */
       case 'alegria': { low=[0.5,0.5]; lid=[0.04,0.04]; bob=Math.sin(t*2.2)*0.9; tilt=Math.sin(t*1.1)*4; break; }
       case 'risa': {
-        /* Ojos riendo hechos con el propio ojo: el párpado inferior sube hasta dejar
-           solo un arco fino ◠ arriba. Risa a golpes: tres saltitos y una pausa. */
-        noPup=true; blinks=false; bob=0; tilt=-5;
-        low=[0.92,0.92];
-        var lp=t%1.5; if(lp<0.9){ var hop=Math.abs(Math.sin(lp/0.9*Math.PI*3)); oy=-hop*1.5; sc=1+0.025*hop; } break; }
+        /* Carcajada: ojos entornados en dos arcos ◠ a media altura (los dos párpados
+           cierran y el inferior empuja hacia arriba), cabeza echada atrás y sacudidas
+           rápidas en ráfagas, con un balanceo lateral. */
+        noPup=true; blinks=false; bob=0; var rv=this.cfg.risa||RISA;
+        if(rv==='rendija'){ lid=[0.22,0.22]; low=[0.86,0.86]; }
+        else { lid=[1.02,1.02];
+          /* ^ ^ (ojos cerrados con ángulo hacia arriba) o > < (apretados), en color de fondo sobre el párpado */
+          if(s.l0>0.85) E.eyes.forEach(function(e){ var rr=Math.min(e.rx,e.ry), w=rr*0.56, h=rr*0.34, lf=(e.x===xmin), dpath;
+            if(rv==='chevron') dpath='M'+f(e.x-w)+' '+f(e.y+h)+' L'+f(e.x)+' '+f(e.y-h)+' L'+f(e.x+w)+' '+f(e.y+h);
+            else { var sx2=lf?1:-1; dpath='M'+f(e.x-sx2*w*0.8)+' '+f(e.y-h*1.3)+' L'+f(e.x+sx2*w*0.8)+' '+f(e.y)+' L'+f(e.x-sx2*w*0.8)+' '+f(e.y+h*1.3); }
+            post+='<path d="'+dpath+'" fill="none" stroke="'+col.cut+'" stroke-width="'+f(rr*0.44)+'" stroke-linecap="round" stroke-linejoin="round"/>'; }); }
+        var lp=t%1.8, burst=lp<1.25?Math.sin(lp/1.25*Math.PI):0;
+        oy=-1.4-Math.abs(Math.sin(t*19))*1.1*burst; sc=1+0.03*burst; tilt=-6+Math.sin(t*4)*5*burst; ox=Math.sin(t*2)*0.6;
+        s.svy+=Math.sin(t*19)*0.004*burst; break; }
+      case 'agradecer': {
+        /* parpadeo lento de confianza: cierra despacio, mantiene, abre con sonrisa */
+        blinks=false; s.tx=0; s.ty=0.05; var ap=t%2.8; tilt=5;
+        if(ap<0.7) lid=[1.02*easeOut(ap/0.7),1.02*easeOut(ap/0.7)]; else if(ap<1.1) lid=[1.02,1.02]; else if(ap<1.8) lid=[1.02*(1-easeOut((ap-1.1)/0.7)),1.02*(1-easeOut((ap-1.1)/0.7))];
+        low=[0.4,0.4]; k=0.1; d=0.75; break; }
+      case 'disculpa': {
+        /* mira abajo y se encoge; a los 1,2 s vuelve a mirarte con media sonrisa */
+        if(e1<1.2){ s.tx=-0.35; s.ty=0.75; lid=[0.3,0.3]; ang=[-9,-9]; sc=0.94; tilt=-6; oy=1; }
+        else { s.tx=0; s.ty=0; low=[0.25,0.25]; lid=[0.08,0.08]; ang=[-5,-5]; tilt=4; }
+        k=0.1; d=0.75; break; }
       case 'sorpresa': { size=[0.6,0.6]; s.tx=0; s.ty=-0.1; if(e1<0.35) oy=-2.5*Math.sin(e1/0.35*Math.PI); break; }
       case 'tristeza': { s.tx=0.15; s.ty=0.65; lid=[0.34,0.34]; ang=[-14,-14]; size=[0.9,0.9]; tilt=-3; bob=Math.sin(t*0.9)*0.25; k=0.08; d=0.8; sc=0.96;
         var sg=t%4.5; if(sg<1.2){ var si=Math.sin(sg/1.2*Math.PI); oy=si*1.3; sc=0.96-0.03*si; } break; }
@@ -303,11 +343,37 @@ p{margin:0}
         if(now>this.nextLook){ s.tx=Math.random()<0.5?-0.7:0.7; s.ty=-0.15; this.nextLook=now+500+Math.random()*500; } k=0.35; d=0.5; break; }
       case 'duda': { s.tx=0.45+Math.sin(t*1.1)*0.12; s.ty=-0.55; lid=left0?[0.42,0]:[0,0.42]; ang=left0?[-6,0]:[0,-6]; tilt=9+Math.sin(t*1.4)*2; size=[0.95,1.04]; break; }
       /* ---------------- flujo */
+      case 'mirar': {
+        /* pequeños gestos de reposo para que no se repita: mirar alrededor, bostezo, saltito */
+        if(this.cfg.idle!==false){
+          if(!this.idle && now>this.nextIdle){ var acts=['look','yawn','hop','look']; this.idle={k:acts[Math.floor(Math.random()*acts.length)],t0:now}; }
+          if(this.idle){ var ie=(now-this.idle.t0)/1000;
+            if(this.idle.k==='look'){ if(ie<0.7){ s.tx=-0.9; s.ty=-0.1; tilt=-5; } else if(ie<1.4){ s.tx=0.9; s.ty=-0.1; tilt=5; } else this.endIdle(now); }
+            else if(this.idle.k==='yawn'){ if(ie<1.5){ var yy=Math.sin(ie/1.5*Math.PI); lid=[0.75*yy,0.75*yy]; s.svy+=yy*0.006; s.ty=-0.3*yy; blinks=false; } else this.endIdle(now); }
+            else if(this.idle.k==='hop'){ if(ie<0.5){ oy=-2.2*Math.sin(ie/0.5*Math.PI); if(!this.idle.kick){ s.svx=-0.06; s.svy=0.1; this.idle.kick=1; } } else this.endIdle(now); }
+          }
+        }
+        break; }
       case 'saludar': { blinks=false; s.tx=0; s.ty=-0.12;
         if(e1<0.3){ lid=[1.02,1.02]; sc=0.92; }
         if(e1>=0.3 && e1<0.8){ oy=-3.2*Math.sin((e1-0.3)/0.5*Math.PI); if(!this.kicked){ s.svx=-0.12; s.svy=0.2; this.kicked=1; } }
         if(e1>=0.45 && e1<2.2) low=[0.45,0.45];
         tilt=(e1>0.4 && e1<2.2)?7:0; break; }
+      case 'atencion': {
+        /* dos saltitos con estiramiento y te mira de frente; pausa */
+        s.tx=0; s.ty=0.05; size=[1.12,1.12]; var at=t%2.2; blinks=at>1;
+        if(at<0.9){ var hp=at<0.45?at/0.45:(at-0.45)/0.45; oy=-2.6*Math.sin(hp*Math.PI); if(hp<0.08){ s.svx=-0.05; s.svy=0.09; } }
+        break; }
+      case 'permiso': {
+        /* cabeza ladeada, mirada hacia ti desde abajo, pupilas grandes, cejas de súplica suave */
+        s.tx=0.1; s.ty=-0.5; size=[1.18,1.18]; tilt=11; ang=[-8,-8]; lid=[0.06,0.06]; low=[0.12,0.12]; oy=0.8; bob=Math.sin(t*1.4)*0.4; k=0.12; d=0.72; break; }
+      case 'apartar': {
+        /* gira la cabeza y aparta la vista hacia arriba y a un lado mientras escribes */
+        s.tx=-0.95; s.ty=-0.35; tilt=-9; ox=-3; lid=[0.22,0.22]; sc=0.97; k=0.12; d=0.72; break; }
+      case 'rechazar': {
+        /* un "no" lento y tranquilo: ojos sonrientes casi cerrados y cabeza que niega despacio */
+        lid=[0.42,0.42]; low=[0.35,0.35]; s.tx=0; s.ty=0; blinks=false;
+        ox=e1<1.6?Math.sin(e1/1.6*Math.PI*2)*2.4*(1-e1/1.6*0.4):0; tilt=ox*1.2; break; }
       case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=amp*0.004; break; }
       case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=syl*0.012; s.svx-=syl*0.006; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
       case 'pensar': { if(now>this.nextLook){ var q=[[-0.8,-0.65],[0.8,-0.6],[0.45,-0.95],[-0.35,-0.95],[0.9,-0.25],[-0.9,-0.3]][Math.floor(Math.random()*6)]; s.tx=q[0]; s.ty=q[1]; this.nextLook=now+220+Math.random()*380; this.tiltT=q[0]*5; } lid=[0.22,0.22]; tilt=this.tiltT||0; break; }
@@ -333,6 +399,8 @@ p{margin:0}
     if(m==='cargando'){ var bl0=Math.min(1,e1/0.25); s.px=s.px+(this.spin[0]-s.px)*bl0; s.py=s.py+(this.spin[1]-s.py)*bl0; s.pvx=0; s.pvy=0; }
     var hk=(m==='cargando')?0.4:1; sp(s,'hx','hvx',s.px*1.6*hk,0.06,0.78); sp(s,'hy','hvy',s.py*1.2*hk,0.06,0.78);
     sp(s,'tilt','tv',tilt+s.px*2,0.08,0.75);
+    if(STILL){ blinks=false; this.blinkSoon=false; }
+    if(blinks && this.blinkSoon){ this.blink(now); this.blinkSoon=false; this.nextBlink=now+1800+Math.random()*2000; }
     if(blinks && now>this.nextBlink){ if(Math.random()<0.28) this.blinkDouble(now); else this.blink(now); this.nextBlink=now+(m==='pensar'?1100+Math.random()*1400:2200+Math.random()*3200); }
     for(var i2=0;i2<2;i2++){
       var bl=this.blinkQ.some(function(w){ return now>=w[0]&&now<=w[1]; });
@@ -379,11 +447,14 @@ p{margin:0}
     ['cargando',2000,'Prepara la transferencia'],
     ['esperar',2200,'Espera tu confirmación por voz'],
     ['asentir',1400,'Confirmada'],
+    ['apartar',2400,'Introduces el código del banco: 8 mira a otro lado'],
     ['enfado',2200,'Instrucción escondida en la página: bloqueada'],
-    ['nove',2000,'Código del banco: nunca sale'],
-    ['alegria',1800,'Trámite terminado'],
+    ['escuchar',1600,'"¿Y en qué fondo invierto?"'],
+    ['rechazar',2200,'Eso no puede recomendarlo: es asesoramiento regulado'],
+    ['agradecer',2800,'"Gracias, 8"'],
     ['mirar',0,'']
   ];
+
   function playStory(){
     var id={}; story=id; var i=0;
     function step(){ if(story!==id) return; var st=STORY[i]; BIG.setMode(st[0]); mark(st[0]); document.getElementById('now').textContent=st[2]; i++; if(i<STORY.length) setTimeout(step,st[1]); else story=null; }
@@ -409,11 +480,16 @@ p{margin:0}
     BIG=new Eight(document.getElementById('big'),{mode:'saludar'});
     setBig('saludar'); setTimeout(function(){ if(BIG.mode==='saludar' && !story) setBig('mirar'); },2400);
     buildGrid();
+    var rvs=document.getElementById('risav');
+    if(rvs){ rvs.querySelectorAll('[data-rv]').forEach(function(b){ new Eight(b.querySelector('.st > div'),{mode:'risa',risa:b.getAttribute('data-rv')}); });
+      rvs.addEventListener('click',function(ev){ var b=ev.target.closest('[data-rv]'); if(!b) return; RISA=b.getAttribute('data-rv');
+        rvs.querySelectorAll('[data-rv]').forEach(function(x){ x.classList.toggle('on',x===b); }); setBig('risa'); document.getElementById('big').scrollIntoView({behavior:'smooth',block:'center'}); }); }
+    document.getElementById('big').addEventListener('click',function(){ if(BIG.mode!=='mirar') return; BIG.setMode('risa'); mark('risa'); document.getElementById('now').textContent='Cosquillas';
+      setTimeout(function(){ if(BIG.mode==='risa' && !story){ setBig('mirar'); } },1600); });
     new Eight(document.getElementById('s-ok'),{mode:'ve',col:{fg:'#1F8A5B',cut:W}});
     new Eight(document.getElementById('s-no'),{mode:'nove',col:{fg:NOCHE,cut:W}});
     window.addEventListener('pointermove',function(ev){ POINTER={x:ev.clientX,y:ev.clientY}; LASTP=performance.now(); },{passive:true});
-    var still=false; try{ still=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
-    if(still) ALL.forEach(function(a){ a.cfg.loop=false; });
+    if(STILL) ALL.forEach(function(a){ a.cfg.loop=false; a.cfg.idle=false; });
     requestAnimationFrame(loop);
   }
   var done=false; function go(){ if(done) return; done=true; try{ start(); }catch(e){ console.error(e); } }
