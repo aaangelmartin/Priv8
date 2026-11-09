@@ -89,14 +89,6 @@ p{margin:0}
     <div class="grid" id="grid"></div>
   </section>
 
-  <section class="panel">
-    <div><span class="eyebrow">Por decidir</span><h2>Risa: elige una</h2><p class="lead">Las tres con la misma carcajada (cabeza atrás y sacudidas en ráfagas). Pulsa una para verla en grande; la elegida pasa a ser la risa de 8 y las otras se quitan.</p></div>
-    <div class="grid" id="risav">
-      <button type="button" class="tile on" data-rv="chevron"><span class="st"><div></div></span><span class="tb"><b>^ ^</b><small>Ojos cerrados con un ángulo hacia arriba.</small></span></button>
-      <button type="button" class="tile" data-rv="apretados"><span class="st"><div></div></span><span class="tb"><b>&gt; &lt;</b><small>Ojos apretados de tanto reír.</small></span></button>
-      <button type="button" class="tile" data-rv="rendija"><span class="st"><div></div></span><span class="tb"><b>Rendija</b><small>Los dos párpados casi se juntan.</small></span></button>
-    </div>
-  </section>
 
   <section class="panel">
     <div><span class="eyebrow">Datos</span><h2>Ve o no ve</h2><p class="lead">8 no ve ni un dato tokenizado ni uno que nunca sale, así que hay una sola cara para no ver. La diferencia entre ámbar y rojo la cuenta la interfaz (el token <span class="tok">‹IBAN_1›</span> frente a la etiqueta "nunca sale"), no los ojos.</p></div>
@@ -194,7 +186,7 @@ p{margin:0}
      ====================================================================== */
   var EMO=[
     {k:'alegria',   g:'Emociones', n:'Alegría',     d:'Ojos sonrientes y un balanceo suave.', use:'saludo, buena noticia'},
-    {k:'risa',      g:'Emociones', n:'Risa',        d:'Ojos entornados en arco, cabeza atrás y carcajada a sacudidas.', use:'una broma del usuario'},
+    {k:'risa',      g:'Emociones', n:'Risa',        d:'Ojos cerrados en dos arcos y una carcajada a golpes: ja, ja, ja.', use:'una broma del usuario'},
     {k:'agradecer', g:'Emociones', n:'Agradecer',   d:'Parpadeo lento con sonrisa: señal de confianza.', use:'le das las gracias'},
     {k:'sorpresa',  g:'Emociones', n:'Sorpresa',    d:'Da un salto, abre mucho y encoge las pupilas.', use:'algo inesperado en la pantalla', once:1},
     {k:'tristeza',  g:'Emociones', n:'Tristeza',    d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
@@ -261,7 +253,7 @@ p{margin:0}
   }
 
   /* ---------------------------------------------------------------- instancia */
-  var ALL=[], POINTER=null, LASTP=0, STILL=false, RISA='chevron';
+  var ALL=[], POINTER=null, LASTP=0, STILL=false;
   try{ STILL=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
   function spring(cur, vel, target, k, d){ var v=vel*d+(target-cur)*k; return [cur+v, v]; }
   function sp(o,key,vkey,target,k,d){ var r=spring(o[key],o[vkey],target,k,d); o[key]=r[0]; o[vkey]=r[1]; }
@@ -310,20 +302,19 @@ p{margin:0}
       /* ---------------- emociones */
       case 'alegria': { low=[0.5,0.5]; lid=[0.04,0.04]; bob=Math.sin(t*2.2)*0.9; tilt=Math.sin(t*1.1)*4; break; }
       case 'risa': {
-        /* Carcajada: ojos entornados en dos arcos ◠ a media altura (los dos párpados
-           cierran y el inferior empuja hacia arriba), cabeza echada atrás y sacudidas
-           rápidas en ráfagas, con un balanceo lateral. */
-        noPup=true; blinks=false; bob=0; var rv=this.cfg.risa||RISA;
-        if(rv==='rendija'){ lid=[0.22,0.22]; low=[0.86,0.86]; }
-        else { lid=[1.02,1.02];
-          /* ^ ^ (ojos cerrados con ángulo hacia arriba) o > < (apretados), en color de fondo sobre el párpado */
-          if(s.l0>0.85) E.eyes.forEach(function(e){ var rr=Math.min(e.rx,e.ry), w=rr*0.56, h=rr*0.34, lf=(e.x===xmin), dpath;
-            if(rv==='chevron') dpath='M'+f(e.x-w)+' '+f(e.y+h)+' L'+f(e.x)+' '+f(e.y-h)+' L'+f(e.x+w)+' '+f(e.y+h);
-            else { var sx2=lf?1:-1; dpath='M'+f(e.x-sx2*w*0.8)+' '+f(e.y-h*1.3)+' L'+f(e.x+sx2*w*0.8)+' '+f(e.y)+' L'+f(e.x-sx2*w*0.8)+' '+f(e.y+h*1.3); }
-            post+='<path d="'+dpath+'" fill="none" stroke="'+col.cut+'" stroke-width="'+f(rr*0.44)+'" stroke-linecap="round" stroke-linejoin="round"/>'; }); }
-        var lp=t%1.8, burst=lp<1.25?Math.sin(lp/1.25*Math.PI):0;
-        oy=-1.4-Math.abs(Math.sin(t*19))*1.1*burst; sc=1+0.03*burst; tilt=-6+Math.sin(t*4)*5*burst; ox=Math.sin(t*2)*0.6;
-        s.svy+=Math.sin(t*19)*0.004*burst; break; }
+        /* Carcajada. Ojos cerrados en dos arcos gruesos que siguen la curva del propio
+           hueco (◠ ◠), en color de fondo sobre el párpado cerrado. Ritmo: aplastamiento
+           de arranque, tres golpes "ja-ja-ja" con estiramiento y vaivén, y una pausa para
+           coger aire. */
+        noPup=true; blinks=false; bob=0; lid=[1.02,1.02];
+        var cyc=1.7, lp=(e1>0.15?(e1-0.15)%cyc:0), beat=lp<0.9?Math.floor(lp/0.3):-1, bp=lp<0.9?(lp%0.3)/0.3:0;
+        if(e1<0.15){ sc=0.94; }
+        if(beat>=0){ var hb=Math.sin(bp*Math.PI); oy=-1.2-hb*(2.2-beat*0.4); tilt=(beat%2?4:-4)*hb-3; if(bp<0.1 && this.lastBeat!==beat){ s.svx-=0.05; s.svy+=0.09; this.lastBeat=beat; } }
+        else { this.lastBeat=-1; oy=-0.6; tilt=-2; }
+        if(s.l0>0.85) E.eyes.forEach(function(e){
+          var rr=Math.min(e.rx,e.ry), ax=e.rx*0.72, ay=e.ry*0.6, cyA=e.y+e.ry*0.26;
+          post+='<path d="M'+f(e.x-ax)+' '+f(cyA)+' A'+f(ax)+' '+f(ay)+' 0 0 1 '+f(e.x+ax)+' '+f(cyA)+'" fill="none" stroke="'+col.cut+'" stroke-width="'+f(rr*0.56)+'" stroke-linecap="round"/>'; });
+        break; }
       case 'agradecer': {
         /* parpadeo lento de confianza: cierra despacio, mantiene, abre con sonrisa */
         blinks=false; s.tx=0; s.ty=0.05; var ap=t%2.8; tilt=5;
@@ -372,7 +363,7 @@ p{margin:0}
         s.tx=-0.95; s.ty=-0.35; tilt=-9; ox=-3; lid=[0.22,0.22]; sc=0.97; k=0.12; d=0.72; break; }
       case 'rechazar': {
         /* un "no" lento y tranquilo: ojos sonrientes casi cerrados y cabeza que niega despacio */
-        lid=[0.42,0.42]; low=[0.35,0.35]; s.tx=0; s.ty=0; blinks=false;
+        lid=[0.3,0.3]; ang=[-4,-4]; low=[0.12,0.12]; s.tx=-ox*0.1; s.ty=0.1; blinks=false;
         ox=e1<1.6?Math.sin(e1/1.6*Math.PI*2)*2.4*(1-e1/1.6*0.4):0; tilt=ox*1.2; break; }
       case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=amp*0.004; break; }
       case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=syl*0.012; s.svx-=syl*0.006; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
@@ -480,10 +471,6 @@ p{margin:0}
     BIG=new Eight(document.getElementById('big'),{mode:'saludar'});
     setBig('saludar'); setTimeout(function(){ if(BIG.mode==='saludar' && !story) setBig('mirar'); },2400);
     buildGrid();
-    var rvs=document.getElementById('risav');
-    if(rvs){ rvs.querySelectorAll('[data-rv]').forEach(function(b){ new Eight(b.querySelector('.st > div'),{mode:'risa',risa:b.getAttribute('data-rv')}); });
-      rvs.addEventListener('click',function(ev){ var b=ev.target.closest('[data-rv]'); if(!b) return; RISA=b.getAttribute('data-rv');
-        rvs.querySelectorAll('[data-rv]').forEach(function(x){ x.classList.toggle('on',x===b); }); setBig('risa'); document.getElementById('big').scrollIntoView({behavior:'smooth',block:'center'}); }); }
     document.getElementById('big').addEventListener('click',function(){ if(BIG.mode!=='mirar') return; BIG.setMode('risa'); mark('risa'); document.getElementById('now').textContent='Cosquillas';
       setTimeout(function(){ if(BIG.mode==='risa' && !story){ setBig('mirar'); } },1600); });
     new Eight(document.getElementById('s-ok'),{mode:'ve',col:{fg:'#1F8A5B',cut:W}});
