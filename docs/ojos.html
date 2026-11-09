@@ -77,6 +77,7 @@ p{margin:0}
       <h1>8 mira, piensa, escucha y no ve.</h1>
       <p>8 (se lee Ocho o Eight) es el agente de Priv8: el 8 de Sora, tumbado, son sus ojos. Tiene emociones y una cara para cada momento del trámite. Pulsa una para verla en grande o reproduce la demo. En reposo, 8 sigue el puntero.</p>
       <div class="chips" id="chips"></div>
+      <div class="chips ctl"><span class="group-l">Parpadeo</span><button type="button" id="blinkToggle" aria-pressed="true">Parpadeo: activado</button><button type="button" id="blinkOnce">Parpadear</button></div>
     </div>
     <div>
       <div class="big" id="big"></div>
@@ -186,7 +187,7 @@ p{margin:0}
      ====================================================================== */
   var EMO=[
     {k:'alegria',   g:'Emociones', n:'Alegría',     d:'Ojos sonrientes y un balanceo suave.', use:'saludo, buena noticia'},
-    {k:'risa',      g:'Emociones', n:'Risa',        d:'Ojos de alegría apretados y una carcajada a golpes: ja, ja, ja.', use:'una broma del usuario'},
+    {k:'risa',      g:'Emociones', n:'Risa',        d:'Ojos sonrientes y una carcajada a golpes: ja, ja, ja.', use:'una broma del usuario'},
     {k:'agradecer', g:'Emociones', n:'Agradecer',   d:'Parpadeo lento con sonrisa: señal de confianza.', use:'le das las gracias'},
     {k:'sorpresa',  g:'Emociones', n:'Sorpresa',    d:'Da un salto, abre mucho y encoge las pupilas.', use:'algo inesperado en la pantalla', once:1},
     {k:'tristeza',  g:'Emociones', n:'Tristeza',    d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
@@ -253,7 +254,7 @@ p{margin:0}
   }
 
   /* ---------------------------------------------------------------- instancia */
-  var ALL=[], POINTER=null, LASTP=0, STILL=false;
+  var ALL=[], POINTER=null, LASTP=0, STILL=false, BLINKS=true;
   try{ STILL=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
   function spring(cur, vel, target, k, d){ var v=vel*d+(target-cur)*k; return [cur+v, v]; }
   function sp(o,key,vkey,target,k,d){ var r=spring(o[key],o[vkey],target,k,d); o[key]=r[0]; o[vkey]=r[1]; }
@@ -302,10 +303,11 @@ p{margin:0}
       /* ---------------- emociones */
       case 'alegria': { low=[0.5,0.5]; lid=[0.04,0.04]; bob=Math.sin(t*2.2)*0.9; tilt=Math.sin(t*1.1)*4; break; }
       case 'risa': {
-        /* Carcajada solo con los ojos: los de alegría, más apretados (párpado de abajo muy
-           subido, el de arriba algo bajado), pupilas mirando arriba, y la risa a golpes:
-           tres saltitos con estiramiento y vaivén, y una pausa para coger aire. */
-        blinks=false; bob=0; low=[0.62,0.62]; lid=[0.2,0.2]; s.tx=0; s.ty=-0.45; size=[0.9,0.9];
+        /* Carcajada solo con los ojos: ojos sonrientes (párpado de abajo subido, el de
+           arriba libre, pupilas al frente) y la risa a golpes: tres saltitos con
+           estiramiento y vaivén, y una pausa para coger aire. Sin párpado de arriba ni
+           mirada hacia arriba, que se leen como dolor. */
+        blinks=false; bob=0; low=[0.52,0.52]; lid=[0,0]; s.tx=0; s.ty=-0.08; size=[1.05,1.05];
         var cyc=1.7, lp=(e1>0.15?(e1-0.15)%cyc:0), beat=lp<0.9?Math.floor(lp/0.3):-1, bp=lp<0.9?(lp%0.3)/0.3:0;
         if(e1<0.15){ sc=0.95; }
         if(beat>=0){ var hb=Math.sin(bp*Math.PI); oy=-1-hb*(2-beat*0.4); tilt=(beat%2?4:-4)*hb-3; if(bp<0.1 && this.lastBeat!==beat){ s.svx-=0.05; s.svy+=0.09; this.lastBeat=beat; } }
@@ -386,7 +388,7 @@ p{margin:0}
     if(m==='cargando'){ var bl0=Math.min(1,e1/0.25); s.px=s.px+(this.spin[0]-s.px)*bl0; s.py=s.py+(this.spin[1]-s.py)*bl0; s.pvx=0; s.pvy=0; }
     var hk=(m==='cargando')?0.4:1; sp(s,'hx','hvx',s.px*1.6*hk,0.06,0.78); sp(s,'hy','hvy',s.py*1.2*hk,0.06,0.78);
     sp(s,'tilt','tv',tilt+s.px*2,0.08,0.75);
-    if(STILL){ blinks=false; this.blinkSoon=false; }
+    if(STILL||!BLINKS){ blinks=false; this.blinkSoon=false; }
     if(blinks && this.blinkSoon){ this.blink(now); this.blinkSoon=false; this.nextBlink=now+1800+Math.random()*2000; }
     if(blinks && now>this.nextBlink){ if(Math.random()<0.28) this.blinkDouble(now); else this.blink(now); this.nextBlink=now+(m==='pensar'?1100+Math.random()*1400:2200+Math.random()*3200); }
     for(var i2=0;i2<2;i2++){
@@ -475,6 +477,9 @@ p{margin:0}
     BIG=new Eight(document.getElementById('big'),{mode:'saludar'});
     setBig('saludar'); setTimeout(function(){ if(BIG.mode==='saludar' && !story) setBig('mirar'); },2400);
     buildGrid();
+    var bt1=document.getElementById('blinkToggle'), bt2=document.getElementById('blinkOnce');
+    bt1.addEventListener('click',function(){ BLINKS=!BLINKS; bt1.setAttribute('aria-pressed',BLINKS?'true':'false'); bt1.textContent=BLINKS?'Parpadeo: activado':'Parpadeo: desactivado'; });
+    bt2.addEventListener('click',function(){ var n=performance.now(); ALL.forEach(function(a){ a.blink(n,140); }); });
     document.getElementById('big').addEventListener('click',function(){ if(BIG.mode!=='mirar') return; BIG.setMode('risa'); mark('risa'); document.getElementById('now').textContent='Cosquillas';
       setTimeout(function(){ if(BIG.mode==='risa' && !story){ setBig('mirar'); } },1600); });
     new Eight(document.getElementById('s-ok'),{mode:'ve',col:{fg:'#1F8A5B',cut:W}});
