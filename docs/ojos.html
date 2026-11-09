@@ -247,11 +247,13 @@ p{margin:0}
   }
   /* La media luna de Inactivo, volteada: con el ojo ya cerrado, se recorta en color de
      fondo la parte del ojo que queda libre bajo el párpado de Inactivo, reflejada arriba. */
-  function crescentUp(e, col, t){
-    var c=eyeClip(e,0), lry=e.ry*1.3, lrx=e.rx*1.7, open=e.y-e.ry-lry-1, closed=e.y+e.ry*1.02-lry, cy=2*e.y-(open+(closed-open)*t);
-    var x0=e.x-e.rx-1, y0=e.y-e.ry-1, w=2*e.rx+2, h=2*e.ry+2;
-    var d='M'+f(x0)+' '+f(y0)+'h'+f(w)+'v'+f(h)+'h'+f(-w)+'Z M'+f(e.x-lrx)+' '+f(cy)+' a'+f(lrx)+' '+f(lry)+' 0 1 0 '+f(2*lrx)+' 0 a'+f(lrx)+' '+f(lry)+' 0 1 0 '+f(-2*lrx)+' 0 Z';
-    return c.def+'<g clip-path="url(#'+c.id+')"><path d="'+d+'" fill-rule="evenodd" fill="'+col.cut+'"/></g>';
+  function crescentUp(e, col){
+    /* Ojo cerrado sonriendo: la media luna de Inactivo, volteada y centrada en el ojo.
+       Dos arcos de elipse, como el propio hueco: el exterior marca el arco y el interior
+       la vacía, de modo que queda gruesa en el centro y en punta en los extremos. */
+    var W=e.rx*0.78, H1=e.ry*0.5, H2=e.ry*0.18, y0=e.y+H1*0.5;
+    var d='M'+f(e.x-W)+' '+f(y0)+' A'+f(W)+' '+f(H1)+' 0 0 1 '+f(e.x+W)+' '+f(y0)+' A'+f(W)+' '+f(H2)+' 0 0 0 '+f(e.x-W)+' '+f(y0)+' Z';
+    return '<path d="'+d+'" fill="'+col.cut+'"/>';
   }
   /* Párpado inferior: sube y hace de sonrisa. */
   function lowLid(e, fg, amt){
@@ -273,7 +275,7 @@ p{margin:0}
     this.root=el.querySelector('.root'); this.dyn=el.querySelector('.dyn'); this.fx=el.querySelector('.fx');
     var xs=this.E.eyes.map(function(e){return e.x;}); this.xmin=Math.min.apply(null,xs);
     this.s={px:0,pvx:0,py:0,pvy:0,tx:0,ty:0,hx:0,hvx:0,hy:0,hvy:0,tilt:0,tv:0,l0:0,lv0:0,l1:0,lv1:0,a0:0,av0:0,a1:0,av1:0,low0:0,lowv0:0,low1:0,lowv1:0,
-      z0:1,zv0:0,z1:1,zv1:0,sx:1,svx:0,sy:1,svy:0,sh:1,shv:0,P:0,Pv:0,ox:0,ovx:0,oy:0,ovy:0};
+      z0:1,zv0:0,z1:1,zv1:0,sx:1,svx:0,sy:1,svy:0,sh:1,shv:0,P:0,Pv:0,ox:0,ovx:0,oy:0,ovy:0,b:0,bv:0};
     this.blinkQ=[]; this.nextBlink=0; this.nextLook=0; this.visible=true; this.spin=[0,0];
     this.setMode(cfg.mode||'mirar');
     ALL.push(this);
@@ -319,9 +321,7 @@ p{margin:0}
         if(e1<0.15){ sc=0.94; }
         if(beat>=0){ var hb=Math.sin(bp*Math.PI); oy=-1.2-hb*(2.2-beat*0.4); tilt=(beat%2?4:-4)*hb-3; if(bp<0.1 && this.lastBeat!==beat){ s.svx-=0.05; s.svy+=0.09; this.lastBeat=beat; } }
         else { this.lastBeat=-1; oy=-0.6; tilt=-2; }
-        /* El ojo de Inactivo, al revés: el párpado inferior es el reflejo exacto del
-           superior cerrado, así queda la misma media luna de Inactivo pero boca abajo (◠ ◠). */
-        if(s.l0>0.9) E.eyes.forEach(function(e){ post+=crescentUp(e,col,0.8); });
+                if(s.l0>0.9){ var cg=clamp((s.l0-0.9)/0.12,0,1); E.eyes.forEach(function(e){ post+='<g transform="translate('+f(e.x)+' '+f(e.y)+') scale('+f(cg)+' '+f(cg)+') translate('+f(-e.x)+' '+f(-e.y)+')">'+crescentUp(e,col)+'</g>'; }); }
         break; }
       case 'agradecer': {
         /* parpadeo lento de confianza: cierra despacio, mantiene, abre con sonrisa */
@@ -402,12 +402,13 @@ p{margin:0}
     if(blinks && this.blinkSoon){ this.blink(now); this.blinkSoon=false; this.nextBlink=now+1800+Math.random()*2000; }
     if(blinks && now>this.nextBlink){ if(Math.random()<0.28) this.blinkDouble(now); else this.blink(now); this.nextBlink=now+(m==='pensar'?1100+Math.random()*1400:2200+Math.random()*3200); }
     for(var i2=0;i2<2;i2++){
-      var bl=this.blinkQ.some(function(w){ return now>=w[0]&&now<=w[1]; });
-      sp(s,'l'+i2,'lv'+i2,hide?0:(bl?1.02:lid[i2]),bl?0.5:0.3,0.45);
+      sp(s,'l'+i2,'lv'+i2,hide?0:lid[i2],0.3,0.45);
       sp(s,'a'+i2,'av'+i2,hide?0:ang[i2],0.2,0.6);
       sp(s,'low'+i2,'lowv'+i2,hide?0:low[i2],0.25,0.55); 
       sp(s,'z'+i2,'zv'+i2,size[i2],0.18,0.6);
     }
+    var blk=!hide && this.blinkQ.some(function(w){ return now>=w[0]&&now<=w[1]; });
+    sp(s,'b','bv',blk?1:0,0.5,0.42); s.b=clamp(s.b,0,1);
     sp(s,'sh','shv',sc,0.12,0.7);
     sp(s,'sx','svx',1,0.18,0.72); sp(s,'sy','svy',1,0.18,0.72);
     sp(s,'P','Pv',hide?1:0,0.07,0.78); if(s.P<0) s.P=0;
@@ -417,7 +418,14 @@ p{margin:0}
     var dyn=pre, P=s.P;
     this.root.setAttribute('transform','translate('+f(32+s.hx+s.ox)+' '+f(32+s.hy+s.oy+bob)+') rotate('+f(s.tilt)+') scale('+f(s.sx*s.sh)+' '+f(s.sy*s.sh)+') translate(-32 -32)');
     if(!noPup) E.eyes.forEach(function(e,i){ var pr=pupilR(e)*s['z'+i]*(1-Math.min(1,P/0.3)); if(pr>0.05) dyn+=pupilAt(e,s.px,s.py,pr,col.fg); });
-    E.eyes.forEach(function(e,i){ dyn+=lidA(e,col.fg,s['l'+i],s['a'+i],e.x===xmin)+lowLid(e,col.fg,s['low'+i]); });
+    E.eyes.forEach(function(e,i){
+      /* parpadeo: el párpado de arriba baja desde su pose y cierra el ojo; la inclinación
+         se suaviza al cerrar. Si la emoción sonríe (párpado inferior subido), en el cierre
+         aparece la media luna centrada: el mismo ojo cerrado sonriendo de la risa. */
+      var lo=s['low'+i], up=s['l'+i], bt=s.b, uEff=up+(Math.max(1.04,up)-up)*bt, aEff=s['a'+i]*(1-0.7*bt), loEff=lo*(1-bt);
+      dyn+=lidA(e,col.fg,uEff,aEff,e.x===xmin)+lowLid(e,col.fg,loEff);
+      if(lo>0.15 && bt>0.55){ var cg=(bt-0.55)/0.45; dyn+='<g transform="translate('+f(e.x)+' '+f(e.y)+') scale('+f(cg)+') translate('+f(-e.x)+' '+f(-e.y)+')">'+crescentUp(e,col)+'</g>'; }
+    });
     dyn+=post;
     if(P>0.01) dyn+=asterisk(E,P,col);
     this.dyn.innerHTML=dyn;
