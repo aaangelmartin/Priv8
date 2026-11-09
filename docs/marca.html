@@ -382,18 +382,20 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
   <div class="stab">
     <h3>Emociones</h3>
     <div class="sr"><b>Alegría</b><span>Ojos sonrientes, balanceo suave. <i>Saludo, buena noticia.</i></span></div>
-    <div class="sr"><b>Risa</b><span>Ojos cerrados en arco, cabeza atrás. <i>Una broma del usuario.</i></span></div>
+    <div class="sr"><b>Risa</b><span>Ojos sonrientes en arco y carcajada a golpes: tres saltitos y pausa. <i>Una broma del usuario.</i></span></div>
     <div class="sr"><b>Agradecer</b><span>Parpadeo lento con sonrisa. <i>Le das las gracias.</i></span></div>
     <div class="sr"><b>Sorpresa</b><span>Salto, ojos grandes, pupilas pequeñas. <i>Algo inesperado en pantalla.</i></span></div>
     <div class="sr"><b>Tristeza</b><span>Párpados caídos, mirada baja. <i>No se ha podido hacer.</i></span></div>
     <div class="sr"><b>Enfado</b><span>Ceño firme, pupilas pequeñas. <i>Bloquea una instrucción escondida.</i></span></div>
     <div class="sr"><b>Miedo</b><span>Se echa atrás y mira a los lados. <i>Acción arriesgada.</i></span></div>
+    <div class="sr"><b>Curiosidad</b><span>Un ojo más abierto, cabeza ladeada, se acerca. <i>Le pides algo nuevo o pregunta un detalle.</i></span></div>
     <div class="sr"><b>Duda</b><span>Un párpado baja, ladea la cabeza. <i>No entiende la orden.</i></span></div>
     <div class="sr"><b>Disculpa</b><span>Mira abajo y vuelve con media sonrisa. <i>Se ha equivocado.</i></span></div>
     <h3>Flujo del trámite</h3>
     <div class="sr"><b>Reposo</b><span>Sigue el puntero y parpadea. <i>App abierta, sin tarea.</i></span></div>
     <div class="sr"><b>Saludar</b><span>Abre los ojos, saltito, sonrisa. <i>Al abrir la app.</i></span></div>
     <div class="sr"><b>Llamar</b><span>Dos saltitos y te mira. <i>Necesita tu respuesta.</i></span></div>
+    <div class="sr"><b>Interrumpido</b><span>Se calla, da un respingo y se pone a escuchar. <i>Hablas mientras 8 habla.</i></span></div>
     <div class="sr"><b>Escuchar</b><span>Pupilas que laten con tu voz. <i>Micrófono activo.</i></span></div>
     <div class="sr"><b>Hablar</b><span>Rebotes al ritmo de las sílabas. <i>Responde por voz.</i></span></div>
     <div class="sr"><b>Pensar</b><span>Entrecierra y mira arriba. <i>Planifica el trámite.</i></span></div>
@@ -406,7 +408,14 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
     <div class="sr"><b>Confirmado</b><span>Dos cabeceos cortos. <i>Aceptas una operación.</i></span></div>
     <div class="sr"><b>Cancelado</b><span>Sacude la cabeza. <i>Cancelas una operación.</i></span></div>
     <div class="sr"><b>No puedo</b><span>Un "no" lento y tranquilo. <i>Piden asesoría de inversión o un dato rojo.</i></span></div>
+    <div class="sr"><b>Sin conexión</b><span>Busca arriba a los lados y reintenta con un saltito. <i>Sin conexión, reintentando.</i></span></div>
     <div class="sr"><b>Inactivo</b><span>Ojos cerrados que respiran, "z" en Sora. <i>App en segundo plano.</i></span></div>
+  </div>
+  <div class="stab">
+    <h3>Parpadeo</h3>
+    <p class="lead small">Como un ojo real: la abertura se estrecha en almendra desde las esquinas y se cierra en una línea algo por debajo del centro. Cierra en 70 ms, se queda cerrado 30 ms y abre en 160 ms. Parte siempre de la pose de la emoción, así que nunca deja trozos del hueco. Al abrir, cada 2 a 5 s, a veces doble. No parpadea cuando los ojos ya están cerrados o tienen una forma fija: risa, inactivo, no ve.</p>
+    <h3>Tamaño pequeño</h3>
+    <p class="lead small">De 32 px en adelante se distinguen todas las caras. Por debajo, quieto, solo se distinguen las que cambian de forma: alegría, risa y listo (arcos), tristeza y enfado (párpados inclinados), duda, mirar a otro lado, no ve e inactivo. Las demás se reconocen por su movimiento, así que a 24 px 8 siempre va animado.</p>
   </div>
   <div class="cta"><a class="btn pri" href="ojos.html">Ver los estados en vivo</a><span class="lead small">La referencia animada y el código de los ojos están en <code>docs/ojos.html</code>.</span></div>
 </section>

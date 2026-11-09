@@ -72,8 +72,10 @@
   --p8-radius-icono: 22.5%;     /* icono de app: esquina = 22.5% del lado */
 
   /* Movimiento (los de 8 salen de docs/ojos.html) */
-  --p8-dur-parpadeo: 120ms;     /* parpadeo simple; doble: 110 ms + 110 ms con 100 ms de pausa */
-  --p8-dur-parpadeo-lento: 380ms; /* esperar, agradecer */
+  --p8-dur-parpadeo: 260ms;     /* parpadeo en almendra: cierra 70 ms (acelera), cerrado 30 ms, abre 160 ms (frena); doble: 260 ms entre inicios */
+  --p8-dur-parpadeo-cierre: 70ms;
+  --p8-dur-parpadeo-apertura: 160ms;
+  --p8-dur-parpadeo-lento: 830ms; /* esperar (parpadeo a 3,2x); agradecer cierra 0,7 s, mantiene 0,4 s y abre 0,7 s */
   --p8-dur-rapida: 160ms;       /* hover, foco, chips */
   --p8-dur-base: 240ms;         /* entrada de paneles y avisos */
   --p8-dur-lenta: 400ms;        /* cambio de estado de 8, asterisco de "no ve" */
@@ -82,7 +84,8 @@
   --p8-ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);   /* rebote corto (back, c = 1.7) */
   --p8-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   /* Muelles de 8 (por fotograma a 60 fps): mirada k 0.2 · amortiguación 0.62;
-     cabeza k 0.06 · 0.78 (sigue a la mirada con retraso); párpados k 0.3 · 0.45. */
+     cabeza k 0.06 · 0.78 (sigue a la mirada con retraso); párpados k 0.3 · 0.45.
+     El parpadeo no es un muelle: sigue la curva de tiempos de --p8-dur-parpadeo-*. */
 }
 
 /* Modo oscuro: automático según el sistema, o forzado con data-theme="dark".
