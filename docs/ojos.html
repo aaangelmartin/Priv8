@@ -186,7 +186,7 @@ p{margin:0}
      ====================================================================== */
   var EMO=[
     {k:'alegria',   g:'Emociones', n:'Alegría',     d:'Ojos sonrientes y un balanceo suave.', use:'saludo, buena noticia'},
-    {k:'risa',      g:'Emociones', n:'Risa',        d:'Cierra los ojos en ^ ^, con el glifo de Sora, y se ríe a golpes: ja, ja, ja.', use:'una broma del usuario'},
+    {k:'risa',      g:'Emociones', n:'Risa',        d:'Los ojos de Inactivo al revés (◠ ◠) y una carcajada a golpes: ja, ja, ja.', use:'una broma del usuario'},
     {k:'agradecer', g:'Emociones', n:'Agradecer',   d:'Parpadeo lento con sonrisa: señal de confianza.', use:'le das las gracias'},
     {k:'sorpresa',  g:'Emociones', n:'Sorpresa',    d:'Da un salto, abre mucho y encoge las pupilas.', use:'algo inesperado en la pantalla', once:1},
     {k:'tristeza',  g:'Emociones', n:'Tristeza',    d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
@@ -245,6 +245,14 @@ p{margin:0}
     var a=(left?1:-1)*(ang||0);
     return c.def+'<g clip-path="url(#'+c.id+')"><ellipse cx="'+f(e.x)+'" cy="'+f(cy)+'" rx="'+f(lrx)+'" ry="'+f(lry)+'" fill="'+fg+'" transform="rotate('+f(a)+' '+f(e.x)+' '+f(e.y)+')"/></g>';
   }
+  /* La media luna de Inactivo, volteada: con el ojo ya cerrado, se recorta en color de
+     fondo la parte del ojo que queda libre bajo el párpado de Inactivo, reflejada arriba. */
+  function crescentUp(e, col, t){
+    var c=eyeClip(e,0), lry=e.ry*1.3, lrx=e.rx*1.7, open=e.y-e.ry-lry-1, closed=e.y+e.ry*1.02-lry, cy=2*e.y-(open+(closed-open)*t);
+    var x0=e.x-e.rx-1, y0=e.y-e.ry-1, w=2*e.rx+2, h=2*e.ry+2;
+    var d='M'+f(x0)+' '+f(y0)+'h'+f(w)+'v'+f(h)+'h'+f(-w)+'Z M'+f(e.x-lrx)+' '+f(cy)+' a'+f(lrx)+' '+f(lry)+' 0 1 0 '+f(2*lrx)+' 0 a'+f(lrx)+' '+f(lry)+' 0 1 0 '+f(-2*lrx)+' 0 Z';
+    return c.def+'<g clip-path="url(#'+c.id+')"><path d="'+d+'" fill-rule="evenodd" fill="'+col.cut+'"/></g>';
+  }
   /* Párpado inferior: sube y hace de sonrisa. */
   function lowLid(e, fg, amt){
     if(amt<0.01) return '';
@@ -253,8 +261,7 @@ p{margin:0}
   }
 
   /* ---------------------------------------------------------------- instancia */
-  var ALL=[], POINTER=null, LASTP=0, STILL=false, CARET=null;
-  function measureGlyph(ch){ var S=200, c=document.createElement('canvas').getContext('2d'); c.font='700 '+S+'px '+FONT; var m=c.measureText(ch); return {S:S,L:m.actualBoundingBoxLeft,R:m.actualBoundingBoxRight,A:m.actualBoundingBoxAscent,D:m.actualBoundingBoxDescent}; }
+  var ALL=[], POINTER=null, LASTP=0, STILL=false;
   try{ STILL=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
   function spring(cur, vel, target, k, d){ var v=vel*d+(target-cur)*k; return [cur+v, v]; }
   function sp(o,key,vkey,target,k,d){ var r=spring(o[key],o[vkey],target,k,d); o[key]=r[0]; o[vkey]=r[1]; }
@@ -312,11 +319,9 @@ p{margin:0}
         if(e1<0.15){ sc=0.94; }
         if(beat>=0){ var hb=Math.sin(bp*Math.PI); oy=-1.2-hb*(2.2-beat*0.4); tilt=(beat%2?4:-4)*hb-3; if(bp<0.1 && this.lastBeat!==beat){ s.svx-=0.05; s.svy+=0.09; this.lastBeat=beat; } }
         else { this.lastBeat=-1; oy=-0.6; tilt=-2; }
-        /* ^ ^ con el propio glifo de Sora, recortado en el párpado cerrado (como los
-           asteriscos de No ve): entra creciendo con rebote cuando el ojo ya se ha cerrado. */
-        if(s.l0>0.8 && CARET){ var gp=back(clamp((s.l0-0.8)/0.22,0,1));
-          E.eyes.forEach(function(e){ var size=Math.min(e.rx,e.ry)*4.6, k2=size/CARET.S, gx=e.x-((CARET.R-CARET.L)/2)*k2, gy=e.y+((CARET.A-CARET.D)/2)*k2;
-            post+='<g transform="translate('+f(e.x)+' '+f(e.y)+') scale('+f(Math.max(gp,0.001))+') translate('+f(-e.x)+' '+f(-e.y)+')"><text x="'+f(gx)+'" y="'+f(gy)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(size)+'" fill="'+col.cut+'">^</text></g>'; }); }
+        /* El ojo de Inactivo, al revés: el párpado inferior es el reflejo exacto del
+           superior cerrado, así queda la misma media luna de Inactivo pero boca abajo (◠ ◠). */
+        if(s.l0>0.9) E.eyes.forEach(function(e){ post+=crescentUp(e,col,0.8); });
         break; }
       case 'agradecer': {
         /* parpadeo lento de confianza: cierra despacio, mantiene, abre con sonrisa */
@@ -469,7 +474,7 @@ p{margin:0}
     gr.addEventListener('click',function(ev){ var t=ev.target.closest('.tile'); if(!t) return; setBig(t.getAttribute('data-m')); document.getElementById('big').scrollIntoView({behavior:'smooth',block:'center'}); });
   }
   function start(){
-    M=measure8(); CARET=measureGlyph('^');
+    M=measure8();
     buildChips();
     BIG=new Eight(document.getElementById('big'),{mode:'saludar'});
     setBig('saludar'); setTimeout(function(){ if(BIG.mode==='saludar' && !story) setBig('mirar'); },2400);
