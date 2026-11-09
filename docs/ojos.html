@@ -186,7 +186,7 @@ p{margin:0}
      ====================================================================== */
   var EMO=[
     {k:'alegria',   g:'Emociones', n:'Alegría',     d:'Ojos sonrientes y un balanceo suave.', use:'saludo, buena noticia'},
-    {k:'risa',      g:'Emociones', n:'Risa',        d:'Los ojos de Inactivo al revés (◠ ◠) y una carcajada a golpes: ja, ja, ja.', use:'una broma del usuario'},
+    {k:'risa',      g:'Emociones', n:'Risa',        d:'Ojos de alegría apretados y una carcajada a golpes: ja, ja, ja.', use:'una broma del usuario'},
     {k:'agradecer', g:'Emociones', n:'Agradecer',   d:'Parpadeo lento con sonrisa: señal de confianza.', use:'le das las gracias'},
     {k:'sorpresa',  g:'Emociones', n:'Sorpresa',    d:'Da un salto, abre mucho y encoge las pupilas.', use:'algo inesperado en la pantalla', once:1},
     {k:'tristeza',  g:'Emociones', n:'Tristeza',    d:'Párpados caídos hacia fuera, mirada baja y un suspiro.', use:'error: no se ha podido hacer'},
@@ -245,16 +245,6 @@ p{margin:0}
     var a=(left?1:-1)*(ang||0);
     return c.def+'<g clip-path="url(#'+c.id+')"><ellipse cx="'+f(e.x)+'" cy="'+f(cy)+'" rx="'+f(lrx)+'" ry="'+f(lry)+'" fill="'+fg+'" transform="rotate('+f(a)+' '+f(e.x)+' '+f(e.y)+')"/></g>';
   }
-  /* La media luna de Inactivo, volteada: con el ojo ya cerrado, se recorta en color de
-     fondo la parte del ojo que queda libre bajo el párpado de Inactivo, reflejada arriba. */
-  function crescentUp(e, col){
-    /* Ojo cerrado sonriendo: la media luna de Inactivo, volteada y centrada en el ojo.
-       Dos arcos de elipse, como el propio hueco: el exterior marca el arco y el interior
-       la vacía, de modo que queda gruesa en el centro y en punta en los extremos. */
-    var W=e.rx*0.78, H1=e.ry*0.5, H2=e.ry*0.18, y0=e.y+H1*0.5;
-    var d='M'+f(e.x-W)+' '+f(y0)+' A'+f(W)+' '+f(H1)+' 0 0 1 '+f(e.x+W)+' '+f(y0)+' A'+f(W)+' '+f(H2)+' 0 0 0 '+f(e.x-W)+' '+f(y0)+' Z';
-    return '<path d="'+d+'" fill="'+col.cut+'"/>';
-  }
   /* Párpado inferior: sube y hace de sonrisa. */
   function lowLid(e, fg, amt){
     if(amt<0.01) return '';
@@ -312,16 +302,14 @@ p{margin:0}
       /* ---------------- emociones */
       case 'alegria': { low=[0.5,0.5]; lid=[0.04,0.04]; bob=Math.sin(t*2.2)*0.9; tilt=Math.sin(t*1.1)*4; break; }
       case 'risa': {
-        /* Carcajada. Ojos cerrados en dos arcos gruesos que siguen la curva del propio
-           hueco (◠ ◠), en color de fondo sobre el párpado cerrado. Ritmo: aplastamiento
-           de arranque, tres golpes "ja-ja-ja" con estiramiento y vaivén, y una pausa para
-           coger aire. */
-        noPup=true; blinks=false; bob=0; lid=[1.02,1.02];
+        /* Carcajada solo con los ojos: los de alegría, más apretados (párpado de abajo muy
+           subido, el de arriba algo bajado), pupilas mirando arriba, y la risa a golpes:
+           tres saltitos con estiramiento y vaivén, y una pausa para coger aire. */
+        blinks=false; bob=0; low=[0.62,0.62]; lid=[0.2,0.2]; s.tx=0; s.ty=-0.45; size=[0.9,0.9];
         var cyc=1.7, lp=(e1>0.15?(e1-0.15)%cyc:0), beat=lp<0.9?Math.floor(lp/0.3):-1, bp=lp<0.9?(lp%0.3)/0.3:0;
-        if(e1<0.15){ sc=0.94; }
-        if(beat>=0){ var hb=Math.sin(bp*Math.PI); oy=-1.2-hb*(2.2-beat*0.4); tilt=(beat%2?4:-4)*hb-3; if(bp<0.1 && this.lastBeat!==beat){ s.svx-=0.05; s.svy+=0.09; this.lastBeat=beat; } }
-        else { this.lastBeat=-1; oy=-0.6; tilt=-2; }
-                if(s.l0>0.9){ var cg=clamp((s.l0-0.9)/0.12,0,1); E.eyes.forEach(function(e){ post+='<g transform="translate('+f(e.x)+' '+f(e.y)+') scale('+f(cg)+' '+f(cg)+') translate('+f(-e.x)+' '+f(-e.y)+')">'+crescentUp(e,col)+'</g>'; }); }
+        if(e1<0.15){ sc=0.95; }
+        if(beat>=0){ var hb=Math.sin(bp*Math.PI); oy=-1-hb*(2-beat*0.4); tilt=(beat%2?4:-4)*hb-3; if(bp<0.1 && this.lastBeat!==beat){ s.svx-=0.05; s.svy+=0.09; this.lastBeat=beat; } }
+        else { this.lastBeat=-1; oy=-0.5; tilt=-2; }
         break; }
       case 'agradecer': {
         /* parpadeo lento de confianza: cierra despacio, mantiene, abre con sonrisa */
@@ -419,12 +407,12 @@ p{margin:0}
     this.root.setAttribute('transform','translate('+f(32+s.hx+s.ox)+' '+f(32+s.hy+s.oy+bob)+') rotate('+f(s.tilt)+') scale('+f(s.sx*s.sh)+' '+f(s.sy*s.sh)+') translate(-32 -32)');
     if(!noPup) E.eyes.forEach(function(e,i){ var pr=pupilR(e)*s['z'+i]*(1-Math.min(1,P/0.3)); if(pr>0.05) dyn+=pupilAt(e,s.px,s.py,pr,col.fg); });
     E.eyes.forEach(function(e,i){
-      /* parpadeo: el párpado de arriba baja desde su pose y cierra el ojo; la inclinación
-         se suaviza al cerrar. Si la emoción sonríe (párpado inferior subido), en el cierre
-         aparece la media luna centrada: el mismo ojo cerrado sonriendo de la risa. */
-      var lo=s['low'+i], up=s['l'+i], bt=s.b, uEff=up+(Math.max(1.04,up)-up)*bt, aEff=s['a'+i]*(1-0.7*bt), loEff=lo*(1-bt);
+      /* parpadeo: el ojo cerrado es siempre el mismo, el de Inactivo (queda la media luna
+         de abajo). El párpado de arriba baja desde su pose hasta ahí y, si la emoción
+         sonríe, el de abajo baja a la vez para no dejar astillas del hueco. */
+      var lo=s['low'+i], up=s['l'+i], bt=s.b;
+      var uEff=up+(Math.max(0.88,up)-up)*bt, aEff=s['a'+i]*(1-0.7*bt), loEff=lo*(1-Math.min(1,bt*1.6));
       dyn+=lidA(e,col.fg,uEff,aEff,e.x===xmin)+lowLid(e,col.fg,loEff);
-      if(lo>0.15 && bt>0.55){ var cg=(bt-0.55)/0.45; dyn+='<g transform="translate('+f(e.x)+' '+f(e.y)+') scale('+f(cg)+') translate('+f(-e.x)+' '+f(-e.y)+')">'+crescentUp(e,col)+'</g>'; }
     });
     dyn+=post;
     if(P>0.01) dyn+=asterisk(E,P,col);
