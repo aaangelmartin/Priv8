@@ -111,9 +111,9 @@ Las variables están en `brand/tokens.css` y la guía completa en `docs/marca.ht
 - **Tokens visuales:** siempre en Plex Mono, con comillas ‹ ›, fondo cobalto suave.
 - **Tono:** preciso y tranquilo. Sin superlativos, exclamaciones ni emojis.
 
-## Logo: los ojos (Ocho)
+## Logo: los ojos (8)
 
-Los ojos son el agente y se llama **Ocho**. La referencia viva de sus estados es `docs/ojos.html`.
+Los ojos son el agente y se llama **8**, que se lee 8 o Eight. La referencia viva de sus estados es `docs/ojos.html`.
 
 
 La implementación de referencia es el `<script>` de `docs/logo.html`.
@@ -125,7 +125,7 @@ La implementación de referencia es el `<script>` de `docs/logo.html`.
   - Cabeza que sigue a la mirada con retraso.
   - Parpadeos simples, dobles y guiños.
   - Estados: mirar (sigue el puntero), pensar (entrecierra y mira arriba), cargando (se encoge en tres puntos), listo (rebote y ojos sonrientes), sorpresa, sueño y proteger dato.
-- **Sistema de estados de los datos:** Ocho **ve** (verde) o **no ve** (ámbar y rojo). Hay una sola cara para no ver, porque el agente no ve ni un token ni un dato que nunca sale; la diferencia entre ámbar y rojo se muestra en la interfaz (chip de token frente a etiqueta "nunca sale"), no en los ojos. Cara de "no ve" por defecto: los huecos de los ojos se cierran y quedan recortados en forma de asterisco.
+- **Sistema de estados de los datos:** 8 **ve** (verde) o **no ve** (ámbar y rojo). Hay una sola cara para no ver, porque el agente no ve ni un token ni un dato que nunca sale; la diferencia entre ámbar y rojo se muestra en la interfaz (chip de token frente a etiqueta "nunca sale"), no en los ojos. Cara de "no ve" por defecto: los huecos de los ojos se cierran y quedan recortados en forma de asterisco.
 - **24 opciones animadas de "no ver"**, sin vendas: manos, manos espiando, telón, bóveda, cerradura, candado, asteriscos, contraseña, ojos apretados, mirar a otro lado, ojos en blanco, dormido, gafas de sol, persiana, cremallera, pixelado, niebla, huella, tokens, almohadilla, binario, glitch, escudo y texto tachado.
 
 ### Decisiones pendientes
