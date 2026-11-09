@@ -198,9 +198,8 @@ p{margin:0}
     {k:'hablar',   g:'Flujo',     n:'Hablar',     d:'Pequeños rebotes al ritmo de las sílabas.', use:'responde por voz'},
     {k:'pensar',   g:'Flujo',     n:'Pensar',     d:'Entrecierra y mira arriba en saltos rápidos.', use:'planifica el trámite'},
     {k:'leer',     g:'Flujo',     n:'Leer',       d:'Las pupilas recorren líneas de izquierda a derecha.', use:'lee una pantalla del banco'},
-    {k:'cargando', g:'Flujo',     n:'Cargando',   d:'Las dos pupilas giran a la vez, con estela.', use:'ejecuta un paso'},
-    {k:'calcular', g:'Flujo',     n:'Calcular',   d:'Las pupilas se vuelven dígitos en Plex Mono.', use:'el oráculo calcula en local'},
-    {k:'esperar',  g:'Flujo',     n:'Esperar',    d:'Balanceo lento y parpadeos tranquilos.', use:'espera tu confirmación'},
+    {k:'cargando', g:'Flujo',     n:'Cargando',   d:'Las pupilas dan vueltas por el borde del ojo, las dos a la vez.', use:'ejecuta un paso o espera al oráculo'},
+    {k:'esperar',  g:'Flujo',     n:'Esperar',    d:'Te mira, atento y quieto, con parpadeos lentos.', use:'espera tu confirmación'},
     {k:'listo',    g:'Flujo',     n:'Listo',      d:'Rebote con estiramiento y ojos sonrientes.', use:'tarea completada', once:1},
     {k:'asentir',  g:'Flujo',     n:'Confirmado', d:'Dos cabeceos cortos.', use:'aceptas una operación', once:1},
     {k:'negar',    g:'Flujo',     n:'Cancelado',  d:'Sacude la cabeza de lado a lado.', use:'cancelas una operación', once:1},
@@ -259,7 +258,7 @@ p{margin:0}
     var xs=this.E.eyes.map(function(e){return e.x;}); this.xmin=Math.min.apply(null,xs);
     this.s={px:0,pvx:0,py:0,pvy:0,tx:0,ty:0,hx:0,hvx:0,hy:0,hvy:0,tilt:0,tv:0,l0:0,lv0:0,l1:0,lv1:0,a0:0,av0:0,a1:0,av1:0,low0:0,lowv0:0,low1:0,lowv1:0,
       z0:1,zv0:0,z1:1,zv1:0,sx:1,svx:0,sy:1,svy:0,sh:1,shv:0,P:0,Pv:0,ox:0,ovx:0,oy:0,ovy:0};
-    this.blinkQ=[]; this.nextBlink=0; this.nextLook=0; this.visible=true; this.digits=[0,0]; this.nextDigit=0;
+    this.blinkQ=[]; this.nextBlink=0; this.nextLook=0; this.visible=true; this.spin=[0,0];
     this.setMode(cfg.mode||'mirar');
     ALL.push(this);
     var self=this;
@@ -309,16 +308,12 @@ p{margin:0}
       case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=syl*0.012; s.svx-=syl*0.006; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
       case 'pensar': { if(now>this.nextLook){ var q=[[-0.8,-0.65],[0.8,-0.6],[0.45,-0.95],[-0.35,-0.95],[0.9,-0.25],[-0.9,-0.3]][Math.floor(Math.random()*6)]; s.tx=q[0]; s.ty=q[1]; this.nextLook=now+220+Math.random()*380; this.tiltT=q[0]*5; } lid=[0.22,0.22]; tilt=this.tiltT||0; break; }
       case 'leer': { var u=(t*0.55)%1, line=Math.floor(u*3), fr=(u*3)%1; s.tx=fr<0.85?-0.75+1.5*(fr/0.85):0.75-1.5*((fr-0.85)/0.15); s.ty=-0.5+line*0.5; k=0.32; d=0.55; lid=[0.14,0.14]; break; }
-      case 'cargando': { noPup=true; blinks=false; bob=0; s.tx=0; s.ty=0;
-        E.eyes.forEach(function(e){
-          var ro=Math.min(e.rx,e.ry)*0.5, pr0=pupilR(e)*0.95, c=eyeClip(e,0.2), tr='';
-          for(var i=6;i>=0;i--){ var ph=((t-i*0.035)/1.15)%1, ez=ph-Math.sin(ph*Math.PI*2)/(Math.PI*2)*0.35, an=-Math.PI/2+ez*Math.PI*2;
-            tr+='<circle cx="'+f(e.x+Math.cos(an)*ro)+'" cy="'+f(e.y+Math.sin(an)*ro)+'" r="'+f(pr0*(1-i*0.09))+'" fill="'+col.fg+'" opacity="'+f(i===0?1:0.6*(1-i/7))+'"/>'; }
-          pre+=c.def+'<g clip-path="url(#'+c.id+')">'+tr+'</g>';
-        }); break; }
-      case 'calcular': { noPup=true; lid=[0.12,0.12]; if(now>this.nextDigit){ this.digits=[Math.floor(Math.random()*10),Math.floor(Math.random()*10)]; this.nextDigit=now+90; }
-        var dg=this.digits; E.eyes.forEach(function(e,i){ var c=eyeClip(e,0), rr=Math.min(e.rx,e.ry); pre+=c.def+'<g clip-path="url(#'+c.id+')"><text x="'+f(e.x)+'" y="'+f(e.y+rr*0.42)+'" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="'+f(rr*1.25)+'" fill="'+col.fg+'">'+dg[i]+'</text></g>'; }); break; }
-      case 'esperar': { tilt=Math.sin(t*2.2)*6; s.tx=0; s.ty=0; bob=0; if(now>this.nextBlink){ this.blink(now,420); this.nextBlink=now+2600; } blinks=false; break; }
+      case 'cargando': {
+        /* Las mismas pupilas de siempre recorren el borde del ojo, las dos a la vez,
+           acelerando y frenando en cada vuelta. La cabeza las sigue con retraso. */
+        blinks=false; bob=0; var ph=(t/1.1)%1, ez=ph-Math.sin(ph*Math.PI*2)/(Math.PI*2)*0.35, an=-Math.PI/2+ez*Math.PI*2;
+        this.spin=[Math.cos(an)*0.8, Math.sin(an)*0.8]; break; }
+      case 'esperar': { /* te mira a ti, atento y quieto; parpadeo lento de vez en cuando */ s.tx=0; s.ty=0.12; tilt=Math.sin(t*0.8)*2.5; sc=1.02; if(now>this.nextBlink){ this.blink(now,380); this.nextBlink=now+3000+Math.random()*1200; } blinks=false; break; }
       case 'listo': { s.tx=0; s.ty=-0.15; low=[0.55,0.55]; if(e1>1.3) low=[0,0]; break; }
       case 'asentir': { oy=e1<1.1?Math.sin(e1*Math.PI*3.6)*3.2*(1-e1/1.1):0; low=[0.3,0.3]; s.tx=0; s.ty=0.1; break; }
       case 'negar': { ox=e1<1.2?Math.sin(e1*Math.PI*4.4)*4*(1-e1/1.2):0; lid=[0.16,0.16]; ang=[-5,-5]; s.tx=-ox*0.12; s.ty=0.2; break; }
@@ -330,7 +325,8 @@ p{margin:0}
     if(this.cfg.loop && emo(m).once && e1>2.8) this.setMode(m);
     /* muelles */
     sp(s,'px','pvx',s.tx,k,d); sp(s,'py','pvy',s.ty,k,d);
-    sp(s,'hx','hvx',s.px*1.6,0.06,0.78); sp(s,'hy','hvy',s.py*1.2,0.06,0.78);
+    if(m==='cargando'){ var bl0=Math.min(1,e1/0.25); s.px=s.px+(this.spin[0]-s.px)*bl0; s.py=s.py+(this.spin[1]-s.py)*bl0; s.pvx=0; s.pvy=0; }
+    var hk=(m==='cargando')?0.4:1; sp(s,'hx','hvx',s.px*1.6*hk,0.06,0.78); sp(s,'hy','hvy',s.py*1.2*hk,0.06,0.78);
     sp(s,'tilt','tv',tilt+s.px*2,0.08,0.75);
     if(blinks && now>this.nextBlink){ if(Math.random()<0.28) this.blinkDouble(now); else this.blink(now); this.nextBlink=now+(m==='pensar'?1100+Math.random()*1400:2200+Math.random()*3200); }
     for(var i2=0;i2<2;i2++){
@@ -371,7 +367,7 @@ p{margin:0}
     ['pensar',1800,'8 planifica sobre tokens'],
     ['leer',2200,'Lee la pantalla del banco'],
     ['nove',2200,'Los saldos salen como tokens: 8 no los ve'],
-    ['calcular',1600,'El oráculo suma en local'],
+    ['cargando',1600,'El oráculo suma en local; 8 solo recibe un token'],
     ['hablar',2600,'Responde; la cifra la lee la voz local'],
     ['listo',1500,'Hecho'],
     ['escuchar',1800,'"Pasa 200 € al broker"'],
