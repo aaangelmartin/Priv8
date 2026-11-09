@@ -128,7 +128,7 @@ p{margin:0}
   </section>
 
   <section class="panel">
-    <div><span class="eyebrow">Formas de no ver</span><h2>Formas de taparse, para decidir</h2><p class="lead">Fuera las manos y la venda. Arriba, las tres nuevas: token ‹ › para tokenizado, y diafragma y eclipse para nunca sale. Todas entran y salen en bucle. Al lado, cómo quedan a tamaño icono sobre blanco y sobre noche. Marca las que descartas para ir cerrando la lista.</p></div>
+    <div><span class="eyebrow">Formas de no ver</span><h2>Formas de taparse, para decidir</h2><p class="lead">Fuera las manos y la venda. Arriba, las nuevas. Por defecto: asteriscos de Sora para tokenizado y ojos cerrados de reposo para nunca sale. Todas entran y salen en bucle. Al lado, cómo quedan a tamaño icono sobre blanco y sobre noche. Marca las que descartas para ir cerrando la lista.</p></div>
     <div class="toolbar" id="filters">
       <button type="button" class="on" data-f="all">Todas</button>
       <button type="button" data-f="live">Sin descartar</button>
@@ -359,7 +359,7 @@ p{margin:0}
      producto; nada de adornos tipo emoji, en línea con el tono de la marca. */
   var EMO=[
     {k:'mirar',     g:'Conversación', n:'Mirar',       d:'Sigue el puntero y parpadea con naturalidad.', use:'reposo, app abierta'},
-    {k:'saludar',   g:'Conversación', n:'Saludar',     d:'Abre los ojos, da un saltito, sonríe y guiña.', use:'al abrir la app', once:1},
+    {k:'saludar',   g:'Conversación', n:'Saludar',     d:'Abre los ojos, da un saltito y sonríe.', use:'al abrir la app', once:1},
     {k:'escuchar',  g:'Conversación', n:'Escuchar',    d:'Atento al frente; las pupilas laten con tu voz.', use:'micrófono activo'},
     {k:'hablar',    g:'Conversación', n:'Hablar',      d:'Pequeños rebotes al ritmo de las sílabas.', use:'respuesta por voz'},
     {k:'confuso',   g:'Conversación', n:'No entiendo', d:'Un párpado baja, el otro no; ladea la cabeza.', use:'orden ambigua, pide aclaración'},
@@ -373,7 +373,7 @@ p{margin:0}
     {k:'negar',     g:'Resultado',    n:'Cancelado',   d:'Sacude la cabeza de lado a lado.', use:'cancelas una operación', once:1},
     {k:'triste',    g:'Resultado',    n:'Error',       d:'Párpados caídos hacia fuera y mirada baja.', use:'no se ha podido hacer'},
     {k:'alerta',    g:'Resultado',    n:'Bloqueado',   d:'Ceño firme, pupilas pequeñas y un temblor.', use:'inyección o fuga bloqueada', once:1},
-    {k:'dormir',    g:'Reposo',       n:'Inactivo',    d:'Ojos casi cerrados que respiran despacio.', use:'app en segundo plano'},
+    {k:'dormir',    g:'Reposo',       n:'Inactivo',    d:'Ojos cerrados que respiran despacio, con zetas en Sora.', use:'app en segundo plano'},
     {k:'libre',     g:'Datos',        n:'Libre',       d:'Ojos abiertos: el agente puede ver esto.', use:'dato verde'},
     {k:'tokenizado',g:'Datos',        n:'Tokenizado',  d:'La forma elegida para ámbar.', use:'dato ámbar'},
     {k:'nuncasale', g:'Datos',        n:'Nunca sale',  d:'La forma elegida para rojo.', use:'dato rojo'}
@@ -386,6 +386,8 @@ p{margin:0}
      Nuevas: token ‹ › con morfosis real, diafragma y eclipse.
      ====================================================================== */
   var NEW=[
+    {k:'asterisco', n:'Asteriscos', d:'Cada pupila gira y se convierte en el asterisco de Sora: * *.', hide:1, own:1, custom:1, fresh:1},
+    {k:'cerradosR', n:'Cerrados, en reposo', d:'Los párpados bajan y dejan la línea del ojo cerrado, como en reposo.', hide:1, custom:1, fresh:1},
     {k:'token2',    n:'Token ‹ ›',  d:'La pupila se estira hasta ser una comilla: el 8 queda entre ‹ ›, como un token.', hide:1, own:1, custom:1, fresh:1},
     {k:'diafragma', n:'Diafragma',  d:'Cada ojo se cierra como el diafragma de una cámara. No hay foto.', hide:1, custom:1, fresh:1},
     {k:'eclipse',   n:'Eclipse',    d:'Un disco se desliza sobre cada ojo y deja solo un filo de luz.', hide:1, custom:1, fresh:1},
@@ -399,9 +401,17 @@ p{margin:0}
   function customOv(k,E,P,t,col,xmin){
     var out='', Pc=clamp(P,0,1);
     if(k==='cerrados') return lidAt(E.eyes,col.fg,easeOut(Pc)*1.02);
+    if(k==='cerradosR') return lidAt(E.eyes,col.fg,easeOut(Pc)*0.88);
     E.eyes.forEach(function(e){
       var r=Math.min(e.rx,e.ry), x=e.x, y=e.y, left=(e.x===xmin), c=eyeClip(e,0.3);
-      if(k==='token2'){
+      if(k==='asterisco'){
+        /* El * de Sora, centrado en el hueco con la caja real del glifo (medida en canvas).
+           Entra girando desde el tamaño de la pupila. */
+        var p2=back(seg(Pc,0.02,0.8)), size=r*2.75, AS=AST, k2=size/AS.S;
+        var gx=x-((AS.R-AS.L)/2)*k2, gy=y+((AS.A-AS.D)/2)*k2, rot=(1-clamp(p2,0,1))*-140;
+        if(p2>0.01) out+='<g transform="translate('+f(x)+' '+f(y)+') rotate('+f(rot)+') scale('+f(Math.max(p2,0.001))+') translate('+f(-x)+' '+f(-y)+')"><text x="'+f(gx)+'" y="'+f(gy)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(size)+'" fill="'+col.fg+'">*</text></g>';
+        var pr3=pupilR(e)*(1-clamp(Pc/0.3,0,1)); if(pr3>0.05) out+='<circle cx="'+f(x)+'" cy="'+f(y)+'" r="'+f(pr3)+'" fill="'+col.fg+'"/>';
+      } else if(k==='token2'){
         /* morfosis: un trazo de tres puntos con remate redondo. Con p=0 los tres puntos
            coinciden y el grosor es el diámetro de la pupila: es la pupila. */
         var p=back(seg(Pc,0.02,0.85)), pr=pupilR(e), dir=left?1:-1, br=Pc>0.85?1+0.05*Math.sin(t*3.2):1;
@@ -424,11 +434,17 @@ p{margin:0}
     return out;
   }
 
+  var AST=null;
+  function measureAst(){
+    var S=200, c=document.createElement('canvas').getContext('2d'); c.font='700 '+S+'px '+FONT;
+    var m=c.measureText('*'); return {S:S, L:m.actualBoundingBoxLeft, R:m.actualBoundingBoxRight, A:m.actualBoundingBoxAscent, D:m.actualBoundingBoxDescent};
+  }
+
   /* Selección guardada por clave. */
-  var DEF={amber:'token2', red:'diafragma', out:[]};
+  var DEF={amber:'asterisco', red:'cerradosR', out:[]};
   var SEL=JSON.parse(JSON.stringify(DEF));
-  try{ var sv=JSON.parse(localStorage.getItem('p8-ojos-sel3')||'null'); if(sv&&sv.amber&&oi(sv.amber)>=0&&oi(sv.red)>=0) SEL=sv; }catch(e){}
-  function saveSel(){ try{ localStorage.setItem('p8-ojos-sel3',JSON.stringify(SEL)); }catch(e){} }
+  try{ var sv=JSON.parse(localStorage.getItem('p8-ojos-sel4')||'null'); if(sv&&sv.amber&&oi(sv.amber)>=0&&oi(sv.red)>=0) SEL=sv; }catch(e){}
+  function saveSel(){ try{ localStorage.setItem('p8-ojos-sel4',JSON.stringify(SEL)); }catch(e){} }
   function optName(i){ return OPTS[i].n; }
   function overlay(i,E,P,t,col,xmin){ var o=OPTS[i]; return o.custom ? customOv(o.k,E,P,t,col,xmin) : ov(i,E,P,t,col); }
   function staticAlt(i,fg,acc,cut){
@@ -497,14 +513,13 @@ p{margin:0}
     }
     switch(m){
       case 'saludar': {
-        /* 0–0,3 s abre los ojos · 0,3–0,8 salto con estiramiento · sonrisa · guiño a 1,0 s · se asienta */
+        /* 0–0,3 s abre los ojos · 0,3–0,8 salto con estiramiento · sonrisa · se asienta */
         blinks=false; s.tx=0; s.ty=-0.12;
         if(e1<0.3){ lid=[1.02,1.02]; sc=0.92; }
         else { lid=[0,0]; sc=1; }
         if(e1>=0.3 && e1<0.8){ var hp=(e1-0.3)/0.5; oy=-3.2*Math.sin(hp*Math.PI); if(!this.kicked){ s.svx=-0.12; s.svy=0.2; this.kicked=1; } }
         if(e1>=0.45 && e1<2.2) low=[0.45,0.45];
         tilt=(e1>0.4 && e1<2.2)?7:0;
-        if(e1>1.0 && !this.winked){ this.blink(now, left0?'winkR':'winkL'); this.winked=1; }
         break; }
       case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=amp*0.004; break; }
       case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=syl*0.012; s.svx-=syl*0.006; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
@@ -531,7 +546,11 @@ p{margin:0}
       case 'negar': { ox=e1<1.2?Math.sin(e1*Math.PI*4.4)*4*(1-e1/1.2):0; lid=[0.16,0.16]; ang=[-5,-5]; s.tx=-ox*0.12; s.ty=0.2; break; }
       case 'triste': { s.tx=0.15; s.ty=0.65; lid=[0.34,0.34]; ang=[-14,-14]; size=[0.9,0.9]; tilt=-3; bob=Math.sin(t*0.9)*0.25; k=0.08; d=0.8; sc=0.96; break; }
       case 'alerta': { lid=[0.3,0.3]; ang=[17,17]; size=[0.72,0.72]; s.tx=0; s.ty=0; if(e1<0.5) ox=Math.sin(e1*90)*1.4*(1-e1/0.5); blinks=false; break; }
-      case 'dormir': { s.tx=0; s.ty=0.3; var br=0.84+0.07*Math.sin(t*1.3); lid=[br,br]; blinks=false; bob=Math.sin(t*1.3)*0.6; sc=1+0.012*Math.sin(t*1.3); break; }
+      case 'dormir': { s.tx=0; s.ty=0.3; var br=0.86+0.04*Math.sin(t*1.3); lid=[br,br]; blinks=false; bob=Math.sin(t*1.3)*0.6; sc=1+0.012*Math.sin(t*1.3);
+        /* zetas en Sora: suben en diagonal, crecen y se desvanecen, una cada 0,9 s */
+        for(var z=0;z<3;z++){ var ph=((t/2.7)+z/3)%1, zs=4+ph*5, zx=32+E.halfW-4+ph*7, zy=32-E.halfH+1-ph*12, op=Math.min(1,ph*4)*(1-ph);
+          fx+='<text x="'+f(zx)+'" y="'+f(zy)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(zs)+'" fill="'+this.col.fg+'" opacity="'+f(op)+'">z</text>'; }
+        break; }
     }
     if(prot){ blinks=false; s.tx=0; s.ty=0; if(ok==='lado') tilt=-7; }
     if(this.cfg.loop && emo(m).once && el>2800){ this.setMode(m); }
@@ -647,7 +666,7 @@ p{margin:0}
   }
 
   function start(){
-    M=measure8();
+    M=measure8(); AST=measureAst();
     buildChips();
     BIG=new Eyes(document.getElementById('big'),{mode:'mirar'});
     setBig('mirar');
