@@ -5,7 +5,7 @@ import Eight from './eight/Eight.jsx';
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
 /* aparece cuando entra en pantalla (una vez) */
-function useSeen(threshold = 0.3) {
+export function useSeen(threshold = 0.3) {
   const ref = useRef(null);
   const [seen, setSeen] = useState(false);
   useEffect(() => {
@@ -186,11 +186,11 @@ export function HowCase() {
   }, [seen]);
   const pick = (i) => { setStep(i); hold.current = performance.now() + 9000; };
   return (
-    <section id="como" className="block block-paper howcase" aria-labelledby="h-how" ref={ref}>
+    <section id="caso" className="block block-cobalt howcase" aria-labelledby="h-how" ref={ref}>
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode={CASE[step].mode} say="Te lo enseño con una factura." />
-          <p className="eyebrow">Cómo funciona</p>
+          <p className="eyebrow">Un caso real</p>
           <h2 id="h-how">Una factura con trampa. <span className="soft">De principio a fin.</span></h2>
         </div>
         <div className="case">

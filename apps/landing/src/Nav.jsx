@@ -4,8 +4,8 @@ import { useCompanion } from './companion.js';
 
 const LINKS = [
   ['problema', 'Qué ve'],
-  ['cifras', 'Por qué ahora'],
   ['como', 'Cómo funciona'],
+  ['garantias', 'Garantías'],
   ['producto', 'Productos'],
   ['faq', 'Preguntas'],
 ];

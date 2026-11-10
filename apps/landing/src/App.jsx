@@ -5,6 +5,7 @@ import Companion from './Companion.jsx';
 import Field, { Blend } from './Field.jsx';
 import { SeeScene, Spot } from './Story.jsx';
 import { WhyNow, HowCase, Products } from './Sections.jsx';
+import { HowArch, Guarantees, Developers, Compare, Compliance, Team } from './More.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
 
@@ -145,9 +146,9 @@ function Footer({ pal }) {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a></div>
-            <div><b>Confianza</b><a href="#como">Pagos seguros</a><a href="#faq">Datos y modelo</a><a href="#faq">Registro firmado</a></div>
-            <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#problema">Por qué Priv8</a></div>
+            <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#integrar">Integración</a></div>
+            <div><b>Confianza</b><a href="#garantias">Garantías</a><a href="#caso">Un caso real</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
+            <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#comparar">Por qué Priv8</a><a href="#equipo">Equipo</a></div>
           </nav>
         </div>
         {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
@@ -228,9 +229,19 @@ export default function App() {
         <Blend from="--paper" to="--band" seed={2} />
         <WhyNow />
         <Blend from="--band" to="--paper" seed={3} />
+        <HowArch />
+        <Guarantees />
+        <Blend from="--paper" to="--band" seed={4} />
         <HowCase />
+        <Blend from="--band" to="--paper" seed={5} />
         <Products />
+        <Developers />
+        <Blend from="--paper" to="--band" seed={6} />
+        <Compare />
+        <Blend from="--band" to="--paper" seed={7} />
+        <Compliance />
         <Faq />
+        <Team />
         <Blend from="--paper" to="--band" seed={8} />
         <Cierre />
         <Blend from="--band" to="--paper" seed={9} />
