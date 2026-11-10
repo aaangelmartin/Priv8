@@ -79,24 +79,100 @@ export default function Field() {
   return <canvas ref={ref} className="field" aria-hidden="true" />;
 }
 
-/* Transición entre secciones: degradado con curva suave (sin bandas), grano fino y una línea de horizonte
-   luminosa en el centro con un brillo que la recorre despacio. */
+/* Transiciones entre secciones. Cuatro variantes para elegir (ver #transiciones):
+   fade    degradado con curva suave, sin nada más
+   curve   la sección siguiente entra con una curva amplia, con una capa intermedia
+   pills   cápsulas con el radio del notch que se van juntando hasta cubrir el color siguiente
+   sheet   la sección siguiente entra como una hoja con esquinas grandes y sombra */
 const EASE = [0, 0.03, 0.1, 0.21, 0.35, 0.5, 0.65, 0.79, 0.9, 0.97, 1];
 const LIGHT = ['--paper', '--mist'];
-export function Blend({ from, to }) {
-  /* entre un tono claro y uno oscuro, el medio pasa por cobalto para no quedar gris */
+function eased(from, to) {
   const via = LIGHT.includes(from) !== LIGHT.includes(to);
   const col = (t) => {
     if (!via) return `color-mix(in oklab, var(${from}), var(${to}) ${Math.round(t * 100)}%)`;
-    return t < 0.5
-      ? `color-mix(in oklab, var(${from}), var(--band) ${Math.round(t * 200)}%)`
-      : `color-mix(in oklab, var(--band), var(${to}) ${Math.round((t - 0.5) * 200)}%)`;
+    return t < 0.5 ? `color-mix(in oklab, var(${from}), var(--band) ${Math.round(t * 200)}%)` : `color-mix(in oklab, var(--band), var(${to}) ${Math.round((t - 0.5) * 200)}%)`;
   };
-  const stops = EASE.map((t, i) => `${col(t)} ${i * 10}%`).join(', ');
+  return `linear-gradient(180deg, ${EASE.map((t, i) => `${col(t)} ${i * 10}%`).join(', ')})`;
+}
+function useWidth() {
+  const ref = useRef(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current; if (!el) return undefined;
+    const ro = new ResizeObserver(() => setW(Math.round(el.getBoundingClientRect().width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w];
+}
+export function Blend({ from, to, variant = 'fade' }) {
+  const [ref, w] = useWidth();
+  if (variant === 'curve') {
+    const H = 160;
+    return (
+      <div ref={ref} className="blend blend-curve" aria-hidden="true" style={{ background: `var(${from})`, height: H }}>
+        {w > 0 && (
+          <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`}>
+            <path d={`M0 ${H * 0.55} C ${w * 0.25} ${H * 0.05}, ${w * 0.55} ${H * 0.95}, ${w} ${H * 0.35} L ${w} ${H} L 0 ${H} Z`} style={{ fill: LIGHT.includes(from) !== LIGHT.includes(to) ? 'var(--band)' : `color-mix(in oklab, var(${from}), var(${to}) 50%)`, opacity: 0.85 }} />
+            <path d={`M0 ${H * 0.8} C ${w * 0.3} ${H * 0.35}, ${w * 0.62} ${H * 1.05}, ${w} ${H * 0.6} L ${w} ${H} L 0 ${H} Z`} style={{ fill: `var(${to})` }} />
+          </svg>
+        )}
+      </div>
+    );
+  }
+  if (variant === 'pills') {
+    const H = 150, rows = 6, rh = H / rows, cells = [];
+    if (w > 0) {
+      let s = 7; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+      for (let r = 0; r < rows; r++) {
+        const fill = (r + 1) / rows;
+        let x = -rnd() * 60;
+        while (x < w) {
+          const pw = 40 + rnd() * 120;
+          const gap = 6 + (1 - fill) * (30 + rnd() * 120);
+          if (rnd() < 0.35 + fill * 0.65) {
+            const ph = rh * (0.5 + fill * 0.5);
+            cells.push(<rect key={r + '-' + Math.round(x)} x={x} y={r * rh + (rh - ph) / 2} width={pw} height={ph} rx={Math.min(ph / 2, 14)} />);
+          }
+          x += pw + gap;
+        }
+      }
+    }
+    return (
+      <div ref={ref} className="blend" aria-hidden="true" style={{ background: `var(${from})`, height: H + 16 }}>
+        {w > 0 && <svg width={w} height={H + 16} viewBox={`0 0 ${w} ${H + 16}`} style={{ fill: `var(${to})` }}>{cells}<rect x="0" y={H} width={w} height="17" /></svg>}
+      </div>
+    );
+  }
+  if (variant === 'sheet') {
+    return (
+      <div ref={ref} className="blend blend-sheet" aria-hidden="true" style={{ background: `var(${from})` }}>
+        <div style={{ background: `var(${to})` }} />
+      </div>
+    );
+  }
+  return <div ref={ref} className="blend blend-fade" aria-hidden="true" style={{ background: eased(from, to) }} />;
+}
+
+/* Página de prueba de transiciones: http://localhost:5180/#transiciones */
+export function TransitionsLab() {
+  const pairs = [['--band', '--night', 'Cobalto a noche'], ['--paper', '--night', 'Blanco a noche']];
+  const variants = [['fade', 'A · Fundido suave'], ['curve', 'B · Curva'], ['pills', 'C · Cápsulas con el radio del notch'], ['sheet', 'D · Hoja con esquinas grandes']];
   return (
-    <div className="blend" aria-hidden="true" style={{ background: `linear-gradient(180deg, ${stops})` }}>
-      <span className="blend-glow" />
-      <span className="blend-line" />
+    <div className="lab">
+      <header className="lab-head"><h1>Transiciones entre secciones</h1><p>Cuatro opciones. Dime la letra que te guste, o mezcla.</p></header>
+      {variants.map(([v, name]) => (
+        <section key={v} className="lab-item">
+          <h2>{name}</h2>
+          {pairs.map(([a, b, label]) => (
+            <div key={label} className="lab-pair">
+              <div className="lab-block" style={{ background: `var(${a})`, color: a === '--paper' ? '#0b1b33' : '#fff' }}>{label}</div>
+              <Blend from={a} to={b} variant={v} />
+              <div className="lab-block" style={{ background: `var(${b})`, color: '#fff' }} />
+            </div>
+          ))}
+        </section>
+      ))}
     </div>
   );
 }
