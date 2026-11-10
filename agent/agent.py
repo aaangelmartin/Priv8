@@ -249,11 +249,15 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
 async def _main(a: argparse.Namespace) -> int:
     from agent.server import DEFAULT_HOST, build_server, default_core, serve_http
 
-    from agent.core_adapter import DEFAULT_SCENE, core_choice, mount_scene, tokenize_task
+    from agent.core_adapter import DEFAULT_SCENE, core_choice, mount_scene, mount_web, tokenize_task
 
     real = core_choice() == "real"
     if a.scene and not real:
         raise ValueError("--scene needs PRIV8_CORE=real: the fake core has its own screen")
+    if a.web and not real:
+        raise ValueError("--web needs PRIV8_CORE=real: the fake core has its own screen")
+    if a.scene and a.web:
+        raise ValueError("--scene and --web are exclusive: a demo scene or the real web apps")
     core = default_core()  # PRIV8_CORE=real|fake, in this same process
     err = lambda s: print(s, file=sys.stderr)  # noqa: E731
 
@@ -271,7 +275,10 @@ async def _main(a: argparse.Namespace) -> int:
         # With --server-url the screen and the vault live in the server process instead, and
         # the task goes out as written, through the loop's final block.
         persona = bool(a.replay) if a.simulated_persona is None else a.simulated_persona
-        mount_scene(a.session, a.scene or DEFAULT_SCENE, simulated_persona=persona)
+        if a.web:  # Alba Core and the mailbox in Chromium; the person approves in the console
+            mount_web(a.session)
+        else:
+            mount_scene(a.session, a.scene or DEFAULT_SCENE, simulated_persona=persona)
         # What the person asked goes to Claude with their data as tokens of this session.
         task = tokenize_task(a.session, TASKS.get(task.strip().lower(), task))
 
@@ -318,6 +325,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--session", default=None, help="session id (default: the scene name, or s1 with the fake core)")
     p.add_argument("--scene", choices=["b2b", "b2c"], default=None,
                    help="PRIV8_CORE=real: demo screen of core/scenes.py to mount in this process (default b2b)")
+    p.add_argument("--web", action="store_true",
+                   help="PRIV8_CORE=real: drive the real Alba Core and mailbox (apps/erp-sim, apps/inbox-sim) "
+                        "with Playwright instead of a demo scene")
     p.add_argument("--simulated-persona", action=argparse.BooleanOptionalAction, default=None,
                    help="a simulated person approves held actions (default: on with --replay, off live)")
     p.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)

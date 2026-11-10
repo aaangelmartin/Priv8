@@ -171,6 +171,33 @@ def mount_scene(session: str, name: str = DEFAULT_SCENE, *, simulated_persona: b
     return scene
 
 
+def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
+              events: bool = True) -> Any:
+    """Connect the real Alba Core and mailbox (adapters/web, Playwright) to `session`.
+
+    Unlike the scenes, the screens are the apps of apps/erp-sim and apps/inbox-sim, which
+    must be running (ports 5173 and 5174). The seed values are trusted so the final block
+    looks for them in everything that goes out, and the events WebSocket (:8700) starts so
+    the audit console can show the screens and the person can approve held actions there.
+    """
+    import sys
+    from pathlib import Path
+
+    from adapters.web import WebAdapter
+
+    mod = _load(module)
+    data = Path(__file__).resolve().parent.parent / "data"
+    sys.path.insert(0, str(data))
+    from check_seed import known
+
+    mod.trust(known())
+    web = WebAdapter(start=start)
+    mod.connect(session, web)
+    if events:
+        importlib.import_module(f"{module}.server").start()
+    return web
+
+
 def tokenize_task(session: str, text: str, module: str = CORE_MODULE) -> str:
     """What the person asked, with their data replaced by tokens of `session`, before it goes to Claude."""
     return str(_load(module).tokenize_text(session, text))

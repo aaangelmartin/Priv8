@@ -1,4 +1,4 @@
-# ERP Alba Core (Camino 2). Selectores provisionales: Álvaro los ajusta al DOM real (#19).
+# ERP Alba Core (Camino 2). Selectores del DOM real de apps/erp-sim (#19).
 version: 1
 app: alba-core
 source: web
@@ -56,9 +56,17 @@ screens:
         origen: maestro
         campo: proveedor.iban
         acepta: [maestro]
+      - match: {sel: "#cif-prov"}
+        cls: ambar
+        tipo: CIF
+        origen: maestro
       - match: {sel: "#telefono"}
         cls: ambar
         tipo: TEL
+        origen: maestro
+      - match: {sel: "#email"}
+        cls: ambar
+        tipo: EMAIL
         origen: maestro
       - match: {sel: "#guardar"}
         cls: verde
