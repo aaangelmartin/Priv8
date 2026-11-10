@@ -112,7 +112,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .hero h1 { font-size: clamp(2.6rem, 1rem + 5vw, 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
 .hero h1 .line { display: block; white-space: nowrap; }
 @media (max-width: 700px) { .hero h1 .line { white-space: normal; } }
-.rotator { position: relative; display: inline-grid; vertical-align: bottom; text-align: left; overflow: hidden; padding-bottom: .14em; margin-bottom: -.14em; transition: width .6s var(--ease); }
+.rotator { position: relative; display: inline-grid; vertical-align: bottom; text-align: left; transition: width .6s var(--ease); }
 .rot-sizer { visibility: hidden; grid-area: 1 / 1; }
 .rot-item { position: relative; grid-area: 1 / 1; justify-self: start; white-space: nowrap; color: #fff; pointer-events: none; }
 /* cada letra entra desde abajo con un pequeño desenfoque, una detrás de otra; la frase anterior se va hacia arriba */
@@ -426,3 +426,8 @@ html.js .rv.in { opacity: 1; transform: none; }
 .lab-block { height: 140px; display: flex; align-items: flex-end; padding: 18px 24px; font: 600 .9rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
 
 html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-delay: .22s; } html.landed .in-3 { transition-delay: .36s; } html.landed .in-4 { transition-delay: .5s; }
+
+/* «Conoce a 8» solo en la bienvenida: aparece debajo de 8 mientras saluda y se va cuando vuela a su sitio */
+.intro-title { position: fixed; z-index: 45; left: 50%; top: calc(50vh + min(50vw, 89.125vh, 640px) * .3478 + 22px); transform: translateX(-50%); margin: 0; font: 700 clamp(2rem, 1.2rem + 3vw, 3.6rem)/1 var(--f-display); letter-spacing: -.04em; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; }
+html.intro .intro-title { visibility: visible; animation: introtitle 1.35s var(--ease) both; }
+@keyframes introtitle { 0% { opacity: 0; transform: translate(-50%, 16px); } 30%, 78% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
