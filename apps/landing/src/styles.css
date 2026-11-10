@@ -192,12 +192,12 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .hv-2 .q .tok { background: #fff; color: #1f33b0; }
 .hv-2 .a { font: 700 clamp(3.4rem, 2rem + 5vw, 6rem)/1 var(--f-display); color: #fff; letter-spacing: -.05em; }
 .hv-2 .budget { font: 500 .85rem/1 var(--f-mono); color: #c4cdff; }
-.hv-3 .confirm { width: min(360px, 84vw); padding: 22px; border-radius: var(--r); background: #fff; color: #0b1b33; display: grid; gap: 10px; text-align: left; box-shadow: 0 30px 80px rgba(5, 16, 31, .3); }
-.hv-3 .confirm b { font: 600 1.15rem/1.25 var(--f-display); }
-.hv-3 .confirm span { color: #4e5a72; }
-.hv-3 .row2 { display: flex; gap: 8px; margin-top: 6px; }
-.hv-3 .row2 i { flex: 1; text-align: center; font-style: normal; font-weight: 600; padding: 13px; border-radius: 999px; background: #eef2fb; }
-.hv-3 .row2 i.yes { background: #2d45d6; color: #fff; animation: pulse 1.6s ease-in-out infinite; }
+.hv-4 .confirm { width: min(360px, 84vw); padding: 22px; border-radius: var(--r); background: #fff; color: #0b1b33; display: grid; gap: 10px; text-align: left; box-shadow: 0 30px 80px rgba(5, 16, 31, .3); }
+.hv-4 .confirm b { font: 600 1.15rem/1.25 var(--f-display); }
+.hv-4 .confirm span { color: #4e5a72; }
+.hv-4 .row2 { display: flex; gap: 8px; margin-top: 6px; }
+.hv-4 .row2 i { flex: 1; text-align: center; font-style: normal; font-weight: 600; padding: 13px; border-radius: 999px; background: #eef2fb; }
+.hv-4 .row2 i.yes { background: #2d45d6; color: #fff; animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(45, 69, 214, .5); } 50% { box-shadow: 0 0 0 10px rgba(45, 69, 214, 0); } }
 @media (max-width: 520px) { .pair { font-size: .8rem; gap: 8px; } .pair .arrow { width: 20px; } .pair .tok, .pair .real { font-size: .8rem; padding: 8px 10px; } }
 
@@ -228,7 +228,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 
 /* ---------- bloques normales: misma composición centrada que la portada ----------
    Cobalto (con el campo de datos) o blanco, nada más. En blanco el titular va en noche con la segunda parte en cobalto. */
-.block { position: relative; overflow: hidden; padding-block: clamp(96px, 12vw, 150px); }
+.block { position: relative; overflow: hidden; padding-block: clamp(96px, 12vw, 150px); min-height: 100vh; min-height: 100svh; display: grid; align-content: center; }
 .block > .wrap { position: relative; z-index: 1; }
 .block-paper { background: var(--paper); color: var(--ink); }
 .block-cobalt { background: transparent; color: #fff; }
@@ -450,7 +450,7 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .scene-paper .hv-2 .q { color: var(--ink); }
 .scene-paper .hv-2 .a { color: var(--band); }
 .scene-paper .hv-2 .budget { color: var(--ink-2); }
-.scene-paper .hv-3 .confirm { box-shadow: 0 30px 80px rgba(11, 27, 51, .14), 0 0 0 1px rgba(11, 27, 51, .06); }
+.scene-paper .hv-4 .confirm { box-shadow: 0 30px 80px rgba(11, 27, 51, .14), 0 0 0 1px rgba(11, 27, 51, .06); }
 
 /* pie en blanco */
 .foot { background: var(--paper); color: var(--ink); border-top: 0; }
@@ -458,3 +458,18 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .foot-logo { color: var(--band); }
 .foot-cols b { color: var(--ink-2); }
 .foot-cols a { color: var(--ink); }
+
+/* cómo funciona: piezas nuevas */
+.tree { margin: 0; text-align: left; padding: 18px 22px; border-radius: 20px; background: #0b1b33; color: #cdd6f4; font: 500 clamp(.72rem, .6rem + .4vw, .88rem)/1.75 var(--f-mono); white-space: pre; box-shadow: 0 30px 80px rgba(11, 27, 51, .18); }
+.write { width: min(460px, 86vw); display: grid; gap: 10px; text-align: left; }
+.write .wl { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 16px; border-radius: 16px; background: #eef2fb; }
+.write .wl span { color: var(--ink-2); font-size: .9rem; }
+.write .wl b { font: 600 .86rem/1.3 var(--f-mono); color: var(--ink); }
+.write small { color: var(--ink-2); font-size: .85rem; text-align: center; }
+.log { list-style: none; margin: 0; padding: 0; width: min(480px, 86vw); display: grid; gap: 8px; text-align: left; }
+.log li { display: flex; gap: 14px; align-items: baseline; padding: 12px 16px; border-radius: 14px; background: #eef2fb; color: var(--ink); font-size: .92rem; }
+.log time { font: 500 .78rem/1 var(--f-mono); color: var(--ink-2); }
+.log li.bad { background: #fbe5e3; color: #a83228; }
+.log li.ok { background: #dff2e7; color: #18734c; }
+.how .lead { min-height: 3.2em; }
+.num-big.long { font-size: clamp(3.4rem, min(1rem + 10vw, 22vh), 10rem); letter-spacing: -.06em; }

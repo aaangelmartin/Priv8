@@ -97,9 +97,9 @@ export default function Companion({ pal, intro }) {
       const changed = anchor !== lastSpot.current;
       if (changed) {
         lastSpot.current = anchor;
-        setSpot({ mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', id: Math.random().toString(36) });
+        setSpot({ mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) });
       } else if (anchor && (anchor.dataset.mode !== spot.mode || anchor.dataset.say !== spot.say)) {
-        setSpot((s) => (s.mode === anchor.dataset.mode && s.say === anchor.dataset.say ? s : { mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', id: Math.random().toString(36) }));
+        setSpot((s) => (s.mode === anchor.dataset.mode && s.say === anchor.dataset.say ? s : { mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) }));
       }
       if (changed) changeT.current = performance.now();
       const moving = performance.now() - changeT.current < 950;
@@ -137,16 +137,16 @@ export default function Companion({ pal, intro }) {
   }, [stage]);
 
   /* bocadillo: cada vez que cambia de sitio o de frase */
-  const say = (text) => {
+  const say = (text, side = '') => {
     clearTimeout(bubbleT.current);
     if (!text) { setBubble((b) => ({ ...b, show: false })); return; }
-    setBubble({ text, show: true, big: false, side: '' });
+    setBubble({ text, show: true, big: false, side });
     bubbleT.current = setTimeout(() => setBubble((b) => ({ ...b, show: false })), 4200);
   };
   useEffect(() => {
     if (stage !== 'done') return undefined;
     setBubble((b) => ({ ...b, show: false, big: false, side: '' }));
-    const t = setTimeout(() => say(spot.say), 650);
+    const t = setTimeout(() => say(spot.say, spot.side), 650);
     return () => clearTimeout(t);
   }, [spot.id, stage]);
 

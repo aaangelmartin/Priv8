@@ -19,11 +19,12 @@ export function textureUrl() {
     const y = r * ROW + 20;
     while (x < W) {
       const t = DATA[Math.floor(rnd() * DATA.length)];
-      const a = (0.07 + rnd() * 0.1).toFixed(3);
+      /* misma opacidad que las letras de la portada (rgba(215,223,255,.32) a los lados); el centro lo limpia cada sección */
+      const a = (0.28 + rnd() * 0.06).toFixed(3);
       out += `<text x="${x.toFixed(0)}" y="${y}" fill-opacity="${a}">${esc(t)}</text>`;
       x += t.length * 8.7 + 28 + rnd() * 90;
     }
   }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><g font-family="IBM Plex Mono, Menlo, Consolas, monospace" font-size="14.4" fill="#ffffff">${out}</g></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><g font-family="IBM Plex Mono, Menlo, Consolas, monospace" font-size="13" font-weight="500" fill="#d7dfff">${out}</g></svg>`;
   return `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
 }

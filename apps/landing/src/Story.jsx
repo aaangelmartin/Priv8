@@ -34,8 +34,8 @@ export function Scene({ id, screens = 3, tone = 'cobalt', phases = 1, label, chi
 }
 
 /* Punto de anclaje: 8 se coloca aquí, con este tamaño, esta cara y esta frase. */
-export function Spot({ mode = 'mirar', say = '', className = '' }) {
-  return <div className={'spot ' + className} data-anchor8="" data-mode={mode} data-say={say} aria-hidden="true" />;
+export function Spot({ mode = 'mirar', say = '', side = '', className = '' }) {
+  return <div className={'spot ' + className} data-anchor8="" data-mode={mode} data-say={say} data-side={side} aria-hidden="true" />;
 }
 
 const ROWS = [
@@ -79,20 +79,21 @@ export function SeeScene() {
 
 /* 2 · Las cifras, una por pantalla. */
 const NUMS = [
-  { n: '52%', t: 'de los directivos pone la seguridad, la privacidad o el cumplimiento como primer freno de los agentes de IA.', s: 'Dynatrace, vía SecurityBrief', u: 'https://securitybrief.co.uk/story/security-fears-keep-half-of-agentic-ai-stuck-in-pilots', mode: 'curiosidad', say: 'La mitad no se atreve. Normal.' },
+  { n: '55%', t: 'de los bancos europeos encuestados ya usa IA generativa o agentes en procesos de cara al cliente.', s: 'EBA, seguimiento de la IA en banca, 2025', u: null, mode: 'curiosidad', say: 'Los agentes ya están dentro.' },
+  { n: '52%', t: 'de los directivos pone la seguridad, la privacidad o el cumplimiento como primer freno para llevar agentes a producción.', s: 'Dynatrace, vía SecurityBrief', u: 'https://securitybrief.co.uk/story/security-fears-keep-half-of-agentic-ai-stuck-in-pilots', mode: 'duda', say: 'Y la mitad se queda en piloto.' },
   { n: '97%', t: 'de los datos sensibles de la pantalla llega al modelo cuando un agente trabaja sin protección.', s: 'Tsinghua, «Available but Invisible»', u: 'https://arxiv.org/html/2602.10139v2', mode: 'sorpresa', say: 'Casi todo. Y sin que nadie se entere.' },
-  { n: '8/120', t: 'IBAN bien leídos por OCR a través de un escritorio remoto. Por eso leemos la estructura de la pantalla, no los píxeles.', s: 'Medición propia', u: null, mode: 'leer', say: 'Yo leo la pantalla por dentro, no la foto.' },
+  { n: '4.200 M€', t: 'de fraude en pagos en la UE en 2024. En transferencias, más de la mitad es manipulación del pagador: alguien que se hace pasar por otro.', s: 'EBA y BCE, informe de fraude en pagos 2025', u: null, mode: 'enfado', say: 'Justo lo que un agente no puede pagar.' },
 ];
 export function NumbersScene() {
   return (
-    <Scene id="cifras" screens={3} tone="paper" phases={3} label="Las cifras">
+    <Scene id="cifras" screens={4} tone="paper" phases={4} label="Las cifras">
       {({ phase }) => {
         const d = NUMS[phase];
         return (
           <div className="wrap scn nums">
             <Spot className="spot-scn" mode={d.mode} say={d.say} />
             <p className="eyebrow">Por qué ahora</p>
-            <div key={phase} className="num-big swap">{d.n}</div>
+            <div key={phase} className={'num-big swap' + (d.n.length > 5 ? ' long' : '')}>{d.n}</div>
             <p key={'t' + phase} className="num-text swap">{d.t}</p>
             <p className="num-src">{d.u ? <a href={d.u} target="_blank" rel="noreferrer">{d.s}</a> : d.s}</p>
           </div>
@@ -102,40 +103,61 @@ export function NumbersScene() {
   );
 }
 
-/* 3 · Cómo: tokeniza, comprueba, confirma. */
+/* 3 · Cómo funciona: las seis piezas del protocolo, una por pantalla. */
 const STEPS = [
-  { h: 'Tokeniza.', t: 'Antes de que la pantalla llegue al modelo, cada dato sensible se cambia por un token estable. Las claves y los códigos ni siquiera salen.', mode: 'nove', say: 'Lo tengo, pero tapado.' },
-  { h: 'Comprueba sin mirar.', t: '¿El saldo cubre 200 €? Un oráculo local responde sí o no, sin dar la cifra y con un límite de preguntas.', mode: 'pensar', say: '¿Cubre? Sí. ¿Cuánto hay? Ni idea.' },
-  { h: 'Espera tu sí.', t: 'Pagar, firmar o enviar se queda en espera hasta que una persona lo confirma. La clave del banco la pones tú.', mode: 'esperar', say: 'Yo lo preparo. El botón es tuyo.' },
+  { h: <>Lee la pantalla <span className="soft">por dentro.</span></>, t: 'Nada de capturas: 8 lee la estructura de la pantalla, el DOM en la web y el árbol de accesibilidad en el móvil. Sabe qué es cada campo sin hacer una foto.', mode: 'leer', say: 'Leo la estructura, no la foto.' },
+  { h: <>Cambia cada dato <span className="soft">por un token.</span></>, t: 'Antes de salir hacia el modelo, cada IBAN, nombre o importe se cambia por un token estable. Las claves, los PIN y los códigos ni siquiera salen.', mode: 'nove', say: 'Lo tengo, pero tapado.' },
+  { h: <>Comprueba <span className="soft">sin mirar.</span></>, t: '¿El saldo cubre 200 €? Un oráculo local responde sí o no, sin dar la cifra y con un límite de preguntas para que nadie la adivine a base de comparar.', mode: 'pensar', say: '¿Cubre? Sí. ¿Cuánto hay? Ni idea.' },
+  { h: <>Escribe <span className="soft">sin ver.</span></>, t: 'El modelo escribe tokens. El ejecutor, en tu máquina, pone el valor real en el campo justo antes de pulsar.', mode: 'hablar', say: 'Yo digo ‹IBAN_2›. Tu máquina escribe el resto.' },
+  { h: <>Espera <span className="soft">tu sí.</span></>, t: 'Pagar, firmar o enviar se queda en espera hasta que una persona lo confirma. La clave del banco la pones tú; 8 mira a otro lado.', mode: 'esperar', say: 'Yo lo preparo. El botón es tuyo.' },
+  { h: <>Lo deja <span className="soft">firmado.</span></>, t: 'Cada paso queda en un registro firmado: qué recibió el modelo, qué se bloqueó y quién aprobó. Y si algo sensible se escapa sin tokenizar, la petición no sale.', mode: 'listo', say: 'Todo apuntado. Nada filtrado.' },
 ];
 export function HowScene() {
   return (
-    <Scene id="como" screens={3} tone="paper" phases={3} label="Cómo funciona">
+    <Scene id="como" screens={6} tone="paper" phases={6} label="Cómo funciona">
       {({ phase }) => {
         const s = STEPS[phase];
         return (
           <div className="wrap scn how">
             <Spot className="spot-scn" mode={s.mode} say={s.say} />
-            <p className="eyebrow">Cómo funciona · {phase + 1} de 3</p>
+            <p className="eyebrow">Cómo funciona · {phase + 1} de {STEPS.length}</p>
             <h2 key={phase} className="swap">{s.h}</h2>
             <p key={'l' + phase} className="lead swap">{s.t}</p>
             <div className="how-viz">
-              <div className={'hv hv-1' + (phase === 0 ? ' on' : '')}>
-                <div className="pair"><span className="real">ES43 9100 0001 5740…</span><span className="arrow" /><Tok>‹IBAN_1›</Tok></div>
-                <div className="pair"><span className="real">3.412,58 €</span><span className="arrow" /><Tok>‹IMPORTE_1›</Tok></div>
+              <div className={'hv hv-0' + (phase === 0 ? ' on' : '')}>
+                <pre className="tree">{'pantalla "Banca Alcor"\n├ campo  "Titular"         ‹NOMBRE_1›\n├ campo  "Cuenta nómina"   ‹IBAN_1›\n├ campo  "Saldo"           ‹IMPORTE_1›\n├ campo  "Clave"           nunca sale\n└ botón  "Hacer una transferencia"'}</pre>
+              </div>
+              <div className={'hv hv-1' + (phase === 1 ? ' on' : '')}>
+                <div className="pair"><span className="real">ES43 9100 0001 5740…</span><span className="arrow" /><Tok>‹IBAN_1·propio›</Tok></div>
+                <div className="pair"><span className="real">3.412,58 €</span><span className="arrow" /><Tok>‹IMPORTE_1·positivo›</Tok></div>
                 <div className="pair"><span className="real">••••••••</span><span className="arrow" /><span className="never">nunca sale</span></div>
               </div>
-              <div className={'hv hv-2' + (phase === 1 ? ' on' : '')}>
+              <div className={'hv hv-2' + (phase === 2 ? ' on' : '')}>
                 <div className="q">¿<Tok>‹IMPORTE_1›</Tok> cubre 200 €?</div>
                 <div className="a">Sí</div>
-                <div className="budget">4 preguntas restantes</div>
+                <div className="budget">4 preguntas restantes · respuestas por tramos</div>
               </div>
-              <div className={'hv hv-3' + (phase === 2 ? ' on' : '')}>
+              <div className={'hv hv-3' + (phase === 3 ? ' on' : '')}>
+                <div className="write">
+                  <div className="wl"><span>El modelo escribe</span><Tok>‹IBAN_2›</Tok></div>
+                  <div className="wl"><span>En tu pantalla</span><b>ES71 9400 0007 0206 0223 3441</b></div>
+                  <small>El valor real solo existe en tu máquina.</small>
+                </div>
+              </div>
+              <div className={'hv hv-4' + (phase === 4 ? ' on' : '')}>
                 <div className="confirm">
                   <b>200,00 € a tu cuenta de Nimbo Bróker</b>
                   <span>¿Lo confirmas?</span>
                   <div className="row2"><i>Cancelar</i><i className="yes">Confirmar</i></div>
                 </div>
+              </div>
+              <div className={'hv hv-5' + (phase === 5 ? ' on' : '')}>
+                <ol className="log">
+                  <li><time>09:12:04</time>al modelo: 6 tokens, 0 datos reales</li>
+                  <li className="bad"><time>09:12:05</time>bloqueado: IBAN llegado por correo</li>
+                  <li><time>09:12:31</time>aprobado por una persona</li>
+                  <li className="ok"><time>09:12:32</time>registro firmado</li>
+                </ol>
               </div>
             </div>
           </div>

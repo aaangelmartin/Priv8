@@ -190,7 +190,7 @@ function Footer({ pal }) {
         </div>
         {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
         <div className="foot-word">
-          <Spot className="spot-foot" mode="alegria" />
+          <Spot className="spot-foot" mode="alegria" say="¡Hola!" side="left" />
           <span>Priv8</span>
         </div>
       </div>
