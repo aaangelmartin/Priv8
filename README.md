@@ -30,7 +30,7 @@ El agente solo tiene tres herramientas: `observe`, `act` y `oracle` (calcula sin
 | Voz mixta: ElevenLabs y voz local | `voice/` | Funciona, con tests |
 | Servicio de accesibilidad, puente y app 8 | `apps/android-8/`, `adapters/android/` | Ver su README |
 | Banca Alcor simulada | `apps/banks-sim/` | Ver su README |
-| ERP, bandeja de correo, consola de auditoría y adaptador web | `apps/`, `adapters/web/` | En curso |
+| ERP, bandeja de correo, consola de auditoría y adaptador web | Todavía no están en el repositorio | En curso |
 
 ## Requisitos
 
@@ -96,10 +96,10 @@ Y en la B2C:
 ### Con Claude en vivo
 
 ```bash
-PRIV8_CORE=real make agent
+uv run --env-file .env python -m agent.agent --serve --task "registrar factura"
 ```
 
-Sin make: `uv run --env-file .env python -m agent.agent --serve --task "registrar factura"`. Hace falta `ANTHROPIC_API_KEY`. Con `--record FICHERO.json` se graba un replay nuevo. Detalles en `agent/README.md`.
+Lee la configuración del `.env` (hace falta `ANTHROPIC_API_KEY` y `PRIV8_CORE=real`). `make agent` lanza lo mismo, pero no lee el `.env`: con make hay que exportar antes las variables en la terminal. Con `--record FICHERO.json` se graba un replay nuevo. Detalles en `agent/README.md`.
 
 ### Comprobar un registro de auditoría
 
@@ -150,7 +150,7 @@ core/            Núcleo Priv8 CUA (Python): detector, tokens, bóveda, polític
 policies/        Políticas por sitio (YAML): formato en docs/contracts/policies.md
 agent/           Servidor MCP (observe, act, oracle) y bucle del agente
 voice/           Voz mixta: frases sin datos a ElevenLabs, cifras y nombres en local
-adapters/        Adaptadores de pantalla: Android (puente WebSocket) y web
+adapters/        Adaptadores de pantalla: Android (puente WebSocket); el web, en curso
 apps/            App 8 y bancos simulados (Android); ERP, bandeja y consola (web)
 docs/            SPEC.md, contracts/, arquitectura, plan, marca y 8
 scripts/emu.sh   Arranca el emulador e instala los APK
