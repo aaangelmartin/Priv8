@@ -64,9 +64,9 @@ class Performer(
         if (text == null) return OTHER
         val node = resolve(target) ?: return NOT_FOUND
         // Rojo: the user types passwords and OTP; 8 never does (PSD2).
-        if (node.isPassword) return NOT_ALLOWED
+        if (RojoField.isRojo(node)) return NOT_ALLOWED
         val field = if (node.isEditable) node else findEditable(node) ?: return NOT_ALLOWED
-        if (field.isPassword) return NOT_ALLOWED
+        if (RojoField.isRojo(field)) return NOT_ALLOWED
         field.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
         val args = Bundle().apply {
             putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
