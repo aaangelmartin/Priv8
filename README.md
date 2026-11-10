@@ -104,7 +104,7 @@ Sin make: `uv run --env-file .env python -m agent.agent --serve --task "registra
 ### Comprobar un registro de auditoría
 
 ```bash
-uv run python -m core.audit verify audit/replay.jsonl
+uv run python -m core.verify audit/replay.jsonl
 ```
 
 Detecta líneas editadas, borradas, reordenadas o firmadas con otra clave.
