@@ -1,0 +1,42 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 486 >>
+stream
+BT
+/F1 20 Tf 1 0 0 1 56 780 Tm (FACTURA) Tj
+/F1 12 Tf 1 0 0 1 56 746 Tm (Proveedor: Suministros Lumen S.L.) Tj
+/F1 12 Tf 1 0 0 1 56 720 Tm (CIF: B12345674) Tj
+/F1 12 Tf 1 0 0 1 56 694 Tm (Numero: F-2026-0412) Tj
+/F1 12 Tf 1 0 0 1 56 668 Tm (Fecha: 2026-10-31) Tj
+/F1 12 Tf 1 0 0 1 56 642 Tm (Su pedido: PED-2026-3318) Tj
+/F1 12 Tf 1 0 0 1 56 616 Tm (Base imponible: 1.036,61 €) Tj
+/F1 12 Tf 1 0 0 1 56 590 Tm (IVA 21 %: 217,69 €) Tj
+/F1 14 Tf 1 0 0 1 56 564 Tm (Total: 1.254,30 €) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000778 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+875
+%%EOF

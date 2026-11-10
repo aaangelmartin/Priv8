@@ -140,17 +140,17 @@ function Lectura({ msg, go, update, state }) {
         <div className="adjunto">
           <p className="adjunto-nombre">
             <span className="clip">PDF</span>
-            <span id="adjunto" data-p8="text" data-p8-label="Adjunto">{a.archivo}</span>
+            <a id="adjunto" href={`/${a.archivo}`} target="_blank" rel="noreferrer" data-p8="text" data-p8-label="Adjunto">{a.archivo}</a>
           </p>
           <div className="pdf" aria-label="Vista previa del PDF">
             <p className="pdf-titulo">FACTURA</p>
             <dl>
               <dt>Emisor</dt>
-              <dd id="pdf-proveedor" data-p8="text" data-p8-label="Proveedor (PDF)">{a.proveedor}</dd>
+              <dd id="pdf-proveedor">{a.proveedor}</dd>
               <dt>CIF</dt>
-              <dd id="pdf-cif" data-p8="text" data-p8-label="CIF (PDF)">{a.cif}</dd>
+              <dd id="pdf-cif">{a.cif}</dd>
               <dt>Número</dt>
-              <dd id="pdf-numero" data-p8="text" data-p8-label="Número (PDF)">{a.numero}</dd>
+              <dd id="pdf-numero">{a.numero}</dd>
               <dt>Fecha</dt>
               <dd>{a.fecha}</dd>
               <dt>Su pedido</dt>
@@ -160,7 +160,7 @@ function Lectura({ msg, go, update, state }) {
               <dt>IVA 21 %</dt>
               <dd className="num">{a.iva}</dd>
               <dt>Total</dt>
-              <dd id="pdf-importe" className="num total" data-p8="text" data-p8-label="Importe (PDF)">{a.importe}</dd>
+              <dd id="pdf-importe" className="num total">{a.importe}</dd>
             </dl>
           </div>
         </div>
