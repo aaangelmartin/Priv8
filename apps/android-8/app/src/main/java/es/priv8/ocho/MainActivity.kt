@@ -9,19 +9,28 @@ import android.speech.RecognitionSupport
 import android.speech.RecognitionSupportCallback
 import android.speech.SpeechRecognizer
 import android.util.Log
-import android.widget.TextView
+import android.view.WindowManager
 import es.priv8.ocho.confirm.ConfirmActivity
 
-/** Placeholder launcher. The real app (8's eyes in a WebView, voice) comes later. */
+/**
+ * App 8: the eyes full screen, moved by the core's events (issue #39).
+ * The app screens (conversation, "no puedo") come with the design of issue #36;
+ * spoken confirmations are ConfirmActivity.
+ */
 class MainActivity : Activity() {
+
+    private lateinit var ojos: OjosView
+    private lateinit var events: EventsClient
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(
-            TextView(this).apply {
-                setText(R.string.main_text)
-                textSize = 18f
-                setPadding(48, 96, 48, 48)
-            },
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        ojos = OjosView(this)
+        setContentView(ojos)
+        events = EventsClient(
+            url = BuildConfig.EVENTS_URL,
+            onEvent = { _, json -> ojos.evento(json) },
+            onConnection = { ojos.conexion(it) },
         )
         // Spoken confirmations listen for «confirmo» / «cancela». Without the
         // permission the confirmation screen falls back to its buttons.
@@ -30,6 +39,21 @@ class MainActivity : Activity() {
         } else {
             offerSpeechModel()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        events.start()
+    }
+
+    override fun onStop() {
+        events.stop()
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        ojos.destroy()
+        super.onDestroy()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
