@@ -31,8 +31,10 @@ PHRASES = {
 }
 SAY_AS = {"IMPORTE": "currency", "SUMA": "currency", "PERSONA": "name", "PROVEEDOR": "name",
           "IBAN": "iban", "TEL": "phone", "DNI": "digits", "NIE": "digits", "CIF": "digits"}
-CONNECT = {"IMPORTE": None, "PERSONA": "a", "PROVEEDOR": "a", "IBAN": "en la cuenta",
-           "TEL": "al número", "FACTURA": "de la factura"}
+CONNECT = {"IMPORTE": "por", "PERSONA": "a", "PROVEEDOR": "a", "IBAN": "en la cuenta",
+           "TEL": "al número", "FACTURA": "la factura", "EMAIL": "a"}
+# En transferir, el importe va justo después de «Voy a transferir».
+NO_CONNECT_FIRST = {"transferir", "invertir"}
 
 
 @dataclass
@@ -91,16 +93,19 @@ class Confirmations:
     def _summary(self, sess: Session, kind: str, rule: Rule | None, text: str | None) -> list[dict]:
         toks: list[str] = []
         if rule and rule.resumen and sess.last_screen is not None:
+            typed = sess.extra.get("typed", {})
             for sel in rule.resumen:
                 for el in (sess.last_raw or {}).get("elements", []):
                     if el.get("sel") == sel:
-                        toks += _tokens_of(sess, el)
+                        toks += T.find(typed[el["id"]]) if el["id"] in typed else _tokens_of(sess, el)
         toks += T.find(text or "")
         lead, ask = PHRASES[kind]
         segs: list[dict] = [{"voice": "cloud", "text": lead}]
-        for tok in dict.fromkeys(toks):
+        for i, tok in enumerate(dict.fromkeys(toks)):
             tipo = T.parse(tok).tipo
-            if CONNECT.get(tipo):
+            if i == 0 and kind in NO_CONNECT_FIRST and tipo == "IMPORTE":
+                pass
+            elif CONNECT.get(tipo):
                 segs.append({"voice": "cloud", "text": CONNECT[tipo]})
             seg = {"voice": "local", "token": tok}
             if tipo in SAY_AS:
