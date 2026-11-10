@@ -225,6 +225,29 @@ export default function App() {
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
+  /* una sección, una pantalla: si el contenido de un bloque no cabe en su alto, se reduce con zoom lo justo */
+  useEffect(() => {
+    const fit = () => {
+      const wide = window.innerWidth > 900;
+      document.querySelectorAll('.block').forEach((b) => {
+        const w = b.querySelector(':scope > .wrap'); if (!w) return;
+        w.style.zoom = '';
+        if (!wide) return;
+        const cs = getComputedStyle(b);
+        const reserve = b.id === 'faq' ? 120 : 0; /* sitio para la respuesta que se abra */
+        const avail = b.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - reserve;
+        const h = w.scrollHeight;
+        if (h > avail) w.style.zoom = String(Math.max(0.55, avail / h));
+      });
+    };
+    fit();
+    const later = () => setTimeout(fit, 60);
+    window.addEventListener('resize', later);
+    document.addEventListener('click', later);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    const t = setTimeout(fit, 800);
+    return () => { clearTimeout(t); window.removeEventListener('resize', later); document.removeEventListener('click', later); };
+  }, []);
   /* aparición al entrar en pantalla, en los bloques normales */
   useEffect(() => {
     const els = document.querySelectorAll('.block .block-head, .block .swap-in, .block .demos, .block .faq, .lead-form');

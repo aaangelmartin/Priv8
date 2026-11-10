@@ -88,7 +88,8 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 }
 
 /* ---------- 8 y su bocadillo ---------- */
-.companion { position: fixed; left: 0; top: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: 0 0; }
+.layer8 { position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; transform-origin: 0 0; }
+.companion { position: fixed; left: 0; top: 0; z-index: 40; pointer-events: auto; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: 0 0; }
 .companion-eight { position: absolute; inset: 0; }
 .companion-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 17px; background: transparent; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); filter: drop-shadow(0 12px 22px rgba(5, 16, 31, .2)); opacity: 0; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
@@ -229,6 +230,19 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 /* ---------- bloques normales: misma composición centrada que la portada ----------
    Cobalto (con el campo de datos) o blanco, nada más. En blanco el titular va en noche con la segunda parte en cobalto. */
 .block { position: relative; overflow: hidden; padding-block: clamp(96px, 12vw, 150px); min-height: 100vh; min-height: 100svh; display: grid; align-content: center; }
+/* escritorio: cada sección mide exactamente una pantalla (las transiciones van aparte); si el contenido no cabe, se reduce lo justo */
+@media (min-width: 901px) {
+  .block { height: 100vh; height: 100svh; min-height: 0; padding-top: clamp(88px, 11vh, 112px); padding-bottom: clamp(20px, 4vh, 44px); }
+  .block .block-head { margin-bottom: clamp(18px, 3vh, 40px); gap: 10px; }
+  .block .spot-inline { width: clamp(70px, min(7vw, 10vh), 104px); margin-bottom: 4px; }
+  .block h2 { font-size: clamp(2rem, min(1rem + 3.2vw, 7vh), 4rem); }
+  .block .block-head { max-width: 1120px; }
+  .faq summary { padding-block: 18px; }
+  .close-grid > .lead-form { width: min(720px, 100%); grid-template-columns: 1fr 1fr; column-gap: 16px; }
+  .close-grid > .lead-form .btn { grid-column: 1 / -1; justify-self: center; }
+  .vert { gap: clamp(24px, 4vw, 56px); }
+  .steps li { padding-block: 12px; }
+}
 .block > .wrap { position: relative; z-index: 1; }
 .block-paper { background: var(--paper); color: var(--ink); }
 .block-cobalt { background: transparent; color: #fff; }

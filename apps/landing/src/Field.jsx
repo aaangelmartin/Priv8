@@ -185,8 +185,17 @@ export function Blend({ from, to, variant = 'pixels', seed = 1, overlay = false 
          Hacia cobalto se dibuja el blanco con los píxeles como huecos. */
       <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={overlay ? { background: 'transparent', height: H, marginTop: -H, zIndex: 2 } : { background: from === '--band' || to === '--band' ? 'transparent' : `var(${from})`, height: H }}>
         {w > 0 && (to === '--band' && !overlay ? (
-          <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} style={{ fill: `var(${from})`, display: 'block' }}>
-            <path fillRule="evenodd" d={`M0 0 H${w} V${H} H0 Z ` + paths.join(' ')} />
+          /* el blanco con los píxeles recortados por una máscara: los píxeles se dibujan con un poco de trazo,
+             así se solapan entre ellos y con el borde de abajo y no queda ni una junta ni una línea fina */
+          <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} style={{ display: 'block' }}>
+            <defs>
+              <mask id={`bm${seed}`} maskUnits="userSpaceOnUse" x="0" y="-2" width={w} height={H + 4}>
+                <rect x="0" y="-2" width={w} height={H + 4} fill="#fff" />
+                <path d={paths.join(' ')} fill="#000" stroke="#000" strokeWidth="1" strokeLinejoin="round" />
+                <rect x="0" y={H - 0.5} width={w} height="3" fill="#000" />
+              </mask>
+            </defs>
+            <rect x="0" y="0" width={w} height={H} style={{ fill: `var(${from})` }} mask={`url(#bm${seed})`} />
           </svg>
         ) : (
           <svg width={w} height={H + 1} viewBox={`0 0 ${w} ${H + 1}`} style={{ fill: `var(${to})` }}>

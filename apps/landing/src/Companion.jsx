@@ -52,6 +52,7 @@ export default function Companion({ pal, intro }) {
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
   const box = useRef(null);
+  const layer = useRef(null);
   const lastSpot = useRef(null);
   const changeT = useRef(0);
   const bubbleT = useRef(0);
@@ -68,6 +69,9 @@ export default function Companion({ pal, intro }) {
 
   useEffect(() => {
     let raf = 0, lastC = 0, snapUntil = 0;
+    let cur = null, tween = null, cand = null, candT = 0;
+    const DUR = 460;
+    const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
     const frame = () => {
       raf = 0;
       const el = box.current; if (!el) return;
@@ -75,13 +79,22 @@ export default function Companion({ pal, intro }) {
       const heroA = document.getElementById('hero-anchor');
       const now0 = performance.now();
       const snapping = now0 < snapUntil;
-      /* mientras cambia el zoom o el tamaño, 8 no cambia de sitio: se queda en el que tenía y se recoloca sin animación */
-      let anchor = phase.current === 'live' ? ((snapping && lastSpot.current && lastSpot.current.isConnected) ? lastSpot.current : pickAnchor()) : heroA;
+      /* 8 cambia de sitio solo cuando el nuevo lleva un momento siendo el más centrado: así no va y viene entre dos */
+      const picked = phase.current === 'live' ? pickAnchor() : heroA;
+      if (phase.current !== 'live' || !lastSpot.current || !lastSpot.current.isConnected) { lastSpot.current = picked; tween = null; }
+      else if (picked && picked !== lastSpot.current) {
+        if (cand !== picked) { cand = picked; candT = now0; }
+        if (now0 - candT > 120 || snapping) {
+          lastSpot.current = picked; cand = null;
+          tween = snapping || !cur ? null : { from: { ...cur }, t0: now0 };
+          setSpot({ mode: picked.dataset.mode || 'mirar', say: picked.dataset.say || '', side: picked.dataset.side || '', id: Math.random().toString(36) });
+        } else ask();
+      } else cand = null;
+      const anchor = lastSpot.current;
       let target = null;
       if (anchor) {
         const r = anchor.getBoundingClientRect();
         const D = r.width, S = D * 64 / 46;
-        /* 8 vive en su sitio de la página: si el sitio sube, 8 sube con él; nunca se queda flotando encima del contenido */
         const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         target = { left: cx - S / 2, top: cy - S / 2, S, D };
       }
@@ -92,19 +105,23 @@ export default function Companion({ pal, intro }) {
         el.style.transition = el.dataset.placed && !snapping ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
         el.dataset.placed = '1';
         el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
+        cur = { left: vw / 2 - S / 2, top: vh * 0.5 - S / 2, S };
         return;
       }
-      const changed = anchor !== lastSpot.current;
-      if (changed) {
-        lastSpot.current = anchor;
-        setSpot({ mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) });
-      } else if (anchor && (anchor.dataset.mode !== spot.mode || anchor.dataset.say !== spot.say)) {
-        setSpot((s) => (s.mode === anchor.dataset.mode && s.say === anchor.dataset.say ? s : { mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) }));
+      if (anchor && (anchor.dataset.mode !== spot.mode || anchor.dataset.say !== spot.say)) {
+        setSpot((sp) => (sp.mode === anchor.dataset.mode && sp.say === anchor.dataset.say ? sp : { mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) }));
       }
-      if (changed) changeT.current = performance.now();
-      const moving = performance.now() - changeT.current < 950;
-      el.style.transition = snapping ? 'none' : phase.current === 'flying' ? 'transform 1.1s cubic-bezier(.34, 1.56, .64, 1)' : (moving ? 'transform .9s cubic-bezier(.2, .8, .2, 1)' : 'none');
-      el.style.transform = `translate3d(${target.left}px, ${target.top}px, 0) scale(${target.S / BASE})`;
+      /* viaje entre sitios: una sola curva suave, de donde está a donde está ahora su sitio (que se recalcula en cada
+         fotograma), así llega justo, sin quedarse atrás ni pasarse */
+      let pos = target;
+      if (tween && phase.current === 'live') {
+        const k = Math.min(1, (now0 - tween.t0) / DUR), e = ease(k);
+        pos = { left: tween.from.left + (target.left - tween.from.left) * e, top: tween.from.top + (target.top - tween.from.top) * e, S: tween.from.S + (target.S - tween.from.S) * e };
+        if (k < 1) ask(); else tween = null;
+      }
+      el.style.transition = phase.current === 'flying' ? 'transform 1.1s cubic-bezier(.34, 1.56, .64, 1)' : 'none';
+      el.style.transform = `translate3d(${pos.left}px, ${pos.top}px, 0) scale(${pos.S / BASE})`;
+      cur = { left: pos.left, top: pos.top, S: pos.S };
       const now = performance.now();
       if (now - lastC > 140) {
         lastC = now;
@@ -115,16 +132,23 @@ export default function Companion({ pal, intro }) {
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
     const snap = () => { snapUntil = performance.now() + 600; if (box.current) box.current.style.transition = 'none'; ask(); };
+    /* zoom con dos dedos: 8 y su bocadillo van en una capa que deshace el zoom, así se quedan en la pantalla
+       en el mismo sitio y con el mismo tamaño, en vez de ampliarse y moverse con la página */
+    const pin = () => {
+      const v = window.visualViewport, L = layer.current; if (!v || !L) return;
+      L.style.transform = v.scale === 1 && !v.offsetLeft && !v.offsetTop ? '' : `translate(${v.offsetLeft}px, ${v.offsetTop}px) scale(${1 / v.scale})`;
+    };
+    pin();
     ask();
     const tick = setInterval(ask, 200);
     window.addEventListener('scroll', ask, { passive: true });
     window.addEventListener('resize', snap);
     /* zoom del navegador: cambia el tamaño visible y la densidad de píxeles */
-    const vv = window.visualViewport; if (vv) vv.addEventListener('resize', snap);
+    const vv = window.visualViewport; const onVv = () => { pin(); ask(); }; if (vv) { vv.addEventListener('resize', onVv); vv.addEventListener('scroll', onVv); }
     let mq = null; const watchDpr = () => { if (mq) mq.removeEventListener('change', onDpr); mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener('change', onDpr); };
     function onDpr() { snap(); watchDpr(); }
     watchDpr();
-    return () => { clearInterval(tick); window.removeEventListener('scroll', ask); window.removeEventListener('resize', snap); if (vv) vv.removeEventListener('resize', snap); if (mq) mq.removeEventListener('change', onDpr); cancelAnimationFrame(raf); };
+    return () => { clearInterval(tick); window.removeEventListener('scroll', ask); window.removeEventListener('resize', snap); if (vv) { vv.removeEventListener('resize', onVv); vv.removeEventListener('scroll', onVv); } if (mq) mq.removeEventListener('change', onDpr); cancelAnimationFrame(raf); };
   }, []);
 
   /* al despertar, crece hasta su sitio en la portada */
@@ -158,14 +182,14 @@ export default function Companion({ pal, intro }) {
   /* en la bienvenida, ojos bien abiertos todo el rato: nada de párpados entornados */
   const mode = override || (stage === 'wake' || stage === 'fly' ? 'mirar' : spot.mode);
   return (
-    <>
+    <div className="layer8" ref={layer}>
       <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
         onClick={() => { mood('risa', 1600); say('Eso hace cosquillas.'); }} onMouseEnter={() => say(spot.say || 'Hola.')}
         aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
         <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
       </button>
       <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} />
-    </>
+    </div>
   );
 }
 
@@ -203,7 +227,10 @@ function Bubble({ text, show, big, side, eight }) {
     const place = () => {
       raf = requestAnimationFrame(place);
       const el = ref.current, e8 = eight.current; if (!el || !e8) return;
-      const r = e8.getBoundingClientRect();
+      /* los rectángulos vienen en coordenadas de la página; la capa deshace el zoom, así que se pasan a las suyas */
+      const v = window.visualViewport, sc = v ? v.scale : 1, ox = v ? v.offsetLeft : 0, oy = v ? v.offsetTop : 0;
+      const q = e8.getBoundingClientRect();
+      const r = { left: (q.left - ox) * sc, top: (q.top - oy) * sc, width: q.width * sc, height: q.height * sc };
       const D = r.width * 46 / 64, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       const vw = window.innerWidth, vh = window.innerHeight, m = 12;
       const gap = Math.max(14, D * 0.08), T = big ? 23 : 14;
