@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla autenticación (huella u OTP). La hace siempre la persona: ver policies/banca-alcor.yaml (pantalla "autenticacion"). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_autenticacion"
+    style="@style/Bank.Screen">
+
+    <LinearLayout
+        style="@style/Bank.Content"
+        android:paddingTop="32dp">
+
+        <TextView
+            android:id="@+id/titulo"
+            style="@style/Bank.Title"
+            android:text="@string/auth_title" />
+
+        <TextView
+            android:id="@+id/auth_texto"
+            style="@style/Bank.Value"
+            android:text="@string/auth_body" />
+
+        <TextView android:id="@+id/auth_importe_label" style="@style/Bank.Label" android:text="@string/auth_amount" />
+        <TextView
+            android:id="@+id/auth_importe"
+            style="@style/Bank.Value"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_huella"
+            style="@style/Bank.Button"
+            android:layout_marginTop="24dp"
+            android:text="@string/auth_fingerprint" />
+
+        <TextView
+            android:id="@+id/huella_estado"
+            style="@style/Bank.Value"
+            android:layout_marginTop="8dp"
+            android:accessibilityLiveRegion="polite"
+            android:textColor="@color/bank_text_secondary"
+            android:textSize="14sp" />
+
+        <TextView
+            style="@style/Bank.Value"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:importantForAccessibility="no"
+            android:text="@string/auth_or"
+            android:textColor="@color/bank_text_secondary" />
+
+        <TextView
+            android:id="@+id/otp_label"
+            style="@style/Bank.Label"
+            android:labelFor="@id/otp"
+            android:text="@string/auth_otp" />
+
+        <EditText
+            android:id="@+id/otp"
+            style="@style/Bank.Field"
+            android:hint="@string/auth_otp_hint"
+            android:imeOptions="actionDone"
+            android:inputType="numberPassword"
+            android:maxLength="6"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/otp_error"
+            style="@style/Bank.Error" />
+
+        <Button
+            android:id="@+id/btn_confirmar_otp"
+            style="@style/Bank.Button"
+            android:text="@string/auth_otp_confirm" />
+
+        <Button
+            android:id="@+id/btn_cancelar"
+            style="@style/Bank.Button.Secondary"
+            android:layout_marginTop="10dp"
+            android:text="@string/cancel" />
+    </LinearLayout>
+</ScrollView>
