@@ -73,10 +73,10 @@ Para pasar el `.env` a un comando: `uv run --env-file .env …`.
 ### Las dos escenas de la demo, sin claves
 
 ```bash
-make replay
+make demo
 ```
 
-Sin make: `uv run python -m core.replay`. Para una sola escena: `SCENE=b2b make replay` o `uv run python -m core.replay b2c`.
+Sin make: `uv run python -m core.replay`. Para una sola escena: `SCENE=b2b make demo` o `uv run python -m core.replay b2c`. (`make replay` es el replay del agente sobre un núcleo simulado; ver `agent/README.md`.)
 
 Corre las dos escenas con el **núcleo real** y respuestas del modelo grabadas (`core/replays/`). Por cada paso se ve lo que recibe y pide el modelo, siempre con tokens. Al final aparece:
 - lo que dice 8 renderizado en local, con los valores reales;
