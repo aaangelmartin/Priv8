@@ -45,7 +45,7 @@ const isDark = ([r, g, b]) => (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 < 0.5
 export default function Companion({ pal, intro }) {
   const { section, override } = useCompanion();
   const [greet, setGreet] = useState(true);
-  const [dark, setDark] = useState(true);
+  const [bg, setBg] = useState(null);
   const box = useRef(null);
   const docked = useRef(null);
   const phase = useRef(intro ? 'intro' : 'live');
@@ -102,7 +102,9 @@ export default function Companion({ pal, intro }) {
         last = now;
         const r = el.getBoundingClientRect();
         const cx = clamp(r.left + r.width / 2, 1, vw - 1), cy = clamp(r.top + r.height / 2, 1, vh - 1);
-        setDark(isDark(backgroundAt(cx, cy, el)));
+        const c = backgroundAt(cx, cy, el);
+        const hex = '#' + c.slice(0, 3).map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+        setBg((prev) => (prev === hex ? prev : hex));
       }
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
@@ -127,7 +129,10 @@ export default function Companion({ pal, intro }) {
   }, [intro]);
 
   const band = pal.band || COBALT;
-  const col = dark ? { fg: '#FFFFFF', cut: band } : { fg: band, cut: '#FFFFFF' };
+  /* el cuerpo es blanco sobre fondo oscuro y cobalto sobre claro; el fondo de los ojos es el color que tiene detrás */
+  const under = bg || band;
+  const dark = isDark([1, 3, 5].map((i) => parseInt(under.slice(i, i + 2), 16)));
+  const col = { fg: dark ? '#FFFFFF' : band, cut: under };
   const mode = override || (greet && section === 'inicio' ? 'saludar' : (SECTIONS[section] || SECTIONS.inicio).mode);
   return (
     <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
