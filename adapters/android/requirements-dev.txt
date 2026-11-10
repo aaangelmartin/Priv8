@@ -1,0 +1,4 @@
+# Laptop-side dev tools for the Android bridge (bridge_dev_server.py). Python 3.12.
+websockets==15.0.1
+jsonschema==4.25.1
+referencing==0.37.0
