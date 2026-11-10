@@ -2,8 +2,8 @@
 
 Stands in for the core on the laptop so the device side can be tested on its
 own: it accepts the connection from 8's accessibility service, validates every
-message in both directions against the v1 contracts, and can ask for
-snapshots and send performs. It is a dev tool; the real core side is not this.
+message in both directions against bridge.schema.json (contracts v1.1), and
+can ask for snapshots, send performs and push confirmations. It is a dev tool; the real core side is not this.
 
 Usage (Python 3.12, from the repository root):
 
@@ -25,9 +25,9 @@ Interactive commands (one per line), or a script with --run "cmd; cmd; ...":
                              push a confirmation request to 8 and wait for
                              its approval_result (defaults: "200,00 €",
                              "Nimbo Bróker", 300 s). Sends render_values first
-                             (proposed: the token values for the session),
-                             then confirm_request; both and the answer are
-                             validated against confirm.schema.json. Does
+                             (the token values for the session), then
+                             confirm_request; both and the answer are
+                             validated against bridge.schema.json. Does
                              not block: other commands keep working
     await                    wait for the pending approval_results
     wait  SECONDS            pause (lets the screen settle between steps)
@@ -60,27 +60,9 @@ from websockets.exceptions import ConnectionClosed
 
 BASE_URI = "https://priv8.dev/contracts/"
 REPLY_TIMEOUT_S = 15.0
-# Message type -> definition in bridge.schema.json.
-# Not in bridge.schema.json v1, validated against confirm.schema.json instead
-# (confirm_request, approval_result) or the proposal below (render_values).
-CONFIRM_DEFS = {"confirm_request": "request", "approval_result": "approval_result"}
-# Proposed bridge message: token -> real value for a session, so the device can
-# render the summary of a confirmation locally. Both ends are in the trust zone.
-RENDER_VALUES = {
-    "type": "object",
-    "required": ["type", "session", "values"],
-    "additionalProperties": False,
-    "properties": {
-        "type": {"const": "render_values"},
-        "session": {"$ref": f"{BASE_URI}common.schema.json#/$defs/session"},
-        "values": {
-            "type": "object",
-            "propertyNames": {"$ref": f"{BASE_URI}common.schema.json#/$defs/token"},
-            "additionalProperties": {"type": "string"},
-            "minProperties": 1,
-        },
-    },
-}
+# Message type -> its branch of the oneOf in bridge.schema.json, to report the
+# errors of the right one. confirm_request and approval_result are refs to
+# confirm.schema.json (contracts v1.1).
 DEFS = {
     "hello": "hello",
     "snapshot.request": "snapshot_request",
@@ -88,7 +70,13 @@ DEFS = {
     "perform": "perform",
     "result": "result",
     "event": "event",
+    "render_values": "render_values",
+    "voice": "voice",
+    "voice.audio": "voice_audio",
+    "voice.audio.end": "voice_audio_end",
+    "voice.done": "voice_done",
 }
+CONFIRM_DEFS = {"confirm_request": "request", "approval_result": "approval_result"}
 
 
 def load_validator(contracts: Path) -> Draft202012Validator:
@@ -129,23 +117,15 @@ class Session:
 
     def check(self, msg: Any) -> str | None:
         """Returns None if msg is valid, else a short description of the first error."""
-        kind = msg.get("type") if isinstance(msg, dict) else None
-        if kind in CONFIRM_DEFS or kind == "render_values":
-            schema = RENDER_VALUES if kind == "render_values" else {
-                "$ref": f"{BASE_URI}confirm.schema.json#/$defs/{CONFIRM_DEFS[kind]}"
-            }
-            error = next(iter(self.validator.evolve(schema=schema).iter_errors(msg)), None)
-            if error is None:
-                return None
-            path = "/".join(str(p) for p in error.absolute_path) or "(root)"
-            return f"{path}: {error.message}"
         if self.validator.is_valid(msg):
             return None
         # The schema is a oneOf; report the errors of the branch for this type.
-        branch = DEFS.get(msg.get("type")) if isinstance(msg, dict) else None
+        kind = msg.get("type") if isinstance(msg, dict) else None
         validator = self.validator
-        if branch:
-            validator = self.validator.evolve(schema={"$ref": f"{BASE_URI}bridge.schema.json#/$defs/{branch}"})
+        if kind in CONFIRM_DEFS:
+            validator = self.validator.evolve(schema={"$ref": f"{BASE_URI}confirm.schema.json#/$defs/{CONFIRM_DEFS[kind]}"})
+        elif kind in DEFS:
+            validator = self.validator.evolve(schema={"$ref": f"{BASE_URI}bridge.schema.json#/$defs/{DEFS[kind]}"})
         error = next(iter(validator.iter_errors(msg)), None)
         if error is None:
             return "does not match bridge.schema.json"
@@ -185,8 +165,12 @@ class Session:
             elif kind == "approval_result":
                 reason = f" reason={msg['reason']}" if "reason" in msg else ""
                 log("<-", f"approval_result {msg.get('id')} ok={msg.get('ok')} via={msg.get('via')} "
-                          f"by={msg.get('by')}{reason} [{status} against confirm.schema.json]")
+                          f"by={msg.get('by')}{reason} [{status}]")
                 self.resolve(msg)
+            elif kind == "voice.done":
+                gap = msg.get("gap_ms") or {}
+                log("<-", f"voice.done {msg.get('utterance')} ok={msg.get('ok')} "
+                          f"gap_max={gap.get('max', '-')} gap_mean={gap.get('mean', '-')} [{status}]")
             elif kind == "event":
                 detail = f" detail={msg['detail']!r}" if "detail" in msg else ""
                 log("<-", f"event {msg.get('kind')} app={msg.get('app')}{detail} [{status}]")
@@ -358,11 +342,11 @@ class Session:
                 log("->", f"NOT SENT, invalid {msg['type']}: {error}")
                 return
         shown = {k: (v if self.args.show_values else f"<{len(v)} chars>") for k, v in values["values"].items()}
-        log("->", f"render_values session={session} values={json.dumps(shown, ensure_ascii=False)} [valid, proposed]")
+        log("->", f"render_values session={session} values={json.dumps(shown, ensure_ascii=False)} [valid]")
         await self.ws.send(json.dumps(values, ensure_ascii=False))
         fut = asyncio.get_running_loop().create_future()
         self.pending[cid] = fut
-        log("->", f"confirm_request {cid} kind=transferir expires_s={expires} [valid against confirm.schema.json]")
+        log("->", f"confirm_request {cid} kind=transferir expires_s={expires} [valid]")
         await self.ws.send(json.dumps(request, ensure_ascii=False))
         # Wait in the background so other commands (snap, tap...) still run
         # while the confirmation is open; `await` waits for the answer.
