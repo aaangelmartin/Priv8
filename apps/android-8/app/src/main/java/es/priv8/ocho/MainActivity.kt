@@ -9,8 +9,13 @@ import android.speech.RecognitionSupport
 import android.speech.RecognitionSupportCallback
 import android.speech.SpeechRecognizer
 import android.util.Log
+import android.view.Gravity
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager
+import android.widget.FrameLayout
 import es.priv8.ocho.confirm.ConfirmActivity
+import org.json.JSONObject
 
 /**
  * App 8: the eyes full screen, moved by the core's events (issue #39).
@@ -20,16 +25,27 @@ import es.priv8.ocho.confirm.ConfirmActivity
 class MainActivity : Activity() {
 
     private lateinit var ojos: OjosView
+    private lateinit var subtitulo: Subtitulo
     private lateinit var events: EventsClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         ojos = OjosView(this)
-        setContentView(ojos)
+        subtitulo = Subtitulo(this)
+        setContentView(
+            FrameLayout(this).apply {
+                addView(ojos, FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT))
+                addView(subtitulo, FrameLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, Gravity.BOTTOM))
+            },
+        )
         events = EventsClient(
             url = BuildConfig.EVENTS_URL,
-            onEvent = { _, json -> ojos.evento(json) },
+            onEvent = { type, json ->
+                ojos.evento(json)
+                // What 8 says, with the values rendered on the device (#40).
+                if (type == "voice") Frase.parse(JSONObject(json))?.let(subtitulo::mostrar)
+            },
             onConnection = { ojos.conexion(it) },
         )
         // Spoken confirmations listen for «confirmo» / «cancela». Without the
@@ -52,6 +68,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        subtitulo.ocultar()
         ojos.destroy()
         super.onDestroy()
     }

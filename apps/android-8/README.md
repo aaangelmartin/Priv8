@@ -136,3 +136,15 @@ uv run --python 3.12 --with websockets==15.0.1 --with jsonschema==4.25.1 \
 ```
 
 Tests de la tabla de caras: `node apps/android-8/dev/test_estados.mjs`.
+
+## Renderizador local (issue #40)
+
+Lo que dice 8 sale debajo de los ojos con los valores reales puestos en el móvil.
+
+- El mensaje `voice` del canal de eventos solo trae tokens: «Entre tus tres cuentas tienes ‹SUMA_1›».
+- Los valores llegan antes o justo después por el puente, con `render_values` (`bridge.schema.json` v1.1), y los guarda `LocalValues`: solo en memoria, sin registrar.
+- `Frase.kt` lee el `voice` y lo pinta con el mismo `Renderer` de las confirmaciones habladas. Rechaza un token en un segmento `cloud`.
+- `Subtitulo.kt` lo enseña. Si todavía falta algún valor, lo reintenta durante unos 2 s y mientras tanto enseña el token, nunca un valor inventado. El texto no se registra ni sale del dispositivo.
+- Es un aspecto provisional (Sora blanca sobre cobalto) hasta el diseño de la app (#36).
+
+Tests: `./gradlew testDebugUnitTest` (`FraseTest`, con los ejemplos de `docs/contracts/examples`).
