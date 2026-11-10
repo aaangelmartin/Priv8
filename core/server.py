@@ -17,7 +17,11 @@ import json
 import threading
 
 from starlette.applications import Starlette
-from starlette.routing import WebSocketRoute
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Route, WebSocketRoute
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 import core
@@ -26,7 +30,17 @@ from core import events
 HOST, PORT = "127.0.0.1", 8700
 
 
+# Navegadores que pueden abrir el canal. Un cliente nativo (app 8, agente) no manda Origin.
+# Sin esto, cualquier web abierta en el mismo ordenador podría leer las pantallas reales
+# y mandar approval_result (cross-site WebSocket hijacking).
+ALLOWED_ORIGINS = {"http://127.0.0.1:5175", "http://localhost:5175"}
+
+
 async def events_ws(ws: WebSocket) -> None:
+    origin = ws.headers.get("origin")
+    if origin is not None and origin not in ALLOWED_ORIGINS:
+        await ws.close(code=1008)
+        return
     await ws.accept()
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue = asyncio.Queue()
@@ -50,7 +64,33 @@ async def events_ws(ws: WebSocket) -> None:
         sender.cancel()
 
 
-app = Starlette(routes=[WebSocketRoute("/events", events_ws)])
+def _verify_log() -> dict:
+    from cryptography.hazmat.primitives import serialization
+
+    from core.audit import verify
+
+    path = core.AUDIT.path
+    if path is None:
+        return {"ok": False, "lines": 0, "error": "auditoría solo en memoria (PRIV8_AUDIT=off): no hay registro en disco"}
+    if not path.exists():
+        return {"ok": True, "lines": 0, "error": None}
+    lines = path.read_text(encoding="utf-8").splitlines()
+    pub_path = path.with_name("priv8.pub")
+    pub = serialization.load_pem_public_key(pub_path.read_bytes()) if pub_path.exists() else core.AUDIT.public_key
+    errors = verify(lines, pub)
+    return {"ok": not errors, "lines": sum(1 for x in lines if x.strip()),
+            "error": "; ".join(errors[:5]) if errors else None}
+
+
+async def verify_route(_: Request) -> JSONResponse:
+    return JSONResponse(await asyncio.to_thread(_verify_log))
+
+
+app = Starlette(
+    routes=[WebSocketRoute("/events", events_ws), Route("/verify", verify_route)],
+    middleware=[Middleware(CORSMiddleware, allow_origins=sorted(ALLOWED_ORIGINS),
+                           allow_methods=["GET"])],
+)
 
 
 def start(host: str = HOST, port: int = PORT) -> threading.Thread:
