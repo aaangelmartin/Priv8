@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://priv8.dev/contracts/tools.schema.json",
+  "title": "Entradas y salidas de observe, act y oracle",
+  "description": "Lo que el núcleo acepta y devuelve en las tres herramientas. El servidor MCP (Camino 3, mcp/tools.json) las expone al modelo tal cual; este archivo fija la frontera entre el servidor MCP y el núcleo.",
+  "$defs": {
+    "observe_input": {
+      "type": "object",
+      "required": ["session"],
+      "additionalProperties": false,
+      "properties": {
+        "session": { "$ref": "common.schema.json#/$defs/session" }
+      }
+    },
+    "observe_result": {
+      "oneOf": [
+        { "$ref": "observation.schema.json" },
+        { "$ref": "#/$defs/denied" }
+      ]
+    },
+    "act_input": {
+      "type": "object",
+      "required": ["session", "op"],
+      "additionalProperties": false,
+      "properties": {
+        "session": { "$ref": "common.schema.json#/$defs/session" },
+        "op": { "$ref": "common.schema.json#/$defs/op" },
+        "target": {
+          "description": "Id del elemento de la última observación. Obligatorio salvo en key, back, open_app y scroll sin destino.",
+          "$ref": "common.schema.json#/$defs/element_id"
+        },
+        "text": {
+          "description": "Para type: texto verde o tokens. Para key: nombre de tecla. Para open_app: paquete o clave de la app. Para call: token ‹TEL_n›.",
+          "type": "string"
+        },
+        "direction": {
+          "description": "Para scroll.",
+          "enum": ["up", "down", "left", "right"]
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "enum": ["tap", "type", "send"] } } },
+          "then": { "required": ["target"] }
+        },
+        {
+          "if": { "properties": { "op": { "enum": ["type", "key", "open_app", "call"] } } },
+          "then": { "required": ["text"] }
+        }
+      ]
+    },
+    "act_result": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["ok"],
+          "additionalProperties": false,
+          "properties": { "ok": { "const": true } }
+        },
+        {
+          "type": "object",
+          "required": ["held"],
+          "additionalProperties": false,
+          "properties": {
+            "held": {
+              "type": "object",
+              "required": ["confirm"],
+              "additionalProperties": false,
+              "properties": {
+                "confirm": { "description": "Id de la petición de confirmación (confirm.schema.json).", "type": "string" }
+              }
+            }
+          }
+        },
+        { "$ref": "#/$defs/denied" }
+      ]
+    },
+    "oracle_input": {
+      "type": "object",
+      "required": ["session", "op", "args"],
+      "additionalProperties": false,
+      "properties": {
+        "session": { "$ref": "common.schema.json#/$defs/session" },
+        "op": { "enum": ["sum", "compare", "matches"] },
+        "args": {
+          "description": "sum: dos o más tokens de importe. compare: dos tokens. matches: dos tokens del mismo tipo.",
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/token" },
+          "minItems": 2
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "enum": ["compare", "matches"] } } },
+          "then": { "properties": { "args": { "maxItems": 2 } } }
+        }
+      ]
+    },
+    "oracle_result": {
+      "oneOf": [
+        {
+          "description": "sum: devuelve un token nuevo ‹SUMA_n› y el tramo.",
+          "type": "object",
+          "required": ["result", "tramo", "budget_left"],
+          "additionalProperties": false,
+          "properties": {
+            "result": { "$ref": "common.schema.json#/$defs/token" },
+            "tramo": { "type": "string", "examples": ["0–100", "100–1.000", "1.000–10.000", "más de 10.000"] },
+            "budget_left": { "type": "integer", "minimum": 0 }
+          }
+        },
+        {
+          "description": "compare y matches.",
+          "type": "object",
+          "required": ["result", "budget_left"],
+          "additionalProperties": false,
+          "properties": {
+            "result": { "enum": ["igual", "mayor", "menor", "coincide", "no coincide"] },
+            "budget_left": { "type": "integer", "minimum": 0 }
+          }
+        },
+        { "$ref": "#/$defs/denied" }
+      ]
+    },
+    "denied": {
+      "description": "Rechazo del núcleo. reason coincide con audit.schema.json.",
+      "type": "object",
+      "required": ["denied"],
+      "additionalProperties": false,
+      "properties": {
+        "denied": { "enum": ["fuga", "destino", "rojo", "presupuesto", "sin_regla", "token_desconocido", "caducado", "cancelado"] },
+        "detail": {
+          "description": "Explicación para el modelo. Nunca lleva valores reales.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}
