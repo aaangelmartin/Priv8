@@ -3,7 +3,7 @@ import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
-import Field, { Dither } from './Field.jsx';
+import Field from './Field.jsx';
 import { Empresas, Movil } from './Products.jsx';
 import { mood } from './companion.js';
 import { useTheme, PALETTE } from './useTheme.js';
@@ -441,20 +441,14 @@ export default function App() {
       <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
       <main>
         <Hero />
-        <Dither from="--band" to="--night" seed={1} />
         <Problem />
-        <Dither from="--night" to="--paper" seed={2} />
         <Coste />
         <Como />
-        <Dither from="--mist" to="--night" seed={3} />
         <Prueba pal={pal} />
-        <Dither from="--night" to="--paper" seed={4} />
         <Producto pal={pal} />
         <Confianza />
         <Faq />
-        <Dither from="--paper" to="--band" seed={5} />
         <Cierre />
-        <Dither from="--band" to="--ink-band" seed={6} />
       </main>
       <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />

@@ -16,6 +16,7 @@
   --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --margin: clamp(20px, 4vw, 56px);
   --ease: cubic-bezier(.2, .8, .2, 1);
+  --r-notch: 28px;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -63,6 +64,9 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 
 /* ---------- bandas ---------- */
 .band { position: relative; padding-block: clamp(84px, 11vw, 150px); }
+/* Cada banda entra por encima de la anterior con las esquinas de arriba redondeadas, el mismo radio que el notch. */
+main > .band + .band, .foot { margin-top: calc(-1 * var(--r-notch)); border-radius: var(--r-notch) var(--r-notch) 0 0; padding-top: calc(clamp(84px, 11vw, 150px) + var(--r-notch) * .5); }
+main > .band:not(:last-child) { padding-bottom: calc(clamp(84px, 11vw, 150px) + var(--r-notch)); }
 .band-cobalt { background: var(--band); color: var(--on-dark); }
 .band-night { background: radial-gradient(1100px 600px at 85% 0%, rgba(45, 69, 214, .28), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgba(45, 69, 214, .16), transparent 60%), var(--night); color: var(--on-dark); }
 .band-paper { background: var(--paper); }
@@ -74,8 +78,6 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .band-cobalt .soft { color: #c4cdff; }
 .band-night .soft, .band-ink .soft { color: #8fa2ff; }
 .band-night code, .band-night .tok { background: rgba(143, 162, 255, .16); color: #c3cdff; }
-.dither { aspect-ratio: 64 / 5; max-height: 120px; min-height: 30px; position: relative; margin: -1px 0; }
-.dither svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 .head { display: grid; gap: 20px; margin-bottom: clamp(44px, 6vw, 80px); max-width: 860px; }
 .head.row-head { max-width: none; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; }
@@ -108,13 +110,13 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
   position: fixed; z-index: 50; left: 50%; top: 0; transform: translateX(-50%);
   width: min(1240px, calc(100% - 2 * var(--margin)));
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  padding: 9px 10px 11px 18px; border-radius: 0 0 26px 26px;
+  padding: 9px 10px 11px 18px; border-radius: 0 0 var(--r-notch) var(--r-notch);
   background: var(--ink-band); color: #fff; box-shadow: 0 16px 40px rgba(2, 6, 15, .22);
   animation: navdrop .9s var(--ease) both;
 }
-.nav::before, .nav::after { content: ""; position: absolute; top: 0; width: 18px; height: 18px; background: radial-gradient(circle at 0 100%, transparent 17.5px, var(--ink-band) 18px); }
-.nav::before { left: -18px; }
-.nav::after { right: -18px; transform: scaleX(-1); }
+.nav::before, .nav::after { content: ""; position: absolute; top: 0; width: 9px; height: 9px; background: radial-gradient(circle at 0 100%, transparent 8.5px, var(--ink-band) 9px); }
+.nav::before { left: -9px; }
+.nav::after { right: -9px; transform: scaleX(-1); }
 .nav a { color: inherit; text-decoration: none; }
 .nav .brand { display: flex; align-items: center; gap: 9px; font: 700 1.05rem/1 var(--f-display); letter-spacing: -.02em; }
 .nav-eight { width: 36px; height: 36px; flex: none; }
