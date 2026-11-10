@@ -25,8 +25,8 @@ import org.json.JSONObject
  */
 data class Pause(val reason: String, val detail: String?) {
 
-    fun snapshot(root: AccessibilityNodeInfo, seq: Int): JSONObject {
-        val app = root.packageName?.toString() ?: SnapshotBuilder.UNKNOWN_APP
+    fun snapshot(root: AccessibilityNodeInfo?, seq: Int): JSONObject {
+        val app = root?.packageName?.toString() ?: SnapshotBuilder.UNKNOWN_APP
         val raw = JSONObject()
             .put("source", "android")
             .put("app", app)
@@ -35,7 +35,7 @@ data class Pause(val reason: String, val detail: String?) {
         val elements = JSONArray()
         when (reason) {
             AUTH -> {
-                raw.put("screen", screenOf(root) ?: JSONObject.NULL)
+                raw.put("screen", root?.let { screenOf(it) } ?: JSONObject.NULL)
                 elements.put(
                     JSONObject()
                         .put("id", FIELD_ID)
@@ -75,6 +75,13 @@ data class Pause(val reason: String, val detail: String?) {
 
         val CONFIRMATION = Pause(CONFIRM, null)
         val OWN_APP = Pause(OWN, null)
+        /**
+         * A window 8 cannot read: rootInActiveWindow is null. On Android 14
+         * the permission dialog is one (its views are hidden from services
+         * that are not accessibility tools). The safe default is to treat it
+         * as a system dialog: the agent waits and nothing is sent.
+         */
+        val HIDDEN = Pause(DIALOG, "oculta")
         fun dialog(kind: String) = Pause(DIALOG, kind)
         fun authentication(kind: RojoField.Kind) = Pause(AUTH, kind.detail)
     }

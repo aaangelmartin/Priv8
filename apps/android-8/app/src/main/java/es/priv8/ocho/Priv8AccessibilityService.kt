@@ -209,10 +209,8 @@ class Priv8AccessibilityService : AccessibilityService() {
         seq++
         if (root == null) {
             lastNodes = emptyMap()
-            return JSONObject()
-                .put("source", "android").put("app", lastWindowPackage ?: SnapshotBuilder.UNKNOWN_APP)
-                .put("screen", JSONObject.NULL).put("seq", seq).put("focus", JSONObject.NULL)
-                .put("system_dialog", JSONObject.NULL).put("elements", JSONArray())
+            updatePause(Pause.HIDDEN, null)
+            return Pause.HIDDEN.snapshot(null, seq)
         }
         val paused = currentPause(root)
         updatePause(paused, root.packageName?.toString())
@@ -270,7 +268,11 @@ class Priv8AccessibilityService : AccessibilityService() {
 
     /** Sends app_changed, screen_changed and system_dialog(_closed) once per change. */
     private fun reportChanges() {
-        val root = settledRoot() ?: return
+        val root = settledRoot()
+        if (root == null) {
+            updatePause(Pause.HIDDEN, null)
+            return
+        }
         val app = root.packageName?.toString() ?: return
         updatePause(currentPause(root), app)
         if (pause?.reason == Pause.DIALOG) return
