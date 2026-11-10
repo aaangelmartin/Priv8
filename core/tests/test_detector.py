@@ -51,6 +51,12 @@ def test_validadores(fn, good, bad):
     ("Recibo de Marta Ruiz Gil", [("PERSONA", "Marta Ruiz Gil")]),
     ("Transferencia de Juan Pérez García", [("PERSONA", "Juan Pérez García")]),
     ("Paga a Inés Prado Llorente", [("PERSONA", "Inés Prado Llorente")]),
+    ("Factura 2026-0042 del 5 de noviembre", [("FACTURA", "2026-0042")]),
+    ("Factura nº A/1234 pendiente", [("FACTURA", "A/1234")]),
+    ("la factura n.º 0412", [("FACTURA", "0412")]),
+    ("Adjunto la F-2026-0412", [("FACTURA", "F-2026-0412")]),
+    ("Ref. FA-2026-0877", [("FACTURA", "FA-2026-0877")]),
+    ("Pedido PED-2026-3325", [("CODIGO", "PED-2026-3325")]),
 ])
 def test_positivos(text, expected):
     assert kinds(text) == expected
@@ -59,7 +65,6 @@ def test_positivos(text, expected):
 @pytest.mark.parametrize("text", [
     "ES91 2100 0418 4502 0005 1333",       # IBAN con control mal
     "DNI 12345678A",                       # letra mal
-    "Factura 2026-0042 del 5 de noviembre",
     "Tarjeta 4111 1111 1111 1112",         # no pasa Luhn
     "Pulsa Transferir para continuar",
     "Cuenta nómina",
@@ -67,6 +72,10 @@ def test_positivos(text, expected):
     "Hola, buenos días",
     "Pasa dinero a mi cuenta de Nimbo Bróker",  # nombre de la interfaz, no un dato
     "Abre Banca Alcor",
+    "Revisa la factura 2026",              # años, fechas y trimestres no son números de factura
+    "Factura 2026-10-20",
+    "la factura 10/2026",
+    "la factura Q4",
 ])
 def test_negativos(text):
     assert kinds(text) == []
@@ -139,3 +148,25 @@ def test_cero_falsos_negativos_en_seed_alcor():
     assert misses == []
     # Lo rojo del seed también se detecta en contexto
     assert (ROJO, seed["user"]["otp"]) in kinds(f"Código OTP: {seed['user']['otp']}", det)
+
+
+def test_numeros_de_documento_del_seed_b2b_no_salen():
+    """La bandeja junta remitente, asunto y fecha en el texto del enlace: ningún número sale en claro."""
+    import re
+
+    from core.policies import load_policies
+    from core.screen import observe_screen
+
+    p = ROOT / "data/seed.json"
+    if not p.exists():
+        pytest.skip("data/seed.json no está en esta rama")
+    nums = sorted(set(re.findall(r"\b[A-Z]{1,4}-20\d{2}-\d{3,6}\b", p.read_text(encoding="utf-8"))))
+    assert len(nums) >= 5
+    v = Vault("s1")
+    elements = [{"id": f"abrir-{i}", "role": "link",
+                 "text": f"pagos@lumen.exampleFactura {n} de octubre10 nov"} for i, n in enumerate(nums)]
+    raw = {"source": "web", "app": "inbox", "screen": None, "url": "http://127.0.0.1:5174/bandeja",
+           "seq": 1, "focus": None, "system_dialog": None, "elements": elements}
+    obs, _ = observe_screen(raw, load_policies().screen_for(raw), v, 30, FinanceDetector(vault=v))
+    dump = json.dumps(obs, ensure_ascii=False)
+    assert [n for n in nums if n in dump] == []
