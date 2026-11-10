@@ -1,11 +1,20 @@
 # Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
 
-.PHONY: agent replay replay-fake demo test
+.PHONY: agent agent-web web replay replay-fake demo test
 
 # MCP server (streamable HTTP on :8701) and the agent loop, live against the Claude API.
 # Needs ANTHROPIC_API_KEY (see .env.example).
 agent:
 	uv run python -m agent.agent --serve --task "$${TASK:-registrar factura}"
+
+# Live agent over the real Alba Core and mailbox (Playwright). Needs `make web` running
+# and ANTHROPIC_API_KEY. Held actions are approved from the audit console.
+agent-web:
+	uv run python -m agent.agent --web --task "$${TASK:-registrar factura}"
+
+# Alba Core (:5173) and the mailbox (:5174). First time: pnpm install in each app.
+web:
+	(cd apps/erp-sim && pnpm dev) & (cd apps/inbox-sim && pnpm dev) & wait
 
 # Same loop with recorded model responses over the real core and a demo scene of
 # core/scenes.py: no API key needed. SCENE=b2c for the transfer, REPLAY=FILE for another file.
@@ -24,6 +33,6 @@ demo:
 
 # Every test suite and the contract examples.
 test:
-	uv run pytest agent/tests core/tests voice/tests
+	uv run pytest agent/tests core/tests voice/tests adapters/web/tests
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py

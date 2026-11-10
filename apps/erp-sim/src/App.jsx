@@ -274,7 +274,7 @@ function Ficha({ id, go }) {
       </h1>
       <fieldset>
         <legend>Datos maestros</legend>
-        <Dato id="codigo" label="Código" value={String(p.id).padStart(5, '0')} />
+        <Dato id="codigo" label="Nº de proveedor" value={String(p.id).padStart(5, '0')} />
         <Dato id="nombre" label="Nombre" value={p.nombre} />
         <Dato id="cif-prov" label="CIF" value={p.cif} />
         <Dato id="iban" label="IBAN" value={p.iban} />
