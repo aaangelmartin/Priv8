@@ -19,30 +19,6 @@
   --r: 28px;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --band: #2238c4; --night: #050b1c; --paper: #0b1430; --mist: #0f1b3e; --ink-band: #02060f;
-    --ink: #eef2fb; --ink-2: #a7b2cf; --line: #24325e; --card: #13205a;
-    --accent: #8fa2ff; --accent-ink: #050b1c; --accent-soft: #1a2a66;
-    --tok-bg: #1a2a66; --tok-fg: #c3cdff;
-    --ok: #4cc38a; --ok-text: #6fd6a3; --ok-soft: #12352a;
-    --warn: #e3a447; --warn-text: #f0bb6a; --warn-soft: #3a2a10;
-    --bad: #f07a6e; --bad-text: #f59a90; --bad-soft: #3d1a1a;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 18px 40px rgba(0, 0, 0, .35);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --band: #2238c4; --night: #050b1c; --paper: #0b1430; --mist: #0f1b3e; --ink-band: #02060f;
-  --ink: #eef2fb; --ink-2: #a7b2cf; --line: #24325e; --card: #13205a;
-  --accent: #8fa2ff; --accent-ink: #050b1c; --accent-soft: #1a2a66;
-  --tok-bg: #1a2a66; --tok-fg: #c3cdff;
-  --ok: #4cc38a; --ok-text: #6fd6a3; --ok-soft: #12352a;
-  --warn: #e3a447; --warn-text: #f0bb6a; --warn-soft: #3a2a10;
-  --bad: #f07a6e; --bad-text: #f59a90; --bad-soft: #3d1a1a;
-  --shadow: 0 1px 2px rgba(0, 0, 0, .35), 0 18px 40px rgba(0, 0, 0, .35);
-  color-scheme: dark;
-}
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -102,11 +78,11 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .nav .now { display: none; font: 600 .72rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #4e5a72; }
 @keyframes navdrop { from { transform: translate(-50%, -160%); } to { transform: translate(-50%, 0); } }
 html.intro .nav { animation: none; transform: translate(-50%, -160%); }
-html.landed .nav { animation: navdrop 1s .55s var(--ease) both; }
+html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 @media (max-width: 900px) { .nav .links { display: none; } .nav .now { display: inline; } .nav .word { display: none; } }
 
 /* ---------- 8 y su bocadillo ---------- */
-.companion { position: fixed; left: 0; top: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: 0 0; will-change: transform; }
+.companion { position: fixed; left: 0; top: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: 0 0; }
 .companion-eight { position: absolute; inset: 0; }
 .companion-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 16px; border-radius: 6px 20px 20px 20px; background: #ffffff; color: #0b1b33; font: 500 .95rem/1.4 var(--f-body); box-shadow: 0 18px 40px rgba(5, 16, 31, .25); opacity: 0; transform: translateX(-8px) scale(.96); transform-origin: top left; transition: opacity .35s var(--ease), transform .45s var(--ease); pointer-events: none; }
@@ -118,11 +94,9 @@ html.landed .nav { animation: navdrop 1s .55s var(--ease) both; }
 .hero { position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-items: center; overflow: hidden; background: var(--band); color: #fff; }
 .field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 42% 48% at 50% 60%, var(--band) 46%, transparent 80%); }
-.hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: 110px; padding-bottom: 80px; }
+.hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: 136px; padding-bottom: 72px; }
 .hero-anchor { width: clamp(200px, 24vw, 340px); aspect-ratio: 46 / 32; margin-bottom: clamp(18px, 2.6vw, 32px); }
-.meet { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; padding: 8px 8px 8px 18px; border-radius: 999px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .22); backdrop-filter: blur(6px); }
-.meet span { font: 700 clamp(1.05rem, .9rem + .6vw, 1.4rem)/1 var(--f-display); letter-spacing: -.02em; color: #fff; }
-.meet em { font: 500 .95rem/1 var(--f-body); font-style: normal; color: #1f33b0; background: #fff; padding: 9px 14px; border-radius: 999px; }
+.meet { font: 700 clamp(1.3rem, 1rem + 1vw, 1.9rem)/1 var(--f-display); letter-spacing: -.03em; color: #fff; padding: 12px 22px; border-radius: 999px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .24); backdrop-filter: blur(6px); }
 .hero h1 { font-size: clamp(2.8rem, 1rem + 5.6vw, 6rem); letter-spacing: -.05em; line-height: .96; margin-top: 22px; max-width: 14ch; }
 .hero h1 .soft { color: #c4cdff; }
 .hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 60ch; }
@@ -429,3 +403,10 @@ html.js .rv.in { opacity: 1; transform: none; }
 .lab-item h2 { font-size: 1.5rem; margin-bottom: 14px; }
 .lab-pair { border-radius: 28px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 18px 40px rgba(11, 27, 51, .12); }
 .lab-block { height: 140px; display: flex; align-items: flex-end; padding: 18px 24px; font: 600 .9rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
+
+/* bienvenida: «Conoce a 8» debajo de 8 grande, antes de que vuele a su sitio */
+.intro-title { position: fixed; z-index: 45; left: 50%; top: calc(42vh + min(50vw, 89.125vh, 640px) * .3478 + 18px); transform: translateX(-50%); margin: 0; font: 700 clamp(2rem, 1.2rem + 3vw, 3.6rem)/1 var(--f-display); letter-spacing: -.04em; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; }
+.intro-title b { color: #c4cdff; }
+html.intro .intro-title { animation: introtitle 2.7s var(--ease) both; }
+@keyframes introtitle { 0%, 38% { opacity: 0; transform: translate(-50%, 18px); } 52%, 86% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
+html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-delay: .22s; } html.landed .in-3 { transition-delay: .36s; } html.landed .in-4 { transition-delay: .5s; }

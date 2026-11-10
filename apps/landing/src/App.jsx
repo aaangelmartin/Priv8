@@ -7,7 +7,7 @@ import Field, { Blend } from './Field.jsx';
 import { Empresas, Movil } from './Products.jsx';
 import { SeeScene, NumbersScene, HowScene, TrapScene, Spot } from './Story.jsx';
 import { mood, setSection } from './companion.js';
-import { useTheme, PALETTE } from './useTheme.js';
+import { PALETTE } from './useTheme.js';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
@@ -18,7 +18,7 @@ function Hero() {
       <Field />
       <div className="wrap hero-stage">
         <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="Hola." aria-hidden="true" />
-        <p className="meet in-1"><span>Conoce a 8</span><em>el agente que hace el trabajo sin mirar</em></p>
+        <p className="meet in-1">Conoce a 8</p>
         <h1 id="h-hero" className="in-2">Hace el trabajo. <span className="soft">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">
           8 entra en tu ERP, tu correo o la app del banco y hace el trámite como lo harías tú.
@@ -165,8 +165,7 @@ function Footer({ pal }) {
 }
 
 export default function App() {
-  const { effective, cycle } = useTheme();
-  const pal = PALETTE[effective];
+  const pal = PALETTE.light;
   const [intro, setIntro] = useState(() => document.documentElement.classList.contains('intro'));
   useEffect(() => {
     let still = false;
@@ -175,7 +174,7 @@ export default function App() {
     root.classList.add('js');
     if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
     const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
-    const t = setTimeout(end, 2900);
+    const t = setTimeout(end, 3600);
     const skip = () => { clearTimeout(t); end(); };
     window.addEventListener('keydown', skip, { once: true });
     window.addEventListener('wheel', skip, { once: true, passive: true });
@@ -199,7 +198,8 @@ export default function App() {
   }, []);
   return (
     <>
-      <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
+      <Nav />
+      <p className="intro-title" aria-hidden="true">Conoce a <b>8</b></p>
       <main>
         <Hero />
         <Blend from="--band" to="--night" seed={1} />

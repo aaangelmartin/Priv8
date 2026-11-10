@@ -6,7 +6,7 @@ import { mood, useCompanion } from './companion.js';
    Cada escena le pone un sitio, una cara (data-mode) y una frase (data-say).
    Los anclajes .spot-gutter no tienen sitio propio: 8 se queda en el margen lateral.
    Su color sale del fondo real que tiene detrás. */
-const BASE = 360;
+const BASE = 1100; // se dibuja grande y se reduce: así no se pixela al crecer
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 function backgroundAt(x, y, self) {
@@ -62,8 +62,9 @@ export default function Companion({ pal, intro }) {
   useEffect(() => {
     if (stage !== 'sleep') return undefined;
     const a = setTimeout(() => setStage('wake'), 900);
-    const b = setTimeout(() => setStage('done'), 3600);
-    return () => { clearTimeout(a); clearTimeout(b); };
+    const f = setTimeout(() => setStage('fly'), 2700);
+    const b = setTimeout(() => setStage('done'), 3900);
+    return () => { clearTimeout(a); clearTimeout(f); clearTimeout(b); };
   }, []);
 
   useEffect(() => {
@@ -91,9 +92,11 @@ export default function Companion({ pal, intro }) {
       }
       if (!target) return;
       if (phase.current === 'intro') {
-        const S = target.S * 0.62;
-        el.style.transition = 'none';
-        el.style.transform = `translate3d(${target.left + (target.S - S) / 2}px, ${target.top + (target.S - S) / 2 + 30}px, 0) scale(${S / BASE})`;
+        /* bienvenida: 8 grande en el centro de la pantalla */
+        const D = Math.min(vw * 0.5, vh * 0.62 * 46 / 32, 640), S = D * 64 / 46;
+        el.style.transition = el.dataset.placed ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
+        el.dataset.placed = '1';
+        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.42 - S / 2}px, 0) scale(${S / BASE})`;
         return;
       }
       const changed = anchor !== lastSpot.current;
@@ -126,7 +129,7 @@ export default function Companion({ pal, intro }) {
 
   /* al despertar, crece hasta su sitio en la portada */
   useEffect(() => {
-    if (stage === 'sleep' || phase.current !== 'intro') return undefined;
+    if (stage !== 'fly' || phase.current !== 'intro') return undefined;
     phase.current = 'flying';
     window.dispatchEvent(new Event('scroll'));
     const t = setTimeout(() => { phase.current = 'live'; window.dispatchEvent(new Event('scroll')); }, 1200);
@@ -152,7 +155,7 @@ export default function Companion({ pal, intro }) {
   const rgb = [1, 3, 5].map((i) => parseInt(under.slice(i, i + 2), 16));
   const light = lum(rgb) > 0.55;
   const col = { fg: light ? band : '#FFFFFF', cut: under };
-  const mode = override || (stage === 'sleep' ? 'dormir' : stage === 'wake' ? 'saludar' : spot.mode);
+  const mode = override || (stage === 'sleep' ? 'dormir' : stage === 'wake' ? 'saludar' : stage === 'fly' ? 'alegria' : spot.mode);
   return (
     <>
       <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
