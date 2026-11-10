@@ -23,7 +23,7 @@ import json
 import time
 from typing import Any
 
-from . import executor
+from . import executor, provenance
 from .adapter import Adapter
 from .audit import Audit
 from .detect import FinanceDetector
@@ -38,7 +38,7 @@ SESSIONS = Sessions(STORE)
 AUDIT = Audit()
 TRUSTED: list[tuple[str, str]] = []
 LEAK = LeakCheck(STORE)
-HOOKS: dict[str, Any] = {"provenance": None, "confirm": None}
+HOOKS: dict[str, Any] = {"provenance": provenance.check, "confirm": None}
 _policies: PolicySet | None = None
 
 
