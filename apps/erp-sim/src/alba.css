@@ -1,0 +1,141 @@
+/* Alba Core: un ERP de escritorio de hace veinte años, servido en el navegador.
+   Gris de sistema, barra de título azul, campos hundidos, Tahoma. */
+:root {
+  --sistema: #d4d0c8;
+  --claro: #ffffff;
+  --sombra: #808080;
+  --oscuro: #404040;
+  --titulo-a: #0a246a;
+  --titulo-b: #a6caf0;
+  --texto: #000000;
+  --enlace: #0000c0;
+  --ok: #006400;
+  --error: #b00000;
+  --escritorio: #3a6ea5;
+  font: 12px/1.4 Tahoma, Verdana, 'Segoe UI', sans-serif;
+  color: var(--texto);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--escritorio); min-height: 100vh; }
+#root { padding: 16px; }
+
+.ventana {
+  max-width: 880px;
+  margin: 0 auto;
+  background: var(--sistema);
+  border: 2px solid;
+  border-color: var(--claro) var(--oscuro) var(--oscuro) var(--claro);
+  box-shadow: 1px 1px 0 #000;
+}
+.titulo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px 3px 6px;
+  background: linear-gradient(90deg, var(--titulo-a), var(--titulo-b));
+  color: #fff;
+  font-weight: bold;
+}
+.botones-ventana { display: flex; gap: 2px; }
+.botones-ventana i {
+  font-style: normal;
+  width: 16px;
+  height: 14px;
+  line-height: 12px;
+  text-align: center;
+  background: var(--sistema);
+  color: #000;
+  font-size: 10px;
+  border: 1px solid;
+  border-color: var(--claro) var(--oscuro) var(--oscuro) var(--claro);
+}
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  padding: 3px 8px;
+  border-bottom: 1px solid var(--sombra);
+}
+.menu a { color: #000; text-decoration: none; padding: 0 2px; }
+.menu a:hover, .menu a:focus { background: var(--titulo-a); color: #fff; outline: none; }
+.menu-grupo { font-weight: bold; }
+.menu-gris { color: var(--sombra); }
+
+.cuerpo { padding: 12px 14px 16px; }
+h1 { font-size: 14px; margin: 0 0 10px; }
+fieldset {
+  border: 1px solid;
+  border-color: var(--sombra) var(--claro) var(--claro) var(--sombra);
+  margin: 0 0 10px;
+  padding: 6px 10px 10px;
+}
+legend { padding: 0 4px; }
+.campo, .dato {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+.dato b { font-weight: normal; font-family: 'Courier New', monospace; }
+input {
+  font: 12px 'Courier New', monospace;
+  padding: 3px 4px;
+  background: var(--claro);
+  border: 2px solid;
+  border-color: var(--sombra) var(--claro) var(--claro) var(--sombra);
+  max-width: 340px;
+  width: 100%;
+}
+input[readonly] { background: var(--sistema); }
+input:focus { outline: 1px dotted #000; outline-offset: -4px; }
+button {
+  font: inherit;
+  min-width: 90px;
+  padding: 4px 12px;
+  background: var(--sistema);
+  border: 2px solid;
+  border-color: var(--claro) var(--oscuro) var(--oscuro) var(--claro);
+  cursor: default;
+}
+button:active { border-color: var(--oscuro) var(--claro) var(--claro) var(--oscuro); }
+button:focus-visible { outline: 1px dotted #000; outline-offset: -5px; }
+a { color: var(--enlace); }
+.acciones { display: flex; gap: 10px; align-items: center; margin-top: 6px; }
+.ok { color: var(--ok); font-weight: bold; }
+.error { color: var(--error); font-weight: bold; }
+.vacio { padding: 20px; }
+.pista { color: var(--sombra); margin: 10px 0 0; }
+
+.rejilla { width: 100%; border-collapse: collapse; background: var(--claro); }
+.rejilla th {
+  text-align: left;
+  font-weight: normal;
+  background: var(--sistema);
+  border: 1px solid;
+  border-color: var(--claro) var(--sombra) var(--sombra) var(--claro);
+  padding: 2px 6px;
+}
+.rejilla td { border-bottom: 1px solid #e4e4e4; padding: 2px 6px; white-space: nowrap; }
+.rejilla .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.estado {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 2px;
+  border-top: 1px solid var(--claro);
+}
+.estado span {
+  flex: 1;
+  padding: 1px 6px;
+  border: 1px solid;
+  border-color: var(--sombra) var(--claro) var(--claro) var(--sombra);
+}
+.estado .salir { min-width: 0; padding: 1px 8px; }
+
+.login-fondo { min-height: calc(100vh - 32px); display: grid; place-items: center; }
+.login { width: 320px; }
+.login label { display: block; margin-top: 8px; }
+.login input { max-width: none; }
+.login button { margin-top: 12px; }
