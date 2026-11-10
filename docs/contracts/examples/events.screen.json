@@ -3,7 +3,7 @@
   "session": "s2",
   "raw": {
     "source": "android",
-    "app": "es.alcor.banca",
+    "app": "es.priv8.banks.alcor",
     "screen": "inicio",
     "seq": 12,
     "focus": "n4",
@@ -34,10 +34,7 @@
         "role": "textbox",
         "label": "Clave",
         "password": true,
-        "text": "••••",
-        "actions": [
-          "type"
-        ]
+        "text": "••••"
       },
       {
         "id": "n5",
@@ -51,7 +48,7 @@
   },
   "observed": {
     "session": "s2",
-    "app": "es.alcor.banca",
+    "app": "es.priv8.banks.alcor",
     "screen": "inicio",
     "seq": 12,
     "paused": "autenticacion",

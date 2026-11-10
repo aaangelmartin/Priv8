@@ -37,6 +37,21 @@ eventos  núcleo ─ audit · screen · voice · confirm_request ─▶ consola,
          app 8 o consola ─ approval_result ─▶ núcleo
 ```
 
+## v1.1 (10 nov) · cambios aditivos
+
+Un cliente v1 sigue validando. Salen de las notas de Ángel en #58 y #70 (issue #66).
+
+- **Puente:**
+  - `confirm_request` y `approval_result` van también por el puente.
+  - `render_values` manda al móvil los valores reales de los tokens para que los muestre y los lea en local.
+  - Mensajes de voz: `voice`, `voice.audio` y `voice.audio.end` (PCM 24 kHz en tramas binarias entre los dos) y `voice.done`, que se registra como `voice_out`.
+  - Evento `focus_left` cuando el foco sale de un campo rojo.
+  - `detail` definido: `clave`/`otp`, `permiso`/`biometria`/`oculta`, o el nombre de la pantalla.
+- **Nombres de tecla:** `key` acepta `enter`, `back` y `home`. En Android, `send`, `call` y `type` sobre una contraseña devuelven `no_permitido`.
+- **Snapshot:** solo trae lo visible. `parent` es el ancestro conservado más cercano y va vacío si no hay ventana. `system_dialog: oculta` para ventanas que no se pueden leer.
+- **Motivo de rechazo `adaptador`:** el adaptador no pudo ejecutar la acción. Vale en `act` y en la auditoría.
+- **Ejemplos:** paquete real `es.priv8.banks.alcor`; el campo de contraseña no ofrece `type`; `hello.device` como lo manda el emulador.
+
 ## Qué concreta respecto a la arquitectura
 
 Estos puntos no estaban cerrados en `docs/arquitectura.html`. Se proponen así; si alguien necesita otra cosa, se comenta en el PR.

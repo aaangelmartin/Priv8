@@ -1,6 +1,6 @@
 {
   "source": "android",
-  "app": "es.alcor.banca",
+  "app": "es.priv8.banks.alcor",
   "screen": "inicio",
   "seq": 12,
   "focus": "n4",
@@ -31,10 +31,7 @@
       "role": "textbox",
       "label": "Clave",
       "password": true,
-      "text": "••••",
-      "actions": [
-        "type"
-      ]
+      "text": "••••"
     },
     {
       "id": "n5",

@@ -1,5 +1,5 @@
 {
   "type": "event",
   "kind": "focus_password",
-  "app": "es.alcor.banca"
+  "app": "es.priv8.banks.alcor"
 }
