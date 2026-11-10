@@ -10,6 +10,10 @@ dependencies = [
     "jsonschema==4.26.0",
     "referencing==0.37.0",
     "uvicorn==0.54.0",
+    "pydantic>=2.7",
+    "pyyaml>=6",
+    "cryptography>=42",
+    "websockets>=13",
 ]
 
 [dependency-groups]
@@ -23,8 +27,8 @@ dev = [
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["agent/tests"]
-# `agent` is a package at the repo root (agent.server, agent.agent, ...).
+testpaths = ["agent/tests", "core/tests"]
+# `agent` and `core` are packages at the repo root.
 pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
