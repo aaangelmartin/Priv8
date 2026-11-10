@@ -5,7 +5,7 @@ import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
 import Field, { Blend } from './Field.jsx';
 import { Empresas, Movil } from './Products.jsx';
-import { SeeScene, NumbersScene, HowScene, TrapScene, Spot } from './Story.jsx';
+import { SeeScene, NumbersScene, HowScene, TrapScene, Spot, Texture } from './Story.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
 
@@ -91,7 +91,8 @@ function Producto({ pal }) {
 /* ---------------------------------------------------------------- pruébalo */
 function Prueba({ pal }) {
   return (
-    <section id="demo" className="block block-night" aria-labelledby="h-demo">
+    <section id="demo" className="block block-cobalt" aria-labelledby="h-demo">
+      <Texture />
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="leer" say="Quítame la protección y verás." />
@@ -116,9 +117,9 @@ const FAQ = [
 ];
 function Faq() {
   return (
-    <section id="faq" className="block block-mist" aria-labelledby="h-faq">
+    <section id="faq" className="block block-paper" aria-labelledby="h-faq">
       <div className="wrap faq-grid">
-        <div className="block-head sticky">
+        <div className="block-head">
           <Spot className="spot-inline" mode="duda" say="Pregunta. No me ofendo." />
           <p className="eyebrow">Preguntas</p>
           <h2 id="h-faq">Lo que te preguntaría <span className="soft">tu responsable de seguridad.</span></h2>
@@ -158,9 +159,10 @@ function DemoForm({ compact = false }) {
 function Cierre() {
   return (
     <section id="contacto" className="block block-cobalt close" aria-labelledby="h-close">
+      <Texture />
       <div className="wrap close-grid">
-        <div>
-          <Spot className="spot-close" mode="alegria" say="¿Me enseñas tu proceso?" />
+        <div className="block-head">
+          <Spot className="spot-inline" mode="alegria" say="¿Me enseñas tu proceso?" />
           <h2 id="h-close">Enséñanos un proceso. <span className="soft">Te lo devolvemos hecho.</span></h2>
           <p className="lead">Treinta minutos con tus pantallas, o con las nuestras si todavía no quieres compartir nada. Sin integrar nada y sin que la IA vea un dato.</p>
         </div>
@@ -177,11 +179,10 @@ function Footer({ pal }) {
         <div className="foot-mid">
           <div className="foot-brand">
             <a className="foot-logo" href="#inicio" aria-label="Priv8, volver arriba">
-              <Eight className="foot-eight" mode="mirar" fg="#FFFFFF" cut={pal.ink} label="8" />
+              <Eight className="foot-eight" mode="mirar" fg="#FFFFFF" cut={pal.band} label="8" />
               <span>Priv8</span>
             </a>
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
-            <DemoForm compact />
           </div>
           <nav className="foot-cols" aria-label="Pie">
             <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#demo">Pruébalo</a></div>
@@ -208,7 +209,7 @@ export default function App() {
     root.classList.add('js');
     if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
     const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
-    const t = setTimeout(end, 2100);
+    const t = setTimeout(end, 2050);
     const skip = () => { clearTimeout(t); end(); };
     window.addEventListener('keydown', skip, { once: true });
     window.addEventListener('wheel', skip, { once: true, passive: true });
@@ -236,23 +237,18 @@ export default function App() {
       <p className="intro-title" aria-hidden="true"><span>Conoce</span> <span>a</span> <span className="eight-word">8</span></p>
       <main>
         <Hero />
-        <Blend from="--band" to="--night" seed={1} overlay />
         <SeeScene />
-        <Blend from="--night" to="--band" seed={2} />
         <NumbersScene />
-        <Blend from="--band" to="--night" seed={3} />
         <HowScene />
-        <Blend from="--night" to="--band" seed={4} />
         <TrapScene />
         <Blend from="--band" to="--paper" seed={5} />
         <Producto pal={pal} />
-        <Blend from="--paper" to="--night" seed={6} />
+        <Blend from="--paper" to="--band" seed={6} />
         <Prueba pal={pal} />
-        <Blend from="--night" to="--mist" seed={7} />
+        <Blend from="--band" to="--paper" seed={7} />
         <Faq />
-        <Blend from="--mist" to="--band" seed={8} />
+        <Blend from="--paper" to="--band" seed={8} />
         <Cierre />
-        <Blend from="--band" to="--ink-band" seed={9} />
       </main>
       <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />

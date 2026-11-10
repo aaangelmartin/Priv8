@@ -47,61 +47,49 @@ function pickAnchor() {
 
 export default function Companion({ pal, intro }) {
   const { override } = useCompanion();
-  const [stage, setStage] = useState(intro ? 'wake' : 'done');
+  const [stage, setStage] = useState(intro ? 'sleep' : 'done');
   const [bg, setBg] = useState(null);
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
   const box = useRef(null);
-  const pos = useRef({ x: 0, y: 0, size: 0, left: false });
   const lastSpot = useRef(null);
   const changeT = useRef(0);
   const bubbleT = useRef(0);
   const phase = useRef(intro ? 'intro' : 'live');
 
-  /* arranque: 8 duerme, despierta y saluda */
+  /* arranque: 8 duerme, se despierta saludando y vuela a su sitio en la portada */
   useEffect(() => {
-    if (stage !== 'wake') return undefined;
-    const f = setTimeout(() => setStage('fly'), 1300);
-    const b = setTimeout(() => setStage('done'), 2400);
-    return () => { clearTimeout(f); clearTimeout(b); };
+    if (stage !== 'sleep') return undefined;
+    const w = setTimeout(() => setStage('wake'), 750);
+    const f = setTimeout(() => setStage('fly'), 1850);
+    const b = setTimeout(() => setStage('done'), 2950);
+    return () => { clearTimeout(w); clearTimeout(f); clearTimeout(b); };
   }, []);
 
   useEffect(() => {
-    let raf = 0, lastC = 0;
+    let raf = 0, lastC = 0, snapUntil = 0;
     const frame = () => {
       raf = 0;
       const el = box.current; if (!el) return;
       const vw = window.innerWidth, vh = window.innerHeight;
       const heroA = document.getElementById('hero-anchor');
-      let target = null, anchor = phase.current === 'live' ? pickAnchor() : heroA;
+      const now0 = performance.now();
+      const snapping = now0 < snapUntil;
+      /* mientras cambia el zoom o el tamaño, 8 no cambia de sitio: se queda en el que tenía y se recoloca sin animación */
+      let anchor = phase.current === 'live' ? ((snapping && lastSpot.current && lastSpot.current.isConnected) ? lastSpot.current : pickAnchor()) : heroA;
+      let target = null;
       if (anchor) {
-        if (anchor.classList.contains('spot-gutter')) {
-          const gutter = Math.max(0, (vw - 1240) / 2) + Math.min(56, Math.max(20, vw * 0.04));
-          const small = gutter < 150;
-          const D = small ? 96 : Math.min(190, gutter - 36);
-          const S = D * 64 / 46;
-          const x = small ? vw - D - 12 : Math.max(8, (gutter - D) / 2 - 10);
-          const y = small ? vh - D * 0.7 - 12 : vh * 0.5 - D * 0.35;
-          target = { left: x + D / 2 - S / 2, top: y + D * 0.35 - S / 2, S, D, gx: x, gy: y };
-        } else {
-          const r = anchor.getBoundingClientRect();
-          const S = r.width * 64 / 46;
-          target = { left: r.left + r.width / 2 - S / 2, top: r.top + r.height / 2 - S / 2, S, D: r.width, gx: r.left, gy: r.top + r.height / 2 - r.width * 0.35 };
-          /* con zoom o pantallas bajas el sitio puede quedar bajo la barra o fuera de la pantalla: entonces 8 espera en la esquina */
-          const navB = (document.querySelector('.nav')?.getBoundingClientRect().bottom || 0) + 6;
-          const top8 = r.top + r.height / 2 - r.width * 0.36, bot8 = r.top + r.height / 2 + r.width * 0.36;
-          if (phase.current === 'live' && anchor.id !== 'hero-anchor' && (top8 < navB || bot8 > vh - 6)) {
-            const Dc = clamp(vh * 0.16, 56, 96), Sc = Dc * 64 / 46;
-            const x = vw - Dc - 12, y = vh - Dc * 0.7 - 12;
-            target = { left: x + Dc / 2 - Sc / 2, top: y + Dc * 0.35 - Sc / 2, S: Sc, D: Dc, gx: x, gy: y };
-          }
-        }
+        const r = anchor.getBoundingClientRect();
+        const D = r.width, S = D * 64 / 46;
+        /* 8 vive en su sitio de la página: si el sitio sube, 8 sube con él; nunca se queda flotando encima del contenido */
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        target = { left: cx - S / 2, top: cy - S / 2, S, D };
       }
       if (!target) return;
       if (phase.current === 'intro') {
         /* bienvenida: 8 grande en el centro de la pantalla */
         const D = Math.min(vw * 0.5, vh * 0.62 * 46 / 32, 640), S = D * 64 / 46;
-        el.style.transition = el.dataset.placed ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
+        el.style.transition = el.dataset.placed && !snapping ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
         el.dataset.placed = '1';
         /* variante B: 8 se coloca a la derecha de «Conoce a», en la misma línea, haciendo de «8» */
         const root = document.documentElement;
@@ -118,7 +106,6 @@ export default function Companion({ pal, intro }) {
         /* variante C: 8 lo dice en su bocadillo */
         if (root.classList.contains('intro-c') && !el.dataset.said) {
           el.dataset.said = '1';
-          pos.current = { x: vw / 2 - D / 2, y: vh * 0.5 - D * 0.35, size: D, left: true };
           setTimeout(() => setBubble({ text: 'Conoce a 8', show: true, big: true }), 250);
         }
         return;
@@ -132,11 +119,8 @@ export default function Companion({ pal, intro }) {
       }
       if (changed) changeT.current = performance.now();
       const moving = performance.now() - changeT.current < 950;
-      el.style.transition = phase.current === 'flying' ? 'transform 1.1s cubic-bezier(.34, 1.56, .64, 1)' : (moving ? 'transform .9s cubic-bezier(.2, .8, .2, 1)' : 'none');
+      el.style.transition = snapping ? 'none' : phase.current === 'flying' ? 'transform 1.1s cubic-bezier(.34, 1.56, .64, 1)' : (moving ? 'transform .9s cubic-bezier(.2, .8, .2, 1)' : 'none');
       el.style.transform = `translate3d(${target.left}px, ${target.top}px, 0) scale(${target.S / BASE})`;
-      const moved = Math.abs(target.gy - pos.current.y) + Math.abs(target.gx - pos.current.x) > 24;
-      pos.current = { x: target.gx, y: target.gy, size: target.D, left: target.gx + target.D / 2 < vw / 2 };
-      if (moved) setBubble((b) => (b.show ? { ...b, show: false } : b));
       const now = performance.now();
       if (now - lastC > 140) {
         lastC = now;
@@ -146,16 +130,17 @@ export default function Companion({ pal, intro }) {
       }
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
+    const snap = () => { snapUntil = performance.now() + 600; if (box.current) box.current.style.transition = 'none'; ask(); };
     ask();
     const tick = setInterval(ask, 200);
     window.addEventListener('scroll', ask, { passive: true });
-    window.addEventListener('resize', ask);
+    window.addEventListener('resize', snap);
     /* zoom del navegador: cambia el tamaño visible y la densidad de píxeles */
-    const vv = window.visualViewport; if (vv) vv.addEventListener('resize', ask);
+    const vv = window.visualViewport; if (vv) vv.addEventListener('resize', snap);
     let mq = null; const watchDpr = () => { if (mq) mq.removeEventListener('change', onDpr); mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener('change', onDpr); };
-    function onDpr() { box.current && (box.current.style.transition = 'none'); ask(); watchDpr(); }
+    function onDpr() { snap(); watchDpr(); }
     watchDpr();
-    return () => { clearInterval(tick); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); if (vv) vv.removeEventListener('resize', ask); if (mq) mq.removeEventListener('change', onDpr); cancelAnimationFrame(raf); };
+    return () => { clearInterval(tick); window.removeEventListener('scroll', ask); window.removeEventListener('resize', snap); if (vv) vv.removeEventListener('resize', snap); if (mq) mq.removeEventListener('change', onDpr); cancelAnimationFrame(raf); };
   }, []);
 
   /* al despertar, crece hasta su sitio en la portada */
@@ -187,7 +172,7 @@ export default function Companion({ pal, intro }) {
   const light = lum(rgb) > 0.55;
   const col = { fg: light ? band : '#FFFFFF', cut: under };
   /* en la bienvenida, ojos abiertos desde el primer momento: alegría y dos saltitos, sin el parpadeo de despertar */
-  const mode = override || (stage === 'wake' ? 'atencion' : stage === 'fly' ? 'alegria' : spot.mode);
+  const mode = override || (stage === 'sleep' ? 'dormir' : stage === 'wake' ? 'saludar' : stage === 'fly' ? 'alegria' : spot.mode);
   return (
     <>
       <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
@@ -195,15 +180,14 @@ export default function Companion({ pal, intro }) {
         aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
         <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
       </button>
-      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} pos={pos.current} />
+      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} eight={box} />
     </>
   );
 }
 
-/* Bocadillo de 8: al lado de 8 y por encima de sus ojos, con el pico en la esquina de abajo apuntándole.
-   Si no cabe arriba, va por debajo con el pico en la esquina de arriba. Siempre con aire entre los dos. */
-/* El bocadillo y su cola son un solo trazado SVG medido con el tamaño real del texto:
-   no hay dos piezas que unir, así que no puede verse ninguna junta. La base sigue recta hasta la punta. */
+/* Bocadillo de 8. Se coloca en cada fotograma a partir de dónde está 8 de verdad en pantalla, así que se mueve con él
+   y nunca lo toca: a su lado y por encima de los ojos; si no cabe a ningún lado, encima de 8; si arriba está la barra,
+   por debajo. El bocadillo y su cola son un solo trazado SVG, sin juntas, con la base recta hasta la punta. */
 function bubblePath(W, H, R, th) {
   const k = th / 18, T = 14 * k, y0 = H - th;
   const p = (x, y) => `${(x * k).toFixed(2)} ${(y0 + y * k).toFixed(2)}`;
@@ -211,10 +195,11 @@ function bubblePath(W, H, R, th) {
     + `C${p(1, 18)} ${p(0.6, 16.4)} ${p(3.4, 15.4)} C${p(11, 12.6)} ${p(14, 7)} ${p(14, 0)} V${R} A${R} ${R} 0 0 1 ${T + R} 0 Z`;
 }
 
-function Bubble({ text, show, big, pos }) {
+function Bubble({ text, show, big, eight }) {
   const [n, setN] = useState(0);
   const ref = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [geo, setGeo] = useState({ left: true, below: false });
   useEffect(() => {
     setN(0);
     if (!show) return undefined;
@@ -223,25 +208,53 @@ function Bubble({ text, show, big, pos }) {
     return () => clearInterval(t);
   }, [text, show]);
   useLayoutEffect(() => {
-    const el = ref.current; if (!el) return;
-    const w = el.offsetWidth, h = el.offsetHeight;
-    setSize((o) => (o.w === w && o.h === h ? o : { w, h }));
-  });
-  const gap = Math.max(18, pos.size * 0.08);
-  const eye = pos.y + pos.size * 0.3;
-  /* nunca debajo de la barra de navegación */
-  const navB = (typeof document !== 'undefined' && document.querySelector('.nav')?.getBoundingClientRect().bottom) || 0;
-  const below = eye - gap - (big ? 90 : 64) < navB + 10;
-  const v = below ? { top: pos.y + pos.size * 0.42 + gap } : { bottom: window.innerHeight - (eye - gap) };
-  const h = pos.left ? { left: pos.x + pos.size + gap } : { right: window.innerWidth - pos.x + gap };
-  const cls = 'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '') + (below ? ' below' : '') + (big ? ' big' : '');
+    const el = ref.current; if (!el) return undefined;
+    const measure = () => { const w = el.offsetWidth, h = el.offsetHeight; setSize((o) => (o.w === w && o.h === h ? o : { w, h })); };
+    measure();
+    const ro = new ResizeObserver(measure); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => {
+    let raf = 0;
+    const place = () => {
+      raf = requestAnimationFrame(place);
+      const el = ref.current, e8 = eight.current; if (!el || !e8) return;
+      const r = e8.getBoundingClientRect();
+      const D = r.width * 46 / 64, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const vw = window.innerWidth, vh = window.innerHeight, m = 12;
+      const gap = Math.max(14, D * 0.08), T = big ? 23 : 14;
+      const navB = (document.querySelector('.nav')?.getBoundingClientRect().bottom || 0) + 10;
+      const L = cx - D / 2, R = cx + D / 2, top8 = cy - D * 0.36, bot8 = cy + D * 0.36, eye = cy - D * 0.06;
+      const roomR = vw - m - (R + gap + T), roomL = (L - gap - T) - m;
+      el.style.maxWidth = (big ? 'none' : `${Math.max(150, Math.min(260, Math.max(roomR, roomL, vw - 2 * m - T)))}px`);
+      const w = el.offsetWidth, h = el.offsetHeight;
+      let left, top, onRight = true, below = false, room = true;
+      if (roomR >= w) { left = R + gap + T; onRight = true; }
+      else if (roomL >= w) { left = L - gap - T - w; onRight = false; }
+      else {
+        /* no cabe al lado: encima de 8, con la cola hacia él */
+        left = clamp(cx + D * 0.12, m + T, vw - m - w); onRight = true;
+        top = top8 - gap - h;
+      }
+      if (top === undefined) top = eye - gap - h;
+      /* el bocadillo nunca va debajo: ahí está el titular. Si arriba no cabe (la barra, una pantalla muy baja), no sale. */
+      if (top < navB) { if (big) { top = bot8 + gap; below = true; } else room = false; }
+      /* si 8 se ha ido de la pantalla, su bocadillo se va con él */
+      el.style.visibility = !room || bot8 < navB || top8 > vh ? 'hidden' : '';
+      el.style.left = `${left}px`; el.style.top = `${top}px`;
+      setGeo((g) => (g.left === onRight && g.below === below ? g : { left: onRight, below }));
+    };
+    place();
+    return () => cancelAnimationFrame(raf);
+  }, [show, big, text]);
+  const cls = 'bubble8' + (show ? ' on' : '') + (geo.left ? ' l' : '') + (geo.below ? ' below' : '') + (big ? ' big' : '');
   const R = big ? 28 : 20, th = big ? 30 : 18, T = 14 * th / 18;
-  const flip = `scale(${pos.left ? 1 : -1}, ${below ? -1 : 1})`;
+  const flip = `scale(${geo.left ? 1 : -1}, ${geo.below ? -1 : 1})`;
   return (
-    <div ref={ref} className={cls} style={{ ...v, ...h }} role="status" aria-live="polite">
+    <div ref={ref} className={cls} role="status" aria-live="polite">
       {size.w > 0 && (
         <svg className="shape" width={size.w + T} height={size.h} viewBox={`0 0 ${size.w + T} ${size.h}`}
-          style={{ [pos.left ? 'left' : 'right']: -T, transform: flip }} aria-hidden="true">
+          style={{ [geo.left ? 'left' : 'right']: -T, transform: flip }} aria-hidden="true">
           <path d={bubblePath(size.w, size.h, Math.min(R, size.h / 2), th)} />
         </svg>
       )}
