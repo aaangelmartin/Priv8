@@ -122,12 +122,14 @@ export function Developers() {
 }
 
 /* ---------------------------------------------------------------- frente a lo que ya existe */
+const COLS = ['Protege lo que el agente ve en pantalla', 'Bloquea datos inyectados por correo', 'Retiene los pagos hasta tu «sí»', 'Funciona sin integrar nada'];
 const ROWS = [
-  ['Un agente normal', 'no', 'no', 'sí'],
-  ['Pagos para agentes (Visa, Google)', 'no', 'sí', 'no'],
-  ['Bóvedas de datos para IA', 'en sus sistemas', 'no', 'no'],
-  ['Priv8', 'sí', 'espera tu «sí»', 'sí'],
+  ['Un agente normal', [0, 0, 0, 1]],
+  ['Pagos para agentes · Visa, Google', [0, 0, 1, 0]],
+  ['Bóvedas de datos para IA', [0.5, 0, 0, 0]],
+  ['Priv8', [1, 1, 1, 1]],
 ];
+const Mark = ({ v }) => (v === 1 ? <span className="mk yes" aria-label="sí">✓</span> : v === 0 ? <span className="mk no" aria-label="no">✕</span> : <span className="mk half" aria-label="en parte">en parte</span>);
 export function Compare() {
   return (
     <section id="comparar" className="block block-cobalt compare" aria-labelledby="h-cmp">
@@ -138,10 +140,11 @@ export function Compare() {
           <h2 id="h-cmp">Visa y Google resolvieron cómo paga un agente. <span className="soft">Priv8 resuelve qué ve mientras trabaja.</span></h2>
         </div>
         <div className="cmp" role="table" aria-label="Comparativa">
-          <div className="cmp-r cmp-h" role="row"><span role="columnheader" /><span role="columnheader">Protege lo que el agente ve en pantalla</span><span role="columnheader">Controla el pago</span><span role="columnheader">Funciona sin integrar nada</span></div>
-          {ROWS.map((r) => (
-            <div className={'cmp-r' + (r[0] === 'Priv8' ? ' me' : '')} role="row" key={r[0]}>
-              {r.map((c, i) => <span role={i ? 'cell' : 'rowheader'} key={i} className={i && (c === 'no') ? 'no' : ''}>{c}</span>)}
+          <div className="cmp-r cmp-h" role="row"><span role="columnheader" />{COLS.map((c) => <span role="columnheader" key={c}>{c}</span>)}</div>
+          {ROWS.map(([name, vals]) => (
+            <div className={'cmp-r' + (name === 'Priv8' ? ' me' : '')} role="row" key={name}>
+              <span role="rowheader">{name}</span>
+              {vals.map((v, i) => <span role="cell" key={i}><Mark v={v} /></span>)}
             </div>
           ))}
         </div>
@@ -150,51 +153,28 @@ export function Compare() {
   );
 }
 
-/* ---------------------------------------------------------------- cumplimiento */
+/* ---------------------------------------------------------------- cumplimiento, con peso */
 const LAWS = [
-  ['RGPD', 'Minimización y seudonimización: al proveedor del modelo solo le llegan tokens. Tu empresa sigue siendo responsable de sus datos.'],
-  ['PSD2', 'La autenticación reforzada del banco la hace siempre la persona. 8 mira a otro lado mientras pone su clave o su huella.'],
-  ['Asesoramiento', '8 ejecuta lo que decides; no recomienda inversiones. Si se lo pides, dice que no puede.'],
-  ['AI Act', 'Supervisión humana en lo irreversible y un registro de cada paso, listo para auditoría.'],
+  ['RGPD', 'Minimización y seudonimización', 'Al proveedor del modelo solo le llegan tokens. Los datos personales no salen de tu entorno.'],
+  ['PSD2', 'Autenticación reforzada', 'La clave, la huella y los códigos los pone siempre la persona. 8 no los ve ni los guarda.'],
+  ['MiFID II', 'Sin asesoramiento', '8 ejecuta lo que decides; no recomienda productos de inversión.'],
+  ['AI Act', 'Supervisión humana y trazabilidad', 'Lo irreversible espera a una persona y cada paso queda en un registro firmado.'],
 ];
 export function Compliance() {
   return (
-    <section id="cumplimiento" className="block block-paper laws" aria-labelledby="h-laws">
+    <section id="cumplimiento" className="block block-cobalt laws" aria-labelledby="h-laws">
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="leer" say="Hecho para pasar auditoría." />
           <p className="eyebrow">Cumplimiento</p>
-          <h2 id="h-laws">Pensado para lo que te va a preguntar <span className="soft">tu responsable de cumplimiento.</span></h2>
+          <h2 id="h-laws">La IA entra en procesos con datos. <span className="soft">Tu cumplimiento, intacto.</span></h2>
+          <p className="lead">Priv8 está diseñado para que tu equipo legal pueda decir que sí.</p>
         </div>
         <div className="laws-grid">
-          {LAWS.map(([k, t]) => (<article key={k} className="law"><h3>{k}</h3><p>{t}</p></article>))}
+          {LAWS.map(([k, sub, t]) => (<article key={k} className="law"><h3>{k}</h3><p className="law-sub">{sub}</p><p>{t}</p></article>))}
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------------------------------------------------------------- equipo */
-const TEAM = [
-  ['Ángel', 'Agente, Android, voz y diseño'],
-  ['Pablo', 'Núcleo del protocolo'],
-  ['Álvaro', 'Priv8 para empresas'],
-  ['Marco', 'App 8 y bancos simulados'],
-];
-export function Team() {
-  return (
-    <section id="equipo" className="block block-paper team" aria-labelledby="h-team">
-      <div className="wrap">
-        <div className="block-head">
-          <Spot className="spot-inline" mode="alegria" say="Mi equipo." />
-          <p className="eyebrow">Equipo</p>
-          <h2 id="h-team">Cuatro personas <span className="soft">y un 8.</span></h2>
-          <p className="lead">Hecho en la hackathon de finanzas de la Madrid Engineering Week.</p>
-        </div>
-        <div className="team-grid">
-          {TEAM.map(([n, r]) => (<article key={n} className="mate"><span className="av">{n[0]}</span><h3>{n}</h3><p>{r}</p></article>))}
-        </div>
-      </div>
-    </section>
-  );
-}

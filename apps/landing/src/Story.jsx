@@ -60,10 +60,10 @@ export function SeeScene() {
             <div className="see-copy">
               <Spot className="spot-scn" mode={safe ? 'nove' : 'miedo'} say={safe ? 'Así sí. No veo nada que no deba.' : 'Esto no debería verlo nadie.'} />
               <p className="eyebrow">{safe ? 'Con Priv8' : 'Sin Priv8'}</p>
-              <h2 key={phase} className="swap">{safe ? <>8 ve <span className="soft">esto.</span></> : <>Un agente normal <span className="soft">ve esto.</span></>}</h2>
-              <p key={'l' + phase} className="lead swap">{safe
-                ? 'La misma pantalla, la misma tarea. El modelo sabe qué es cada campo y puede trabajar con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina, y la clave ni siquiera sale.'
-                : 'Para usar una web o una app, el agente manda la pantalla entera al proveedor del modelo: nombres, IBAN, saldos y movimientos. Por eso los bancos no dejan a la IA tocar procesos con datos de clientes.'}</p>
+              <h2 key={phase} className="swap see-h">{safe ? <>8 solo ve <span className="soft">tokens.</span></> : <>Un agente normal <span className="soft">lo ve todo.</span></>}</h2>
+              <p key={'l' + phase} className="lead swap see-l">{safe
+                ? 'La misma pantalla y la misma tarea. El modelo sabe qué es cada campo y trabaja con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina.'
+                : 'Para usar una web, el agente manda la pantalla entera al proveedor del modelo: nombres, IBAN, saldos y movimientos. Por eso los bancos no dejan a la IA tocar datos de clientes.'}</p>
             </div>
             <BankScreen safe={safe} />
           </div>
