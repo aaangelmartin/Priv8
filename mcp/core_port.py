@@ -1,10 +1,10 @@
 """The thin interface between the MCP server / agent loop and the Priv8 core.
 
 The real core (`core/`, issues #4-#14) is not written yet. Everything in `mcp/`
-talks to it only through the Protocol classes below, built on the draft
-contracts in `docs/arquitectura.html`. When the official contracts land in
-`docs/contracts/` (#4), an adapter around `core/` implements these Protocols
-and is passed to `build_server()` / `run_agent()` instead of `fakes.FakeCore`.
+talks to it only through the Protocol classes below, which follow contracts v1
+in `docs/contracts/` (PR #58): tools.schema.json, observation.schema.json and
+audit.schema.json. An adapter around `core/` implements these Protocols and is
+passed to `build_server()` / `run_agent()` instead of `fakes.FakeCore`.
 
 Every payload here is a plain JSON-compatible dict, so a contract change is a
 change of keys, not of types.
@@ -22,12 +22,14 @@ import re
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol, runtime_checkable
 
-# Draft grammar: ‹TIPO_n·etiqueta›  (docs/arquitectura.html, "Gramática del token")
+# docs/contracts/token.md: ‹TIPO_n·etiqueta›
 TOKEN_RE = re.compile(r"‹([A-Z]+)_(\d+)(?:·([a-z]+))?›")
 
 ActOp = Literal["tap", "type", "key", "scroll", "open_app", "back", "send", "call"]
 OracleOp = Literal["sum", "compare", "matches"]
-DenyReason = Literal["fuga", "destino", "rojo", "presupuesto", "sin_regla"]
+# docs/contracts/tools.schema.json#/$defs/denied, shared with audit.schema.json
+DenyReason = Literal["fuga", "destino", "rojo", "presupuesto", "sin_regla",
+                     "token_desconocido", "caducado", "cancelado"]
 AuditKind = Literal[
     "observe_sent", "act", "held", "approval", "oracle", "blocked",
     "voice_out", "call", "paused", "task",
@@ -35,25 +37,33 @@ AuditKind = Literal[
 
 JSON = dict[str, Any]
 
+# Keys a caller may pass to AuditPort.record (audit.schema.json minus what the log adds).
+AUDIT_INPUT_FIELDS = frozenset({
+    "session", "kind", "reason", "app", "screen", "model_saw", "tokens",
+    "confirm", "approved_by", "counts", "detail", "ms",
+})
+NO_SESSION = "sin_sesion"  # session id for events about calls that carried none
+
 
 @runtime_checkable
 class ScreenPort(Protocol):
     def observe(self, session: str) -> JSON:
-        """Tokenized tree of the current screen.
+        """Tokenized screen: observation.schema.json, or {"denied": ...}.
 
-        Draft shape: {"screen", "app", "paused", "elements": [{"id", "role",
-        "label", "value"|"text", "cls", "actions"}], "budget_left"}.
-        Red elements arrive with value/text = None.
+        {"session", "app", "screen", "seq", "paused", "elements": [{"id", "role",
+        "label", "text", "cls", "tokens", "actions"}], "budget_left"}.
+        Red elements arrive with text = None.
         """
         ...
 
 
 @runtime_checkable
 class ActPort(Protocol):
-    def act(self, session: str, op: ActOp, target: str | None = None, text: str | None = None) -> JSON:
-        """Run one action. `text` holds tokens or green text only.
+    def act(self, session: str, op: ActOp, target: str | None = None, text: str | None = None,
+            direction: str | None = None) -> JSON:
+        """Run one action (tools.schema.json act_input). `text` holds tokens or green text only.
 
-        Draft outputs: {"ok": True} | {"held": {"confirm": "c3"}}
+        act_result: {"ok": True} | {"held": {"confirm": "c3"}}
         | {"denied": DenyReason, "detail": str}.
         The executor rehydrates tokens locally before the adapter writes.
         """
@@ -91,9 +101,11 @@ class LeakCheckPort(Protocol):
 @runtime_checkable
 class AuditPort(Protocol):
     def record(self, event: JSON) -> JSON:
-        """Append one event and return it as stored (with seq, ts, prev, hash).
+        """Append one event and return it as stored (audit.schema.json).
 
-        Draft fields: session, kind, reason, model_saw, tokens, approved_by, ms.
+        The caller gives session, kind and any of reason, app, screen,
+        model_saw, tokens, confirm, approved_by, counts, detail, ms; the audit
+        adds seq, ts, prev, hash and sig. No other keys.
         """
         ...
 

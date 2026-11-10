@@ -1,18 +1,23 @@
 """In-memory fake of the Priv8 core, enough to run «registrar factura» end to end.
 
-Stands in for `core/` (issues #4-#14) until it exists. It follows the draft
-contracts in `docs/arquitectura.html` and implements the Protocols in
-`core_port.py`. It is deliberately small: one site (Alba Core), one screen with
-an invoice form, a vault, a destination policy, an oracle with a budget, an
-executor that rehydrates tokens, a confirmation that auto-approves, a leak
-check and a hash-chained audit log.
+Stands in for `core/` (issues #4-#14) until it exists. It follows contracts v1
+(`docs/contracts/`, PR #58) and implements the Protocols in `core_port.py`:
+the adapter returns snapshot.schema.json, observe returns
+observation.schema.json, act and oracle return tools.schema.json results, and
+the audit log writes audit.schema.json lines.
 
-All data is invented. Nothing here is the real detector: the fake screen
-declares which fragment is which data type, as a site policy would.
+It is deliberately small: one site (Alba Core), one screen with an invoice
+form, a vault, a destination policy, an oracle with a budget, an executor that
+rehydrates tokens, a confirmation that auto-approves, a leak check and a
+hash-chained audit log. Nothing here is the real detector: the fake vault is
+pre-loaded with the seed values, as a site policy plus the vault match would.
+
+All data is invented.
 """
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import re
@@ -21,7 +26,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from core_port import JSON, TOKEN_RE, Core, LeakVerdict
+from core_port import AUDIT_INPUT_FIELDS, JSON, TOKEN_RE, Core, LeakVerdict, tokens_in
 
 # ---------------------------------------------------------------- seed data
 
@@ -39,12 +44,12 @@ SEED: dict[str, str] = {
     "clave": "Lumen-2026!",
 }
 
-# seed key -> (TIPO, etiqueta)
+# seed key -> (TIPO, etiqueta), in vault order (fixes the token numbers).
 SEED_TYPES: dict[str, tuple[str, str | None]] = {
-    "proveedor": ("PROVEEDOR", None),
-    "cif": ("CIF", None),
-    "factura": ("FACTURA", None),
-    "email": ("EMAIL", "tercero"),
+    "proveedor": ("PROVEEDOR", "correo"),
+    "cif": ("CIF", "tercero"),
+    "factura": ("FACTURA", "correo"),
+    "email": ("EMAIL", "correo"),
     "importe_correo": ("IMPORTE", "positivo"),
     "importe_pedido": ("IMPORTE", "positivo"),
     "iban_maestro": ("IBAN", "maestro"),
@@ -98,10 +103,15 @@ class Field:
 
 
 class FakeAdapter:
-    """Fake Alba Core screen. Holds real values: never leaves the trust zone."""
+    """Fake Alba Core screen. Holds real values: never leaves the trust zone.
+
+    Implements the core/adapter.py interface (PR #58): snapshot() returns
+    snapshot.schema.json; perform(RealAction) returns Result.
+    """
 
     def __init__(self) -> None:
         self.screen = "factura.alta"
+        self.seq = 0
         self.performed: list[JSON] = []
         self.fields: dict[str, Field] = {
             "e6": Field("e6", "Proveedor", "factura.proveedor"),
@@ -114,16 +124,16 @@ class FakeAdapter:
         self.registered: dict[str, str] | None = None
         self.error: str | None = None
 
-    # The draft adapter interface: snapshot() / perform().
     def snapshot(self) -> JSON:
         s = SEED
+        self.seq += 1
         if self.screen == "factura.registrada":
             reg = self.registered or {}
             elements = [
                 _el("e1", "heading", None, "Factura registrada"),
                 _el("e2", "text", None, f"Factura {reg.get('factura.numero', '')} de {reg.get('factura.proveedor', '')}"),
                 _el("e3", "text", None, f"Importe {reg.get('factura.importe', '')}, pago a {reg.get('pago.iban', '')}"),
-                _el("e4", "button", "Volver al listado", None, actions=["tap"]),
+                _el("e4", "button", "Volver al listado", "Volver al listado", actions=["tap"]),
             ]
         else:
             elements = [
@@ -133,18 +143,19 @@ class FakeAdapter:
                 _el("e4", "text", None, f"Importe: {s['importe_correo']}"),
                 _el("e5", "text", None, f"Nueva cuenta para el pago: {s['iban_correo']}"),
                 *[
-                    {"id": f.id, "role": "textbox", "label": f.label, "value": f.value,
-                     "password": f.password, "actions": ["type"], "sel": f"#{f.field}"}
-                    for f in self.fields.values() if f.id != "e12"
+                    {"id": f.id, "role": "textbox", "label": f.label,
+                     "text": ("••••" if f.value else "") if f.password else f.value,
+                     **({"password": True} if f.password else {}),
+                     "sel": "#" + f.field.replace(".", "-"), "actions": ["type"]}
+                    for f in self.fields.values()
                 ],
                 _el("e11", "text", "Pedido PO-311", f"Importe del pedido: {s['importe_pedido']}"),
-                {"id": "e12", "role": "textbox", "label": "Clave de firma", "value": "••••" if self.fields["e12"].value else "",
-                 "password": True, "actions": ["type"], "sel": "#firma.clave"},
-                _el("e13", "button", "Registrar", None, actions=["tap"]),
+                _el("e13", "button", "Registrar", "Registrar", actions=["tap"]),
             ]
             if self.error:
-                elements.append(_el("e14", "alert", None, self.error))
-        return {"source": "web", "app": "alba-core", "screen": self.screen, "seq": len(self.performed),
+                elements.append(_el("e14", "text", "Aviso", self.error))
+        return {"source": "web", "app": "alba-core", "screen": self.screen,
+                "url": "http://127.0.0.1:5173/facturas/alta", "seq": self.seq,
                 "focus": None, "system_dialog": None, "elements": elements}
 
     def perform(self, action: JSON) -> JSON:
@@ -158,7 +169,7 @@ class FakeAdapter:
             missing = [f.label for f in self.fields.values() if not f.password and not f.value]
             if missing:
                 self.error = "Faltan campos: " + ", ".join(missing)
-                return {"ok": False}
+                return {"ok": True}  # the tap worked; the page shows the error
             self.registered = {f.field: f.value for f in self.fields.values() if not f.password}
             self.screen = "factura.registrada"
             self.error = None
@@ -167,7 +178,7 @@ class FakeAdapter:
             return {"ok": True}
         if op in ("scroll", "key", "back"):
             return {"ok": True}
-        return {"ok": False}
+        return {"ok": False, "error": "target_no_encontrado"}
 
 
 def _el(id_: str, role: str, label: str | None, text: str | None, actions: list[str] | None = None) -> JSON:
@@ -179,7 +190,7 @@ def _el(id_: str, role: str, label: str | None, text: str | None, actions: list[
 
 # ---------------------------------------------------------------- policy
 
-# Site policy for alba-core (stand-in for policies/alba-core.yaml).
+# Site policy for alba-core (stand-in for policies/alba-core.yaml, #7).
 # field -> (accepted TIPO, accepted etiquetas or None for any)
 FIELD_RULES: dict[str, tuple[str, set[str] | None]] = {
     "factura.proveedor": ("PROVEEDOR", None),
@@ -189,6 +200,7 @@ FIELD_RULES: dict[str, tuple[str, set[str] | None]] = {
     "pago.iban": ("IBAN", {"maestro"}),
 }
 CRITICAL = {("tap", "e13"): "enviar"}  # needs human confirmation
+KNOWN_SCREENS = {"factura.alta", "factura.registrada"}
 TRAMOS = [(Decimal(100), "0–100"), (Decimal(1000), "100–1.000"), (Decimal(10000), "1.000–10.000")]
 
 
@@ -245,42 +257,49 @@ class FakeLeakCheck:
 
 # ---------------------------------------------------------------- audit
 
+GENESIS = "sha256:" + "0" * 64
+# The fake cannot sign: a fixed placeholder that matches the schema's pattern.
+FAKE_SIG = "ed25519:" + base64.b64encode(b"priv8-fake-unsigned").decode()
+
+
+def _canonical(obj: JSON) -> str:
+    return json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+
+
 class FakeAudit:
-    """JSONL-style audit log, hash-chained: hash = sha256(prev + canonical line)."""
+    """audit.schema.json lines, hash-chained: hash = sha256(prev + canonical line
+    without hash and sig). Unsigned (see FAKE_SIG)."""
 
     def __init__(self) -> None:
         self.events: list[JSON] = []
 
     def record(self, event: JSON) -> JSON:
-        prev = self.events[-1]["hash"] if self.events else "sha256:0"
-        stored: JSON = {
-            "seq": len(self.events) + 1,
+        extra = set(event) - AUDIT_INPUT_FIELDS
+        if extra:
+            raise ValueError(f"audit fields outside audit.schema.json: {sorted(extra)}")
+        ms = {"core": None, "adapter": None, "model": None, **(event.get("ms") or {})}
+        stored: JSON = {k: v for k, v in event.items() if v is not None and k != "ms"}
+        stored.update({
+            "seq": len(self.events),
             "ts": datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
-            "session": event.get("session"),
-            "kind": event["kind"],
-            "reason": event.get("reason"),
             "model_saw": event.get("model_saw"),
-            "tokens": event.get("tokens", []),
+            "tokens": list(event.get("tokens") or []),
             "approved_by": event.get("approved_by"),
-            "ms": event.get("ms", {}),
-            **{k: v for k, v in event.items() if k not in {
-                "session", "kind", "reason", "model_saw", "tokens", "approved_by", "ms"}},
-            "prev": prev,
-        }
-        line = json.dumps(stored, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-        stored["hash"] = "sha256:" + hashlib.sha256((prev + line).encode()).hexdigest()
-        stored["sig"] = None  # ed25519 signature: real core only
+            "ms": ms,
+            "prev": self.events[-1]["hash"] if self.events else GENESIS,
+        })
+        stored["hash"] = "sha256:" + hashlib.sha256((stored["prev"] + _canonical(stored)).encode()).hexdigest()
+        stored["sig"] = FAKE_SIG
         self.events.append(stored)
         return stored
 
     def verify(self) -> bool:
-        prev = "sha256:0"
+        prev = GENESIS
         for ev in self.events:
             body = {k: v for k, v in ev.items() if k not in ("hash", "sig")}
             if body["prev"] != prev:
                 return False
-            line = json.dumps(body, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
-            if ev["hash"] != "sha256:" + hashlib.sha256((prev + line).encode()).hexdigest():
+            if ev["hash"] != "sha256:" + hashlib.sha256((prev + _canonical(body)).encode()).hexdigest():
                 return False
             prev = ev["hash"]
         return True
@@ -298,6 +317,10 @@ def _amount(value: str) -> Decimal | None:
         return None
 
 
+def _denied(reason: str, detail: str) -> JSON:
+    return {"denied": reason, "detail": detail}
+
+
 @dataclass
 class FakeCore:
     """Screen, actor and oracle ports over the fake adapter and vault."""
@@ -308,110 +331,131 @@ class FakeCore:
     auto_approve: bool = True
     oracle_budget: int = 30
     _confirm_n: int = 0
+    _pending: str | None = None
 
     def __post_init__(self) -> None:
-        # Pre-register seed values so tokens are stable and leak check knows them.
         for key, (tipo, etiqueta) in SEED_TYPES.items():
             self.vault.tokenize(SEED[key], tipo, etiqueta)
 
-    # -- observe: adapter.snapshot() -> policy -> tokenizer -> (leak check in server)
+    # -- observe: adapter.snapshot() -> policy -> tokenizer -> (final block in the server)
     def observe(self, session: str) -> JSON:
         raw = self.adapter.snapshot()
+        if raw["screen"] not in KNOWN_SCREENS:
+            return _denied("sin_regla", "No hay política para esta pantalla")
         out = []
         for el in raw["elements"]:
+            item: JSON = {"id": el["id"], "role": el["role"]}
+            if el.get("label") is not None:
+                item["label"] = el["label"]
             if el.get("password"):
-                out.append({"id": el["id"], "role": el["role"], "label": el["label"],
-                            "value": None, "cls": "rojo", "actions": el.get("actions", [])})
-                continue
-            item: JSON = {"id": el["id"], "role": el["role"], "label": el["label"]}
-            cls = "verde"
-            for key in ("text", "value"):
-                if key in el:
-                    tokenized = self._tokenize_text(el[key]) if el[key] else el[key]
-                    if tokenized != el[key]:
-                        cls = "ambar"
-                    item[key] = tokenized
-            item["cls"] = cls
+                item.update(text=None, cls="rojo")
+            else:
+                text = el.get("text")
+                tokenized = self._tokenize_text(text) if text else text
+                item.update(text=tokenized, cls="ambar" if tokenized != text else "verde")
+                toks = list(dict.fromkeys(tokens_in(f"{item.get('label') or ''} {tokenized or ''}")))
+                if toks:
+                    item["tokens"] = toks
             if el.get("actions"):
                 item["actions"] = el["actions"]
             out.append(item)
-        return {"screen": raw["screen"], "app": raw["app"], "paused": None,
+        return {"session": session, "app": raw["app"], "screen": raw["screen"], "seq": raw["seq"],
+                "paused": "confirmacion" if self._pending else None,
                 "elements": out, "budget_left": self.oracle_budget}
 
     def _tokenize_text(self, text: str) -> str:
-        # Longest values first so a value inside another is not split.
+        # token.md rule 5: real text that imitates a token is defused first.
+        text = text.replace("‹", "<").replace("›", ">")
         for value in sorted(self.vault.values(), key=len, reverse=True):
             if value and value in text:
                 text = text.replace(value, self.vault.token_for(value) or value)
         return text
 
     # -- act: policy -> provenance -> confirmation -> executor -> adapter.perform()
-    def act(self, session: str, op: str, target: str | None = None, text: str | None = None) -> JSON:
+    def act(self, session: str, op: str, target: str | None = None, text: str | None = None,
+            direction: str | None = None) -> JSON:
         fields = self.adapter.fields
+        if self._pending:
+            return _denied("sin_regla", f"hay una confirmación pendiente ({self._pending})")
         if target in fields and fields[target].password:
-            return {"denied": "rojo", "detail": "campo rojo: lo escribe la persona"}
+            return _denied("rojo", "campo rojo: lo escribe la persona")
         real_text = text
         if op == "type":
             if target not in fields:
-                return {"denied": "sin_regla", "detail": f"{target} no es un campo escribible"}
+                return _denied("sin_regla", f"{target} no es un campo escribible")
             rule = FIELD_RULES.get(fields[target].field)
-            toks = list(TOKEN_RE.finditer(text or ""))
             if rule is None:
-                return {"denied": "sin_regla", "detail": f"sin regla para {fields[target].field}"}
+                return _denied("sin_regla", f"sin regla para {fields[target].field}")
             tipo, etiquetas = rule
+            toks = list(TOKEN_RE.finditer(text or ""))
             if len(toks) != 1 or toks[0].group(0) != (text or "").strip():
-                return {"denied": "destino", "detail": f"{fields[target].field} solo acepta un token {tipo}"}
+                return _denied("destino", f"{fields[target].field} solo acepta un token {tipo}")
             m = toks[0]
             if self.vault.value(m.group(0)) is None:
-                return {"denied": "sin_regla", "detail": "token desconocido: no se escribe"}
+                return _denied("token_desconocido", "token desconocido: no se escribe")
             if m.group(1) != tipo or (etiquetas is not None and m.group(3) not in etiquetas):
                 origen = m.group(3) or "sin etiqueta"
-                return {"denied": "destino",
-                        "detail": f"{m.group(1)} de origen {origen} no entra en {fields[target].field}"}
+                return _denied("destino", f"{m.group(1)} de origen {origen} no entra en {fields[target].field}")
             real_text = self.vault.value(m.group(0))
         elif text and TOKEN_RE.search(text):
-            real_text = TOKEN_RE.sub(lambda mm: self.vault.value(mm.group(0)) or mm.group(0), text)
+            unknown = [t for t in tokens_in(text) if self.vault.value(t) is None]
+            if unknown:
+                return _denied("token_desconocido", "token desconocido: no se escribe")
+            real_text = TOKEN_RE.sub(lambda mm: self.vault.value(mm.group(0)) or "", text)
 
-        action = {"op": op, "target": target, "text": real_text}
-        kind = CRITICAL.get((op, target or ""))
-        if kind:
+        action: JSON = {"op": op}
+        if target is not None:
+            action["target"] = target
+        if real_text is not None:
+            action["text"] = real_text
+        if direction is not None:
+            action["direction"] = direction
+
+        if (op, target or "") in CRITICAL:
             self._confirm_n += 1
             confirm_id = f"c{self._confirm_n}"
-            self.audit.record({"session": session, "kind": "held", "confirm": confirm_id,
-                               "confirm_kind": kind, "model_saw": f"act {op} {target}"})
+            self.audit.record({"session": session, "kind": "held", "confirm": confirm_id, "app": "alba-core",
+                               "screen": self.adapter.screen, "model_saw": f"act {op} {target}",
+                               "detail": CRITICAL[(op, target or "")]})
             if self.auto_approve:
                 self.audit.record({"session": session, "kind": "approval", "confirm": confirm_id,
-                                   "approved_by": "persona", "via": "pantalla"})
+                                   "approved_by": "persona", "detail": "pantalla"})
                 self.adapter.perform(action)
+            else:
+                self._pending = confirm_id
             return {"held": {"confirm": confirm_id}}
         result = self.adapter.perform(action)
-        return {"ok": bool(result.get("ok"))}
+        if not result.get("ok"):
+            return _denied("sin_regla", f"no se pudo hacer {op} en {target}")
+        return {"ok": True}
 
     # -- oracle: budget -> vault -> answer by ranges or a new token
     def oracle(self, session: str, op: str, args: list[str]) -> JSON:
         if self.oracle_budget <= 0:
-            return {"denied": "presupuesto", "detail": "sin presupuesto de oráculo"}
+            return _denied("presupuesto", "sin presupuesto de oráculo en esta sesión")
         values = [self.vault.value(a) for a in args]
         if any(v is None for v in values):
-            return {"denied": "sin_regla", "detail": "token desconocido"}
+            return _denied("token_desconocido", "token desconocido")
         self.oracle_budget -= 1
         if op == "sum":
             amounts = [_amount(v) for v in values]  # type: ignore[arg-type]
             if any(a is None for a in amounts):
-                return {"denied": "sin_regla", "detail": "sum solo admite importes"}
+                return _denied("sin_regla", "sum solo admite importes")
             total = sum(amounts)  # type: ignore[arg-type]
             token = self.vault.tokenize(f"{total:.2f}", "SUMA")
             tramo = next((t for lim, t in TRAMOS if total < lim), "más de 10.000")
             return {"result": token, "tramo": tramo, "budget_left": self.oracle_budget}
         if len(values) != 2:
-            return {"denied": "sin_regla", "detail": f"{op} usa exactamente dos tokens"}
+            return _denied("sin_regla", f"{op} usa exactamente dos tokens")
         a, b = values
         if op == "compare":
             x, y = _amount(a), _amount(b)  # type: ignore[arg-type]
             if x is None or y is None:
-                return {"denied": "sin_regla", "detail": "compare solo admite importes"}
+                return _denied("sin_regla", "compare solo admite importes")
             res = "igual" if x == y else ("mayor" if x > y else "menor")
             return {"result": res, "budget_left": self.oracle_budget}
+        if TOKEN_RE.fullmatch(args[0]).group(1) != TOKEN_RE.fullmatch(args[1]).group(1):  # type: ignore[union-attr]
+            return _denied("sin_regla", "matches compara dos tokens del mismo tipo")
         same = _norm(a) == _norm(b)  # type: ignore[arg-type]
         return {"result": "coincide" if same else "no coincide", "budget_left": self.oracle_budget}
 
