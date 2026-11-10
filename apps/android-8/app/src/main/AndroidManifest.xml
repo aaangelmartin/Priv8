@@ -3,12 +3,21 @@
 
     <!-- Bridge to the core on the laptop (ws://127.0.0.1:8765 via adb reverse). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Confirmaciones habladas: «confirmo» / «cancela», on-device recognizer only. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!-- open_app: see the launchable apps (package visibility, API 30+). -->
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <!-- Local voice: TextToSpeech engine and speech recognizer. -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
         </intent>
     </queries>
 
@@ -27,6 +36,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".confirm.ConfirmActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:taskAffinity="es.priv8.ocho.confirm" />
 
         <service
             android:name=".Priv8AccessibilityService"
