@@ -106,6 +106,16 @@ class AuditPort(Protocol):
         The caller gives session, kind and any of reason, app, screen,
         model_saw, tokens, confirm, approved_by, counts, detail, ms; the audit
         adds seq, ts, prev, hash and sig. No other keys.
+
+        One owner per event, so nothing appears twice in the log:
+        - The core records its own work on each call: observe_sent, act, held,
+          approval, oracle, and blocked for the denials it decides.
+        - The MCP server (agent/server.py) records only blocked events the core
+          never sees: unknown tool, invalid input, a real value in the input,
+          and a core result held back by the server's final block.
+        - The agent loop (agent/agent.py) records task events (start, each
+          model step with ms.model, end, errors) and blocked for a request to
+          Claude held back by the final block.
         """
         ...
 

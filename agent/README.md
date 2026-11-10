@@ -23,7 +23,8 @@ Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo; aún sin fusi
 
 ```bash
 uv sync                      # Python 3.12, dependencias fijadas en pyproject.toml / uv.lock
-make replay                  # «registrar factura» con respuestas grabadas, sin clave
+make replay-fake             # «registrar factura» con respuestas grabadas sobre el núcleo falso, sin clave
+make replay                  # las dos escenas de la demo con el núcleo real, sin clave (core/replay.py, #79)
 make agent                   # en vivo: servidor HTTP en :8701 y agente conectado a él (necesita ANTHROPIC_API_KEY)
 uv run pytest                # tests
 
@@ -41,7 +42,11 @@ Opciones de `agent.agent`: `--task` (nombre de tarea o texto libre en español),
 - **Tres herramientas.** El servidor solo registra `tools/list` y `tools/call`; `resources/*` y `prompts/*` responden «Method not found». El agente se niega a arrancar si el servidor ofrece otra cosa que `observe`, `act` y `oracle`.
 - **Entrada validada.** Cada llamada se valida contra su esquema; un error devuelve solo la ruta del campo, nunca el valor.
 - **Bloqueo final.** Toda respuesta de herramienta pasa por `LeakCheckPort.check` antes de salir; si se escapa un patrón sensible, el modelo recibe `{"denied":"fuga"}` y queda un evento `blocked`. Lo mismo para la entrada de `act` y para cada petición a Claude (tarea, resultados de herramientas).
-- **Auditoría.** Cada llamada deja un evento (`observe_sent`, `act`, `oracle`, `held`, `approval`, `blocked`) y cada paso del modelo un evento `task` con lo que dijo y su latencia (`ms.model`).
+- **Auditoría, un dueño por evento.** Cada evento sale una sola vez en el registro:
+  - **El núcleo** registra lo que hace en cada llamada: `observe_sent`, `act`, `held`, `approval`, `oracle` y `blocked` por sus propias denegaciones. El núcleo falso (`fakes.py`) hace lo mismo.
+  - **El servidor** (`server.py`) solo registra `blocked` de lo que el núcleo no ve: herramienta desconocida, entrada inválida, dato real en la entrada y respuesta retenida por su bloqueo final.
+  - **El bucle** (`agent.py`) registra `task` (inicio, cada paso del modelo con lo que dijo y `ms.model`, fin, errores) y `blocked` si retiene una petición a Claude.
+  - Con `PRIV8_CORE=real`, `--audit-out` solo trae lo que registró el lado del agente; el registro completo y firmado es el del núcleo (`audit/priv8.jsonl`).
 
 ## Formato de replay (`priv8-replay/1`)
 
@@ -100,7 +105,7 @@ Decisión del equipo (opción A): el núcleo (`core/`, Camino 1) es una bibliote
 Elección del núcleo: `PRIV8_CORE=fake|real` (por defecto `fake` hasta que llegue el núcleo). La usan `server.default_core()` y la entrada de `agent.agent`:
 
 ```bash
-PRIV8_CORE=real make replay
+make replay                                   # escenas de la demo con el núcleo real (core/replay.py)
 PRIV8_CORE=real uv run python -m agent.server
 ```
 
@@ -108,7 +113,7 @@ Si `core` no se importa o le falta alguna función, `build_real_core()` lanza `R
 
 ## Cuando llegue el núcleo
 
-1. Exponer en `core` las cinco funciones de arriba. Con eso, `PRIV8_CORE=real make replay` ya corre el trámite contra el núcleo real.
+1. Exponer en `core` las cinco funciones de arriba. Hecho: `make replay` corre las escenas de la demo contra el núcleo real (#79) y `make replay-fake` mantiene el replay del agente sobre el núcleo falso.
 2. Si cambian los contratos o las firmas, ajustar `tools.json` (y `x-priv8-rules`), `core_port.py` y `core_adapter.py`; `test_contracts.py` dirá qué no cuadra.
 3. Cambiar el valor por defecto de `PRIV8_CORE` a `real` en `core_adapter.py` cuando el núcleo esté listo.
 4. Mantener `fakes.py` para los tests, o pasar los tests al núcleo real y borrarlo.

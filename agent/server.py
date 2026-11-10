@@ -1,8 +1,13 @@
 """Priv8 CUA MCP server: exactly three closed tools, observe, act and oracle.
 
 No other tool, no resources, no prompts. Every result goes through the core's
-leak check (the final block) before it is returned, and every call leaves an
-audit event (audit.schema.json).
+leak check (the final block) before it is returned.
+
+Audit ownership (one owner per event, audit.schema.json): the core records what
+it does on each call (observe_sent, act, held, approval, oracle, and blocked
+for its own denials). This server records only what the core never sees: calls
+it refuses before reaching the core (unknown tool, invalid input, a real value
+in the input) and core results its final block holds back. See AuditPort.
 
     python -m agent.server                     # streamable HTTP on 127.0.0.1:8701/mcp
     python -m agent.server --transport stdio   # stdio, for MCP hosts that spawn it
@@ -27,7 +32,7 @@ import mcp_types as types
 from jsonschema import Draft202012Validator
 from mcp.server import Server
 
-from agent.core_port import JSON, NO_SESSION, Core, tokens_in
+from agent.core_port import JSON, NO_SESSION, Core
 
 log = logging.getLogger("priv8.mcp")
 
@@ -88,42 +93,18 @@ class ToolGateway:
             result = self.core.oracle.oracle(args["session"], args["op"], list(args["args"]))
         core_ms = round((time.perf_counter() - t0) * 1000)
 
+        # The core has already recorded this call (observe_sent, act, held, oracle or
+        # blocked). Recording it here too would duplicate it in the signed log.
         payload = json.dumps(result, ensure_ascii=False)
         verdict = self.core.leak.check(payload)
         if not verdict.ok:
             self._audit(session, "blocked", reason="fuga", model_saw=f"{name} respuesta retenida",
                         detail="patrón: " + ", ".join(verdict.matched), ms={"core": core_ms})
             return dict(LEAK_BLOCKED)
-
-        denied = result.get("denied")
-        if name == "observe" and not denied:
-            counts = {c: sum(1 for e in result["elements"] if e["cls"] == c) for c in ("verde", "ambar", "rojo")}
-            self._audit(session, "observe_sent", app=result["app"], screen=result["screen"],
-                        model_saw=f"observe {result['screen']}", tokens=_unique_tokens(payload),
-                        counts=counts, ms={"core": core_ms})
-        else:
-            said = " ".join(str(x) for x in (name, args.get("op"), args.get("target"), args.get("text"),
-                                              args.get("direction"), *(args.get("args") or [])) if x)
-            self._audit(session, "blocked" if denied else name, reason=denied, model_saw=said,
-                        tokens=_unique_tokens(said + " " + payload),
-                        detail=result.get("detail") if denied else _summary(result), ms={"core": core_ms})
         return result
 
     def _audit(self, session: str, kind: str, **fields: Any) -> None:
         self.core.audit.record({"session": session, "kind": kind, **fields})
-
-
-def _unique_tokens(text: str) -> list[str]:
-    return list(dict.fromkeys(tokens_in(text)))
-
-
-def _summary(result: JSON) -> str:
-    """One line for audit.detail: tokens and green words only."""
-    if "held" in result:
-        return f"held {result['held']['confirm']}"
-    if "result" in result:
-        return " ".join(str(result[k]) for k in ("result", "tramo") if k in result)
-    return "ok"
 
 
 def build_server(core: Core, *, name: str = "priv8-cua") -> Server[Any]:
