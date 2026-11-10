@@ -26,3 +26,4 @@ demo:
 test:
 	uv run pytest agent/tests core/tests voice/tests
 	uv run python docs/contracts/validate.py
+	uv run python data/check_seed.py
