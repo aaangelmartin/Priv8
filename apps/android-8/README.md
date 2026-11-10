@@ -95,3 +95,44 @@ Probado en la issue #26 sobre Android 14 (API 34):
 
 - **Instalado con `adb install`:** no hay restricción. El servicio se activa por `adb shell settings` y también desde Ajustes › Accesibilidad.
 - **Instalado desde un archivo o el navegador:** Ajustes muestra el servicio en gris con «Restricted setting», y el sistema descarta el valor de `enabled_accessibility_services` puesto por adb. Se desbloquea con «Allow restricted settings» en Información de la app, o con `adb shell appops set es.priv8.ocho ACCESS_RESTRICTED_SETTINGS allow`. `emu.sh` ya lo hace antes de activar el servicio.
+
+## Los ojos de 8 (issue #39)
+
+La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos del núcleo (`ws://127.0.0.1:8700/events`, `docs/contracts/events.schema.json`).
+
+- **`OjosView.kt`**: WebView con `assets/ocho/app.html`. Todo se sirve desde el APK (`https://appassets.androidplatform.net/assets/`); la página no sale a la red: la petición a Google Fonts de `ojos.html` se responde con la Sora incluida (`assets/ocho/fonts/`, OFL) y cualquier otra recibe un 403.
+- **`docs/ojos.html` es la única fuente de los ojos.** El build lo copia sin tocarlo a `build/generated/ojos/ocho/ojos.html` (tarea `copyOjos`). `app.html` lo carga en un iframe, deja visible solo el 8 grande y lo mueve con `P8.poner()`.
+- **`EventsClient.kt`**: cliente WebSocket del canal de eventos, con reconexión de 1 a 30 s. Descarta `screen` (lleva la pantalla real para la consola) antes de que llegue a la interfaz y solo registra tipos de mensaje.
+- **`assets/ocho/estados.js`**: de evento a cara. Función pura, con tests en `dev/test_estados.mjs`.
+
+| Evento | Cara |
+|---|---|
+| conexión abierta / perdida | saludar / sin conexión |
+| `audit` `task` | pensar |
+| `audit` `observe_sent` | leer; después asteriscos (`nove`) si hubo datos ámbar o ojos cerrados (`nuncasale`) si hubo rojos |
+| `audit` `act`, `oracle` | cargando |
+| `audit` `held` | esperar |
+| `audit` `paused` | mirar a otro lado (`apartar`), hasta el siguiente evento |
+| `audit` `approval` | confirmado (`asentir`) o cancelado (`negar`) |
+| `audit` `blocked` | `rojo`: nunca sale · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
+| `audit` `call` | hablar |
+| `voice` | hablar, con una duración aproximada hasta que la voz mixta avise del final |
+| `confirm_request` | llamar (`atencion`) y luego esperar |
+| `approval_result` | confirmado o cancelado |
+| `screen`, `audit` `voice_out` | no cambian la cara |
+
+Los gestos de una vez duran 2,8 s (`--p8-dur-gesto`) y vuelven a reposo (`mirar`). En los builds de depuración se ve abajo el estado de la conexión y la cara actual.
+
+### Probar sin el núcleo
+
+`dev/events_dev_server.py` hace de canal de eventos: valida cada mensaje contra los contratos antes de mandarlo y reproduce tres escenas (`saldo`, `transferencia`, `bloqueos`). También sirve una vista previa para el navegador.
+
+```sh
+uv run --python 3.12 --with websockets==15.0.1 --with jsonschema==4.25.1 \
+  python apps/android-8/dev/events_dev_server.py --run "wait 3; todo" --loop
+# navegador: http://127.0.0.1:8710/ocho/app.html?debug
+# emulador:
+~/Library/Android/sdk/platform-tools/adb reverse tcp:8700 tcp:8700
+```
+
+Tests de la tabla de caras: `node apps/android-8/dev/test_estados.mjs`.
