@@ -6,10 +6,10 @@ import json
 
 from mcp import Client
 
-from agent import ReplayModel, run_agent
+from agent.agent import ReplayModel, run_agent
 from conftest import REPLAY, seed_leaks
-from fakes import SEED, _el
-from server import build_server
+from agent.fakes import SEED, _el
+from agent.server import build_server
 
 
 async def _run_replay(core):

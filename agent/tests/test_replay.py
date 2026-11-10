@@ -7,11 +7,11 @@ import json
 import pytest
 from mcp import Client
 
-import agent as agent_mod
-from agent import ReplayExhausted, ReplayModel, run_agent, write_replay
+from agent import agent as agent_mod
+from agent.agent import ReplayExhausted, ReplayModel, run_agent, write_replay
 from conftest import REPLAY
-from fakes import SEED
-from server import build_server
+from agent.fakes import SEED
+from agent.server import build_server
 
 
 async def test_replay_registers_the_invoice(world):

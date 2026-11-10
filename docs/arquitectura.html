@@ -388,7 +388,7 @@ details.iss ol{margin:0;padding:0 12px 12px 34px;display:flex;flex-direction:col
   <div class="tbl scroll"><table>
     <thead><tr><th>Contrato</th><th>Dueño</th><th>Lo usan</th><th>Archivo</th></tr></thead>
     <tbody>
-      <tr><td>Herramientas MCP <code>observe</code> · <code>act</code> · <code>oracle</code></td><td>Camino 3 (Ángel), sobre el núcleo del 1</td><td>todos, a través del agente</td><td><code>mcp/tools.json</code></td></tr>
+      <tr><td>Herramientas MCP <code>observe</code> · <code>act</code> · <code>oracle</code></td><td>Camino 3 (Ángel), sobre el núcleo del 1</td><td>todos, a través del agente</td><td><code>agent/tools.json</code></td></tr>
       <tr><td>Gramática de tokens</td><td>Camino 1</td><td>2, 3, 4 (renderizador, consola)</td><td><code>docs/contracts/token.md</code></td></tr>
       <tr><td>Snapshot de pantalla</td><td>Camino 1</td><td>2 (web), 3 (Android)</td><td><code>snapshot.schema.json</code></td></tr>
       <tr><td>Interfaz de adaptador y puente</td><td>Camino 1</td><td>2, 3</td><td><code>core/adapter.py</code>, <code>bridge.schema.json</code></td></tr>
@@ -559,7 +559,7 @@ class Adapter(Protocol):
 │   ├── tokens.py  vault.py  policies.py  provenance.py
 │   ├── oracle.py  executor.py  confirm.py  leak.py  audit.py
 │   └── adapter.py      <span class="c">interfaz snapshot() / perform()</span>
-├── <span class="o">mcp/</span>               <span class="c">Python · SDK de MCP, API de Claude        · Camino 3</span>
+├── <span class="o">agent/</span>             <span class="c">Python · SDK de MCP, API de Claude        · Camino 3</span>
 │   ├── server.py       <span class="c">observe, act, oracle</span>
 │   └── agent.py        <span class="c">bucle del agente y modo replay</span>
 ├── adapters/

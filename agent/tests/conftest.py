@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from fakes import SEED, build_fake_core
+from agent.fakes import SEED, build_fake_core
 
-MCP_DIR = Path(__file__).resolve().parents[1]
-REPLAY = MCP_DIR / "replays" / "registrar_factura.json"
+AGENT_DIR = Path(__file__).resolve().parents[1]
+REPLAY = AGENT_DIR / "replays" / "registrar_factura.json"
 
 
 @pytest.fixture

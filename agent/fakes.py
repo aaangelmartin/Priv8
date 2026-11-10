@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from core_port import AUDIT_INPUT_FIELDS, JSON, TOKEN_RE, Core, LeakVerdict, tokens_in
+from agent.core_port import AUDIT_INPUT_FIELDS, JSON, TOKEN_RE, Core, LeakVerdict, tokens_in
 
 # ---------------------------------------------------------------- seed data
 

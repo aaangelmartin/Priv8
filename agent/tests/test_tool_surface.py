@@ -9,9 +9,9 @@ import pytest
 from mcp import Client, MCPError, StdioServerParameters
 from mcp.server import Server
 
-from agent import ReplayModel, ToolSurfaceError, load_tools, run_agent
-from conftest import MCP_DIR, REPLAY
-from server import build_server
+from agent.agent import ReplayModel, ToolSurfaceError, load_tools, run_agent
+from conftest import AGENT_DIR, REPLAY
+from agent.server import build_server
 
 EXPECTED = {"observe", "act", "oracle"}
 
@@ -57,7 +57,8 @@ async def test_invalid_input_is_refused(world):
 
 
 async def test_only_three_tools_over_stdio():
-    params = StdioServerParameters(command=sys.executable, args=[str(MCP_DIR / "server.py"), "--transport", "stdio"])
+    params = StdioServerParameters(command=sys.executable, args=["-m", "agent.server", "--transport", "stdio"],
+                                    cwd=str(AGENT_DIR.parent))
     async with Client(params) as client:
         listed = await client.list_tools()
     assert {t.name for t in listed.tools} == EXPECTED

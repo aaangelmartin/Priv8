@@ -1,6 +1,6 @@
 """The thin interface between the MCP server / agent loop and the Priv8 core.
 
-The real core (`core/`, issues #4-#14) is not written yet. Everything in `mcp/`
+The real core (`core/`, issues #4-#14) is not written yet. Everything in `agent/`
 talks to it only through the Protocol classes below, which follow contracts v1
 in `docs/contracts/` (PR #58): tools.schema.json, observation.schema.json and
 audit.schema.json. An adapter around `core/` implements these Protocols and is

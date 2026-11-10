@@ -2,7 +2,7 @@
   "format": "priv8-replay/1",
   "model": "claude-opus-5-5",
   "task": "registrar factura",
-  "$comment": "Hand-written over the fake core (mcp/fakes.py) until a live run is recorded with --record. Tokens follow the fake vault order.",
+  "$comment": "Hand-written over the fake core (agent/fakes.py) until a live run is recorded with --record. Tokens follow the fake vault order.",
   "responses": [
     {
       "stop_reason": "tool_use",

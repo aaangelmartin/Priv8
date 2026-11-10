@@ -1,4 +1,4 @@
-# mcp/ · servidor MCP y bucle del agente
+# agent/ · servidor MCP y bucle del agente
 
 Camino 3, issue #25. El agente (Claude) solo ve tres herramientas: `observe`, `act` y `oracle`. No hay más herramientas, ni recursos, ni prompts.
 
@@ -16,7 +16,7 @@ Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo; aún sin fusi
 | `replays/registrar_factura.json` | Respuestas grabadas de «registrar factura» |
 | `tests/` | pytest |
 
-`mcp/` no tiene `__init__.py` a propósito: así nunca tapa el paquete `mcp` del SDK. Los módulos se importan como `server`, `agent`, etc. (pytest añade `mcp/` al path).
+`agent/` es un paquete (`agent.server`, `agent.agent`, `agent.core_port`...). Antes se llamaba `mcp/` y no tenía `__init__.py` para no tapar el paquete `mcp` del SDK; con el nombre nuevo ya no hay choque. Los comandos se lanzan desde la raíz del repositorio con `python -m`.
 
 ## Uso
 
@@ -26,14 +26,14 @@ make replay                  # «registrar factura» con respuestas grabadas, si
 make agent                   # en vivo: servidor HTTP en :8701 y agente conectado a él (necesita ANTHROPIC_API_KEY)
 uv run pytest                # tests
 
-uv run python mcp/server.py                    # solo el servidor, HTTP :8701
-uv run python mcp/server.py --transport stdio  # solo el servidor, stdio
-uv run python mcp/agent.py --server-url http://127.0.0.1:8701/mcp
-uv run python mcp/agent.py --record mcp/replays/nueva.json   # en vivo y graba un replay
-uv run python mcp/agent.py --replay FILE --audit-out audit.jsonl
+uv run python -m agent.server                  # solo el servidor, HTTP :8701
+uv run python -m agent.server --transport stdio  # solo el servidor, stdio
+uv run python -m agent.agent --server-url http://127.0.0.1:8701/mcp
+uv run python -m agent.agent --record agent/replays/nueva.json   # en vivo y graba un replay
+uv run python -m agent.agent --replay FILE --audit-out audit.jsonl
 ```
 
-Opciones de `agent.py`: `--task` (nombre de tarea o texto libre en español), `--max-steps` (20), `--session` (`s1`), `--port` (8701). Sale con 0 si la tarea termina.
+Opciones de `agent.agent`: `--task` (nombre de tarea o texto libre en español), `--max-steps` (20), `--session` (`s1`), `--port` (8701). Sale con 0 si la tarea termina.
 
 ## Garantías
 
@@ -67,7 +67,7 @@ Un JSON con las respuestas del modelo en orden, una por paso. El bucle las devue
 - Si el bucle pide más pasos de los grabados, falla con `ReplayExhausted`.
 - `--record FILE` escribe este mismo formato desde una ejecución en vivo (`response.model_dump()` de cada paso).
 
-Esto es lo que necesita #14 (modo replay, Pablo): `ReplayModel` y `write_replay` en `agent.py` se pueden reutilizar tal cual.
+Esto es lo que necesita #14 (modo replay, Pablo): `ReplayModel` y `write_replay` en `agent/agent.py` se pueden reutilizar tal cual.
 
 ## Contratos en los tests
 

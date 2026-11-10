@@ -1,14 +1,14 @@
 """Priv8 agent loop: Claude drives a screen through observe, act and oracle only.
 
-    python mcp/agent.py --task "registrar factura"            # live, in-process MCP server
-    python mcp/agent.py --serve                               # live, MCP over HTTP on :8701
-    python mcp/agent.py --server-url http://127.0.0.1:8701/mcp
-    python mcp/agent.py --replay mcp/replays/registrar_factura.json   # no API key
-    python mcp/agent.py --record out.json                     # live, and save a replay file
+    python -m agent.agent --task "registrar factura"            # live, in-process MCP server
+    python -m agent.agent --serve                               # live, MCP over HTTP on :8701
+    python -m agent.agent --server-url http://127.0.0.1:8701/mcp
+    python -m agent.agent --replay agent/replays/registrar_factura.json   # no API key
+    python -m agent.agent --record out.json                     # live, and save a replay file
 
 The agent gets its tools from the MCP server and refuses to run unless they are
 exactly observe, act and oracle. Each step is an audit event; each request to
-Claude passes the final block first. The replay format is in mcp/README.md.
+Claude passes the final block first. The replay format is in agent/README.md.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from typing import Any, Protocol
 import anyio
 from mcp import Client
 
-from core_port import JSON, Core, tokens_in
+from agent.core_port import JSON, Core, tokens_in
 
 MODEL = "claude-opus-5-5"
 MAX_TOKENS = 16000
@@ -242,8 +242,8 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
 # ------------------------------------------------------------------ CLI
 
 async def _main(a: argparse.Namespace) -> int:
-    from fakes import build_fake_core  # until the real core lands (#4)
-    from server import DEFAULT_HOST, build_server, serve_http
+    from agent.fakes import build_fake_core  # until the real core lands (#4)
+    from agent.server import DEFAULT_HOST, build_server, serve_http
 
     core, _fake = build_fake_core()
     err = lambda s: print(s, file=sys.stderr)  # noqa: E731

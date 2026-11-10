@@ -19,12 +19,12 @@ from jsonschema import Draft202012Validator
 from mcp import Client
 from referencing import Registry, Resource
 
-from agent import ReplayModel, run_agent
-from conftest import MCP_DIR, REPLAY
-from fakes import build_fake_core
-from server import _VALIDATORS, TOOL_DEFS, build_server
+from agent.agent import ReplayModel, run_agent
+from conftest import AGENT_DIR, REPLAY
+from agent.fakes import build_fake_core
+from agent.server import _VALIDATORS, TOOL_DEFS, build_server
 
-CONTRACTS = Path(os.environ.get("PRIV8_CONTRACTS_DIR") or MCP_DIR.parent / "docs" / "contracts")
+CONTRACTS = Path(os.environ.get("PRIV8_CONTRACTS_DIR") or AGENT_DIR.parent / "docs" / "contracts")
 BASE_URI = "https://priv8.dev/contracts/"
 
 pytestmark = pytest.mark.skipif(not (CONTRACTS / "tools.schema.json").is_file(),

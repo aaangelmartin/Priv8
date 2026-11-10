@@ -4,8 +4,8 @@ No other tool, no resources, no prompts. Every result goes through the core's
 leak check (the final block) before it is returned, and every call leaves an
 audit event (audit.schema.json).
 
-    python mcp/server.py                     # streamable HTTP on 127.0.0.1:8701/mcp
-    python mcp/server.py --transport stdio   # stdio, for MCP hosts that spawn it
+    python -m agent.server                     # streamable HTTP on 127.0.0.1:8701/mcp
+    python -m agent.server --transport stdio   # stdio, for MCP hosts that spawn it
 
 Follows contracts v1 (docs/contracts/tools.schema.json, PR #58). Until the real
 core lands, the server runs over `fakes.FakeCore`.
@@ -26,7 +26,7 @@ import mcp_types as types
 from jsonschema import Draft202012Validator
 from mcp.server import Server
 
-from core_port import JSON, NO_SESSION, Core, tokens_in
+from agent.core_port import JSON, NO_SESSION, Core, tokens_in
 
 log = logging.getLogger("priv8.mcp")
 
@@ -151,7 +151,7 @@ def build_server(core: Core, *, name: str = "priv8-cua") -> Server[Any]:
 
 def default_core() -> Core:
     """The core the server runs over. Swap for the real `core/` adapter when it lands."""
-    from fakes import build_fake_core
+    from agent.fakes import build_fake_core
 
     core, _ = build_fake_core()
     return core

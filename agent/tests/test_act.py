@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from mcp import Client
 
-from fakes import SEED
-from server import build_server
+from agent.fakes import SEED
+from agent.server import build_server
 
 
 async def _act(core, **args):
@@ -65,7 +65,7 @@ async def test_critical_action_is_held_for_confirmation(world):
 
 
 async def test_held_action_waits_without_approval():
-    from fakes import build_fake_core
+    from agent.fakes import build_fake_core
 
     core, fake = build_fake_core(auto_approve=False)
     r = await _act(core, op="tap", target="e13")
@@ -86,7 +86,7 @@ async def test_oracle_compares_without_revealing(world):
 
 
 async def test_oracle_budget_runs_out():
-    from fakes import build_fake_core
+    from agent.fakes import build_fake_core
 
     core, _ = build_fake_core(oracle_budget=1)
     args = {"session": "s1", "op": "compare", "args": ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"]}

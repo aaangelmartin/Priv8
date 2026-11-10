@@ -58,7 +58,7 @@ Datos inventados en `data/seed.json`: Banca Alcor, Brezo Banco, Nimbo Bróker, S
 
 ```
 core/              Python · detector, tokens, bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo, auditoría · Camino 1
-mcp/               Python · servidor MCP, bucle del agente, modo replay · Camino 3
+agent/             Python · servidor MCP, bucle del agente, modo replay · Camino 3
 adapters/web/      Playwright · Camino 2
 adapters/android/  Kotlin · servicio de accesibilidad y puente · Camino 3
 apps/erp-sim/ apps/inbox-sim/ apps/console/   React + Vite · Camino 2 (correos de prueba: Camino 4)
