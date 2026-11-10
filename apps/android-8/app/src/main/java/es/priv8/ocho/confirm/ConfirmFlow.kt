@@ -19,6 +19,12 @@ import org.json.JSONObject
  *
  * One request at a time, in arrival order. State lives on the main thread.
  * Results go through [sender] (the bridge); values are never logged.
+ *
+ * After each hello the core re-sends the pending confirm_request with the
+ * same id (contracts v1.1). A request already on screen or queued is
+ * ignored; one already answered gets the same approval_result again, so an
+ * answer lost while the bridge was down still arrives and the person is
+ * never asked twice.
  */
 object ConfirmFlow {
 
@@ -35,6 +41,12 @@ object ConfirmFlow {
     private var sender: ((JSONObject) -> Boolean)? = null
     private var screen: Screen? = null
     private var timeout: Runnable? = null
+
+    /** approval_result by request id, last [ANSWERED_MAX] answers, to repeat on a re-send. */
+    private const val ANSWERED_MAX = 32
+    private val answered = object : LinkedHashMap<String, JSONObject>() {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, JSONObject>?) = size > ANSWERED_MAX
+    }
 
     /** The request on screen, or null. Main thread. */
     var active: ConfirmRequest? = null
@@ -55,6 +67,11 @@ object ConfirmFlow {
     fun submit(request: ConfirmRequest) = main.post {
         if (active?.id == request.id || queue.any { it.id == request.id }) {
             Log.w(TAG, "confirm ${request.id}: already pending, ignored")
+            return@post
+        }
+        answered[request.id]?.let { result ->
+            val sent = sender?.invoke(result) == true
+            Log.i(TAG, "confirm ${request.id}: already answered, approval_result sent again${if (sent) "" else " (NOT SENT: bridge down)"}")
             return@post
         }
         queue.addLast(request)
@@ -109,6 +126,7 @@ object ConfirmFlow {
         timeout = null
         active = null
         isActive = false
+        answered[result.getString("id")] = result
         val sent = sender?.invoke(result) == true
         val reason = result.optString("reason").ifEmpty { "-" }
         Log.i(TAG, "approval_result ${result.getString("id")}: ok=${result.getBoolean("ok")} via=${result.getString("via")} reason=$reason${if (sent) "" else " (NOT SENT: bridge down)"}")
