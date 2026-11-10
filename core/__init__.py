@@ -23,13 +23,15 @@ import json
 import time
 from typing import Any
 
-from . import executor, provenance
+from . import events, executor, provenance
 from .adapter import Adapter
 from .audit import Audit
+from .confirm import Confirmations, Pending
 from .detect import FinanceDetector
 from .leak import LeakCheck
 from .policies import PolicySet, load_policies
 from .screen import _replace_spans, observe_screen
+from . import tokens as T
 from .session import Sessions
 from .vault import VaultStore
 
@@ -38,7 +40,6 @@ SESSIONS = Sessions(STORE)
 AUDIT = Audit()
 TRUSTED: list[tuple[str, str]] = []
 LEAK = LeakCheck(STORE)
-HOOKS: dict[str, Any] = {"provenance": provenance.check, "confirm": None}
 _policies: PolicySet | None = None
 
 
@@ -84,7 +85,50 @@ def check(payload: Any) -> dict[str, Any]:
 
 
 def record(event: dict[str, Any]) -> dict[str, Any]:
-    return AUDIT.record(event)
+    stored = AUDIT.record(event)
+    events.publish({"type": "audit", "event": stored})
+    return stored
+
+
+CONFIRM = Confirmations(publish=events.publish, record=record)
+HOOKS: dict[str, Any] = {"provenance": provenance.check, "confirm": CONFIRM.hook}
+
+
+def _perform_pending(p: Pending) -> dict[str, Any]:
+    sess = p.session
+    action = dict(p.action)
+    action.pop("label", None)
+    if "text" in action:
+        action["text"] = sess.vault.render(action["text"])
+    if sess.adapter is None:
+        return {"denied": "sin_regla", "detail": "la sesión no tiene adaptador conectado"}
+    res = sess.adapter.perform(action)
+    record({"session": sess.id, "kind": "act", "confirm": p.request["id"], "approved_by": "persona",
+            "model_saw": " ".join(x for x in ("act", p.action["op"], p.action.get("target"),
+                                              p.action.get("text")) if x),
+            "tokens": T.find(p.action.get("text", ""))})
+    return {"ok": True} if res.get("ok") else {
+        "denied": "sin_regla", "detail": f"el adaptador no pudo: {res.get('error', 'otro')}"}
+
+
+def approve(result: dict[str, Any]) -> dict[str, Any]:
+    """Respuesta de la persona (approval_result de confirm.schema.json). Si aprueba a
+    tiempo, ejecuta la acción retenida y devuelve {"ok": true}."""
+    return CONFIRM.approve(result, _perform_pending)
+
+
+def pending(session: str | None = None) -> list[dict[str, Any]]:
+    return CONFIRM.pending(session)
+
+
+def expire_due() -> list[str]:
+    return CONFIRM.expire_due()
+
+
+def render_values(session: str, toks: list[str]) -> dict[str, str]:
+    """Valores reales de unos tokens, SOLO para la zona de confianza (puente, app 8)."""
+    vault = SESSIONS.get(session).vault
+    return {t: vault.value(t) for t in toks if t in vault}
 
 
 def observe(session: str) -> dict[str, Any]:
@@ -125,8 +169,7 @@ def act(session: str, op: str, target: str | None = None, text: str | None = Non
     result = executor.execute(sess, op, target, text, direction,
                               provenance=HOOKS["provenance"], confirm=HOOKS["confirm"])
     saw = " ".join(x for x in ("act", op, target, text) if x)
-    from .tokens import find
-    base = {"session": session, "model_saw": saw, "tokens": find(text or ""),
+    base = {"session": session, "model_saw": saw, "tokens": T.find(text or ""),
             "app": (sess.last_raw or {}).get("app"),
             "screen": sess.last_screen.id if sess.last_screen else None,
             "ms": {"core": _ms(t0), "adapter": None, "model": None}}
