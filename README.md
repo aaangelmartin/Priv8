@@ -8,6 +8,8 @@ Este README es provisional. El definitivo, con requisitos, instalación, configu
 
 | Archivo | Qué es |
 |---|---|
+| `docs/SPEC.md` | Especificación del protocolo Priv8 CUA: clases de dato, tokens, las seis piezas, herramientas y conformidad |
+| `docs/contracts/` | Contratos v1 en JSON Schema con ejemplos (`python docs/contracts/validate.py`) |
 | `CLAUDE.md` | Contexto del proyecto y reparto, para el equipo y para Claude Code |
 | `docs/plan.html` | Estrategia: Priv8 CUA y sus dos verticales, demo, métricas, rúbrica y plan |
 | `docs/arquitectura.html` | Arquitectura, contratos, flujos, despliegue y reparto (resumen en `docs/arquitectura.md`) |
