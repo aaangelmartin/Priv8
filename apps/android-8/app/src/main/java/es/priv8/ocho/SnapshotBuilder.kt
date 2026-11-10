@@ -11,9 +11,10 @@ import org.json.JSONObject
  * (docs/contracts/snapshot.schema.json, contract v1).
  *
  * The snapshot carries real values and never leaves the trust zone: it only
- * goes over the bridge to the core on the laptop. Password fields are marked
- * `password: true` (always rojo) and their content is masked here as well, so
- * a password never leaves the device even in the raw snapshot.
+ * goes over the bridge to the core on the laptop. Rojo fields (passwords, PIN,
+ * OTP: see [RojoField]) are marked `password: true` and their content is
+ * masked here as well, so a secret never leaves the device even in the raw
+ * snapshot.
  */
 class SnapshotBuilder {
 
@@ -63,7 +64,7 @@ class SnapshotBuilder {
             !node.contentDescription.isNullOrEmpty() ||
             !hint(node).isNullOrEmpty() ||
             node.isClickable || node.isEditable || node.isCheckable || node.isScrollable ||
-            node.isPassword ||
+            RojoField.isRojo(node) ||
             (node.viewIdResourceName != null && !isSystemDecor(node.viewIdResourceName))
 
     private fun toElement(node: AccessibilityNodeInfo, id: String, parentId: String?, app: String): JSONObject {
@@ -77,7 +78,7 @@ class SnapshotBuilder {
         el.put("label", label ?: JSONObject.NULL)
         val text = if (showingHint) null else node.text?.toString()
         when {
-            node.isPassword -> {
+            RojoField.isRojo(node) -> {
                 el.put("password", true)
                 // Never ship the real password, not even in the raw snapshot.
                 el.put("text", if (text.isNullOrEmpty()) JSONObject.NULL else MASK.repeat(text.length))
@@ -140,7 +141,7 @@ class SnapshotBuilder {
             val ops = mutableListOf<String>()
             val ids = node.actionList.map { it.id }.toSet()
             if (node.isClickable || AccessibilityNodeInfo.ACTION_CLICK in ids) ops += "tap"
-            if (!node.isPassword && (node.isEditable || AccessibilityNodeInfo.ACTION_SET_TEXT in ids)) ops += "type"
+            if (!RojoField.isRojo(node) && (node.isEditable || AccessibilityNodeInfo.ACTION_SET_TEXT in ids)) ops += "type"
             if (node.isScrollable ||
                 AccessibilityNodeInfo.ACTION_SCROLL_FORWARD in ids ||
                 AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD in ids
