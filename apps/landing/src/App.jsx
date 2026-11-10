@@ -17,7 +17,7 @@ function Hero() {
     <section id="inicio" className="hero" aria-labelledby="h-hero">
       <Field />
       <div className="wrap hero-stage">
-        <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="Hola. Soy 8." aria-hidden="true" />
+        <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="Hola." aria-hidden="true" />
         <p className="meet in-1"><span>Conoce a 8</span><em>el agente que hace el trabajo sin mirar</em></p>
         <h1 id="h-hero" className="in-2">Hace el trabajo. <span className="soft">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">
@@ -182,6 +182,55 @@ export default function App() {
     window.addEventListener('touchstart', skip, { once: true, passive: true });
     return () => { clearTimeout(t); window.removeEventListener('keydown', skip); window.removeEventListener('wheel', skip); window.removeEventListener('touchstart', skip); };
   }, []);
+  /* Transición de color entre secciones: el fondo es uno solo para toda la página y pasa de un tono al siguiente
+     mientras la frontera entre dos secciones cruza la pantalla. Las secciones no pintan fondo propio. */
+  useEffect(() => {
+    const secs = Array.from(document.querySelectorAll('main > section, footer.foot'));
+    const css = getComputedStyle(document.documentElement);
+    const tone = (el) => {
+      const c = el.className;
+      if (/scene-night|block-night/.test(c)) return '--night';
+      if (/hero|scene-cobalt|block-cobalt/.test(c)) return '--band';
+      if (/block-mist/.test(c)) return '--mist';
+      if (/foot/.test(c)) return '--ink-band';
+      return '--paper';
+    };
+    const hex = (v) => { const h = v.trim().replace('#', ''); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+    let cols = [];
+    const read = () => { cols = secs.map((el) => hex(css.getPropertyValue(tone(el)))); };
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const smooth = (t) => t * t * (3 - 2 * t);
+    let raf = 0;
+    const frame = () => {
+      raf = 0;
+      if (!cols.length) read();
+      const vh = window.innerHeight, mid = vh * 0.5, zone = Math.min(vh * 0.45, 380);
+      let c = cols[0];
+      for (let i = 0; i < secs.length; i++) {
+        const r = secs[i].getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) {
+          c = cols[i];
+          const d = r.bottom - mid;
+          if (secs[i + 1] && d < zone) c = mix(cols[i], cols[i + 1], smooth(1 - d / zone));
+          const u = mid - r.top;
+          if (i > 0 && u < zone * 0.001) c = cols[i];
+          break;
+        }
+      }
+      const rgb = `rgb(${c.join(',')})`;
+      document.body.style.backgroundColor = rgb;
+      document.documentElement.style.setProperty('--morph', rgb);
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
+    const retheme = () => { read(); ask(); };
+    ask();
+    window.addEventListener('scroll', ask, { passive: true });
+    window.addEventListener('resize', ask);
+    const mo = new MutationObserver(retheme);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); mo.disconnect(); };
+  }, [effective]);
+
   /* sección visible, para la barra */
   useEffect(() => {
     const els = Array.from(document.querySelectorAll('main > section[id]'));

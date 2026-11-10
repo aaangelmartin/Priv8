@@ -175,9 +175,11 @@ function Bubble({ text, show, pos }) {
     const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 26);
     return () => clearInterval(t);
   }, [text, show]);
+  /* al lado de 8, nunca encima del texto: a su derecha si 8 está a la izquierda, y al revés */
+  const top = Math.max(80, pos.y + pos.size * 0.05);
   const style = pos.left
-    ? { left: Math.max(12, pos.x), top: Math.max(80, pos.y - 70) }
-    : { right: Math.max(12, window.innerWidth - pos.x - pos.size), top: Math.max(80, pos.y - 70) };
+    ? { left: pos.x + pos.size + 14, top }
+    : { right: Math.max(12, window.innerWidth - pos.x + 14), top };
   return (
     <div className={'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '')} style={style} role="status" aria-live="polite">
       <span>{text.slice(0, n)}</span><span className="ghost" aria-hidden="true">{text.slice(n)}</span>
