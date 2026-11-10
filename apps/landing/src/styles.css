@@ -1130,3 +1130,24 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .acc strong { min-height: 1.15em; }
 }
 @media (max-width: 900px) { .bank { min-height: 700px; } }
+/* más aire en todas las secciones, para igualarlas con "Qué ve" */
+:root { --sec: clamp(88px, 12vh, 128px); }
+@media (min-width: 901px) { :root { --sec: clamp(124px, 16vh, 176px); } }
+/* "Qué ve" en móvil: con su texto debajo del título, y todo dentro de la pantalla */
+@media (max-width: 900px) {
+  .see2 .lead { display: block; font-size: .92rem; line-height: 1.5; min-height: 0; }
+  .see2 .see-h { min-height: 0; }
+  .see2 { gap: 14px; padding-top: 76px; }
+  .see2 .see-copy { gap: 8px; }
+  .see2 .spot-scn { width: 64px; margin: 0; }
+  .bank { min-height: 470px; font-size: .78rem; }
+  .bank-top { padding: 9px 12px; } .bank-url { display: none; }
+  .bank-main { gap: 8px; padding: 10px; }
+  .acc { padding: 12px 14px; }
+  .acc strong { font-size: 1.5rem; }
+  .mov-r:nth-of-type(n+4) { display: none; }
+  .mov-r { padding: 5px 0; }
+  .bank .leakmeter { padding: 10px 14px; } .bank .leakmeter b { font-size: 1.6rem; }
+}
+@media (max-width: 900px) { .acc-row { display: none; } .bank { min-height: 0; height: 450px; } }
+@media (max-width: 900px) { .see2 .see-l { min-height: 6em; } .see2 .see-h { min-height: 2.1em; } }
