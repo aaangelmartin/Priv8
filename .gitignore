@@ -6,3 +6,5 @@ priv8-handoff.zip
 __pycache__/
 .pytest_cache/
 *.pyc
+*.egg-info/
+build/
