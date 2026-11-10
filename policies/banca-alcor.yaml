@@ -56,8 +56,8 @@ screens:
     sin_regla: ambar
     rules:
       - {match: {sel: id/origen_iban}, cls: ambar, tipo: IBAN, origen: propio}
-      - {match: {sel: id/origen_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}  # "Disponible: 3.412,58 €"
-      - {match: {sel: id/contacto_nombre}, cls: ambar, tipo: PERSONA, origen: maestro}
+      - {match: {sel: id/origen_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true, extract: '(-?\d[\d.,]*\s?€)'}  # "Disponible: 3.412,58 €"
+      - {match: {sel: id/contacto_nombre}, cls: ambar, tipo: PERSONA, origen: maestro, extract: '^(.+?)(?: · .+)?$'}  # "Lucía Ferrer · Nimbo Bróker": solo la persona
       - {match: {sel: id/contacto_iban}, cls: ambar, tipo: IBAN, origen: maestro}
       # Campos de destino: qué orígenes acepta cada uno (procedencia, #10).
       - {match: {sel: id/iban_destino}, cls: ambar, tipo: IBAN, campo: transferencia.iban, acepta: [propio, maestro]}
@@ -72,7 +72,7 @@ screens:
     sin_regla: ambar
     rules:
       - {match: {sel: id/rev_importe}, cls: ambar, tipo: IMPORTE}
-      - {match: {sel: id/rev_beneficiario}, cls: ambar, tipo: PERSONA}
+      - {match: {sel: id/rev_beneficiario}, cls: ambar, tipo: PERSONA, extract: '^(.+?)(?: · .+)?$'}
       - {match: {sel: id/rev_iban_destino}, cls: ambar, tipo: IBAN}
       - {match: {sel: id/rev_origen_iban}, cls: ambar, tipo: IBAN, origen: propio}
       - {match: {sel: id/rev_concepto}, cls: ambar, tipo: MOVIMIENTO}
@@ -101,7 +101,7 @@ screens:
     sin_regla: ambar
     rules:
       - {match: {sel: id/res_importe}, cls: ambar, tipo: IMPORTE}
-      - {match: {sel: id/res_beneficiario}, cls: ambar, tipo: PERSONA}
+      - {match: {sel: id/res_beneficiario}, cls: ambar, tipo: PERSONA, extract: '^(.+?)(?: · .+)?$'}
       - {match: {sel: id/res_iban_destino}, cls: ambar, tipo: IBAN}
       - {match: {sel: id/res_referencia}, cls: ambar, tipo: CODIGO}
       - {match: {sel_re: '^id/(res_texto|res_fecha|btn_inicio)$'}, cls: verde}

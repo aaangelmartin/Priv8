@@ -150,6 +150,25 @@ def test_solo_la_persona_aprueba_y_una_vez(env):
     assert phone.performed == []
 
 
+def test_el_resumen_dice_lo_que_hay_ahora_en_pantalla(env):
+    """Si la app cambia el importe después de la última lectura, la persona oye el nuevo."""
+    c, phone, _, seen = env
+    original = phone.snapshot
+
+    def cambiado():
+        raw = original()
+        for el in raw["elements"]:
+            if el.get("sel") == "id/rev_importe":
+                el["text"] = "250,00 €"
+        return raw
+
+    phone.snapshot = cambiado
+    c.act("s2", "tap", "r4")
+    req = requests(seen)[-1]
+    tok = next(s["token"] for s in req["summary"] if s.get("token", "").startswith("‹IMPORTE"))
+    assert c.render_values("s2", [tok])[tok] == "250,00 €"
+
+
 def test_lo_no_critico_no_se_retiene(env):
     c, phone, _, _ = env
     assert c.act("s2", "key", text="back") == {"ok": True}
