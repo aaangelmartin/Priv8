@@ -11,6 +11,9 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import org.json.JSONArray
 import org.json.JSONObject
+import es.priv8.ocho.confirm.ConfirmFlow
+import es.priv8.ocho.confirm.ConfirmRequest
+import es.priv8.ocho.confirm.LocalValues
 
 /**
  * 8's Android adapter: reads the active window as a raw snapshot, runs
@@ -51,6 +54,7 @@ class Priv8AccessibilityService : AccessibilityService() {
         performer = Performer(this, { id -> lastNodes[id] }, ::firstScrollable)
         bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage)
         bridge.start()
+        ConfirmFlow.init(this) { bridge.send(it) }
         Log.i(TAG, "service connected")
     }
 
@@ -126,6 +130,25 @@ class Priv8AccessibilityService : AccessibilityService() {
                 // Never log `text`: it is the rehydrated real value.
                 val why = held?.let { " (paused: ${it.reason})" } ?: ""
                 Log.i(TAG, "perform $id: op=$op target=${target ?: "-"} -> ${if (outcome is Performer.Outcome.Error) outcome.code else "ok"}$why")
+            }
+            "confirm_request" -> {
+                // Not in bridge.schema.json v1: confirm.schema.json#/$defs/request
+                // over the bridge (proposed). Values are rendered on the device.
+                val request = ConfirmRequest.parse(msg)
+                if (request == null) Log.w(TAG, "confirm_request: does not follow confirm.schema.json, ignored")
+                else ConfirmFlow.submit(request)
+            }
+            "render_values" -> {
+                // Proposed, not in contract v1: token -> value table for a
+                // session, so the device can render a summary. Never logged.
+                val session = msg.optString("session")
+                val values = msg.optJSONObject("values")
+                if (session.isEmpty() || values == null) {
+                    Log.w(TAG, "render_values: missing session or values, ignored")
+                } else {
+                    LocalValues.put(session, values.keys().asSequence().associateWith { values.getString(it) })
+                    Log.i(TAG, "render_values: session=$session tokens=${values.length()}")
+                }
             }
             else -> Log.w(TAG, "bridge: unexpected message type '$type', ignored")
         }
@@ -213,7 +236,7 @@ class Priv8AccessibilityService : AccessibilityService() {
      */
     private fun currentPause(root: AccessibilityNodeInfo): Pause? {
         systemDialog(root)?.let { return Pause.dialog(it) }
-        if (root.packageName?.toString() == packageName) return Pause.CONFIRMATION
+        if (root.packageName?.toString() == packageName) return if (ConfirmFlow.isActive) Pause.CONFIRMATION else Pause.OWN_APP
         val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: return null
         val kind = RojoField.kind(focused) ?: return null
         return Pause.authentication(kind)

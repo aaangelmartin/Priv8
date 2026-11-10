@@ -19,6 +19,9 @@ import org.json.JSONObject
  *    `text: null`), and `focus` pointing at it;
  *  - dialogo_sistema: `system_dialog` set and no elements;
  *  - confirmacion: 8's own screen, `screen: "confirmacion"` and no elements.
+ * 8's own app in front outside a confirmation ([OWN_APP]) is redacted the
+ * same way (no elements), and performs on it are refused, so the agent can
+ * never tap 8's Confirmar button.
  */
 data class Pause(val reason: String, val detail: String?) {
 
@@ -44,6 +47,7 @@ data class Pause(val reason: String, val detail: String?) {
                 raw.put("focus", FIELD_ID)
             }
             CONFIRM -> raw.put("screen", "confirmacion").put("focus", JSONObject.NULL)
+            OWN -> raw.put("screen", JSONObject.NULL).put("focus", JSONObject.NULL)
             else -> raw.put("screen", JSONObject.NULL).put("focus", JSONObject.NULL)
         }
         return raw.put("elements", elements)
@@ -63,11 +67,14 @@ data class Pause(val reason: String, val detail: String?) {
         const val AUTH = "autenticacion"
         const val DIALOG = "dialogo_sistema"
         const val CONFIRM = "confirmacion"
+        /** 8's own app in front, not confirming: not a pause of the contract, but nothing of it goes out either. */
+        const val OWN = "app_propia"
         /** detail of the focus_password event sent when the rojo field loses the focus. */
         const val END = "fin"
         private const val FIELD_ID = "n1"
 
         val CONFIRMATION = Pause(CONFIRM, null)
+        val OWN_APP = Pause(OWN, null)
         fun dialog(kind: String) = Pause(DIALOG, kind)
         fun authentication(kind: RojoField.Kind) = Pause(AUTH, kind.detail)
     }
