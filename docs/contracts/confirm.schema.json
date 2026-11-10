@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://priv8.dev/contracts/confirm.schema.json",
+  "title": "Petición y resultado de confirmación",
+  "description": "Transferir, invertir, firmar y enviar quedan retenidos (act devuelve held) hasta que llega approval_result. Si no llega en expires_s segundos, el núcleo la cancela con reason caducado. La autenticación del banco (SCA de PSD2) la hace siempre la persona.",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/approval_result" }
+  ],
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["type", "id", "session", "kind", "action", "summary", "channels", "sca", "expires_s"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "confirm_request" },
+        "id": { "type": "string", "pattern": "^c[0-9]+$" },
+        "session": { "$ref": "common.schema.json#/$defs/session" },
+        "kind": { "enum": ["transferir", "invertir", "firmar", "enviar", "llamar"] },
+        "action": {
+          "description": "La acción retenida, con tokens.",
+          "type": "object",
+          "required": ["op"],
+          "additionalProperties": false,
+          "properties": {
+            "op": { "$ref": "common.schema.json#/$defs/op" },
+            "target": { "$ref": "common.schema.json#/$defs/element_id" },
+            "label": { "type": "string" },
+            "text": { "type": "string" }
+          }
+        },
+        "summary": {
+          "description": "Lo que 8 dice y la pantalla muestra, en segmentos de voz mixta.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "voice.schema.json#/$defs/segment" }
+        },
+        "channels": {
+          "type": "array",
+          "items": { "enum": ["voz", "pantalla"] },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "sca": {
+          "description": "Quién hace la autenticación fuerte después: siempre la persona, o null si la operación no la pide.",
+          "enum": ["persona", null]
+        },
+        "expires_s": { "type": "integer", "minimum": 1, "default": 300 }
+      }
+    },
+    "approval_result": {
+      "type": "object",
+      "required": ["type", "id", "ok", "via", "by"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "approval_result" },
+        "id": { "type": "string", "pattern": "^c[0-9]+$" },
+        "ok": { "type": "boolean" },
+        "via": { "enum": ["voz", "pantalla", "sistema"] },
+        "by": { "enum": ["persona", "sistema"] },
+        "reason": {
+          "description": "Si ok es false: la persona dijo que no (cancelado) o pasó el tiempo (caducado, via y by sistema).",
+          "enum": ["cancelado", "caducado"]
+        }
+      },
+      "if": { "properties": { "ok": { "const": false } } },
+      "then": { "required": ["reason"] }
+    }
+  }
+}
