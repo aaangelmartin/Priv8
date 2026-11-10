@@ -116,9 +116,9 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .rot-sizer { visibility: hidden; grid-area: 1 / 1; }
 .rot-item { position: relative; grid-area: 1 / 1; justify-self: start; white-space: nowrap; color: #fff; pointer-events: none; }
 /* cada letra entra desde abajo con un pequeño desenfoque, una detrás de otra; la frase anterior se va hacia arriba */
-.rot-item .ch { display: inline-block; opacity: 0; transform: translateY(.55em); filter: blur(6px); transition: opacity .45s ease, transform .6s cubic-bezier(.2, .9, .25, 1), filter .5s ease; transition-delay: calc(var(--j) * 22ms); }
+.rot-item .ch { display: inline-block; opacity: 0; transform: translateY(.14em) scale(.96); filter: blur(8px); transition: opacity .45s ease, transform .6s cubic-bezier(.2, .9, .25, 1), filter .5s ease; transition-delay: calc(var(--j) * 22ms); }
 .rot-item.on .ch { opacity: 1; transform: none; filter: none; }
-.rot-item.out .ch { opacity: 0; transform: translateY(-.45em); filter: blur(6px); transition-duration: .35s, .45s, .35s; transition-delay: calc(var(--j) * 12ms); }
+.rot-item.out .ch { opacity: 0; transform: translateY(-.14em) scale(.98); filter: blur(8px); transition-duration: .35s, .45s, .35s; transition-delay: calc(var(--j) * 12ms); }
 .hero h1 .soft { color: #c4cdff; }
 .hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 62ch; text-wrap: balance; }
 .hero-sub .tok { background: #fff; color: #1f33b0; }
