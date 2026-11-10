@@ -29,6 +29,10 @@ Interactive commands (one per line), or a script with --run "cmd; cmd; ...":
                              confirm_request; both and the answer are
                              validated against bridge.schema.json. Does
                              not block: other commands keep working
+    resend [ID]              send confirm_request ID again with the same id
+                             (default: the last one), as the core does after
+                             a hello; 8 must answer the same approval_result
+                             without asking again if it was already answered
     await                    wait for the pending approval_results
     wait  SECONDS            pause (lets the screen settle between steps)
     quit
@@ -101,8 +105,14 @@ def log(arrow: str, text: str) -> None:
 class Session:
     """One connected device."""
 
-    def __init__(self, ws: ServerConnection, validator: Draft202012Validator, args: argparse.Namespace):
+    def __init__(self, ws: ServerConnection, validator: Draft202012Validator, args: argparse.Namespace,
+                 confirms: dict[str, dict[str, Any]], unanswered: set[str]):
         self.ws = ws
+        # Shared by all connections, like the core: every confirm_request sent
+        # (to resend it by id) and the ids still without an approval_result,
+        # which are sent again after each hello (contracts v1.1).
+        self.confirms = confirms
+        self.unanswered = unanswered
         self.validator = validator
         self.args = args
         self.pending: dict[str, asyncio.Future[dict[str, Any]]] = {}
@@ -151,6 +161,8 @@ class Session:
                 log("<-", f"hello device={msg.get('device')!r} version={msg.get('version')} [{status}]")
                 if not self.hello.done():
                     self.hello.set_result(msg)
+                for cid in sorted(self.unanswered):
+                    await self.resend(cid, after_hello=True)
             elif kind == "snapshot":
                 self.snap_count += 1
                 self.last = msg.get("raw")
@@ -166,6 +178,7 @@ class Session:
                 reason = f" reason={msg['reason']}" if "reason" in msg else ""
                 log("<-", f"approval_result {msg.get('id')} ok={msg.get('ok')} via={msg.get('via')} "
                           f"by={msg.get('by')}{reason} [{status}]")
+                self.unanswered.discard(str(msg.get("id")))
                 self.resolve(msg)
             elif kind == "voice.done":
                 gap = msg.get("gap_ms") or {}
@@ -304,6 +317,12 @@ class Session:
             await self.perform(msg)
         elif cmd == "confirm":
             await self.confirm(*rest[:3])
+        elif cmd == "resend":
+            cid = rest[0] if rest else next(reversed(self.confirms), None)
+            if cid is None:
+                log("  ", "resend: no confirm_request sent yet")
+            else:
+                await self.resend(cid)
         elif cmd == "await":
             if self.waiting:
                 await asyncio.gather(*self.waiting)
@@ -316,8 +335,8 @@ class Session:
 
     async def confirm(self, amount: str = "200,00 €", name: str = "Nimbo Bróker", expires: str = "300") -> None:
         """Pushes a confirmation like the core would and waits for the person's answer."""
-        n = next(self.ids)
-        cid, session = f"c{n}", "s1"
+        # Unique across connections: confirms outlives each Session.
+        cid, session = f"c{len(self.confirms) + 1}", "s1"
         importe, destino = "‹IMPORTE_1›", "‹PROVEEDOR_1·propio›"
         values = {"type": "render_values", "session": session, "values": {importe: amount, destino: name}}
         request = {
@@ -344,13 +363,28 @@ class Session:
         shown = {k: (v if self.args.show_values else f"<{len(v)} chars>") for k, v in values["values"].items()}
         log("->", f"render_values session={session} values={json.dumps(shown, ensure_ascii=False)} [valid]")
         await self.ws.send(json.dumps(values, ensure_ascii=False))
+        self.confirms[cid] = request
+        self.unanswered.add(cid)
+        await self.send_confirm(cid, int(expires) + 15)
+
+    async def send_confirm(self, cid: str, timeout: int, note: str = "") -> None:
+        request = self.confirms[cid]
         fut = asyncio.get_running_loop().create_future()
         self.pending[cid] = fut
-        log("->", f"confirm_request {cid} kind=transferir expires_s={expires} [valid]")
+        log("->", f"confirm_request {cid} kind={request['kind']} expires_s={request['expires_s']}{note} [valid]")
         await self.ws.send(json.dumps(request, ensure_ascii=False))
         # Wait in the background so other commands (snap, tap...) still run
         # while the confirmation is open; `await` waits for the answer.
-        self.waiting.append(asyncio.create_task(self.approval(cid, fut, int(expires) + 15)))
+        self.waiting.append(asyncio.create_task(self.approval(cid, fut, timeout)))
+
+    async def resend(self, cid: str, after_hello: bool = False) -> None:
+        """Sends confirm_request cid again with the same id, as the core does after a hello."""
+        if cid not in self.confirms:
+            self.failures += 1
+            log("  ", f"resend: no confirm_request {cid}")
+            return
+        why = "pending after hello" if after_hello else ("unanswered" if cid in self.unanswered else "already answered")
+        await self.send_confirm(cid, self.confirms[cid]["expires_s"] + 15, f" again ({why})")
 
     async def approval(self, cid: str, fut: asyncio.Future[dict[str, Any]], timeout: int) -> None:
         try:
@@ -393,10 +427,12 @@ async def main(args: argparse.Namespace) -> int:
         log("  ", f"adb reverse tcp:{args.port} tcp:{args.port}")
     done = asyncio.get_running_loop().create_future()
     sessions: list[Session] = []
+    confirms: dict[str, dict[str, Any]] = {}
+    unanswered: set[str] = set()
 
     async def handler(ws: ServerConnection) -> None:
         log("  ", f"device connected from {ws.remote_address}")
-        session = Session(ws, validator, args)
+        session = Session(ws, validator, args, confirms, unanswered)
         sessions.append(session)
         reader = asyncio.create_task(session.reader())
         try:
