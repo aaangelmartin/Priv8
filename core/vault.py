@@ -107,6 +107,10 @@ class VaultStore:
                 self._vaults[session] = Vault(session)
             return self._vaults[session]
 
+    def all(self) -> list[Vault]:
+        with self._lock:
+            return list(self._vaults.values())
+
     def drop(self, session: str) -> None:
         with self._lock:
             self._vaults.pop(session, None)
