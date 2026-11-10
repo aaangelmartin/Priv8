@@ -2,88 +2,341 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://priv8.dev/contracts/bridge.schema.json",
   "title": "Puente Android",
-  "description": "Mensajes JSON por WebSocket entre el núcleo (portátil, ws://127.0.0.1:8765 con adb reverse) y el servicio de accesibilidad del emulador. Lleva valores reales: los dos extremos están en la zona de confianza. → núcleo a Android, ← Android a núcleo. El servicio de Android se conecta como cliente.",
+  "description": "Mensajes JSON por WebSocket entre el núcleo (portátil, ws://127.0.0.1:8765 con adb reverse) y el servicio de accesibilidad del emulador. Lleva valores reales: los dos extremos están en la zona de confianza. → núcleo a Android, ← Android a núcleo. El servicio de Android se conecta como cliente. v1.1: confirmaciones, render_values y voz por el puente.",
   "oneOf": [
-    { "$ref": "#/$defs/hello" },
-    { "$ref": "#/$defs/snapshot_request" },
-    { "$ref": "#/$defs/snapshot" },
-    { "$ref": "#/$defs/perform" },
-    { "$ref": "#/$defs/result" },
-    { "$ref": "#/$defs/event" }
+    {
+      "$ref": "#/$defs/hello"
+    },
+    {
+      "$ref": "#/$defs/snapshot_request"
+    },
+    {
+      "$ref": "#/$defs/snapshot"
+    },
+    {
+      "$ref": "#/$defs/perform"
+    },
+    {
+      "$ref": "#/$defs/result"
+    },
+    {
+      "$ref": "#/$defs/event"
+    },
+    {
+      "$ref": "#/$defs/render_values"
+    },
+    {
+      "$ref": "#/$defs/voice"
+    },
+    {
+      "$ref": "#/$defs/voice_audio"
+    },
+    {
+      "$ref": "#/$defs/voice_audio_end"
+    },
+    {
+      "$ref": "#/$defs/voice_done"
+    },
+    {
+      "$ref": "confirm.schema.json#/$defs/request"
+    },
+    {
+      "$ref": "confirm.schema.json#/$defs/approval_result"
+    }
   ],
   "$defs": {
-    "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$" },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,32}$"
+    },
     "hello": {
       "description": "← Primer mensaje al conectar.",
       "type": "object",
-      "required": ["type", "device", "version"],
+      "required": [
+        "type",
+        "device",
+        "version"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "hello" },
-        "device": { "type": "string" },
-        "version": { "const": 1 }
+        "type": {
+          "const": "hello"
+        },
+        "device": {
+          "type": "string"
+        },
+        "version": {
+          "const": 1
+        }
       }
     },
     "snapshot_request": {
       "description": "→ Pide la pantalla actual.",
       "type": "object",
-      "required": ["type", "id"],
+      "required": [
+        "type",
+        "id"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "snapshot.request" },
-        "id": { "$ref": "#/$defs/id" }
+        "type": {
+          "const": "snapshot.request"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        }
       }
     },
     "snapshot": {
       "description": "← Respuesta a snapshot.request.",
       "type": "object",
-      "required": ["type", "id", "raw"],
+      "required": [
+        "type",
+        "id",
+        "raw"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "snapshot" },
-        "id": { "$ref": "#/$defs/id" },
-        "raw": { "$ref": "snapshot.schema.json" }
+        "type": {
+          "const": "snapshot"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "raw": {
+          "$ref": "snapshot.schema.json"
+        }
       }
     },
     "perform": {
       "description": "→ Acción con el valor ya rehidratado por el ejecutor.",
       "type": "object",
-      "required": ["type", "id", "op"],
+      "required": [
+        "type",
+        "id",
+        "op"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "perform" },
-        "id": { "$ref": "#/$defs/id" },
-        "op": { "$ref": "common.schema.json#/$defs/op" },
-        "target": { "$ref": "common.schema.json#/$defs/element_id" },
-        "text": { "type": "string" },
-        "direction": { "enum": ["up", "down", "left", "right"] }
+        "type": {
+          "const": "perform"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "op": {
+          "$ref": "common.schema.json#/$defs/op"
+        },
+        "target": {
+          "$ref": "common.schema.json#/$defs/element_id"
+        },
+        "text": {
+          "type": "string",
+          "description": "Valor real ya rehidratado (type), nombre de tecla enter, back o home (key) o paquete (open_app). En Android, send y call devuelven no_permitido y type sobre un campo de contraseña también."
+        },
+        "direction": {
+          "enum": [
+            "up",
+            "down",
+            "left",
+            "right"
+          ]
+        }
       }
     },
     "result": {
       "description": "← Resultado de perform.",
       "type": "object",
-      "required": ["type", "id", "ok"],
+      "required": [
+        "type",
+        "id",
+        "ok"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "result" },
-        "id": { "$ref": "#/$defs/id" },
-        "ok": { "type": "boolean" },
+        "type": {
+          "const": "result"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "ok": {
+          "type": "boolean"
+        },
         "error": {
           "description": "Si ok es false.",
-          "enum": ["target_no_encontrado", "no_permitido", "timeout", "otro"]
+          "enum": [
+            "target_no_encontrado",
+            "no_permitido",
+            "timeout",
+            "otro"
+          ]
         }
       }
     },
     "event": {
-      "description": "← Aviso espontáneo. focus_password y system_dialog hacen que el núcleo pause al agente y 8 mire a otro lado.",
+      "description": "← Aviso espontáneo. focus_password y system_dialog pausan al agente y 8 mira a otro lado; focus_left y system_dialog_closed lo reanudan. Los eventos durante una desconexión se descartan, no se encolan.",
       "type": "object",
-      "required": ["type", "kind"],
+      "required": [
+        "type",
+        "kind"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "event" },
-        "kind": { "enum": ["focus_password", "system_dialog", "system_dialog_closed", "screen_changed", "app_changed"] },
-        "app": { "type": "string" },
-        "detail": { "type": "string" }
+        "type": {
+          "const": "event"
+        },
+        "kind": {
+          "enum": [
+            "focus_password",
+            "focus_left",
+            "system_dialog",
+            "system_dialog_closed",
+            "screen_changed",
+            "app_changed"
+          ]
+        },
+        "app": {
+          "type": "string"
+        },
+        "detail": {
+          "description": "focus_password: clave u otp. system_dialog: permiso, biometria u oculta. screen_changed: nombre de la pantalla.",
+          "type": "string"
+        }
+      }
+    },
+    "render_values": {
+      "description": "→ Valores reales de los tokens de una petición o una frase, para que el móvil los muestre y los lea en local. Solo por el puente (zona de confianza).",
+      "type": "object",
+      "required": [
+        "type",
+        "session",
+        "values"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "render_values"
+        },
+        "session": {
+          "$ref": "common.schema.json#/$defs/session"
+        },
+        "values": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/token"
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1
+        }
+      }
+    },
+    "voice": {
+      "description": "→ Frase de voz mixta para que la diga 8 en el móvil.",
+      "type": "object",
+      "required": [
+        "type",
+        "utterance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "voice"
+        },
+        "utterance": {
+          "$ref": "voice.schema.json"
+        }
+      }
+    },
+    "voice_audio": {
+      "description": "→ Empieza el audio PCM de un segmento cloud; le siguen tramas binarias con el PCM y voice.audio.end.",
+      "type": "object",
+      "required": [
+        "type",
+        "utterance",
+        "index",
+        "format"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "voice.audio"
+        },
+        "utterance": {
+          "type": "string",
+          "pattern": "^u[0-9]+$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "format": {
+          "const": "pcm_24000"
+        }
+      }
+    },
+    "voice_audio_end": {
+      "type": "object",
+      "required": [
+        "type",
+        "utterance",
+        "index"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "voice.audio.end"
+        },
+        "utterance": {
+          "type": "string",
+          "pattern": "^u[0-9]+$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "error": {
+          "type": "string",
+          "description": "Si el audio no llegó entero."
+        }
+      }
+    },
+    "voice_done": {
+      "description": "← La frase terminó de sonar; el núcleo lo registra como voice_out.",
+      "type": "object",
+      "required": [
+        "type",
+        "utterance",
+        "ok"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "voice.done"
+        },
+        "utterance": {
+          "type": "string",
+          "pattern": "^u[0-9]+$"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "gap_ms": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "mean": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
       }
     }
   }
