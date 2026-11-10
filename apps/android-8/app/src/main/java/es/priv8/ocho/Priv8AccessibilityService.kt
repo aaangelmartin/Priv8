@@ -11,6 +11,9 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import org.json.JSONArray
 import org.json.JSONObject
+import es.priv8.ocho.confirm.ConfirmFlow
+import es.priv8.ocho.confirm.ConfirmRequest
+import es.priv8.ocho.confirm.LocalValues
 
 /**
  * 8's Android adapter: reads the active window as a raw snapshot, runs
@@ -41,7 +44,8 @@ class Priv8AccessibilityService : AccessibilityService() {
     private var lastNodes: Map<String, AccessibilityNodeInfo> = emptyMap()
     private var reportedApp: String? = null
     private var reportedScreen: String? = null
-    private var reportedDialog: String? = null
+    /** Current pause, as last reported to the core with events. */
+    private var pause: Pause? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -50,6 +54,7 @@ class Priv8AccessibilityService : AccessibilityService() {
         performer = Performer(this, { id -> lastNodes[id] }, ::firstScrollable)
         bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage)
         bridge.start()
+        ConfirmFlow.init(this) { bridge.send(it) }
         Log.i(TAG, "service connected")
     }
 
@@ -81,10 +86,9 @@ class Priv8AccessibilityService : AccessibilityService() {
                 lastChangeAt = SystemClock.uptimeMillis()
             }
             AccessibilityEvent.TYPE_VIEW_FOCUSED -> {
-                if (event.source?.isPassword == true) {
-                    val pkg = event.packageName?.toString()
-                    worker.post { sendEvent("focus_password", pkg, null) }
-                }
+                // Pause as soon as a rojo field takes the focus, before the
+                // first key; and resume as soon as it leaves.
+                worker.post { checkPause() }
             }
         }
         if (BuildConfig.A11Y_DUMP && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
@@ -103,14 +107,19 @@ class Priv8AccessibilityService : AccessibilityService() {
             "snapshot.request" -> {
                 val raw = snapshot()
                 bridge.send(JSONObject().put("type", "snapshot").put("id", id).put("raw", raw))
-                Log.i(TAG, "snapshot $id: seq=${raw.getInt("seq")} app=${raw.getString("app")} elements=${raw.getJSONArray("elements").length()}")
+                val paused = pause?.let { " paused=${it.reason}" } ?: ""
+                Log.i(TAG, "snapshot $id: seq=${raw.getInt("seq")} app=${raw.getString("app")} elements=${raw.getJSONArray("elements").length()}$paused")
             }
             "perform" -> {
                 val op = msg.optString("op")
                 val target = msg.optString("target").ifEmpty { null }
                 val text = if (msg.has("text")) msg.getString("text") else null
                 val direction = msg.optString("direction").ifEmpty { null }
-                val outcome = performWithTimeout(op, target, text, direction)
+                // While the person authenticates, a system dialog is open or
+                // 8 is asking for a confirmation, the agent does not touch
+                // the screen: nothing it could tap there is its business.
+                val held = rootInActiveWindow?.let(::currentPause)
+                val outcome = if (held != null) Performer.NOT_ALLOWED else performWithTimeout(op, target, text, direction)
                 lastPerformAt = SystemClock.uptimeMillis()
                 val result = JSONObject().put("type", "result").put("id", id)
                 when (outcome) {
@@ -119,7 +128,27 @@ class Priv8AccessibilityService : AccessibilityService() {
                 }
                 bridge.send(result)
                 // Never log `text`: it is the rehydrated real value.
-                Log.i(TAG, "perform $id: op=$op target=${target ?: "-"} -> ${if (outcome is Performer.Outcome.Error) outcome.code else "ok"}")
+                val why = held?.let { " (paused: ${it.reason})" } ?: ""
+                Log.i(TAG, "perform $id: op=$op target=${target ?: "-"} -> ${if (outcome is Performer.Outcome.Error) outcome.code else "ok"}$why")
+            }
+            "confirm_request" -> {
+                // Not in bridge.schema.json v1: confirm.schema.json#/$defs/request
+                // over the bridge (proposed). Values are rendered on the device.
+                val request = ConfirmRequest.parse(msg)
+                if (request == null) Log.w(TAG, "confirm_request: does not follow confirm.schema.json, ignored")
+                else ConfirmFlow.submit(request)
+            }
+            "render_values" -> {
+                // Proposed, not in contract v1: token -> value table for a
+                // session, so the device can render a summary. Never logged.
+                val session = msg.optString("session")
+                val values = msg.optJSONObject("values")
+                if (session.isEmpty() || values == null) {
+                    Log.w(TAG, "render_values: missing session or values, ignored")
+                } else {
+                    LocalValues.put(session, values.keys().asSequence().associateWith { values.getString(it) })
+                    Log.i(TAG, "render_values: session=$session tokens=${values.length()}")
+                }
             }
             else -> Log.w(TAG, "bridge: unexpected message type '$type', ignored")
         }
@@ -180,26 +209,73 @@ class Priv8AccessibilityService : AccessibilityService() {
         seq++
         if (root == null) {
             lastNodes = emptyMap()
-            return JSONObject()
-                .put("source", "android").put("app", lastWindowPackage ?: SnapshotBuilder.UNKNOWN_APP)
-                .put("screen", JSONObject.NULL).put("seq", seq).put("focus", JSONObject.NULL)
-                .put("system_dialog", JSONObject.NULL).put("elements", JSONArray())
+            updatePause(Pause.HIDDEN, null)
+            return Pause.HIDDEN.snapshot(null, seq)
         }
-        val built = builder.build(root, seq, systemDialog(root))
+        val paused = currentPause(root)
+        updatePause(paused, root.packageName?.toString())
+        if (paused != null) {
+            // Nothing from this window goes out: only what the core needs to
+            // know that the agent must wait.
+            lastNodes = emptyMap()
+            return paused.snapshot(root, seq)
+        }
+        val built = builder.build(root, seq, null)
         lastNodes = built.nodes
         return built.raw
     }
 
+    // ---- pause («mira a otro lado») ---------------------------------------
+
+    /**
+     * Why the agent must wait on this window, or null. A system dialog
+     * (biometric prompt, permission) first; then 8's own confirmation screen,
+     * which shows real values; then a rojo field with the input focus.
+     */
+    private fun currentPause(root: AccessibilityNodeInfo): Pause? {
+        systemDialog(root)?.let { return Pause.dialog(it) }
+        if (root.packageName?.toString() == packageName) return if (ConfirmFlow.isActive) Pause.CONFIRMATION else Pause.OWN_APP
+        val focused = root.findFocus(AccessibilityNodeInfo.FOCUS_INPUT) ?: return null
+        val kind = RojoField.kind(focused) ?: return null
+        return Pause.authentication(kind)
+    }
+
+    /** Re-reads the active window and reports a change of pause. Worker thread. */
+    private fun checkPause() {
+        val root = rootInActiveWindow ?: return
+        updatePause(currentPause(root), root.packageName?.toString())
+    }
+
+    /**
+     * Reports pause changes with the bridge events of the contract:
+     * focus_password (detail clave|otp) when a rojo field takes the focus and
+     * focus_password with detail "fin" when it loses it; system_dialog
+     * (detail biometria|permiso) and system_dialog_closed. The core turns them
+     * into observe paused and the app 8 into «mirar a otro lado».
+     */
+    private fun updatePause(next: Pause?, app: String?) {
+        val prev = pause
+        if (next == prev) return
+        pause = next
+        if (prev?.reason == Pause.AUTH && next != prev) sendEvent("focus_password", app, Pause.END)
+        if (prev?.reason == Pause.DIALOG && next != prev) sendEvent("system_dialog_closed", app, null)
+        when (next?.reason) {
+            Pause.AUTH -> sendEvent("focus_password", app, next.detail)
+            Pause.DIALOG -> sendEvent("system_dialog", app, next.detail)
+        }
+        Log.i(TAG, "pause: ${prev?.reason ?: "-"} -> ${next?.reason ?: "-"}")
+    }
+
     /** Sends app_changed, screen_changed and system_dialog(_closed) once per change. */
     private fun reportChanges() {
-        val root = settledRoot() ?: return
-        val app = root.packageName?.toString() ?: return
-        val dialog = systemDialog(root)
-        if (dialog != reportedDialog) {
-            if (dialog != null) sendEvent("system_dialog", app, dialog) else sendEvent("system_dialog_closed", app, null)
-            reportedDialog = dialog
+        val root = settledRoot()
+        if (root == null) {
+            updatePause(Pause.HIDDEN, null)
+            return
         }
-        if (dialog != null) return
+        val app = root.packageName?.toString() ?: return
+        updatePause(currentPause(root), app)
+        if (pause?.reason == Pause.DIALOG) return
         val screen = findScreen(root)
         if (app != reportedApp) {
             sendEvent("app_changed", app, null)
@@ -254,6 +330,7 @@ class Priv8AccessibilityService : AccessibilityService() {
 
     /** Raw tree dump with screen content. Only in builds with -Ppriv8.a11yDump=true. */
     private fun debugDump(root: AccessibilityNodeInfo) {
+        if (currentPause(root) != null) return
         val built = builder.build(root, -1, null)
         val chunks = built.raw.toString().chunked(CHUNK)
         chunks.forEachIndexed { i, part -> Log.d(TAG, "dump [${i + 1}/${chunks.size}] $part") }
