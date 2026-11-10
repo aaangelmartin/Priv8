@@ -157,11 +157,11 @@ def spell_characters(text: str) -> str:
 
 
 def verbalize(value: str, say_as: str) -> str:
-    """Spell out a real value for the local voice according to say_as."""
+    """Spell out a real value for the local voice, per the say_as enum of voice.schema.json."""
     if say_as == "currency":
         return verbalize_amount(value)
     if say_as == "number":
         return number_to_words(int(parse_amount(value)))
-    if say_as == "characters":
+    if say_as in ("digits", "phone", "iban"):
         return spell_characters(value)
-    return value  # "text" and "name": the engine reads them as they are
+    return value  # "text", "name" and "date": the engine reads them as they are

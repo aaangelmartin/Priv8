@@ -25,7 +25,7 @@ def seg(template, **kw):
 
 def test_sum_example_from_the_contract():
     u = seg("Entre tus tres cuentas tienes ‹SUMA_1›.")
-    assert u.to_contract(include_local_text=False) == {
+    assert u.to_contract() == {
         "utterance": "u18",
         "session": "s2",
         "segments": [
@@ -33,7 +33,10 @@ def test_sum_example_from_the_contract():
             {"voice": "local", "token": "‹SUMA_1›", "say_as": "currency"},
         ],
     }
-    assert u.segments[1].text == "cuatro mil ochocientos setenta y tres euros"
+    assert not u.blocked
+    assert u.segments[1].spoken == "cuatro mil ochocientos setenta y tres euros"
+    assert [s.speech for s in u.segments] == [
+        "Entre tus tres cuentas tienes", "cuatro mil ochocientos setenta y tres euros"]
 
 
 def test_confirmation_example_keeps_order():
@@ -46,14 +49,14 @@ def test_confirmation_example_keeps_order():
         ("cloud", None),
     ]
     assert u.cloud_texts == ["Voy a pasar", "a tu cuenta de", "¿Lo confirmas?"]
-    assert u.segments[1].text == "doscientos euros"
+    assert u.segments[1].spoken == "doscientos euros"
     assert u.segments[3].say_as == "name"
-    assert u.segments[3].text == "Nimbo Bróker"
+    assert u.segments[3].spoken == "Nimbo Bróker"
 
 
 def test_token_label_is_optional_for_lookup():
     u = seg("Hola, ‹PERSONA_1·titular›")
-    assert u.segments[1].text == "Lucía Ferrer"
+    assert u.segments[1].spoken == "Lucía Ferrer"
 
 
 def test_punctuation_between_tokens_is_not_a_segment():
@@ -68,17 +71,21 @@ def test_unknown_token_is_never_guessed():
 
 def test_iban_is_spelled_out_locally():
     u = seg("Lo envío a ‹IBAN_1·maestro›")
-    assert u.segments[1].say_as == "characters"
-    assert u.segments[1].text.startswith("E S nueve uno, dos uno cero cero")
+    assert u.segments[1].say_as == "iban"
+    assert u.segments[1].spoken.startswith("E S nueve uno, dos uno cero cero")
 
 
-def test_leaking_cloud_sentence_is_demoted_and_audited():
+def test_leak_keeps_the_whole_sentence_local_and_audits_it():
     events = []
-    u = seg("Lucía Ferrer, entre tus cuentas tienes ‹SUMA_1›", audit=events.append)
-    first = u.segments[0]
-    assert first.voice == "local"
-    assert first.blocked == "fuga"
+    u = seg("Lucía Ferrer, entre tus cuentas tienes ‹SUMA_1›. ¿Algo más?", audit=events.append)
+    assert u.blocked
     assert u.cloud_texts == []
+    assert all(s.voice == "local" for s in u.segments)
+    assert u.to_contract()["segments"] == [
+        {"voice": "local", "text": "Lucía Ferrer, entre tus cuentas tienes"},
+        {"voice": "local", "token": "‹SUMA_1›", "say_as": "currency"},
+        {"voice": "local", "text": "¿Algo más?"},
+    ]
     assert events == [{
         "kind": "blocked", "reason": "fuga", "session": "s2", "utterance": "u18",
         "target": "elevenlabs", "findings": ["vault"],
@@ -89,22 +96,23 @@ def test_raw_figure_written_by_the_model_never_goes_cloud():
     events = []
     u = seg("Vas a enviar 200 € a ‹PROVEEDOR_2›", audit=events.append)
     assert u.cloud_texts == []
-    assert u.segments[0].blocked == "fuga"
+    assert u.blocked
     assert "amount" in events[0]["findings"]
 
 
 def test_default_leak_check_is_used_when_none_given():
     u = segment("Tu IBAN es ES91 2100 0418 4502 0005 1332", render,
                 utterance="u1", session="s1")
+    assert u.blocked
     assert u.segments[0].voice == "local"
-    assert u.segments[0].blocked == "fuga"
 
 
-def test_audit_view_has_no_real_values():
-    u = seg("Lucía Ferrer, pasa ‹IMPORTE_6› a ‹PROVEEDOR_2›", audit=lambda e: None)
-    audit_view = json.dumps(u.to_contract(include_local_text=False), ensure_ascii=False)
-    for value in [*VAULT.values(), "doscientos", "Lucía"]:
-        assert value not in audit_view
+def test_audit_event_has_no_real_values():
+    events = []
+    seg("Lucía Ferrer, pasa 200 € a ‹PROVEEDOR_2›", audit=events.append)
+    dumped = json.dumps(events, ensure_ascii=False)
+    for value in [*VAULT.values(), "Lucía", "200", "doscientos"]:
+        assert value not in dumped
 
 
 TEMPLATES = [
@@ -115,16 +123,17 @@ TEMPLATES = [
     "‹PERSONA_1›, ¿pasamos ‹IMPORTE_6›?",
     "Hecho.",
     # the model misbehaves and writes data itself
-    "Tienes 4.873,00 € en total, Lucía",
+    "Tienes 4.873,00 € en total, Lucía Ferrer",
     "Paso doscientos euros a Nimbo Bróker",
     "Tu cuenta ES91 2100 0418 4502 0005 1332 está lista",
+    "Hola Lucía Ferrer, tienes ‹SUMA_1›",
 ]
 
 
 @pytest.mark.parametrize("template", TEMPLATES)
 def test_no_token_or_value_reaches_cloud_text(template):
     u = seg(template)
-    rendered = [s.text for s in u.segments if s.voice == "local" and s.token]
+    rendered = [s.spoken for s in u.segments if s.token]
     for text in u.cloud_texts:
         assert not TOKEN_RE.search(text)
         assert "‹" not in text and "›" not in text
@@ -136,7 +145,7 @@ def test_no_token_or_value_reaches_cloud_text(template):
 
 def test_segment_contract_shapes():
     assert Segment("cloud", text="Hola").to_contract() == {"voice": "cloud", "text": "Hola"}
-    local = Segment("local", text="doscientos euros", token="‹IMPORTE_6›", say_as="currency")
-    assert local.to_contract() == {"voice": "local", "token": "‹IMPORTE_6›",
-                                   "say_as": "currency", "text": "doscientos euros"}
-    assert "text" not in local.to_contract(include_local_text=False)
+    local = Segment("local", token="‹IMPORTE_6›", say_as="currency", spoken="doscientos euros")
+    assert local.to_contract() == {"voice": "local", "token": "‹IMPORTE_6›", "say_as": "currency"}
+    assert local.speech == "doscientos euros"
+    assert Segment("local", text="Lo leo yo").to_contract() == {"voice": "local", "text": "Lo leo yo"}

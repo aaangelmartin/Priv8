@@ -104,5 +104,7 @@ def test_spell_characters_keeps_groups():
 def test_verbalize_dispatches_on_say_as():
     assert verbalize("200 €", "currency") == "doscientos euros"
     assert verbalize("3", "number") == "tres"
-    assert verbalize("ES91", "characters") == "E S nueve uno"
+    assert verbalize("ES91", "iban") == "E S nueve uno"
+    assert verbalize("612 345 678", "phone") == "seis uno dos, tres cuatro cinco, seis siete ocho"
+    assert verbalize("12345678Z", "digits") == "uno dos tres cuatro cinco seis siete ocho Z"
     assert verbalize("Nimbo Bróker", "name") == "Nimbo Bróker"
