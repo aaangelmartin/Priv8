@@ -1,0 +1,72 @@
+{
+  "_nota": "Datos inventados para la demo. Copia de data/seed.json (bancos.nimbo, PR #90 / issue #15): login, clave, OTP, cuenta, IBAN y saldo coinciden con ese archivo. Contactos y movimientos son propios de esta app; reutilizan IBAN ya existentes en el seed. Códigos de entidad 9100 (Alcor), 9200 (Brezo) y 9300 (Nimbo) inventados; todos los IBAN pasan mod-97. La cartera de fondos del seed (Fondo Índice Mundial) no se muestra: la app solo enseña cuentas con IBAN.",
+  "bank": {
+    "id": "nimbo",
+    "name": "Nimbo Bróker"
+  },
+  "user": {
+    "login": "lucia.f",
+    "password": "Nimbo-2026",
+    "name": "Lucía Ferrer",
+    "otp": "215664"
+  },
+  "accounts": [
+    {
+      "id": "efectivo",
+      "alias": "Efectivo del bróker",
+      "iban": "ES0893000001052200334455",
+      "balance_cents": 64000
+    }
+  ],
+  "contacts": [
+    {
+      "id": "alcor",
+      "name": "Lucía Ferrer · Banca Alcor",
+      "iban": "ES4391000001574012345678",
+      "own": true
+    },
+    {
+      "id": "brezo",
+      "name": "Lucía Ferrer · Brezo Banco",
+      "iban": "ES8992000003785500667788",
+      "own": true
+    }
+  ],
+  "movements": [
+    {
+      "account": "efectivo",
+      "date": "2026-11-03",
+      "concept": "Compra Fondo Índice Mundial",
+      "counterparty": "Nimbo Bróker",
+      "amount_cents": -100000
+    },
+    {
+      "account": "efectivo",
+      "date": "2026-11-01",
+      "concept": "Aportación mensual desde Banca Alcor",
+      "counterparty": "Lucía Ferrer",
+      "amount_cents": 100000
+    },
+    {
+      "account": "efectivo",
+      "date": "2026-10-20",
+      "concept": "Comisión de custodia",
+      "counterparty": "Nimbo Bróker",
+      "amount_cents": -250
+    },
+    {
+      "account": "efectivo",
+      "date": "2026-10-03",
+      "concept": "Compra Fondo Índice Mundial",
+      "counterparty": "Nimbo Bróker",
+      "amount_cents": -100000
+    },
+    {
+      "account": "efectivo",
+      "date": "2026-10-01",
+      "concept": "Aportación mensual desde Banca Alcor",
+      "counterparty": "Lucía Ferrer",
+      "amount_cents": 100000
+    }
+  ]
+}
