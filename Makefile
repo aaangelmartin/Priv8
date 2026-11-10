@@ -1,6 +1,6 @@
 # Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
 
-.PHONY: agent agent-web web replay replay-fake demo test
+.PHONY: agent agent-web web replay replay-fake demo test metrics
 
 # MCP server (streamable HTTP on :8701) and the agent loop, live against the Claude API.
 # Needs ANTHROPIC_API_KEY (see .env.example).
@@ -36,3 +36,7 @@ test:
 	uv run pytest agent/tests core/tests voice/tests adapters/web/tests
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
+
+# B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
+metrics:
+	PRIV8_AUDIT=off uv run python -m metrics.b2b

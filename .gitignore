@@ -15,3 +15,6 @@ build/
 
 # Registro y clave locales de la auditoría
 audit/
+
+# Métricas generadas
+metrics/out/
