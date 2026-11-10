@@ -1,4 +1,4 @@
-/* Motor de 8, extraído de docs/ojos.html (sin el taller ni la página). No editar a mano: regenerar con scripts/sync-eight.sh. */
+/* Motor de 8, extraído de docs/ojos.html (el script de la página sin el taller ni la página; solo cambia la llamada a setBig por cfg.onEnd). Si cambia docs/ojos.html, se vuelve a copiar ese bloque. */
 export function createEngine(){
   var NOCHE='#0B1B33', COB='#2D45D6', W='#FFFFFF', CL='#8FA2FF', NIEBLA='#EEF2F8';
   var TONES={ok:'#1F8A5B',warn:'#A86400',bad:'#C23A2E'};
