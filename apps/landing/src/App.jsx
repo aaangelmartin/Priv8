@@ -22,7 +22,7 @@ function Hero() {
         <h1 id="h-hero" className="in-2">Hace el trabajo. <span className="soft">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">
           8 entra en tu ERP, tu correo o la app del banco y hace el trámite como lo harías tú.
-          Cada dato sensible viaja al modelo como un token, <Tok>‹IBAN_1›</Tok>, y el valor real nunca sale de tu máquina.
+          Cada dato sensible viaja al modelo convertido en un token, y el valor real nunca sale de tu máquina.
         </p>
         <div className="cta in-4">
           <a className="btn btn-white" href="#contacto">Pide una demo</a>
@@ -174,7 +174,7 @@ export default function App() {
     root.classList.add('js');
     if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
     const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
-    const t = setTimeout(end, 3600);
+    const t = setTimeout(end, 2300);
     const skip = () => { clearTimeout(t); end(); };
     window.addEventListener('keydown', skip, { once: true });
     window.addEventListener('wheel', skip, { once: true, passive: true });
@@ -199,7 +199,6 @@ export default function App() {
   return (
     <>
       <Nav />
-      <p className="intro-title" aria-hidden="true">Conoce a <b>8</b></p>
       <main>
         <Hero />
         <Blend from="--band" to="--night" seed={1} />

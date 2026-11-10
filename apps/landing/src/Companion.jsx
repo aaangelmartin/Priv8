@@ -61,9 +61,9 @@ export default function Companion({ pal, intro }) {
   /* arranque: 8 duerme, despierta y saluda */
   useEffect(() => {
     if (stage !== 'sleep') return undefined;
-    const a = setTimeout(() => setStage('wake'), 900);
-    const f = setTimeout(() => setStage('fly'), 2700);
-    const b = setTimeout(() => setStage('done'), 3900);
+    const a = setTimeout(() => setStage('wake'), 500);
+    const f = setTimeout(() => setStage('fly'), 1500);
+    const b = setTimeout(() => setStage('done'), 2600);
     return () => { clearTimeout(a); clearTimeout(f); clearTimeout(b); };
   }, []);
 
@@ -175,7 +175,7 @@ function Bubble({ text, show, pos }) {
     setN(0);
     if (!show) return undefined;
     let i = 0;
-    const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 26);
+    const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 20);
     return () => clearInterval(t);
   }, [text, show]);
   /* al lado de 8, nunca encima del texto: a su derecha si 8 está a la izquierda, y al revés */
@@ -186,6 +186,7 @@ function Bubble({ text, show, pos }) {
     : { right: Math.max(12, window.innerWidth - pos.x + 14), top };
   return (
     <div className={'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '')} style={style} role="status" aria-live="polite">
+      <svg className="tail" viewBox="0 0 16 22" aria-hidden="true"><path d="M16 0 V22 C 10 22 3 21 0 18 C 6 15 10 9 10 0 Z" /></svg>
       <span>{text.slice(0, n)}</span><span className="ghost" aria-hidden="true">{text.slice(n)}</span>
     </div>
   );

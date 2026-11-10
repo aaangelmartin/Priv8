@@ -85,19 +85,19 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .companion { position: fixed; left: 0; top: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: 0 0; }
 .companion-eight { position: absolute; inset: 0; }
 .companion-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.bubble8 { position: fixed; z-index: 41; max-width: 270px; padding: 13px 18px; border-radius: 22px; background: #ffffff; color: #0b1b33; font: 600 .98rem/1.35 var(--f-display); letter-spacing: -.01em; box-shadow: 0 18px 44px rgba(5, 16, 31, .28), 0 0 0 1px rgba(11, 27, 51, .05); opacity: 0; translate: 0 -50%; transform: scale(.9); transition: opacity .3s var(--ease), transform .45s cubic-bezier(.34, 1.5, .64, 1); pointer-events: none; }
-.bubble8::before { content: ""; position: absolute; top: 50%; width: 18px; height: 18px; background: #ffffff; border-radius: 5px; transform: translateY(-50%) rotate(45deg); }
-.bubble8.l { transform-origin: left center; }
-.bubble8.l::before { left: -6px; }
-.bubble8:not(.l) { transform-origin: right center; }
-.bubble8:not(.l)::before { right: -6px; }
+.bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 17px; border-radius: 20px; background: #ffffff; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); box-shadow: 0 14px 36px rgba(5, 16, 31, .22); opacity: 0; translate: 0 -50%; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
+.bubble8 .tail { position: absolute; bottom: 6px; width: 16px; height: 22px; fill: #ffffff; overflow: visible; }
+.bubble8.l { border-bottom-left-radius: 6px; transform-origin: 0% 85%; }
+.bubble8.l .tail { left: -10px; }
+.bubble8:not(.l) { border-bottom-right-radius: 6px; transform-origin: 100% 85%; }
+.bubble8:not(.l) .tail { right: -10px; transform: scaleX(-1); }
 .bubble8.on { opacity: 1; transform: none; }
 .bubble8 span { position: relative; }
 .bubble8 .ghost { visibility: hidden; }
 
 /* ---------- portada ---------- */
 .hero { position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-items: center; overflow: hidden; background: var(--band); color: #fff; }
-.field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 72%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 72%, transparent 100%); }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 42% 48% at 50% 60%, var(--band) 46%, transparent 80%); }
 .hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: 136px; padding-bottom: 72px; }
 .hero-anchor { width: clamp(200px, 24vw, 340px); aspect-ratio: 46 / 32; margin-bottom: clamp(18px, 2.6vw, 32px); }
@@ -409,9 +409,4 @@ html.js .rv.in { opacity: 1; transform: none; }
 .lab-pair { border-radius: 28px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 18px 40px rgba(11, 27, 51, .12); }
 .lab-block { height: 140px; display: flex; align-items: flex-end; padding: 18px 24px; font: 600 .9rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
 
-/* bienvenida: «Conoce a 8» debajo de 8 grande, antes de que vuele a su sitio */
-.intro-title { position: fixed; z-index: 45; left: 50%; top: calc(42vh + min(50vw, 89.125vh, 640px) * .3478 + 18px); transform: translateX(-50%); margin: 0; font: 700 clamp(2rem, 1.2rem + 3vw, 3.6rem)/1 var(--f-display); letter-spacing: -.04em; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; }
-.intro-title b { color: #c4cdff; }
-html.intro .intro-title { animation: introtitle 2.7s var(--ease) both; }
-@keyframes introtitle { 0%, 38% { opacity: 0; transform: translate(-50%, 18px); } 52%, 86% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -10px); } }
 html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-delay: .22s; } html.landed .in-3 { transition-delay: .36s; } html.landed .in-4 { transition-delay: .5s; }

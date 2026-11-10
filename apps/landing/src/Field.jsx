@@ -62,7 +62,10 @@ export default function Field() {
         if (it.t > 0.5) {
           const red = it.tok === 'nunca sale';
           ctx.fillStyle = red ? `rgba(255,150,140,${0.95 * fade})` : `rgba(255,255,255,${0.95 * fade})`;
-          ctx.fillText(it.tok, it.x, y);
+          /* el token se escribe centrado donde estaba el dato: se tokeniza en su sitio, sin moverse */
+          ctx.textAlign = 'center';
+          ctx.fillText(it.tok, it.x + it.w / 2, y);
+          ctx.textAlign = 'left';
         } else {
           ctx.fillStyle = `rgba(215,223,255,${0.32 * fade})`;
           ctx.fillText(it.real, it.x, y);
