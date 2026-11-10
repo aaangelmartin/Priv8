@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brezo Banco: marca inventada. Morado brezo y mostaza sobre lino; no se parece a Priv8 a propósito. -->
+<resources>
+    <color name="bank_primary">#6B2E5F</color>
+    <color name="bank_primary_dark">#4E2045</color>
+    <color name="bank_on_primary">#FFFFFF</color>
+    <color name="bank_accent">#C99A2E</color>
+    <color name="bank_background">#F8F5F2</color>
+    <color name="bank_surface">#FFFFFF</color>
+    <color name="bank_text">#231C21</color>
+    <color name="bank_text_secondary">#625A60</color>
+    <color name="bank_line">#E6DEE2</color>
+    <color name="bank_positive">#2F7A3E</color>
+    <color name="bank_error">#B3261E</color>
+</resources>
