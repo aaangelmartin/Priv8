@@ -125,6 +125,7 @@ El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). S
 - **Tamaño:** a partir de 32 px se distinguen todas las caras; por debajo, 8 va siempre animado.
 - **En la app:** hablar y escuchar deben moverse con el volumen real de la voz y del micrófono.
 - **Archivos:** logos trazados, icono de app y favicon en `brand/logo/`.
+- **Expresiones a medida:** si ningún estado encaja, el agente crea una con un JSON (esquema en `brand/8/expresion.schema.json`). El motor lo valida y recorta a rangos seguros; API `P8.definir`, `P8.poner`, `P8.mezclar`. Taller en `docs/ojos.html`.
 
 ### Decisiones tomadas
 

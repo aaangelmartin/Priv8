@@ -417,6 +417,10 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
     <h3>Tamaño pequeño</h3>
     <p class="lead small">De 32 px en adelante se distinguen todas las caras. Por debajo, quieto, solo se distinguen las que cambian de forma: alegría, risa y listo (arcos), tristeza y enfado (párpados inclinados), duda, mirar a otro lado, no ve e inactivo. Las demás se reconocen por su movimiento, así que a 24 px 8 siempre va animado.</p>
   </div>
+  <div class="stab">
+    <h3>Expresiones a medida</h3>
+    <p class="lead small">Si ningún estado encaja, el agente puede crear una cara con un JSON: postura (mirada, párpados, ceño, sonrisa, pupilas, inclinación) y hasta cuatro movimientos. El motor recorta los valores a su rango e ignora cualquier otra cosa, así que nunca hay adornos, colores ni texto en los ojos. Esquema en <code>brand/8/expresion.schema.json</code>; taller para probarlas en <code>docs/ojos.html</code>. Se usan con mesura: primero el juego cerrado.</p>
+  </div>
   <div class="cta"><a class="btn pri" href="ojos.html">Ver los estados en vivo</a><span class="lead small">La referencia animada y el código de los ojos están en <code>docs/ojos.html</code>.</span></div>
 </section>
 
