@@ -1122,3 +1122,11 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 @media (max-width: 900px) { .menu-btn { display: block; } }
 .nav-menu-cta { display: none !important; }
 @media (max-width: 420px) { .nav-menu-cta { display: block !important; } }
+/* móvil: la banca a todo el ancho y con el mismo tamaño con y sin Priv8 */
+@media (max-width: 900px) {
+  .bank-body { grid-template-columns: minmax(0, 1fr); }
+  .bank-main { width: 100%; }
+  .acc, .mini, .mov, .sign { width: 100%; box-sizing: border-box; }
+  .acc strong { min-height: 1.15em; }
+}
+@media (max-width: 900px) { .bank { min-height: 700px; } }
