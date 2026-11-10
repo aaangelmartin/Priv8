@@ -83,7 +83,8 @@ export default function Field() {
    fade    degradado con curva suave, sin nada más
    curve   la sección siguiente entra con una curva amplia, con una capa intermedia
    pills   cápsulas con el radio del notch que se van juntando hasta cubrir el color siguiente
-   sheet   la sección siguiente entra como una hoja con esquinas grandes y sombra */
+   sheet   la sección siguiente entra como una hoja con esquinas grandes y sombra
+   squares cuadrados con esquinas redondeadas que se van llenando fila a fila (la elegida) */
 const EASE = [0, 0.03, 0.1, 0.21, 0.35, 0.5, 0.65, 0.79, 0.9, 0.97, 1];
 const LIGHT = ['--paper', '--mist'];
 function eased(from, to) {
@@ -105,7 +106,7 @@ function useWidth() {
   }, []);
   return [ref, w];
 }
-export function Blend({ from, to, variant = 'fade' }) {
+export function Blend({ from, to, variant = 'squares' }) {
   const [ref, w] = useWidth();
   if (variant === 'curve') {
     const H = 160;
@@ -144,6 +145,25 @@ export function Blend({ from, to, variant = 'fade' }) {
       </div>
     );
   }
+  if (variant === 'squares') {
+    /* los cuadrados de antes (cada fila más llena que la anterior, como una pantalla que se tokeniza), con las esquinas redondeadas */
+    const rows = 6, cell = Math.max(22, Math.min(36, w / 44)), H = rows * cell, cells = [];
+    if (w > 0) {
+      let s = 11; const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+      const cols = Math.ceil(w / cell), gap = Math.max(2, cell * 0.1), rx = cell * 0.3;
+      for (let r = 0; r < rows; r++) {
+        const p = r === rows - 1 ? 1 : Math.pow((r + 0.6) / rows, 0.85);
+        for (let c = 0; c < cols; c++) {
+          if (rnd() < p) cells.push(<rect key={r * cols + c} x={c * cell + gap / 2} y={r * cell + gap / 2} width={cell - gap} height={cell - gap} rx={rx} />);
+        }
+      }
+    }
+    return (
+      <div ref={ref} className="blend" aria-hidden="true" style={{ background: `var(${from})`, height: H || 150 }}>
+        {w > 0 && <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} style={{ fill: `var(${to})` }}>{cells}</svg>}
+      </div>
+    );
+  }
   if (variant === 'sheet') {
     return (
       <div ref={ref} className="blend blend-sheet" aria-hidden="true" style={{ background: `var(${from})` }}>
@@ -157,7 +177,7 @@ export function Blend({ from, to, variant = 'fade' }) {
 /* Página de prueba de transiciones: http://localhost:5180/#transiciones */
 export function TransitionsLab() {
   const pairs = [['--band', '--night', 'Cobalto a noche'], ['--paper', '--night', 'Blanco a noche']];
-  const variants = [['fade', 'A · Fundido suave'], ['curve', 'B · Curva'], ['pills', 'C · Cápsulas con el radio del notch'], ['sheet', 'D · Hoja con esquinas grandes']];
+  const variants = [['squares', 'E · Cuadrados redondeados'], ['fade', 'A · Fundido suave'], ['curve', 'B · Curva'], ['pills', 'C · Cápsulas con el radio del notch'], ['sheet', 'D · Hoja con esquinas grandes']];
   return (
     <div className="lab">
       <header className="lab-head"><h1>Transiciones entre secciones</h1><p>Cuatro opciones. Dime la letra que te guste, o mezcla.</p></header>
