@@ -1,0 +1,30 @@
+[project]
+name = "priv8"
+version = "0.1.0"
+description = "Priv8 CUA: privacy protocol for computer-use agents (hackathon monorepo)"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "anthropic==2.3.0",
+    "mcp==2.3.0",
+    "jsonschema==4.26.0",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+]
+
+[tool.uv]
+# Monorepo of scripts and services, not an installable package.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["mcp/tests"]
+# mcp/ holds flat modules (server.py, agent.py, ...). It has no __init__.py on
+# purpose, so it never shadows the `mcp` SDK package.
+pythonpath = ["mcp"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
