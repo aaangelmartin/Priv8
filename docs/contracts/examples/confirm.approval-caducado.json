@@ -1,0 +1,8 @@
+{
+  "type": "approval_result",
+  "id": "c3",
+  "ok": false,
+  "via": "sistema",
+  "by": "sistema",
+  "reason": "caducado"
+}

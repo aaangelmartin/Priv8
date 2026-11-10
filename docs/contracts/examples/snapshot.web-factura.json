@@ -1,0 +1,52 @@
+{
+  "source": "web",
+  "app": "alba-core",
+  "screen": null,
+  "url": "http://127.0.0.1:5173/facturas/alta",
+  "seq": 3,
+  "focus": "e7",
+  "system_dialog": null,
+  "elements": [
+    {
+      "id": "e1",
+      "role": "heading",
+      "text": "Alta de factura de proveedor"
+    },
+    {
+      "id": "e4",
+      "role": "textbox",
+      "label": "Proveedor",
+      "text": "Suministros Lumen S.L.",
+      "sel": "#proveedor"
+    },
+    {
+      "id": "e5",
+      "role": "textbox",
+      "label": "Importe",
+      "text": "1.254,30",
+      "sel": "#importe",
+      "actions": [
+        "type"
+      ]
+    },
+    {
+      "id": "e7",
+      "role": "textbox",
+      "label": "IBAN de pago",
+      "text": "ES91 2100 0418 4502 0005 1332",
+      "sel": "#pago-iban",
+      "actions": [
+        "type"
+      ]
+    },
+    {
+      "id": "e9",
+      "role": "button",
+      "label": "Registrar",
+      "text": "Registrar",
+      "actions": [
+        "tap"
+      ]
+    }
+  ]
+}

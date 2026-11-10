@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://priv8.dev/contracts/snapshot.schema.json",
+  "title": "Snapshot de pantalla (crudo)",
+  "description": "Lo que entrega un adaptador (web o Android) al núcleo. Lleva valores reales: nunca sale de la zona de confianza. Lo produce adapter.snapshot() en web y el mensaje 'snapshot' del puente en Android.",
+  "type": "object",
+  "required": ["source", "app", "screen", "seq", "elements"],
+  "additionalProperties": false,
+  "properties": {
+    "source": { "enum": ["web", "android"] },
+    "app": {
+      "description": "Aplicación o sitio. Web: clave de la política (alba-core, inbox). Android: paquete (es.alcor.banca).",
+      "type": "string",
+      "minLength": 1
+    },
+    "screen": {
+      "description": "Nombre de la pantalla si el adaptador lo sabe (factura.alta, inicio). Si es null, lo decide la política.",
+      "type": ["string", "null"]
+    },
+    "url": {
+      "description": "Solo web: URL actual.",
+      "type": "string"
+    },
+    "seq": {
+      "description": "Contador creciente de snapshots en la sesión del adaptador.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "focus": {
+      "description": "Id del elemento con el foco, o null.",
+      "type": ["string", "null"]
+    },
+    "system_dialog": {
+      "description": "Diálogo del sistema visible (huella, OTP del sistema, permisos), o null. Mientras haya uno, el núcleo pausa al agente.",
+      "type": ["string", "null"],
+      "examples": ["biometria", "otp", "permiso", null]
+    },
+    "elements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/element" }
+    }
+  },
+  "$defs": {
+    "element": {
+      "type": "object",
+      "required": ["id", "role"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/element_id" },
+        "role": { "$ref": "common.schema.json#/$defs/role" },
+        "label": {
+          "description": "Etiqueta accesible (aria-label, label, contentDescription o hint).",
+          "type": ["string", "null"]
+        },
+        "text": {
+          "description": "Texto visible o contenido del campo (value en web, text en Android). Valor real.",
+          "type": ["string", "null"]
+        },
+        "password": {
+          "description": "Campo de contraseña (type=password en web, isPassword en Android). Siempre rojo.",
+          "type": "boolean"
+        },
+        "sel": {
+          "description": "Selector para casar con la política: CSS en web, viewIdResourceName en Android (id/saldo).",
+          "type": "string"
+        },
+        "bounds": {
+          "description": "[izquierda, arriba, derecha, abajo] en píxeles de pantalla.",
+          "type": "array",
+          "items": { "type": "integer" },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "enabled": { "type": "boolean" },
+        "parent": {
+          "description": "Id del elemento padre, si el adaptador conserva la jerarquía.",
+          "type": ["string", "null"]
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/op" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

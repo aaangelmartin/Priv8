@@ -1,0 +1,28 @@
+{
+  "seq": 0,
+  "ts": "2026-11-11T10:40:00.000Z",
+  "session": "s1",
+  "kind": "observe_sent",
+  "app": "alba-core",
+  "screen": "factura.alta",
+  "model_saw": "observe factura.alta",
+  "tokens": [
+    "‹PROVEEDOR_1·maestro›",
+    "‹IMPORTE_1·positivo›",
+    "‹IBAN_1·maestro›"
+  ],
+  "approved_by": null,
+  "counts": {
+    "verde": 2,
+    "ambar": 3,
+    "rojo": 0
+  },
+  "ms": {
+    "core": 22,
+    "adapter": 45,
+    "model": null
+  },
+  "prev": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+  "hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "sig": "ed25519:QUJDRA=="
+}

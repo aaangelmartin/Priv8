@@ -1,0 +1,8 @@
+{
+  "session": "s1",
+  "op": "matches",
+  "args": [
+    "‹IBAN_1·maestro›",
+    "‹IBAN_2·correo›"
+  ]
+}

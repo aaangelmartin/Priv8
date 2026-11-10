@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://priv8.dev/contracts/events.schema.json",
+  "title": "Canal de eventos del núcleo",
+  "description": "Mensajes del WebSocket ws://127.0.0.1:8700/events. Lo escuchan la consola de auditoría (Camino 2), la app 8 (Camino 4) y el bucle del agente (Camino 3). Es local: screen lleva valores reales para la mitad 'lo que ves' de la consola y nunca se escribe en el registro ni sale a la nube. approval_result es el único mensaje que los clientes envían al núcleo.",
+  "oneOf": [
+    {
+      "description": "núcleo → clientes: cada línea nueva del registro.",
+      "type": "object",
+      "required": ["type", "event"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "audit" },
+        "event": { "$ref": "audit.schema.json" }
+      }
+    },
+    {
+      "description": "núcleo → clientes: la pantalla en crudo y lo que vio el modelo, para la vista partida.",
+      "type": "object",
+      "required": ["type", "session", "raw", "observed"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "screen" },
+        "session": { "$ref": "common.schema.json#/$defs/session" },
+        "raw": { "$ref": "snapshot.schema.json" },
+        "observed": { "$ref": "observation.schema.json" }
+      }
+    },
+    {
+      "description": "núcleo → clientes: frase que 8 debe decir.",
+      "type": "object",
+      "required": ["type", "utterance"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "voice" },
+        "utterance": { "$ref": "voice.schema.json" }
+      }
+    },
+    { "$ref": "confirm.schema.json#/$defs/request" },
+    { "$ref": "confirm.schema.json#/$defs/approval_result" }
+  ]
+}

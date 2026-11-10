@@ -1,0 +1,16 @@
+{
+  "session": "s1",
+  "app": "x",
+  "screen": "y",
+  "seq": 1,
+  "paused": null,
+  "budget_left": 1,
+  "elements": [
+    {
+      "id": "n4",
+      "role": "textbox",
+      "text": "1234",
+      "cls": "rojo"
+    }
+  ]
+}

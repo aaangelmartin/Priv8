@@ -1,0 +1,56 @@
+{
+  "session": "s1",
+  "app": "alba-core",
+  "screen": "factura.alta",
+  "seq": 3,
+  "paused": null,
+  "budget_left": 30,
+  "elements": [
+    {
+      "id": "e1",
+      "role": "heading",
+      "text": "Alta de factura de proveedor",
+      "cls": "verde"
+    },
+    {
+      "id": "e4",
+      "role": "textbox",
+      "label": "Proveedor",
+      "text": "‹PROVEEDOR_1·maestro›",
+      "cls": "ambar",
+      "tokens": [
+        "‹PROVEEDOR_1·maestro›"
+      ]
+    },
+    {
+      "id": "e5",
+      "role": "textbox",
+      "label": "Importe",
+      "text": "‹IMPORTE_1·positivo›",
+      "cls": "ambar",
+      "actions": [
+        "type"
+      ]
+    },
+    {
+      "id": "e7",
+      "role": "textbox",
+      "label": "IBAN de pago",
+      "text": "‹IBAN_1·maestro›",
+      "cls": "ambar",
+      "actions": [
+        "type"
+      ]
+    },
+    {
+      "id": "e9",
+      "role": "button",
+      "label": "Registrar",
+      "text": "Registrar",
+      "cls": "verde",
+      "actions": [
+        "tap"
+      ]
+    }
+  ]
+}

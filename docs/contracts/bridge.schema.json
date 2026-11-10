@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://priv8.dev/contracts/bridge.schema.json",
+  "title": "Puente Android",
+  "description": "Mensajes JSON por WebSocket entre el núcleo (portátil, ws://127.0.0.1:8765 con adb reverse) y el servicio de accesibilidad del emulador. Lleva valores reales: los dos extremos están en la zona de confianza. → núcleo a Android, ← Android a núcleo. El servicio de Android se conecta como cliente.",
+  "oneOf": [
+    { "$ref": "#/$defs/hello" },
+    { "$ref": "#/$defs/snapshot_request" },
+    { "$ref": "#/$defs/snapshot" },
+    { "$ref": "#/$defs/perform" },
+    { "$ref": "#/$defs/result" },
+    { "$ref": "#/$defs/event" }
+  ],
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,32}$" },
+    "hello": {
+      "description": "← Primer mensaje al conectar.",
+      "type": "object",
+      "required": ["type", "device", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "hello" },
+        "device": { "type": "string" },
+        "version": { "const": 1 }
+      }
+    },
+    "snapshot_request": {
+      "description": "→ Pide la pantalla actual.",
+      "type": "object",
+      "required": ["type", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "snapshot.request" },
+        "id": { "$ref": "#/$defs/id" }
+      }
+    },
+    "snapshot": {
+      "description": "← Respuesta a snapshot.request.",
+      "type": "object",
+      "required": ["type", "id", "raw"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "snapshot" },
+        "id": { "$ref": "#/$defs/id" },
+        "raw": { "$ref": "snapshot.schema.json" }
+      }
+    },
+    "perform": {
+      "description": "→ Acción con el valor ya rehidratado por el ejecutor.",
+      "type": "object",
+      "required": ["type", "id", "op"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "perform" },
+        "id": { "$ref": "#/$defs/id" },
+        "op": { "$ref": "common.schema.json#/$defs/op" },
+        "target": { "$ref": "common.schema.json#/$defs/element_id" },
+        "text": { "type": "string" },
+        "direction": { "enum": ["up", "down", "left", "right"] }
+      }
+    },
+    "result": {
+      "description": "← Resultado de perform.",
+      "type": "object",
+      "required": ["type", "id", "ok"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "result" },
+        "id": { "$ref": "#/$defs/id" },
+        "ok": { "type": "boolean" },
+        "error": {
+          "description": "Si ok es false.",
+          "enum": ["target_no_encontrado", "no_permitido", "timeout", "otro"]
+        }
+      }
+    },
+    "event": {
+      "description": "← Aviso espontáneo. focus_password y system_dialog hacen que el núcleo pause al agente y 8 mire a otro lado.",
+      "type": "object",
+      "required": ["type", "kind"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "event" },
+        "kind": { "enum": ["focus_password", "system_dialog", "system_dialog_closed", "screen_changed", "app_changed"] },
+        "app": { "type": "string" },
+        "detail": { "type": "string" }
+      }
+    }
+  }
+}

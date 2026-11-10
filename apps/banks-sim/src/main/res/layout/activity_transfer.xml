@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla transferencia. resource-ids: ver policies/banca-alcor.yaml (pantalla "transferencia"). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_transferencia"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout style="@style/Bank.Header">
+
+        <Button
+            android:id="@+id/btn_volver"
+            style="@style/Bank.HeaderButton"
+            android:contentDescription="@string/back_description"
+            android:text="@string/back" />
+
+        <TextView
+            android:id="@+id/titulo"
+            style="@style/Bank.HeaderTitle"
+            android:text="@string/transfer_title" />
+    </LinearLayout>
+
+    <ScrollView style="@style/Bank.Screen">
+
+        <LinearLayout style="@style/Bank.Content">
+
+            <TextView
+                android:id="@+id/origen_titulo"
+                style="@style/Bank.Section"
+                android:layout_marginTop="0dp"
+                android:text="@string/transfer_from" />
+
+            <LinearLayout style="@style/Bank.Card">
+
+                <TextView
+                    android:id="@+id/origen_alias"
+                    style="@style/Bank.Value"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/origen_iban"
+                    style="@style/Bank.Value"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/bank_text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/origen_saldo"
+                    style="@style/Bank.Value"
+                    android:layout_marginTop="4dp"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_cambiar_origen"
+                style="@style/Bank.Button.Secondary"
+                android:layout_marginTop="0dp"
+                android:text="@string/transfer_change" />
+
+            <TextView
+                android:id="@+id/contactos_titulo"
+                style="@style/Bank.Section"
+                android:text="@string/transfer_contacts" />
+
+            <!-- Filas: layout/item_contacto.xml -->
+            <LinearLayout
+                android:id="@+id/lista_contactos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/iban_destino_label"
+                style="@style/Bank.Label"
+                android:labelFor="@id/iban_destino"
+                android:text="@string/transfer_iban" />
+
+            <EditText
+                android:id="@+id/iban_destino"
+                style="@style/Bank.Field"
+                android:fontFamily="monospace"
+                android:hint="@string/transfer_iban_hint"
+                android:imeOptions="actionNext"
+                android:inputType="textCapCharacters|textNoSuggestions"
+                android:maxLength="34"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/beneficiario_label"
+                style="@style/Bank.Label"
+                android:labelFor="@id/beneficiario"
+                android:text="@string/transfer_name" />
+
+            <EditText
+                android:id="@+id/beneficiario"
+                style="@style/Bank.Field"
+                android:hint="@string/transfer_name_hint"
+                android:imeOptions="actionNext"
+                android:inputType="textPersonName|textCapWords"
+                android:maxLength="70"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/importe_label"
+                style="@style/Bank.Label"
+                android:labelFor="@id/importe"
+                android:text="@string/transfer_amount" />
+
+            <EditText
+                android:id="@+id/importe"
+                style="@style/Bank.Field"
+                android:digits="0123456789,."
+                android:hint="@string/transfer_amount_hint"
+                android:imeOptions="actionNext"
+                android:inputType="numberDecimal"
+                android:maxLength="12"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/concepto_label"
+                style="@style/Bank.Label"
+                android:labelFor="@id/concepto"
+                android:text="@string/transfer_concept" />
+
+            <EditText
+                android:id="@+id/concepto"
+                style="@style/Bank.Field"
+                android:hint="@string/transfer_concept_hint"
+                android:imeOptions="actionDone"
+                android:inputType="textCapSentences"
+                android:maxLength="140"
+                android:maxLines="2" />
+
+            <TextView
+                android:id="@+id/transfer_error"
+                style="@style/Bank.Error" />
+
+            <Button
+                android:id="@+id/btn_continuar"
+                style="@style/Bank.Button"
+                android:layout_marginTop="24dp"
+                android:text="@string/transfer_continue" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
