@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla revisión. btn_enviar es la acción crítica: ver policies/banca-alcor.yaml (pantalla "revision"). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_revision"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout style="@style/Bank.Header">
+
+        <Button
+            android:id="@+id/btn_volver"
+            style="@style/Bank.HeaderButton"
+            android:contentDescription="@string/back_description"
+            android:text="@string/back" />
+
+        <TextView
+            android:id="@+id/titulo"
+            style="@style/Bank.HeaderTitle"
+            android:text="@string/review_title" />
+    </LinearLayout>
+
+    <ScrollView style="@style/Bank.Screen">
+
+        <LinearLayout style="@style/Bank.Content">
+
+            <LinearLayout style="@style/Bank.Card">
+
+                <TextView android:id="@+id/rev_importe_label" style="@style/Bank.Label" android:layout_marginTop="0dp" android:text="@string/review_amount" />
+                <TextView
+                    android:id="@+id/rev_importe"
+                    style="@style/Bank.Value"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView android:id="@+id/rev_beneficiario_label" style="@style/Bank.Label" android:text="@string/review_name" />
+                <TextView android:id="@+id/rev_beneficiario" style="@style/Bank.Value" />
+
+                <TextView android:id="@+id/rev_iban_destino_label" style="@style/Bank.Label" android:text="@string/review_to" />
+                <TextView
+                    android:id="@+id/rev_iban_destino"
+                    style="@style/Bank.Value"
+                    android:fontFamily="monospace"
+                    android:textSize="15sp" />
+
+                <TextView android:id="@+id/rev_origen_label" style="@style/Bank.Label" android:text="@string/review_from" />
+                <TextView android:id="@+id/rev_origen_alias" style="@style/Bank.Value" android:textSize="15sp" />
+                <TextView
+                    android:id="@+id/rev_origen_iban"
+                    style="@style/Bank.Value"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/bank_text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView android:id="@+id/rev_concepto_label" style="@style/Bank.Label" android:text="@string/review_concept" />
+                <TextView android:id="@+id/rev_concepto" style="@style/Bank.Value" />
+
+                <TextView android:id="@+id/rev_comision_label" style="@style/Bank.Label" android:text="@string/review_fee" />
+                <TextView
+                    android:id="@+id/rev_comision"
+                    style="@style/Bank.Value"
+                    android:text="@string/review_fee_value" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_enviar"
+                style="@style/Bank.Button"
+                android:text="@string/review_send" />
+
+            <Button
+                android:id="@+id/btn_cancelar"
+                style="@style/Bank.Button.Secondary"
+                android:layout_marginTop="10dp"
+                android:text="@string/cancel" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

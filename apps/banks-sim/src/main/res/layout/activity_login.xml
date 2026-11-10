@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla login. resource-ids: ver policies/banca-alcor.yaml (pantalla "login"). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_login"
+    style="@style/Bank.Screen">
+
+    <LinearLayout
+        style="@style/Bank.Content"
+        android:paddingTop="48dp">
+
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_bank" />
+
+        <TextView
+            android:id="@+id/banco_nombre"
+            style="@style/Bank.Title"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="2dp"
+            android:text="@string/bank_name" />
+
+        <TextView
+            android:id="@+id/banco_lema"
+            style="@style/Bank.Value"
+            android:layout_marginBottom="32dp"
+            android:text="@string/bank_tagline"
+            android:textColor="@color/bank_text_secondary" />
+
+        <TextView
+            android:id="@+id/login_titulo"
+            style="@style/Bank.Section"
+            android:layout_marginTop="0dp"
+            android:text="@string/login_title"
+            android:textColor="@color/bank_text"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/usuario_label"
+            style="@style/Bank.Label"
+            android:labelFor="@id/usuario"
+            android:text="@string/login_user" />
+
+        <EditText
+            android:id="@+id/usuario"
+            style="@style/Bank.Field"
+            android:hint="@string/login_user_hint"
+            android:imeOptions="actionNext"
+            android:inputType="text|textNoSuggestions"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/clave_label"
+            style="@style/Bank.Label"
+            android:labelFor="@id/clave"
+            android:text="@string/login_password" />
+
+        <EditText
+            android:id="@+id/clave"
+            style="@style/Bank.Field"
+            android:hint="@string/login_password_hint"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"
+            android:maxLines="1" />
+
+        <TextView
+            android:id="@+id/login_error"
+            style="@style/Bank.Error" />
+
+        <Button
+            android:id="@+id/btn_entrar"
+            style="@style/Bank.Button"
+            android:layout_marginTop="24dp"
+            android:text="@string/login_enter" />
+    </LinearLayout>
+</ScrollView>
