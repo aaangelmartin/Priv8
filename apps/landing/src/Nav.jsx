@@ -3,10 +3,11 @@ import Eight from './eight/Eight.jsx';
 import { useCompanion } from './companion.js';
 
 const LINKS = [
-  ['demo', 'Pruébalo'],
-  ['protocolo', 'Protocolo'],
+  ['problema', 'Qué ve'],
+  ['como', 'Cómo funciona'],
   ['producto', 'Productos'],
-  ['confianza', 'Confianza'],
+  ['demo', 'Pruébalo'],
+  ['faq', 'Preguntas'],
 ];
 const NAMES = { inicio: 'Priv8', demo: 'Pruébalo', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Pide una demo' };
 
@@ -18,7 +19,7 @@ function ThemeIcon({ dark }) {
   );
 }
 
-/* Barra superior: un notch ancho pegado arriba, como el de un portátil. 8 vive dentro y te sigue con la mirada. */
+/* Barra suelta y blanca, con el radio del notch. 8 vive dentro y te sigue con la mirada. */
 export default function Nav({ dark, onTheme, pal }) {
   const { section } = useCompanion();
   const [scrolled, setScrolled] = useState(false);
@@ -37,7 +38,7 @@ export default function Nav({ dark, onTheme, pal }) {
   return (
     <nav className={`nav${scrolled ? ' scrolled' : ''}`} aria-label="Principal">
       <a className="brand" href="#inicio" aria-label="Priv8, inicio">
-        <Eight className="nav-eight" mode="mirar" fg={onLight ? '#2D45D6' : '#FFFFFF'} cut={onLight ? '#FFFFFF' : pal.ink} label="8" />
+        <Eight className="nav-eight" mode="mirar" fg="#2D45D6" cut="#FFFFFF" label="8" />
         <span className="word">Priv8</span>
       </a>
       <span className="now" aria-hidden="true">{NAMES[section] || 'Priv8'}</span>
