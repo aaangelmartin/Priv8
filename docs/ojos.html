@@ -339,15 +339,6 @@ code{font-family:var(--f-mono);font-size:.85em}
   }
   var CUSTOM={};
   function definir(spec){ var r=normalizar(spec); CUSTOM[r.expresion.id]=r.expresion; return r; }
-  /* Ejemplos: emociones que no están en el juego cerrado, hechas solo con el formato */
-  var EJEMPLOS=[
-    {id:'satisfecho',nombre:'Satisfecho',descripcion:'Ha cuadrado las cuentas: media sonrisa tranquila y un balanceo lento.',sonrisa:0.3,parpados:0.18,mirada:{x:0.2,y:-0.1},inclinacion:4,movimientos:[{tipo:'balanceo',amplitud:0.4,ritmo:0.5}]},
-    {id:'atento_detalle',nombre:'Atento al detalle',descripcion:'Revisa una cifra con cuidado: ojos entornados que barren despacio.',parpados:0.38,ceno:3,acercamiento:1.04,movimientos:[{tipo:'barrido',amplitud:0.7,ritmo:0.35}],parpadeo:'lento'},
-    {id:'impaciente_amable',nombre:'Impaciente, amable',descripcion:'Lleva rato esperando una respuesta del banco, sin perder la calma.',mirada:{x:0,y:-0.3},inclinacion:-3,movimientos:[{tipo:'vaiven',amplitud:0.3,ritmo:0.9},{tipo:'saltitos',amplitud:0.25,ritmo:0.5}]},
-    {id:'alivio',nombre:'Alivio',descripcion:'Pago verificado: suelta el aire y sonríe.',sonrisa:0.35,parpados:0.3,mirada:{x:0,y:0.1},movimientos:[{tipo:'respirar',amplitud:0.8,ritmo:0.4}],duracion:2.5,despues:'mirar'},
-    {id:'sospecha',nombre:'Sospecha',descripcion:'Algo en la página no le cuadra.',parpados:{izq:0.45,der:0.3},ceno:6,mirada:{x:-0.6,y:0},inclinacion:-6,parpadeo:'lento'}
-  ];
-  EJEMPLOS.forEach(definir);
   function ampMov(mv,t){ return Math.sin(t*mv.ritmo*Math.PI*2); }
 
   /* ---------------------------------------------------------------- instancia */
@@ -581,7 +572,7 @@ code{font-family:var(--f-mono);font-size:.85em}
   window.P8={
     definir:definir,
     poner:function(x){ var id=x; if(x&&typeof x==='object'){ id=definir(x).expresion.id; } if(!CUSTOM[id] && !EMO.some(function(e){return e.k===id;})) return false; setBig(id); return true; },
-    mezclar:function(a,b,t){ var A=CUSTOM[a], B=CUSTOM[b]; if(!A||!B) return null; t=clamp(t,0,1);
+    mezclar:function(a,b,t){ var A=CUSTOM[a], B=CUSTOM[b]; /* solo entre expresiones a medida ya definidas */ if(!A||!B) return null; t=clamp(t,0,1);
       function L(u,v){ return u+(v-u)*t; } function LP(u,v){ return {izq:L(u[0],v[0]),der:L(u[1],v[1])}; }
       return definir({id:a+'_'+b, nombre:A.nombre+' y '+B.nombre, descripcion:'Mezcla', mirada:{x:L(A.mirada.x,B.mirada.x),y:L(A.mirada.y,B.mirada.y)},
         parpados:LP(A.parpados,B.parpados), ceno:LP(A.ceno,B.ceno), sonrisa:LP(A.sonrisa,B.sonrisa), pupilas:LP(A.pupilas,B.pupilas),
@@ -597,7 +588,6 @@ code{font-family:var(--f-mono);font-size:.85em}
     var F=[['mirada.x','Mirada horizontal'],['mirada.y','Mirada vertical'],['parpados.izq','Párpado izquierdo'],['parpados.der','Párpado derecho'],['ceno.izq','Ceño izquierdo'],['ceno.der','Ceño derecho'],
            ['sonrisa.izq','Sonrisa izquierda'],['sonrisa.der','Sonrisa derecha'],['pupilas.izq','Pupila izquierda'],['pupilas.der','Pupila derecha'],['inclinacion','Inclinación'],['acercamiento','Acercamiento'],['desplazamiento.x','Desplazamiento horizontal'],['desplazamiento.y','Desplazamiento vertical']];
     var h='<div class="tl-ctl">';
-    h+='<label class="tl-row"><span>Ejemplo</span><select id="tl-ej"><option value="">Nueva</option>'+EJEMPLOS.map(function(e){return '<option value="'+e.id+'">'+e.nombre+'</option>';}).join('')+'</select></label>';
     h+='<label class="tl-row"><span>Nombre</span><input id="tl-nombre" value="Mi expresión" maxlength="40"></label>';
     F.forEach(function(fd){ var r=RANGOS[fd[0]]; h+='<label class="tl-row"><span>'+fd[1]+'</span><input type="range" data-k="'+fd[0]+'" min="'+r[0]+'" max="'+r[1]+'" step="'+((r[1]-r[0])/100)+'" value="'+r[2]+'"><output>'+r[2]+'</output></label>'; });
     h+='<label class="tl-row"><span>Sigue el puntero</span><input type="checkbox" id="tl-sigue"></label>';
@@ -631,11 +621,10 @@ code{font-family:var(--f-mono);font-size:.85em}
       q('#tl-warn').textContent=r.avisos.length?('Avisos: '+r.avisos.join(' · ')):'Válida.';
       return r;
     }
-    box.addEventListener('input',function(ev){ if(ev.target.id==='tl-json'){ try{ var o=JSON.parse(ev.target.value); var r=apply(o,true); toUI(r.expresion); }catch(e){ q('#tl-warn').textContent='JSON no válido: '+e.message; } return; } if(ev.target.id==='tl-ej') return; apply(fromUI()); });
-    q('#tl-ej').addEventListener('change',function(){ var id=this.value; if(!id){ apply(fromUI()); return; } var ex=EJEMPLOS.filter(function(e){return e.id===id;})[0]; var r=apply(ex); toUI(r.expresion); q('#tl-json').value=JSON.stringify(ex,null,2); });
+    box.addEventListener('input',function(ev){ if(ev.target.id==='tl-json'){ try{ var o=JSON.parse(ev.target.value); var r=apply(o,true); toUI(r.expresion); }catch(e){ q('#tl-warn').textContent='JSON no válido: '+e.message; } return; } apply(fromUI()); });
     q('#tl-big').addEventListener('click',function(){ var r=apply(fromUI()); setBig(r.expresion.id); document.getElementById('big').scrollIntoView({behavior:'smooth',block:'center'}); });
     q('#tl-copy').addEventListener('click',function(){ var t=q('#tl-json').value; try{ navigator.clipboard.writeText(t); q('#tl-warn').textContent='JSON copiado.'; }catch(e){ q('#tl-json').select(); } });
-    q('#tl-ej').value='satisfecho'; q('#tl-ej').dispatchEvent(new Event('change'));
+    apply(fromUI()); /* empieza desde una cara neutra */
   }
 
   function loop(now){ for(var i=0;i<ALL.length;i++){ try{ ALL[i].tick(now); }catch(e){ console.error(e); } } requestAnimationFrame(loop); }
