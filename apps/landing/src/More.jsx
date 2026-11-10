@@ -1,80 +1,79 @@
+import { useEffect, useRef, useState } from 'react';
 import { Spot } from './Story.jsx';
 import { useSeen } from './Sections.jsx';
 
 const Tok = ({ children, never }) => <span className={'tok' + (never ? ' tok-never' : '')}>{children}</span>;
 
-/* ---------------------------------------------------------------- cómo funciona: dónde vive cada dato */
-/* Dos zonas y una frontera. A la izquierda tu máquina, donde están los datos y la tabla de tokens. A la derecha el
-   proveedor del modelo, que solo ve tokens. Los tokens cruzan la frontera; los datos reales se quedan. */
+/* ---------------------------------------------------------------- cómo funciona: el mapa y las ocho piezas */
+/* Un mapa con dos zonas y una frontera: tu máquina, donde viven los datos, y el proveedor del modelo, que solo ve
+   tokens. Las ocho piezas del protocolo están en su sitio del mapa; se iluminan una a una (solas o al pulsarlas)
+   y al lado se explica cada una con su ejemplo. */
+const PIECES = [
+  { k: 'detector', h: 'Tres clases de dato', t: 'Al leer la pantalla, cada dato se clasifica. Claves, PIN y códigos nunca salen. IBAN, nombres e importes se tokenizan. La interfaz va libre.', v: <><Tok never>nunca sale</Tok><Tok>se tokeniza</Tok><span className="free">libre</span></> },
+  { k: 'vault', h: 'Tokens con tipo', t: 'Cada dato se cambia por un token estable en toda la sesión, con su tipo y una pista útil. La tabla token → valor vive solo en tu máquina.', v: <><Tok>‹IBAN_1·propio›</Tok><Tok>‹IMPORTE_3·positivo›</Tok></> },
+  { k: 'gate', h: 'Bloqueo final', t: 'Antes de salir, cada petición se revisa. Si un IBAN, un DNI o una tarjeta se escapa sin tokenizar, la petición no sale.', v: <span className="oq">petición retenida: IBAN válido detectado</span> },
+  { k: 'oracle', h: 'Oráculo con límite', t: 'El modelo puede preguntar «¿cubre 200 €?» y recibir «sí» o «no», sin la cifra. Con un máximo de preguntas para que no la adivine.', v: <span className="oq">¿cubre 200 €? <b>sí</b> · quedan 4</span> },
+  { k: 'exec', h: 'Ejecutor local', t: 'El modelo escribe tokens. El ejecutor, en tu máquina, pone el valor real en la pantalla justo antes de pulsar.', v: <span className="oq"><Tok>‹IBAN_2›</Tok> → ES08 9300 …</span> },
+  { k: 'prov', h: 'Procedencia', t: 'Cada dato recuerda de dónde viene. Uno que llega por correo o por chat no puede entrar en un campo de pago.', v: <span className="oq">dato del correo → campo de pago: <b>no</b></span> },
+  { k: 'yes', h: 'Tu «sí»', t: 'Transferir, invertir, firmar o enviar espera a una persona. La autenticación del banco la hace siempre ella.', v: <span className="btns"><i>Cancelar</i><i className="yes">Confirmar</i></span> },
+  { k: 'log', h: 'Registro firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, encadenado y firmado para auditoría.', v: <span className="oq">09:12:31 aprobado por una persona · firmado</span> },
+];
+const MODELS = ['Claude', 'ChatGPT', 'Gemini', 'Mistral', 'Llama'];
+
 export function HowArch() {
   const [ref, seen] = useSeen(0.35);
+  const [cur, setCur] = useState(0);
+  const hold = useRef(0);
+  useEffect(() => {
+    if (!seen) return undefined;
+    const t = setInterval(() => { if (performance.now() > hold.current) setCur((c) => (c + 1) % PIECES.length); }, 3400);
+    return () => clearInterval(t);
+  }, [seen]);
+  const pick = (i) => { setCur(i); hold.current = performance.now() + 10000; };
+  const on = (k) => (PIECES[cur].k === k ? ' on' : '');
+  const N = ({ k, children, cls = '' }) => {
+    const i = PIECES.findIndex((p) => p.k === k);
+    return <button type="button" className={'mn ' + cls + on(k)} onClick={() => pick(i)}><span className="mn-n">{i + 1}</span>{children}</button>;
+  };
+  const p = PIECES[cur];
   return (
-    <section id="como" className={'block block-paper arch' + (seen ? ' seen' : '')} aria-labelledby="h-arch" ref={ref}>
+    <section id="como" className={'block block-cobalt arch2' + (seen ? ' seen' : '')} aria-labelledby="h-arch" ref={ref}>
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="nove" say="Los datos se quedan contigo." />
           <p className="eyebrow">Cómo funciona</p>
           <h2 id="h-arch">Los datos no cruzan. <span className="soft">Los tokens, sí.</span></h2>
-          <p className="lead">Todo lo sensible se resuelve en tu máquina. Al modelo solo llegan la interfaz y tokens.</p>
         </div>
-        <div className="arch-map">
-          <div className="zone zone-local">
-            <p className="zone-t">Tu máquina · entorno de confianza</p>
-            <div className="an" style={{ '--d': 0 }}><b>1 · Pantalla</b><span>La web o la app, leída por dentro: DOM o árbol de accesibilidad.</span></div>
-            <div className="an" style={{ '--d': 1 }}><b>2 · Detector</b><span>Reglas por sitio, IBAN con mod-97, DNI con su letra, tarjetas con Luhn, nombres.</span></div>
-            <div className="an vault" style={{ '--d': 2 }}><b>Bóveda</b><span className="vrow"><Tok>‹IBAN_1›</Tok>ES43 9100 …</span><span className="vrow"><Tok>‹IMPORTE_1›</Tok>3.412,58 €</span></div>
-            <div className="an" style={{ '--d': 5 }}><b>4 · Ejecutor y oráculo</b><span>Escribe el valor real en la pantalla. Responde «sí» o «no» sin dar la cifra.</span></div>
-            <div className="an" style={{ '--d': 6 }}><b>5 · Confirmación y registro</b><span>Lo irreversible espera a una persona. Todo queda firmado.</span></div>
-          </div>
-          <div className="border-line" aria-hidden="true">
-            <span className="gate" style={{ '--d': 3 }}>bloqueo final</span>
-            <span className="pk out"><Tok>‹IBAN_1›</Tok></span>
-            <span className="pk back"><Tok>escribe ‹IBAN_2›</Tok></span>
-            <span className="pk stop">ES43 9100 …</span>
-          </div>
-          <div className="zone zone-cloud">
-            <p className="zone-t">Proveedor del modelo</p>
-            <div className="an model" style={{ '--d': 4 }}>
-              <b>3 · El modelo razona con tokens</b>
-              <pre>{'campo "Saldo"  ‹IMPORTE_1›\ncampo "Cuenta" ‹IBAN_1›\ncampo "Clave"  nunca sale\n\n→ act(transferir, ‹IBAN_2›, 200 €)'}</pre>
-              <span>Entiende qué es cada cosa y decide qué hacer. Nunca ve el valor.</span>
+        <div className="arch2-grid">
+          <div className="map">
+            <div className="mz local">
+              <p className="mz-t">Tu máquina · entorno de confianza</p>
+              <div className="mrow"><span className="mn plain">Pantalla<small>web o app, leída por dentro</small></span></div>
+              <div className="mrow two"><N k="detector">Detector</N><N k="vault">Bóveda de tokens</N></div>
+              <div className="mrow two"><N k="oracle">Oráculo</N><N k="exec">Ejecutor</N></div>
+              <div className="mrow two"><N k="prov">Procedencia</N><N k="yes">Tu «sí»</N></div>
+              <div className="mrow"><N k="log">Registro firmado</N></div>
+            </div>
+            <div className="mfront">
+              <span className="pk out"><Tok>‹IBAN_1›</Tok></span>
+              <span className="pk back"><Tok>‹IBAN_2›</Tok></span>
+              <N k="gate" cls="gate2">Bloqueo final</N>
+              <span className="pk stop">ES43 9100 …</span>
+            </div>
+            <div className="mz cloud">
+              <p className="mz-t">Proveedor del modelo</p>
+              <div className="models">{MODELS.map((m) => <span key={m}>{m}</span>)}</div>
+              <pre>{'Saldo   ‹IMPORTE_1›\nCuenta  ‹IBAN_1›\nClave   nunca sale\n\n→ transferir a ‹IBAN_2›'}</pre>
+              <p className="mz-n">Razona con tokens. Nunca ve un valor.</p>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------------------------------------------------------- garantías: las piezas del protocolo */
-const PIECES = [
-  { h: 'Tokens con tipo', t: 'Cada dato se cambia por un token estable en toda la sesión, con su tipo y una pista útil.', v: <><Tok>‹IBAN_1·propio›</Tok><Tok>‹IMPORTE_3·positivo›</Tok></> },
-  { h: 'Tres clases de dato', t: 'Claves, PIN y códigos nunca salen. IBAN, nombres e importes se tokenizan. La interfaz va libre.', v: <><Tok never>nunca sale</Tok><Tok>se tokeniza</Tok><span className="free">libre</span></> },
-  { h: 'Oráculo con límite', t: 'Compara sin revelar, con un número máximo de preguntas y respuestas por tramos.', v: <span className="oq">¿cubre 200 €? <b>sí</b> · quedan 4</span> },
-  { h: 'Ejecutor local', t: 'El modelo escribe tokens; el valor real lo pone tu máquina justo antes de pulsar.', v: <span className="oq"><Tok>‹IBAN_2›</Tok> → ES08 9300 …</span> },
-  { h: 'Procedencia', t: 'Un dato que llega por correo o por chat no puede entrar en un campo de pago.', v: <span className="oq">correo → campo de pago: <b>no</b></span> },
-  { h: 'Tu «sí»', t: 'Transferir, invertir, firmar o enviar espera a una persona. La autenticación del banco la hace siempre ella.', v: <span className="btns"><i>Cancelar</i><i className="yes">Confirmar</i></span> },
-  { h: 'Bloqueo final', t: 'Si un IBAN, un DNI o una tarjeta se escapa sin tokenizar, la petición no sale.', v: <span className="oq">petición retenida: IBAN válido</span> },
-  { h: 'Registro firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, encadenado y firmado.', v: <span className="oq">09:12:31 aprobado · firmado</span> },
-];
-export function Guarantees() {
-  const [ref, seen] = useSeen(0.25);
-  return (
-    <section id="garantias" className={'block block-paper guar' + (seen ? ' seen' : '')} aria-labelledby="h-guar" ref={ref}>
-      <div className="wrap">
-        <div className="block-head">
-          <Spot className="spot-inline" mode="esperar" say="Ocho reglas. Ninguna se salta." />
-          <p className="eyebrow">Garantías</p>
-          <h2 id="h-guar">Ocho piezas. <span className="soft">Ninguna depende de que el modelo obedezca.</span></h2>
-        </div>
-        <div className="guar-grid">
-          {PIECES.map((p, i) => (
-            <article className="gp" key={p.h} style={{ '--d': i }}>
-              <div className="gp-v">{p.v}</div>
-              <h3>{p.h}</h3>
-              <p>{p.t}</p>
-            </article>
-          ))}
+          <div className="detail" aria-live="polite">
+            <p className="d-n">{cur + 1} de {PIECES.length}</p>
+            <h3 key={'h' + cur} className="swap">{p.h}</h3>
+            <p key={'t' + cur} className="swap">{p.t}</p>
+            <div key={'v' + cur} className="d-v swap">{p.v}</div>
+            <div className="d-dots">{PIECES.map((x, i) => <button key={x.k} type="button" aria-label={x.h} className={i === cur ? 'on' : ''} onClick={() => pick(i)} />)}</div>
+          </div>
         </div>
       </div>
     </section>
@@ -129,7 +128,7 @@ const ROWS = [
   ['Bóvedas de datos para IA', [0.5, 0, 0, 0]],
   ['Priv8', [1, 1, 1, 1]],
 ];
-const Mark = ({ v }) => (v === 1 ? <span className="mk yes" aria-label="sí">✓</span> : v === 0 ? <span className="mk no" aria-label="no">✕</span> : <span className="mk half" aria-label="en parte">en parte</span>);
+const Mark = ({ v }) => (v === 1 ? <span className="mk yes" aria-label="sí">✓</span> : v === 0 ? <span className="mk no" aria-label="no">✕</span> : <span className="mk half" aria-label="en parte">/</span>);
 export function Compare() {
   return (
     <section id="comparar" className="block block-cobalt compare" aria-labelledby="h-cmp">

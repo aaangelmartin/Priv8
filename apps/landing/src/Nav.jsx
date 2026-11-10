@@ -4,9 +4,10 @@ import { useCompanion } from './companion.js';
 
 const LINKS = [
   ['problema', 'Qué ve'],
+  ['cifras', 'Por qué ahora'],
   ['como', 'Cómo funciona'],
-  ['garantias', 'Garantías'],
   ['producto', 'Productos'],
+  ['comparar', 'Comparativa'],
   ['faq', 'Preguntas'],
 ];
 const NAMES = { inicio: 'Priv8', demo: 'Demostración', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Pide una demo' };
