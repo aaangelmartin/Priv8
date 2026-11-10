@@ -8,7 +8,7 @@ const LINKS = [
   ['producto', 'Productos'],
   ['confianza', 'Confianza'],
 ];
-const NAMES = { inicio: 'Priv8', demo: 'Pruébalo', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Hablemos' };
+const NAMES = { inicio: 'Priv8', demo: 'Pruébalo', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Pide una demo' };
 
 function ThemeIcon({ dark }) {
   return dark ? (
@@ -18,23 +18,19 @@ function ThemeIcon({ dark }) {
   );
 }
 
-/* Barra superior. Tres estilos para elegir: notch (pegada arriba, como el de un portátil),
-   isla (suelta, se abre al pasar por encima) y flotante (suelta y ancha). 8 vive dentro y te sigue con la mirada. */
-export default function Nav({ variant, dark, onTheme, pal }) {
+/* Barra superior: un notch ancho pegado arriba, como el de un portátil. 8 vive dentro y te sigue con la mirada. */
+export default function Nav({ dark, onTheme, pal }) {
   const { section } = useCompanion();
-  const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
     on(); window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
-  const light = variant === 'flotante';
   return (
-    <nav className={`nav nav-${variant}${open ? ' open' : ''}${scrolled ? ' scrolled' : ''}`} aria-label="Principal"
-      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)} onFocus={() => setOpen(true)} onBlur={() => setOpen(false)}>
+    <nav className={`nav${scrolled ? ' scrolled' : ''}`} aria-label="Principal">
       <a className="brand" href="#inicio" aria-label="Priv8, inicio">
-        <Eight className="nav-eight" mode="mirar" fg={light ? pal.accent : '#FFFFFF'} cut={light ? pal.navLight : pal.ink} label="8" />
+        <Eight className="nav-eight" mode="mirar" fg="#FFFFFF" cut={pal.ink} label="8" />
         <span className="word">Priv8</span>
       </a>
       <span className="now" aria-hidden="true">{NAMES[section] || 'Priv8'}</span>
@@ -45,7 +41,7 @@ export default function Nav({ variant, dark, onTheme, pal }) {
       </ul>
       <div className="tools">
         <button type="button" className="icon" onClick={onTheme} aria-label={dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}><ThemeIcon dark={dark} /></button>
-        <a className="pill" href="#contacto">Hablemos</a>
+        <a className="pill" href="#contacto">Pide una demo</a>
       </div>
     </nav>
   );
