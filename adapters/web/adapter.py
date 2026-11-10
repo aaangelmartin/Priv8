@@ -27,7 +27,7 @@ import urllib.request
 from collections.abc import Callable
 from concurrent.futures import Future
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 APPS: dict[str, str] = {
     "alba-core": "http://127.0.0.1:5173",
@@ -202,7 +202,10 @@ class WebAdapter:
         """Lee el PDF adjunto en local (mismo origen) y lo emite como elementos del snapshot."""
         if not dom.get("pdfHref"):
             return []
-        with urllib.request.urlopen(urljoin(url, dom["pdfHref"]), timeout=5) as r:
+        pdf_url = urljoin(url, dom["pdfHref"])
+        if urlparse(pdf_url).netloc != urlparse(url).netloc:  # solo el adjunto de la propia app
+            return []
+        with urllib.request.urlopen(pdf_url, timeout=5) as r:
             campos = pdf_campos(pdf_texto(r.read()))
         n = len(dom["elements"])
         out = []
