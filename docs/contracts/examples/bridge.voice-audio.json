@@ -1,0 +1,6 @@
+{
+  "type": "voice.audio",
+  "utterance": "u18",
+  "index": 0,
+  "format": "pcm_24000"
+}

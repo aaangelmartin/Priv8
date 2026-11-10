@@ -1,0 +1,41 @@
+{
+  "type": "confirm_request",
+  "id": "c3",
+  "session": "s2",
+  "kind": "transferir",
+  "action": {
+    "op": "tap",
+    "target": "n14",
+    "label": "Enviar"
+  },
+  "summary": [
+    {
+      "voice": "cloud",
+      "text": "Voy a pasar"
+    },
+    {
+      "voice": "local",
+      "token": "‹IMPORTE_6›",
+      "say_as": "currency"
+    },
+    {
+      "voice": "cloud",
+      "text": "a tu cuenta de"
+    },
+    {
+      "voice": "local",
+      "token": "‹PROVEEDOR_2·propio›",
+      "say_as": "name"
+    },
+    {
+      "voice": "cloud",
+      "text": "¿Lo confirmas?"
+    }
+  ],
+  "channels": [
+    "voz",
+    "pantalla"
+  ],
+  "sca": "persona",
+  "expires_s": 300
+}

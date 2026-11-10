@@ -1,6 +1,6 @@
 {
   "session": "s2",
-  "app": "es.alcor.banca",
+  "app": "es.priv8.banks.alcor",
   "screen": "inicio",
   "seq": 12,
   "paused": "autenticacion",
