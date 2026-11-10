@@ -1,8 +1,12 @@
 # apps/android-8
 
-App Android de 8 (paquete `es.priv8.ocho`). Por ahora es un esqueleto: una actividad de arranque y un servicio de accesibilidad (`Priv8AccessibilityService`) que, en cada cambio de ventana, escribe en logcat (etiqueta `Priv8A11y`) el árbol de nodos en JSON compacto: clase, `id`, texto, descripción, `password` y límites.
+App Android de 8 (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad `Priv8AccessibilityService`, que es el adaptador Android del núcleo.
 
-El volcado lleva datos de pantalla en claro. Solo se usa en el emulador con datos simulados.
+- **Snapshot** (`SnapshotBuilder.kt`): convierte el árbol de accesibilidad de la ventana activa en un snapshot crudo según `docs/contracts/snapshot.schema.json`. Ids `n1`, `n2`… en preorden, estables dentro de un snapshot; `role` por clase de vista; `label` de `contentDescription`, `labelFor` o la pista; `sel` es el `viewIdResourceName` sin el paquete de la app (`id/iban_destino`); `screen` sale de la vista raíz `screen_<nombre>` si existe. Los campos con `isPassword` llevan `password: true` (rojo) y su texto va enmascarado ya en el dispositivo. Antes de leer espera a que la ventana se asiente: 300 ms sin cambios, la reacción a la última acción y que la ventana activa sea la del último `TYPE_WINDOW_STATE_CHANGED`.
+- **Puente** (`BridgeClient.kt`): cliente WebSocket a `ws://127.0.0.1:8765` (por `adb reverse`), mensajes de `docs/contracts/bridge.schema.json`. Envía `hello` al conectar, responde a `snapshot.request` y `perform`, y emite los eventos `focus_password`, `system_dialog`, `system_dialog_closed`, `screen_changed` y `app_changed`. Si se cae, reintenta con espera exponencial de 1 a 30 s.
+- **Acciones** (`Performer.kt`): `tap`, `type` (`ACTION_SET_TEXT`), `back`, `open_app` (paquete en `text`), `scroll` (con o sin `target`) y `key` (`enter`, `back`, `home`) sobre el id del último snapshot. Errores del contrato: `target_no_encontrado` (id inexistente o vista que ya no está), `no_permitido` (escribir en un campo de contraseña, operación que no corresponde a la pantalla), `timeout` (más de 5 s) y `otro`.
+
+Logcat (etiqueta `Priv8A11y`) solo recibe tipos de mensaje, ids, recuentos y códigos de error, nunca el contenido de la pantalla ni los valores que manda el núcleo. El volcado crudo del árbol existe para depurar, pero solo se compila activado con `-Ppriv8.a11yDump=true`; nunca con datos reales.
 
 ## Requisitos
 
@@ -34,10 +38,23 @@ Desde la raíz del repositorio:
 
 ```sh
 scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.apk
+~/Library/Android/sdk/platform-tools/adb reverse tcp:8765 tcp:8765
 ~/Library/Android/sdk/platform-tools/adb logcat -s Priv8A11y
 ```
 
 `emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
+
+## Probar el puente sin el núcleo
+
+`adapters/android/bridge_dev_server.py` hace de núcleo: acepta la conexión, valida cada mensaje en los dos sentidos contra los contratos y pide snapshots o manda acciones. Es una herramienta de desarrollo; el lado real es del núcleo.
+
+```sh
+python3.12 -m pip install -r adapters/android/requirements-dev.txt
+python3.12 adapters/android/bridge_dev_server.py --contracts docs/contracts --adb-reverse \
+  --run "snap; tap @btn_transferir; snap; type @iban_destino ES4891000004963300998877; snap; expect @iban_destino ES4891000004963300998877"
+```
+
+Sin `--run` lee órdenes por la entrada estándar (`snap`, `tap`, `type`, `scroll`, `back`, `open`, `key`, `expect`, `wait`). `@algo` busca el elemento del último snapshot por `sel`, `label` o `text`. El registro enmascara los textos salvo con `--show-values`, solo para datos simulados. Otra URL del núcleo: `./gradlew assembleDebug -Ppriv8.bridgeUrl=ws://127.0.0.1:9000`.
 
 ## Ajustes restringidos (Android 13+)
 
