@@ -1,3 +1,4 @@
+import { LOGOS } from './logos.js';
 import { useEffect, useRef, useState } from 'react';
 import { Spot } from './Story.jsx';
 import { useSeen } from './Sections.jsx';
@@ -65,7 +66,7 @@ export function HowArch() {
         </div>
         <div className="tmap">
           <div className="tz tz-local"><span>Tu máquina · los datos reales viven aquí</span></div>
-          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models">{MODELS.map((m) => <i key={m}>{m}</i>)}</div></div>
+          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models">{MODELS.map((m) => <i key={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' ? 'evenodd' : undefined} /></svg>{m}</i>)}</div></div>
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" />
