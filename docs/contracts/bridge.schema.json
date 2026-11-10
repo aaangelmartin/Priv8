@@ -50,7 +50,7 @@
       "pattern": "^[A-Za-z0-9_-]{1,32}$"
     },
     "hello": {
-      "description": "← Primer mensaje al conectar.",
+      "description": "← Primer mensaje al conectar. Tras cada hello, el núcleo reenvía los confirm_request pendientes con el mismo id; si el móvil ya los había respondido, contesta otra vez con el mismo approval_result.",
       "type": "object",
       "required": [
         "type",
@@ -132,7 +132,7 @@
         },
         "text": {
           "type": "string",
-          "description": "Valor real ya rehidratado (type), nombre de tecla enter, back o home (key) o paquete (open_app). En Android, send y call devuelven no_permitido y type sobre un campo de contraseña también."
+          "description": "Valor real ya rehidratado (type), nombre de tecla enter, back o home (key) o paquete (open_app). En Android, send y call devuelven no_permitido, y type sobre un campo rojo (password: true: clave, PIN u OTP) también."
         },
         "direction": {
           "enum": [
@@ -301,7 +301,8 @@
           "type": "string",
           "description": "Si el audio no llegó entero."
         }
-      }
+      },
+      "description": "→ Fin del audio PCM de un segmento cloud."
     },
     "voice_done": {
       "description": "← La frase terminó de sonar; el núcleo lo registra como voice_out.",
@@ -335,7 +336,8 @@
               "type": "integer",
               "minimum": 0
             }
-          }
+          },
+          "description": "Huecos entre voces en milisegundos enteros (el reproductor redondea al enviar)."
         }
       }
     }

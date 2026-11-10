@@ -20,7 +20,7 @@
       ]
     },
     "app": {
-      "description": "Aplicación o sitio. Web: clave de la política (alba-core, inbox). Android: paquete (es.alcor.banca).",
+      "description": "Aplicación o sitio. Web: clave de la política (alba-core, inbox). Android: paquete (es.priv8.banks.alcor).",
       "type": "string",
       "minLength": 1
     },
@@ -66,7 +66,7 @@
       "items": {
         "$ref": "#/$defs/element"
       },
-      "description": "Solo lo visible. Sin contenedores de layout: parent apunta al ancestro conservado más cercano; lo que queda fuera de pantalla necesita scroll. Sin ventana activa, va vacío. Mientras hay un campo rojo con el foco, un diálogo del sistema o la pantalla de confirmación de 8, Android no manda nada de la ventana."
+      "description": "Solo lo visible. Sin contenedores de layout: parent apunta al ancestro conservado más cercano; lo que queda fuera de pantalla necesita scroll. Sin ventana activa, va vacío. En pausa Android no manda nada de la ventana, salvo con foco en un campo rojo: entonces solo ese campo, con password: true y sin texto ni etiqueta, y focus apuntándolo."
     }
   },
   "$defs": {

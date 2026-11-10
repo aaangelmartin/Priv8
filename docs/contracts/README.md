@@ -49,6 +49,13 @@ Un cliente v1 sigue validando. Salen de las notas de Ángel en #58 y #70 (issue 
   - `detail` definido: `clave`/`otp`, `permiso`/`biometria`/`oculta`, o el nombre de la pantalla.
 - **Nombres de tecla:** `key` acepta `enter`, `back` y `home`. En Android, `send`, `call` y `type` sobre una contraseña devuelven `no_permitido`.
 - **Snapshot:** solo trae lo visible. `parent` es el ancestro conservado más cercano y va vacío si no hay ventana. `system_dialog: oculta` para ventanas que no se pueden leer.
+- **Pausa antes que la política.** El núcleo mira la pausa antes de buscar política, en este orden:
+  1. `system_dialog` no nulo → `dialogo_sistema`;
+  2. `app` es `es.priv8.ocho` y `screen` es `confirmacion` → `confirmacion`;
+  3. `focus` sobre un elemento con `password: true` → `autenticacion`.
+
+  Con pausa, la observación sale sin elementos y con `screen` crudo o `null`, y `act` se rechaza hasta que acabe. Así, una ventana sin política (un diálogo del sistema, la confirmación de 8) da pausa y no `sin_regla`.
+- **Reenvío de confirmaciones.** Tras cada `hello`, el núcleo reenvía los `confirm_request` pendientes con el mismo `id`. Si el móvil ya los había respondido, contesta otra vez con el mismo `approval_result`.
 - **Motivo de rechazo `adaptador`:** el adaptador no pudo ejecutar la acción. Vale en `act` y en la auditoría.
 - **Ejemplos:** paquete real `es.priv8.banks.alcor`; el campo de contraseña no ofrece `type`; `hello.device` como lo manda el emulador.
 
