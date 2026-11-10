@@ -52,7 +52,6 @@ function Hero() {
     <section id="inicio" className="hero" aria-labelledby="h-hero">
       <Field />
       <div className="wrap hero-stage">
-        <p className="meet in-1">Conoce a 8</p>
         <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="¡Hola!" aria-hidden="true" />
         <h1 id="h-hero" className="in-2"><span className="line">8 <Rotator /></span><span className="soft line">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">

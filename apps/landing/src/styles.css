@@ -111,7 +111,6 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: clamp(92px, 15vh, 136px); padding-bottom: clamp(32px, 8vh, 72px); }
 /* con zoom la pantalla es baja: 8 se ajusta también al alto para que el titular siga a la vista */
 .hero-anchor { width: clamp(110px, min(24vw, 30vh), 340px); aspect-ratio: 46 / 32; margin: clamp(18px, 2.4vw, 30px) 0 clamp(14px, 2vw, 26px); }
-.meet { margin-bottom: clamp(4px, 1vh, 10px); font: 600 .8rem/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: #c4cdff; }
 .hero h1 { font-size: clamp(2rem, min(1rem + 5vw, 10.5vh), 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
 .hero h1 .line { display: block; white-space: nowrap; }
 @media (max-width: 700px) { .hero h1 .line { white-space: normal; } }
@@ -127,7 +126,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 62ch; text-wrap: balance; }
 .hero-sub .tok { background: #fff; color: #1f33b0; }
 .hero .cta { justify-content: center; }
-@media (max-width: 700px) { .meet { margin-bottom: 64px; } .hero-anchor { width: clamp(96px, min(62vw, 30vh), 260px); } }
+@media (max-width: 700px) { .hero-anchor { width: clamp(96px, min(62vw, 30vh), 260px); } }
 
 /* ---------- escenas fijadas: la misma composición que la portada ----------
    Cobalto, el campo de datos tenue detrás, todo centrado: 8 arriba, etiqueta, titular blanco con la segunda parte
