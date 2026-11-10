@@ -162,8 +162,10 @@ export function Blend({ from, to, variant = 'pixels', seed = 1 }) {
         for (let x = 0; x < cols; x++) {
           const X = x * cw, Y = y * ch, X2 = X + cw, Y2 = Y + ch;
           if (on(x, y)) {
-            const tl = !on(x, y - 1) && !on(x - 1, y) ? r : 0, tr = !on(x, y - 1) && !on(x + 1, y) ? r : 0;
-            const br = !on(x, y + 1) && !on(x + 1, y) ? r : 0, bl = !on(x, y + 1) && !on(x - 1, y) ? r : 0;
+            /* una esquina solo se redondea si no hay otra forma tocándola en diagonal; si la hay, las dos se unen
+               con las curvas de los rincones y queda un cuello suave en vez de una estrella */
+            const tl = !on(x, y - 1) && !on(x - 1, y) && !on(x - 1, y - 1) ? r : 0, tr = !on(x, y - 1) && !on(x + 1, y) && !on(x + 1, y - 1) ? r : 0;
+            const br = !on(x, y + 1) && !on(x + 1, y) && !on(x + 1, y + 1) ? r : 0, bl = !on(x, y + 1) && !on(x - 1, y) && !on(x - 1, y + 1) ? r : 0;
             paths.push(`M${f(X + tl)} ${f(Y)} L${f(X2 - tr)} ${f(Y)} ${tr ? `A${f(tr)} ${f(tr)} 0 0 1 ${f(X2)} ${f(Y + tr)}` : ''} L${f(X2)} ${f(Y2 - br)} ${br ? `A${f(br)} ${f(br)} 0 0 1 ${f(X2 - br)} ${f(Y2)}` : ''} L${f(X + bl)} ${f(Y2)} ${bl ? `A${f(bl)} ${f(bl)} 0 0 1 ${f(X)} ${f(Y2 - bl)}` : ''} L${f(X)} ${f(Y + tl)} ${tl ? `A${f(tl)} ${f(tl)} 0 0 1 ${f(X + tl)} ${f(Y)}` : ''} Z`);
           } else {
             /* rincones: celda vacía con dos vecinas llenas que forman esquina */
