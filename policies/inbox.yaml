@@ -1,0 +1,36 @@
+# Bandeja de correo simulada (Camino 2). Todo lo que se lee aquí viene de un correo.
+version: 1
+app: inbox
+source: web
+screens:
+  - id: bandeja
+    url_re: /bandeja/?$
+    origen: correo
+    rules:
+      - match: {sel: ".remitente"}
+        cls: ambar
+        tipo: EMAIL
+        origen: correo
+  - id: correo.lectura
+    url_re: /correo/
+    origen: correo
+    rules:
+      - match: {sel: "#de"}
+        cls: ambar
+        tipo: EMAIL
+        origen: correo
+      - match: {sel: "#adjunto"}
+        cls: verde
+  - id: correo.respuesta
+    url_re: /responder/
+    origen: correo
+    rules:
+      - match: {sel: "#para"}
+        cls: ambar
+        tipo: EMAIL
+        origen: correo
+        campo: correo.para
+        acepta: [correo, maestro]
+      - match: {sel: "#enviar"}
+        cls: verde
+        critica: enviar

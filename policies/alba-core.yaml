@@ -1,0 +1,66 @@
+# ERP Alba Core (Camino 2). Selectores provisionales: Álvaro los ajusta al DOM real (#19).
+version: 1
+app: alba-core
+source: web
+screens:
+  - id: factura.alta
+    url_re: /facturas/alta
+    rules:
+      - match: {sel: "#proveedor"}
+        cls: ambar
+        tipo: PROVEEDOR
+        origen: maestro
+        campo: factura.proveedor
+        acepta: [maestro]
+      - match: {sel: "#cif"}
+        cls: ambar
+        tipo: CIF
+        origen: maestro
+      - match: {sel: "#num-factura"}
+        cls: ambar
+        tipo: FACTURA
+        campo: factura.numero
+        acepta: [correo, maestro]
+      - match: {sel: "#importe"}
+        cls: ambar
+        tipo: IMPORTE
+        rasgo_signo: true
+        campo: factura.importe
+        acepta: [correo, maestro]
+      - match: {sel: "#pago-iban"}
+        cls: ambar
+        tipo: IBAN
+        origen: maestro
+        campo: pago.iban
+        acepta: [maestro]
+      - match: {sel: "#registrar"}
+        cls: verde
+        critica: firmar
+  - id: proveedor.ficha
+    url_re: /proveedores/
+    rules:
+      - match: {sel: "#nombre"}
+        cls: ambar
+        tipo: PROVEEDOR
+        origen: maestro
+      - match: {sel: "#iban"}
+        cls: ambar
+        tipo: IBAN
+        origen: maestro
+        campo: proveedor.iban
+        acepta: [maestro]
+      - match: {sel: "#telefono"}
+        cls: ambar
+        tipo: TEL
+        origen: maestro
+      - match: {sel: "#guardar"}
+        cls: verde
+        critica: firmar
+  - id: login
+    url_re: /login
+    detector: false
+    rules:
+      - match: {sel: "#usuario"}
+        cls: rojo
+      - match: {sel: "#clave"}
+        cls: rojo

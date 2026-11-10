@@ -1,0 +1,53 @@
+# Banca Alcor simulada (Camino 3). ids provisionales: Ángel los ajusta a la app real (#31).
+version: 1
+app: es.alcor.banca
+source: android
+screens:
+  - id: acceso
+    when:
+      - {sel: "id/clave"}
+    detector: false
+    rules:
+      - match: {sel: "id/usuario"}
+        cls: rojo
+      - match: {sel: "id/clave"}
+        cls: rojo
+  - id: inicio
+    when:
+      - {sel: "id/saldo"}
+    rules:
+      - match: {sel: "id/saludo"}
+        cls: ambar
+        tipo: PERSONA
+        origen: titular
+        extract: "^Hola, (.+)$"
+      - match: {sel: "id/saldo"}
+        cls: ambar
+        tipo: IMPORTE
+        rasgo_signo: true
+      - match: {sel: "id/iban"}
+        cls: ambar
+        tipo: IBAN
+        origen: propio
+  - id: transferencia
+    when:
+      - {sel: "id/iban_destino"}
+    rules:
+      - match: {sel: "id/iban_destino"}
+        cls: ambar
+        tipo: IBAN
+        campo: transferencia.iban
+        acepta: [propio, maestro]
+      - match: {sel: "id/beneficiario"}
+        cls: ambar
+        tipo: PERSONA
+        campo: transferencia.beneficiario
+        acepta: [propio, maestro, titular]
+      - match: {sel: "id/importe"}
+        cls: ambar
+        tipo: IMPORTE
+        campo: transferencia.importe
+        acepta: [propio, titular]
+      - match: {sel: "id/enviar"}
+        cls: verde
+        critica: transferir
