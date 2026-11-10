@@ -5,7 +5,7 @@ import Companion from './Companion.jsx';
 import Field, { Blend } from './Field.jsx';
 import { SeeScene, Spot } from './Story.jsx';
 import { WhyNow, Products } from './Sections.jsx';
-import { HowArch, Developers, Compare, Compliance } from './More.jsx';
+import { HowArch, Guarantees, Developers, Compare, Compliance } from './More.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
 
@@ -146,8 +146,8 @@ function Footer({ pal }) {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#integrar">Integración</a></div>
-            <div><b>Confianza</b><a href="#como">Garantías</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
+            <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">Priv8 en el móvil</a><a href="#integrar">Integración</a></div>
+            <div><b>Confianza</b><a href="#garantias">Garantías</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
             <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#comparar">Por qué Priv8</a></div>
           </nav>
         </div>
@@ -229,6 +229,7 @@ export default function App() {
         <WhyNow />
         <Blend from="--paper" to="--band" seed={3} />
         <HowArch />
+        <Guarantees />
         <Blend from="--band" to="--paper" seed={5} />
         <Products />
         <Developers />

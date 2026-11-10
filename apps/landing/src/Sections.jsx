@@ -264,6 +264,7 @@ export function Products() {
               <div><dt>Dónde</dt><dd>En el navegador del puesto de trabajo, sin integraciones.</dd></div>
               <div><dt>Qué hace</dt><dd>Registra facturas, da de alta proveedores, contesta correos y prepara pagos.</dd></div>
             </dl>
+            <a className="more" href="empresas/">Priv8 para empresas en detalle</a>
           </article>
           <article className="prod">
             <div className="pv phone2" aria-hidden="true">
@@ -275,7 +276,7 @@ export function Products() {
                 <div className="pc" style={{ '--d': 4 }}><i>Cancelar</i><i className="yes">Confirmar</i></div>
               </div>
             </div>
-            <p className="eyebrow">8 en el móvil</p>
+            <p className="eyebrow">Priv8 en el móvil</p>
             <h3>Tus clientes le hablan a 8 y él maneja sus apps del banco.</h3>
             <p>Lee, suma y prepara sin ver las cuentas. Las cifras las dice la voz del propio móvil; a la nube no llegan.</p>
             <dl className="facts">
@@ -283,6 +284,7 @@ export function Products() {
               <div><dt>Dónde</dt><dd>En Android, a través de la accesibilidad, con voz.</dd></div>
               <div><dt>Qué hace</dt><dd>Consulta saldos entre bancos y prepara transferencias. La clave la pone la persona.</dd></div>
             </dl>
+            <a className="more" href="movil/">Priv8 en el móvil en detalle</a>
           </article>
         </div>
       </div>

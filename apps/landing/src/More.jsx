@@ -20,61 +20,96 @@ const PIECES = [
 ];
 const MODELS = ['Claude', 'ChatGPT', 'Gemini', 'Mistral', 'Llama'];
 
+/* El recorrido de un dato: entra por la pantalla, se tokeniza, cruza la frontera como token, el modelo decide y la
+   orden vuelve para que tu máquina la complete. Un paquete viaja de nodo en nodo y abajo se explica cada paso. */
+const NODES = {
+  screen: { x: 9, y: 26, h: 'Pantalla', s: 'web o app' },
+  detect: { x: 27, y: 26, h: 'Detector', s: 'clasifica' },
+  vault: { x: 45, y: 26, h: 'Bóveda', s: 'token ↔ valor' },
+  gate: { x: 63, y: 50, h: 'Bloqueo final', s: 'frontera' },
+  model: { x: 85, y: 50, h: 'Modelo', s: 'razona' },
+  exec: { x: 45, y: 74, h: 'Ejecutor', s: 'pone el valor' },
+  yes: { x: 27, y: 74, h: 'Tu «sí»', s: 'confirma' },
+  log: { x: 9, y: 74, h: 'Registro', s: 'firmado' },
+};
+const TRIP = [
+  { at: 'screen', pk: '3.412,58 €', real: true, h: 'La pantalla tiene datos reales', t: 'El saldo, el IBAN, el titular. Todo eso está en tu pantalla.' },
+  { at: 'detect', pk: '3.412,58 € · importe', real: true, h: 'El detector los reconoce', t: 'Sabe que es un importe. Las claves y los códigos los marca para que nunca salgan.' },
+  { at: 'vault', pk: '‹IMPORTE_1›', h: 'Se cambian por tokens', t: 'La tabla ‹IMPORTE_1› = 3.412,58 € se guarda en tu máquina.' },
+  { at: 'gate', pk: '‹IMPORTE_1›', h: 'Solo cruzan tokens', t: 'El bloqueo final revisa cada petición. Si algo real se escapa, no sale.' },
+  { at: 'model', pk: 'transferir a ‹IBAN_2›', h: 'El modelo decide con tokens', t: 'Entiende qué hay en la pantalla y qué hacer, sin ver un valor. Si necesita comparar, pregunta al oráculo.' },
+  { at: 'gate', pk: 'transferir a ‹IBAN_2›', h: 'La orden vuelve en tokens', t: 'Lo que el modelo escribe también son tokens.' },
+  { at: 'exec', pk: 'ES08 9300 0001 …', real: true, h: 'Tu máquina pone el valor real', t: 'El ejecutor sustituye el token justo antes de escribir en la pantalla.' },
+  { at: 'yes', pk: 'Confirmar', h: 'Lo irreversible espera tu «sí»', t: 'Transferir, firmar o enviar no ocurre hasta que una persona lo confirma.' },
+  { at: 'log', pk: 'firmado', h: 'Todo queda registrado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó.' },
+];
+
 export function HowArch() {
   const [ref, seen] = useSeen(0.35);
-  const [cur, setCur] = useState(0);
+  const [i, setI] = useState(0);
   const hold = useRef(0);
   useEffect(() => {
     if (!seen) return undefined;
-    const t = setInterval(() => { if (performance.now() > hold.current) setCur((c) => (c + 1) % PIECES.length); }, 3400);
+    const t = setInterval(() => { if (performance.now() > hold.current) setI((v) => (v + 1) % TRIP.length); }, 2400);
     return () => clearInterval(t);
   }, [seen]);
-  const pick = (i) => { setCur(i); hold.current = performance.now() + 10000; };
-  const on = (k) => (PIECES[cur].k === k ? ' on' : '');
-  const N = ({ k, children, cls = '' }) => {
-    const i = PIECES.findIndex((p) => p.k === k);
-    return <button type="button" className={'mn ' + cls + on(k)} onClick={() => pick(i)}><span className="mn-n">{i + 1}</span>{children}</button>;
-  };
-  const p = PIECES[cur];
+  const st = TRIP[i], n = NODES[st.at];
+  const pick = (k) => { setI(k); hold.current = performance.now() + 9000; };
   return (
-    <section id="como" className={'block block-cobalt arch2' + (seen ? ' seen' : '')} aria-labelledby="h-arch" ref={ref}>
+    <section id="como" className={'block block-cobalt trip' + (seen ? ' seen' : '')} aria-labelledby="h-arch" ref={ref}>
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="nove" say="Los datos se quedan contigo." />
           <p className="eyebrow">Cómo funciona</p>
           <h2 id="h-arch">Los datos no cruzan. <span className="soft">Los tokens, sí.</span></h2>
         </div>
-        <div className="arch2-grid">
-          <div className="map">
-            <div className="mz local">
-              <p className="mz-t">Tu máquina · entorno de confianza</p>
-              <div className="mrow"><span className="mn plain">Pantalla<small>web o app, leída por dentro</small></span></div>
-              <div className="mrow two"><N k="detector">Detector</N><N k="vault">Bóveda de tokens</N></div>
-              <div className="mrow two"><N k="oracle">Oráculo</N><N k="exec">Ejecutor</N></div>
-              <div className="mrow two"><N k="prov">Procedencia</N><N k="yes">Tu «sí»</N></div>
-              <div className="mrow"><N k="log">Registro firmado</N></div>
+        <div className="tmap">
+          <div className="tz tz-local"><span>Tu máquina · los datos reales viven aquí</span></div>
+          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models">{MODELS.map((m) => <i key={m}>{m}</i>)}</div></div>
+          <div className="tline" aria-hidden="true" />
+          <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" />
+          </svg>
+          {Object.entries(NODES).map(([k, v]) => (
+            <div key={k} className={'tn tn-' + k + (st.at === k ? ' on' : '')} style={{ left: v.x + '%', top: v.y + '%' }}>
+              <b>{v.h}</b><small>{v.s}</small>
             </div>
-            <div className="mfront">
-              <span className="pk out"><Tok>‹IBAN_1›</Tok></span>
-              <span className="pk back"><Tok>‹IBAN_2›</Tok></span>
-              <N k="gate" cls="gate2">Bloqueo final</N>
-              <span className="pk stop">ES43 9100 …</span>
-            </div>
-            <div className="mz cloud">
-              <p className="mz-t">Proveedor del modelo</p>
-              <div className="models">{MODELS.map((m) => <span key={m}>{m}</span>)}</div>
-              <pre>{'Saldo   ‹IMPORTE_1›\nCuenta  ‹IBAN_1›\nClave   nunca sale\n\n→ transferir a ‹IBAN_2›'}</pre>
-              <p className="mz-n">Razona con tokens. Nunca ve un valor.</p>
-            </div>
-          </div>
-          <div className="detail" aria-live="polite">
-            <p className="d-n">{cur + 1} de {PIECES.length}</p>
-            <h3 key={'h' + cur} className="swap">{p.h}</h3>
-            <p key={'t' + cur} className="swap">{p.t}</p>
-            <div key={'v' + cur} className="d-v swap">{p.v}</div>
-            <div className="d-dots">{PIECES.map((x, i) => <button key={x.k} type="button" aria-label={x.h} className={i === cur ? 'on' : ''} onClick={() => pick(i)} />)}</div>
+          ))}
+          <div className={'tpk' + (st.real ? ' real' : '')} style={{ left: n.x + '%', top: `calc(${n.y}% - 52px)` }}>{st.pk}</div>
+        </div>
+        <div className="tcap">
+          <div className="tcap-tx" key={i}><p className="tcap-n">{i + 1} de {TRIP.length}</p><h3>{st.h}</h3><p>{st.t}</p></div>
+          <div className="tcap-r">
+            <div className="d-dots">{TRIP.map((x, k) => <button key={k} type="button" aria-label={x.h} className={k === i ? 'on' : ''} onClick={() => pick(k)} />)}</div>
+            <a className="more" href="protocolo/">El protocolo en detalle</a>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- garantías: las ocho piezas, en azul */
+export function Guarantees() {
+  const [ref, seen] = useSeen(0.25);
+  return (
+    <section id="garantias" className={'block block-cobalt guar guar-b' + (seen ? ' seen' : '')} aria-labelledby="h-guar" ref={ref}>
+      <div className="wrap">
+        <div className="block-head">
+          <Spot className="spot-inline" mode="esperar" say="Ocho reglas. Ninguna se salta." />
+          <p className="eyebrow">Garantías</p>
+          <h2 id="h-guar">Ocho piezas. <span className="soft">Ninguna depende de que el modelo obedezca.</span></h2>
+        </div>
+        <div className="guar-grid">
+          {PIECES.map((p, k) => (
+            <article className="gp" key={p.h} style={{ '--d': k }}>
+              <div className="gp-v">{p.v}</div>
+              <h3>{p.h}</h3>
+              <p>{p.t}</p>
+            </article>
+          ))}
+        </div>
+        <p className="more-row"><a className="more" href="garantias/">Las ocho piezas en detalle</a></p>
       </div>
     </section>
   );
@@ -96,6 +131,7 @@ export function Developers() {
             <li>Adaptadores para web (Playwright) y Android (accesibilidad).</li>
             <li>Funciona con Claude o con el modelo que elijas.</li>
           </ul>
+          <a className="more" href="integracion/">Guía de integración</a>
         </div>
         <div className="code" aria-label="Ejemplo de llamada">
           <div className="code-bar"><i /><i /><i /><span>observe → act</span></div>
@@ -125,7 +161,7 @@ const COLS = ['Protege lo que el agente ve en pantalla', 'Bloquea datos inyectad
 const ROWS = [
   ['Un agente normal', [0, 0, 0, 1]],
   ['Pagos para agentes · Visa, Google', [0, 0, 1, 0]],
-  ['Bóvedas de datos para IA', [0.5, 0, 0, 0]],
+  ['Bóvedas de datos para IA', [1, 0, 0, 0]],
   ['Priv8', [1, 1, 1, 1]],
 ];
 const Mark = ({ v }) => (v === 1 ? <span className="mk yes" aria-label="sí">✓</span> : v === 0 ? <span className="mk no" aria-label="no">✕</span> : <span className="mk half" aria-label="en parte">/</span>);
@@ -172,6 +208,7 @@ export function Compliance() {
         <div className="laws-grid">
           {LAWS.map(([k, sub, t]) => (<article key={k} className="law"><h3>{k}</h3><p className="law-sub">{sub}</p><p>{t}</p></article>))}
         </div>
+        <p className="more-row"><a className="more" href="cumplimiento/">Cumplimiento en detalle</a></p>
       </div>
     </section>
   );
