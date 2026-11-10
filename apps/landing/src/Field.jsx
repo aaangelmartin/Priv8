@@ -106,7 +106,7 @@ function useWidth() {
   }, []);
   return [ref, w];
 }
-export function Blend({ from, to, variant = 'squares' }) {
+export function Blend({ from, to, variant = 'pixels', seed = 1 }) {
   const [ref, w] = useWidth();
   if (variant === 'curve') {
     const H = 160;
@@ -145,6 +145,23 @@ export function Blend({ from, to, variant = 'squares' }) {
       </div>
     );
   }
+  if (variant === 'pixels') {
+    /* los cuadrados originales: rejilla de 72 x 6 que se llena fila a fila */
+    const cols = 72, rows = 6, cells = [];
+    let sd = seed * 9301 + 49297;
+    const rnd = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const p = (r + 0.5) / rows;
+        if (rnd() < p) cells.push(<rect key={r * cols + c} x={c} y={r} width="1.02" height="1.02" />);
+      }
+    }
+    return (
+      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={{ background: `var(${from})` }}>
+        <svg viewBox={`0 0 ${cols} ${rows}`} preserveAspectRatio="none" style={{ fill: `var(${to})` }}>{cells}</svg>
+      </div>
+    );
+  }
   if (variant === 'squares') {
     /* los cuadrados de antes (cada fila más llena que la anterior, como una pantalla que se tokeniza), con las esquinas redondeadas */
     const rows = 6, cell = Math.max(22, Math.min(36, w / 44)), H = rows * cell, cells = [];
@@ -177,7 +194,7 @@ export function Blend({ from, to, variant = 'squares' }) {
 /* Página de prueba de transiciones: http://localhost:5180/#transiciones */
 export function TransitionsLab() {
   const pairs = [['--band', '--night', 'Cobalto a noche'], ['--paper', '--night', 'Blanco a noche']];
-  const variants = [['squares', 'E · Cuadrados redondeados'], ['fade', 'A · Fundido suave'], ['curve', 'B · Curva'], ['pills', 'C · Cápsulas con el radio del notch'], ['sheet', 'D · Hoja con esquinas grandes']];
+  const variants = [['pixels', 'P · Cuadrados originales'], ['squares', 'E · Cuadrados redondeados'], ['fade', 'A · Fundido suave'], ['curve', 'B · Curva'], ['pills', 'C · Cápsulas con el radio del notch'], ['sheet', 'D · Hoja con esquinas grandes']];
   return (
     <div className="lab">
       <header className="lab-head"><h1>Transiciones entre secciones</h1><p>Cuatro opciones. Dime la letra que te guste, o mezcla.</p></header>

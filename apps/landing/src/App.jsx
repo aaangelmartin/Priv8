@@ -202,23 +202,23 @@ export default function App() {
       <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
       <main>
         <Hero />
-        <Blend from="--band" to="--night" />
+        <Blend from="--band" to="--night" seed={1} />
         <SeeScene />
-        <Blend from="--night" to="--band" />
+        <Blend from="--night" to="--band" seed={2} />
         <NumbersScene />
-        <Blend from="--band" to="--night" />
+        <Blend from="--band" to="--night" seed={3} />
         <HowScene />
-        <Blend from="--night" to="--band" />
+        <Blend from="--night" to="--band" seed={4} />
         <TrapScene />
-        <Blend from="--band" to="--paper" />
+        <Blend from="--band" to="--paper" seed={5} />
         <Producto pal={pal} />
-        <Blend from="--paper" to="--night" />
+        <Blend from="--paper" to="--night" seed={6} />
         <Prueba pal={pal} />
-        <Blend from="--night" to="--mist" />
+        <Blend from="--night" to="--mist" seed={7} />
         <Faq />
-        <Blend from="--mist" to="--band" />
+        <Blend from="--mist" to="--band" seed={8} />
         <Cierre />
-        <Blend from="--band" to="--ink-band" />
+        <Blend from="--band" to="--ink-band" seed={9} />
       </main>
       <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />
