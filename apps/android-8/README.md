@@ -2,11 +2,37 @@
 
 App Android de 8 (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad `Priv8AccessibilityService`, que es el adaptador Android del núcleo.
 
-- **Snapshot** (`SnapshotBuilder.kt`): convierte el árbol de accesibilidad de la ventana activa en un snapshot crudo según `docs/contracts/snapshot.schema.json`. Ids `n1`, `n2`… en preorden, estables dentro de un snapshot; `role` por clase de vista; `label` de `contentDescription`, `labelFor` o la pista; `sel` es el `viewIdResourceName` sin el paquete de la app (`id/iban_destino`); `screen` sale de la vista raíz `screen_<nombre>` si existe. Los campos con `isPassword` llevan `password: true` (rojo) y su texto va enmascarado ya en el dispositivo. Antes de leer espera a que la ventana se asiente: 300 ms sin cambios, la reacción a la última acción y que la ventana activa sea la del último `TYPE_WINDOW_STATE_CHANGED`.
+- **Snapshot** (`SnapshotBuilder.kt`): convierte el árbol de accesibilidad de la ventana activa en un snapshot crudo según `docs/contracts/snapshot.schema.json`. Ids `n1`, `n2`… en preorden, estables dentro de un snapshot; `role` por clase de vista; `label` de `contentDescription`, `labelFor` o la pista; `sel` es el `viewIdResourceName` sin el paquete de la app (`id/iban_destino`); `screen` sale de la vista raíz `screen_<nombre>` si existe. Los campos rojos (`RojoField.kt`: `isPassword`, tipo de entrada de contraseña como `numberPassword` de los OTP, o un campo editable cuyo id, pista o etiqueta nombra un secreto: otp, pin, clave, código...) llevan `password: true` y su texto va enmascarado ya en el dispositivo; 8 no escribe en ellos. Antes de leer espera a que la ventana se asiente: 300 ms sin cambios, la reacción a la última acción y que la ventana activa sea la del último `TYPE_WINDOW_STATE_CHANGED`.
 - **Puente** (`BridgeClient.kt`): cliente WebSocket a `ws://127.0.0.1:8765` (por `adb reverse`), mensajes de `docs/contracts/bridge.schema.json`. Envía `hello` al conectar, responde a `snapshot.request` y `perform`, y emite los eventos `focus_password`, `system_dialog`, `system_dialog_closed`, `screen_changed` y `app_changed`. Si se cae, reintenta con espera exponencial de 1 a 30 s.
 - **Acciones** (`Performer.kt`): `tap`, `type` (`ACTION_SET_TEXT`), `back`, `open_app` (paquete en `text`), `scroll` (con o sin `target`) y `key` (`enter`, `back`, `home`) sobre el id del último snapshot. Errores del contrato: `target_no_encontrado` (id inexistente o vista que ya no está), `no_permitido` (escribir en un campo de contraseña, operación que no corresponde a la pantalla), `timeout` (más de 5 s) y `otro`.
 
 Logcat (etiqueta `Priv8A11y`) solo recibe tipos de mensaje, ids, recuentos y códigos de error, nunca el contenido de la pantalla ni los valores que manda el núcleo. El volcado crudo del árbol existe para depurar, pero solo se compila activado con `-Ppriv8.a11yDump=true`; nunca con datos reales.
+
+## Mira a otro lado (pausa)
+
+Mientras un campo rojo tiene el foco (la persona escribe su clave o el OTP), hay un diálogo del sistema abierto (huella, permiso) o está delante la pantalla de confirmación de 8, el servicio no deja salir nada de esa ventana (`Pause.kt`):
+
+| Situación | Snapshot | Evento |
+|---|---|---|
+| Foco en campo rojo | un solo elemento `n1`, `password: true`, `text: null`; `focus: "n1"`; `screen` sí | `focus_password` con `detail` `clave` u `otp`; al salir, `focus_password` con `detail: "fin"` |
+| Diálogo del sistema | `system_dialog` (`biometria`, `permiso`), sin elementos | `system_dialog` / `system_dialog_closed` |
+| Confirmación de 8 | `screen: "confirmacion"`, sin elementos | ninguno (el núcleo ya la tiene pendiente) |
+
+Con eso el núcleo pone `paused: autenticacion`, `dialogo_sistema` o `confirmacion` en la observación, y la app 8 pasa a «mirar a otro lado». Durante la pausa todo `perform` devuelve `no_permitido`. La pausa empieza con el foco, antes de la primera tecla, y termina en cuanto el foco sale o cambia la pantalla.
+
+## Confirmaciones habladas
+
+Paquete `es.priv8.ocho.confirm`, aislado para que la app (#39) y el diseño (#36) lo vistan:
+
+- El núcleo manda por el puente `render_values` (tabla token → valor de la sesión, propuesto, no está en el contrato v1) y `confirm_request` (`confirm.schema.json`). La tabla vive solo en memoria y nunca va al registro.
+- `ConfirmActivity` muestra la frase con los valores («200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?») y la dice con TextToSpeech es-ES, solo con una voz instalada (sin síntesis en red), con las cifras ya en palabras («Doscientos euros…», `Verbalizer.kt`, port de `voice/verbalize.py`).
+- Escucha «confirmo» o «cancela» con el reconocedor en el dispositivo (`createOnDeviceSpeechRecognizer`). Si no hay reconocedor local, permiso de micrófono o modelo es-ES, lo dice en pantalla y quedan los botones. La app pide el modelo es-ES al abrirla, nunca en mitad de una confirmación.
+- `emu.sh --headless` arranca el emulador con `-no-audio`: ahí la voz no suena ni hay micrófono, el reconocedor solo oye silencio y se responde con los botones. Para probar la voz, arrancarlo con ventana (con audio). Si el motor no avisa del final de la frase, 8 empieza a escuchar tras un margen calculado por longitud.
+- Botones Confirmar y Cancelar. Si falta el valor de algún token, Confirmar no se ofrece.
+- Una respuesta por petición: `approval_result` con `by: persona` y `via: voz|pantalla`, o `caducado` (`via` y `by` `sistema`) a los `expires_s` (300 por defecto).
+- El agente no puede leer ni tocar esta pantalla: snapshot vacío y `perform` rechazado mientras está delante.
+
+Logcat (etiqueta `Priv8Confirm`) solo recibe ids, recuentos y resultados; nunca la frase ni lo que se oyó.
 
 ## Requisitos
 
@@ -54,7 +80,14 @@ python3.12 adapters/android/bridge_dev_server.py --contracts docs/contracts --ad
   --run "snap; tap @btn_transferir; snap; type @iban_destino ES4891000004963300998877; snap; expect @iban_destino ES4891000004963300998877"
 ```
 
-Sin `--run` lee órdenes por la entrada estándar (`snap`, `tap`, `type`, `scroll`, `back`, `open`, `key`, `expect`, `wait`). `@algo` busca el elemento del último snapshot por `sel`, `label` o `text`. El registro enmascara los textos salvo con `--show-values`, solo para datos simulados. Otra URL del núcleo: `./gradlew assembleDebug -Ppriv8.bridgeUrl=ws://127.0.0.1:9000`.
+Sin `--run` lee órdenes por la entrada estándar (`snap`, `tap`, `type`, `scroll`, `back`, `open`, `key`, `expect`, `wait`, `confirm`, `await`). `confirm [IMPORTE [NOMBRE [SEGUNDOS]]]` manda una confirmación como la del núcleo y escribe el `approval_result`, validado; `await` espera a que llegue:
+
+```sh
+python3.12 adapters/android/bridge_dev_server.py --contracts docs/contracts --adb-reverse \
+  --run 'confirm "200,00 €" "Nimbo Bróker" 300; snap; await'
+```
+
+ `@algo` busca el elemento del último snapshot por `sel`, `label` o `text`. El registro enmascara los textos salvo con `--show-values`, solo para datos simulados. Otra URL del núcleo: `./gradlew assembleDebug -Ppriv8.bridgeUrl=ws://127.0.0.1:9000`.
 
 ## Ajustes restringidos (Android 13+)
 
