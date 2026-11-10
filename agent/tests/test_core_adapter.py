@@ -80,10 +80,10 @@ def stub_core(monkeypatch):
 
 # ------------------------------------------------------------ selector
 
-def test_choice_defaults_to_fake():
-    assert core_choice({}) == "fake"
-    assert core_choice({"PRIV8_CORE": ""}) == "fake"
-    assert core_choice({"PRIV8_CORE": " Real "}) == "real"
+def test_choice_defaults_to_real():
+    assert core_choice({}) == "real"
+    assert core_choice({"PRIV8_CORE": ""}) == "real"
+    assert core_choice({"PRIV8_CORE": " Fake "}) == "fake"
 
 
 def test_choice_rejects_unknown_values():
@@ -104,9 +104,9 @@ def test_select_real_core_uses_core_module(stub_core):
 
 
 def test_default_core_reads_env(monkeypatch, stub_core):
-    monkeypatch.delenv("PRIV8_CORE", raising=False)
+    monkeypatch.setenv("PRIV8_CORE", "fake")
     assert isinstance(server_mod.default_core().screen, FakeCore)
-    monkeypatch.setenv("PRIV8_CORE", "real")
+    monkeypatch.delenv("PRIV8_CORE", raising=False)  # default: real
     server_mod.default_core().screen.observe("s9")
     assert stub_core.calls == [("observe", "s9")]
 

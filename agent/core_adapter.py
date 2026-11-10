@@ -17,7 +17,13 @@ núcleo expone" in agent/README.md):
 `core` is imported lazily, only when the real core is selected, so the fake
 core and the tests never need it.
 
-Selection: PRIV8_CORE=fake|real (default fake until the core lands).
+Selection: PRIV8_CORE=real|fake (default real). The fake core in agent/fakes.py
+stays for the tests and for `make replay-fake`.
+
+The real core reads screens through an adapter connected per session
+(`core.connect`). Until the web adapter and the Android bridge are wired into
+this process, `mount_scene` connects one of the in-memory demo scenes of
+core/scenes.py, so the server and the agent loop have a screen to work on.
 """
 
 from __future__ import annotations
@@ -34,7 +40,10 @@ CORE_MODULE = "core"
 REQUIRED = ("observe", "act", "oracle", "check", "record")
 ENV_VAR = "PRIV8_CORE"
 CHOICES = ("fake", "real")
-DEFAULT_CHOICE = "fake"
+DEFAULT_CHOICE = "real"
+# In-memory demo screens of core/scenes.py (b2b: supplier invoice, b2c: balance and transfer).
+SCENES = ("b2b", "b2c")
+DEFAULT_SCENE = "b2b"
 
 
 class RealCoreUnavailable(RuntimeError):
@@ -136,8 +145,39 @@ def build_real_core(module: str = CORE_MODULE) -> Core:
     )
 
 
+def mount_scene(session: str, name: str = DEFAULT_SCENE, *, simulated_persona: bool = False,
+                module: str = CORE_MODULE) -> Any:
+    """Connect a demo scene of core/scenes.py to `session` in the real core and return it.
+
+    With `simulated_persona`, a simulated person approves every held action before the
+    next screen read, as in `make demo`. Only for recorded replays and tests: in a live
+    run the person approves from app 8 or the console.
+    """
+    if name not in SCENES:
+        raise ValueError(f"scene {name!r}: expected one of {', '.join(SCENES)}")
+    mod = _load(module)
+    try:
+        scenes = importlib.import_module(f"{module}.scenes")
+    except ImportError as e:
+        raise RealCoreUnavailable(module, ("scenes",), cause=f"import failed: {e}") from e
+    scene = scenes.SCENES[name]()
+    if simulated_persona:
+        def approve_pending() -> None:
+            for req in mod.pending(session):
+                mod.approve({"type": "approval_result", "id": req["id"], "ok": True,
+                             "via": "pantalla", "by": "persona"})
+        scene.before_snapshot = approve_pending
+    mod.connect(session, scene)
+    return scene
+
+
+def tokenize_task(session: str, text: str, module: str = CORE_MODULE) -> str:
+    """What the person asked, with their data replaced by tokens of `session`, before it goes to Claude."""
+    return str(_load(module).tokenize_text(session, text))
+
+
 def core_choice(env: Mapping[str, str] | None = None) -> str:
-    """The value of PRIV8_CORE (fake by default). Anything else is an error."""
+    """The value of PRIV8_CORE (real by default). Anything else is an error."""
     env = os.environ if env is None else env
     choice = (env.get(ENV_VAR) or DEFAULT_CHOICE).strip().lower()
     if choice not in CHOICES:

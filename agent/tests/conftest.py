@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import tempfile
 from pathlib import Path
+
+# Tests that load the real core never write the repo's audit log or key.
+os.environ.setdefault("PRIV8_AUDIT", "off")
+os.environ.setdefault("PRIV8_AUDIT_KEY", os.path.join(tempfile.mkdtemp(prefix="priv8-"), "priv8.key"))
 
 import pytest
 
