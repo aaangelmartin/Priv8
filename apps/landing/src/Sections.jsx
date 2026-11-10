@@ -109,15 +109,16 @@ export function WhyNow() {
     <section id="cifras" className={'block block-paper why2' + (seen ? ' seen' : '')} aria-labelledby="h-why" ref={ref}>
       <div className="wrap">
         <div className="block-head">
-          <Spot className="spot-inline" mode="curiosidad" say="Los agentes ya están dentro." />
+          <Spot className="spot-inline" mode="curiosidad" say="Ya están aquí." />
           <p className="eyebrow">Por qué ahora</p>
-          <h2 id="h-why">Los bancos ya usan agentes. <span className="soft">Nadie controla qué ven.</span></h2>
+          <h2 id="h-why">La IA ya toca tu dinero. <span className="soft">Nadie controla qué ve.</span></h2>
+          <p className="lead">Bancos, empresas y personas ya dejan que un agente use sus pantallas. Lo que ve, hoy, va entero al proveedor del modelo.</p>
         </div>
         <div className="why-cards">
           <article className="wc">
             <div className="wc-viz dotgrid" aria-hidden="true">{Array.from({ length: 100 }, (_, i) => <i key={i} className={i < 55 ? 'on' : ''} style={{ '--k': i }} />)}</div>
             <p className="wc-n">55 %</p>
-            <p className="wc-t">de los bancos europeos ya usa IA generativa o agentes con sus clientes.</p>
+            <p className="wc-t">de los bancos europeos ya usa IA generativa o agentes con sus clientes. Es decir, contigo.</p>
             <p className="wc-s">55 de cada 100 · EBA, seguimiento de la IA en banca, 2025</p>
           </article>
           <article className="wc">
@@ -125,7 +126,7 @@ export function WhyNow() {
               {Array.from({ length: 33 }, (_, i) => <i key={i} className={i === 20 ? 'kept' : ''} style={{ '--k': i }} />)}
             </div>
             <p className="wc-n">97 %</p>
-            <p className="wc-t">de los datos sensibles de la pantalla llega al modelo cuando el agente no tiene protección.</p>
+            <p className="wc-t">de los datos sensibles de tu pantalla llega al modelo cuando el agente no tiene protección.</p>
             <p className="wc-s"><a href="https://arxiv.org/html/2602.10139v2" target="_blank" rel="noreferrer">Tsinghua, «Available but Invisible»</a></p>
           </article>
           <article className="wc">
@@ -134,7 +135,7 @@ export function WhyNow() {
               <div className="bar now" style={{ '--w': '100%' }}><span>2024</span><b>4.200 M€</b></div>
             </div>
             <p className="wc-n">+20 %</p>
-            <p className="wc-t">de fraude en pagos en la UE en un año. En transferencias, más de la mitad es alguien que se hace pasar por otro.</p>
+            <p className="wc-t">de fraude en pagos en la UE en un año. En transferencias, más de la mitad es alguien que se hace pasar por otro para que pagues tú.</p>
             <p className="wc-s">EBA y BCE, informe de fraude en pagos 2025</p>
           </article>
         </div>

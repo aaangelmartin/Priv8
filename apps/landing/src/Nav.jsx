@@ -25,6 +25,7 @@ export default function Nav() {
   const onLight = tone === 'dark';
   /* sobre blanco la barra se vuelve cobalto, para no fundirse con el fondo */
   const [onWhite, setOnWhite] = useState(false);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     let raf = 0;
     const check = () => {
@@ -70,6 +71,14 @@ export default function Nav() {
       </ul>
       <div className="tools">
         <a className="pill" href="#contacto">Pide una demo</a>
+        <button type="button" className="menu-btn" aria-expanded={open} aria-controls="nav-menu" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen((o) => !o)}>
+          <span /><span />
+        </button>
+      </div>
+      {/* móvil: el menú se despliega bajo la barra con todas las secciones */}
+      <div id="nav-menu" className={'nav-menu' + (open ? ' open' : '')} hidden={!open}>
+        {LINKS.map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)} aria-current={section === id ? 'true' : undefined}>{label}</a>)}
+        <a className="nav-menu-cta" href="#contacto" onClick={() => setOpen(false)}>Pide una demo</a>
       </div>
     </nav>
   );

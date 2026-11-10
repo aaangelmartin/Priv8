@@ -63,7 +63,7 @@ export function SeeScene() {
               <h2 key={phase} className="swap see-h">{safe ? <>8 solo ve <span className="soft">tokens.</span></> : <>Un agente normal <span className="soft">lo ve todo.</span></>}</h2>
               <p key={'l' + phase} className="lead swap see-l">{safe
                 ? 'La misma pantalla y la misma tarea. El modelo sabe qué es cada campo y trabaja con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina.'
-                : 'Para usar una web, el agente manda la pantalla entera al proveedor del modelo: nombres, IBAN, saldos y movimientos. Por eso los bancos no dejan a la IA tocar datos de clientes.'}</p>
+                : 'Para usar una web, el agente manda la pantalla entera al proveedor del modelo: tu nombre, tu IBAN, tu saldo y tus movimientos. Por eso ni los bancos ni las personas se fían de dejarle sus cuentas.'}</p>
             </div>
             <BankScreen safe={safe} />
           </div>

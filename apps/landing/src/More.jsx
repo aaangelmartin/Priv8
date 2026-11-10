@@ -77,6 +77,15 @@ export function HowArch() {
           ))}
           <div className={'tpk' + (st.real ? ' real' : '')} style={{ left: n.x + '%', top: `calc(${n.y}% - 52px)` }}>{st.pk}</div>
         </div>
+        {/* móvil: el mismo recorrido, en vertical */}
+        <ol className="tlist">
+          {TRIP.map((x, k) => (
+            <li key={k} className={k === i ? 'on' : k < i ? 'past' : ''} onClick={() => pick(k)}>
+              <span className="tl-n">{k + 1}</span>
+              <span className="tl-tx"><b>{x.h}</b><span>{x.t}</span><em className={x.real ? 'real' : ''}>{x.pk}</em></span>
+            </li>
+          ))}
+        </ol>
         <div className="tcap">
           <div className="tcap-tx" key={i}><p className="tcap-n">{i + 1} de {TRIP.length}</p><h3>{st.h}</h3><p>{st.t}</p></div>
           <div className="tcap-r">
@@ -179,7 +188,7 @@ export function Compare() {
           {ROWS.map(([name, vals]) => (
             <div className={'cmp-r' + (name === 'Priv8' ? ' me' : '')} role="row" key={name}>
               <span role="rowheader">{name}</span>
-              {vals.map((v, i) => <span role="cell" key={i}><Mark v={v} /></span>)}
+              {vals.map((v, i) => <span role="cell" key={i} data-label={COLS[i]}><Mark v={v} /></span>)}
             </div>
           ))}
         </div>
