@@ -46,3 +46,4 @@ test:
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
 metrics:
 	PRIV8_AUDIT=off uv run python -m metrics.b2b
+	PRIV8_AUDIT=off uv run python -m metrics.b2c
