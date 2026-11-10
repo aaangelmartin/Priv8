@@ -8,6 +8,7 @@ dependencies = [
     "anthropic==2.3.0",
     "mcp==2.3.0",
     "jsonschema==4.26.0",
+    "referencing==0.37.0",
     "uvicorn==0.54.0",
 ]
 
