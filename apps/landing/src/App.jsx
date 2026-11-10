@@ -38,7 +38,11 @@ function Rotator() {
   }, []);
   return (
     <span className="rotator" ref={box} aria-live="polite">
-      {TASKS.map((t, k) => <span key={t} className={'rot-item' + (k === i ? ' on' : k === (i + TASKS.length - 1) % TASKS.length ? ' out' : '')} aria-hidden={k !== i}>{t}</span>)}
+      {TASKS.map((t, k) => (
+        <span key={t} className={'rot-item' + (k === i ? ' on' : k === (i + TASKS.length - 1) % TASKS.length ? ' out' : '')} aria-hidden={k !== i}>
+          {Array.from(t).map((ch, j) => <span key={j} className="ch" style={{ '--j': j }}>{ch === ' ' ? '\u00a0' : ch}</span>)}
+        </span>
+      ))}
     </span>
   );
 }

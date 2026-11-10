@@ -161,7 +161,8 @@ export default function Companion({ pal, intro }) {
   const rgb = [1, 3, 5].map((i) => parseInt(under.slice(i, i + 2), 16));
   const light = lum(rgb) > 0.55;
   const col = { fg: light ? band : '#FFFFFF', cut: under };
-  const mode = override || (stage === 'wake' || stage === 'fly' ? 'saludar' : spot.mode);
+  /* en la bienvenida, ojos abiertos desde el primer momento: alegría y dos saltitos, sin el parpadeo de despertar */
+  const mode = override || (stage === 'wake' ? 'atencion' : stage === 'fly' ? 'alegria' : spot.mode);
   return (
     <>
       <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
