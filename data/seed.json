@@ -110,8 +110,9 @@
     "proveedor": 7,
     "telefono_ficha": "912 345 678",
     "telefono_correo": "611 222 333",
-    "pregunta": "¿Me confirma el número del pedido al que corresponde la factura F-2026-0412?",
-    "respuesta": "PED-2026-3318",
+    "pregunta": "¿Me confirma el número de la última factura que les pagamos?",
+    "respuesta": "F-2026-0371",
+    "_por_que": "La respuesta está en el ERP y la conoce el proveedor real, pero no aparece en el correo ni en el PDF: quien solo tenga el correo no puede contestarla.",
     "iban_vigente": "ES91 2100 0418 4502 0005 1332",
     "cambio_de_banco": false
   },
