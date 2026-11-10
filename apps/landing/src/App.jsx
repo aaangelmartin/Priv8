@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
@@ -40,8 +41,8 @@ function Count({ to }) {
   return <span ref={ref}>{v}</span>;
 }
 
-function Eyebrow({ n, children }) {
-  return <p className="eyebrow"><span className="num">{n}</span><i className="dot" />{children}</p>;
+function Eyebrow({ children }) {
+  return <p className="eyebrow"><i className="dot" />{children}</p>;
 }
 
 /* ---------------------------------------------------------------- portada */
@@ -67,7 +68,6 @@ function Hero() {
         </div>
         <div id="hero-anchor" className="hero-anchor" aria-hidden="true" />
       </div>
-      <p className="hero-hint in-5" aria-hidden="true">Pasa el cursor por los datos: así los ve la IA</p>
     </section>
   );
 }
@@ -106,9 +106,9 @@ function Problem() {
     <section id="problema" className="band band-night" aria-labelledby="h-prob">
       <div className="wrap">
         <div className="head">
-          <Eyebrow n="01">El problema</Eyebrow>
-          <Words id="h-prob">Tu equipo no automatiza porque <span className="soft">la IA lo vería todo.</span></Words>
-          <p className="lead">Un agente que usa pantallas manda al modelo cada nombre, IBAN y saldo que aparece. Por eso los procesos con datos de clientes se siguen haciendo a mano.</p>
+          <Eyebrow>El problema</Eyebrow>
+          <Words id="h-prob">Lo que la IA ve, <span className="soft">ya no es solo tuyo.</span></Words>
+          <p className="lead">Un agente que usa pantallas envía al modelo cada nombre, IBAN y saldo que aparece. Por eso las empresas siguen haciendo a mano justo los procesos que más tiempo les quitan.</p>
         </div>
         <Lanes />
         <div className="stats">
@@ -142,7 +142,7 @@ function Coste() {
     <section id="coste" className="band band-paper" aria-labelledby="h-coste">
       <div className="wrap">
         <div className="head">
-          <Eyebrow n="02">Lo que cuesta</Eyebrow>
+          <Eyebrow>Lo que cuesta</Eyebrow>
           <Words id="h-coste">No automatizar es lento. <span className="soft">Automatizar a ciegas sale caro.</span></Words>
           <p className="lead">Llega por correo una factura de 1.180 €. En el pie, alguien ha escrito «hemos cambiado de banco, pagad a este IBAN».</p>
         </div>
@@ -223,8 +223,8 @@ function Como() {
     <section id="como" className="band band-mist" aria-labelledby="h-como">
       <div className="wrap">
         <div className="head">
-          <Eyebrow n="03">Cómo funciona</Eyebrow>
-          <Words id="h-como">Tres herramientas para el agente. <span className="soft">Ocho piezas que le ponen límites.</span></Words>
+          <Eyebrow>Cómo funciona</Eyebrow>
+          <Words id="h-como">El agente trabaja libre. <span className="soft">Los datos, no.</span></Words>
           <p className="lead">El agente solo puede <code>observe</code>, <code>act</code> y <code>oracle</code>. Todo lo demás pasa por Priv8 CUA, el protocolo que corre en tu máquina.</p>
         </div>
         <Diagram />
@@ -253,9 +253,9 @@ function Prueba({ pal }) {
     <section id="demo" className="band band-night" aria-labelledby="h-demo">
       <div className="wrap">
         <div className="head">
-          <Eyebrow n="04">Pruébalo</Eyebrow>
-          <Words id="h-demo">Mira qué recibe la IA. <span className="soft">Y qué no.</span></Words>
-          <p className="lead">Tres demos con datos inventados. 8 te acompaña y reacciona a lo que pasa.</p>
+          <Eyebrow>Pruébalo</Eyebrow>
+          <Words id="h-demo">No te lo creas. <span className="soft">Pruébalo.</span></Words>
+          <p className="lead">Tres demos con datos inventados: qué recibe el modelo, un correo con trampa y un oráculo que responde sin dar cifras.</p>
         </div>
         <Demos pal={pal} />
       </div>
@@ -271,8 +271,8 @@ function Producto({ pal }) {
       <div className="wrap">
         <div className="head row-head">
           <div className="head-in">
-            <Eyebrow n="05">Productos</Eyebrow>
-            <Words id="h-prod">Un núcleo. <span className="soft">Dos formas de usarlo.</span></Words>
+            <Eyebrow>Productos</Eyebrow>
+            <Words id="h-prod">En tu empresa <span className="soft">y en el bolsillo de tus clientes.</span></Words>
           </div>
           <div className="seg" role="tablist" aria-label="Productos">
             <button type="button" role="tab" aria-selected={tab === 'empresas'} onClick={() => setTab('empresas')}>Priv8 para empresas</button>
@@ -291,8 +291,8 @@ function Confianza() {
     <section id="confianza" className="band band-mist" aria-labelledby="h-conf">
       <div className="wrap">
         <div className="head">
-          <Eyebrow n="06">Confianza</Eyebrow>
-          <Words id="h-conf">Lo que pregunta tu responsable de datos, <span className="soft">respondido de serie.</span></Words>
+          <Eyebrow>Confianza</Eyebrow>
+          <Words id="h-conf">Pensado para pasar <span className="soft">la revisión de seguridad.</span></Words>
         </div>
         <div className="trust">
           <article><div className="tviz" aria-hidden="true"><div className="line"><span className="tok">‹IBAN_1›</span><span className="arrow-r" /><span className="cloudbox">Claude</span></div></div><h3>El proveedor del modelo solo recibe tokens</h3>
@@ -320,7 +320,7 @@ function Faq() {
     <section id="faq" className="band band-paper" aria-labelledby="h-faq">
       <div className="wrap faq-grid">
         <div className="head sticky">
-          <Eyebrow n="07">Preguntas</Eyebrow>
+          <Eyebrow>Preguntas</Eyebrow>
           <Words id="h-faq">Lo que nos preguntan <span className="soft">antes de una demo.</span></Words>
         </div>
         <div className="faq">
@@ -360,7 +360,7 @@ function Cierre() {
     <section id="contacto" className="band band-cobalt close" aria-labelledby="h-close">
       <div className="wrap close-grid">
         <div className="head">
-          <Eyebrow n="08">Pide una demo</Eyebrow>
+          <Eyebrow>Pide una demo</Eyebrow>
           <Words id="h-close">Enséñanos un proceso. <span className="soft">Te lo devolvemos hecho, sin que la IA vea un dato.</span></Words>
           <p className="lead">Treinta minutos con tus pantallas, o con las nuestras si todavía no quieres compartir nada.</p>
           <ul className="close-points">
@@ -375,25 +375,35 @@ function Cierre() {
   );
 }
 
-function Footer() {
+function Footer({ pal }) {
   return (
-    <footer className="band band-ink foot">
+    <footer className="foot">
       <div className="wrap">
-        <div className="foot-top">
+        <div className="foot-cta">
+          <div>
+            <p className="foot-kicker">¿Tienes un proceso que no te atreves a dar a la IA?</p>
+            <p className="foot-claim">Enséñanoslo. <span className="soft">Lo hacemos sin que vea un dato.</span></p>
+          </div>
+          <a className="btn btn-white" href="#contacto">Pide una demo</a>
+        </div>
+        <div className="foot-mid">
           <div className="foot-brand">
-            <p className="foot-claim">Visa y Google resolvieron cómo paga un agente. <span className="soft">Priv8 resuelve qué ve mientras trabaja.</span></p>
+            <a className="foot-logo" href="#inicio" aria-label="Priv8, volver arriba">
+              <Eight className="foot-eight" mode="mirar" fg="#FFFFFF" cut={pal.band} label="8" />
+              <span>Priv8</span>
+            </a>
+            <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
             <DemoForm compact />
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Priv8 para empresas</a><a href="#producto">8 en tu móvil</a><a href="#demo">Pruébalo</a></div>
-            <div><b>Confianza</b><a href="#confianza">Datos y modelo</a><a href="#confianza">Auditoría</a><a href="#faq">Preguntas</a></div>
-            <div><b>Priv8</b><a href="#contacto">Pide una demo</a><a href="#problema">Por qué existe</a></div>
+            <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#demo">Pruébalo</a></div>
+            <div><b>Confianza</b><a href="#confianza">Datos y modelo</a><a href="#confianza">Registro firmado</a><a href="#faq">Preguntas</a></div>
+            <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#coste">Lo que cuesta</a><a href="#problema">Por qué Priv8</a></div>
           </nav>
         </div>
-        <div className="foot-word" aria-hidden="true">Priv<span>8</span></div>
-        <div className="foot-legal">
-          <span>Priv8 CUA · privacidad para agentes de IA</span>
-          <span>Las demos usan datos inventados. Banca Alcor, Nimbo Bróker y Suministros Lumen son nombres de ejemplo.</span>
+        <div className="foot-word" aria-hidden="true">
+          <span>Priv</span>
+          <Eight className="foot-word-eight" mode="mirar" fg="#FFFFFF" cut={pal.band} label="8" />
         </div>
       </div>
     </footer>
@@ -446,7 +456,7 @@ export default function App() {
         <Cierre />
         <Dither from="--band" to="--ink-band" seed={6} />
       </main>
-      <Footer />
+      <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />
     </>
   );

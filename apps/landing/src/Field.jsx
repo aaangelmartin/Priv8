@@ -76,19 +76,25 @@ export default function Field() {
 }
 
 /* Transición entre bandas: una rejilla de bloques que pasa de un color al otro, como una pantalla que se tokeniza. */
-export function Dither({ from, to, rows = 6, seed = 1 }) {
-  const cols = 72, cells = [];
+export function Dither({ from, to, rows = 4, seed = 1 }) {
+  /* Semitono: puntos redondos que crecen fila a fila hasta cubrir el color siguiente, con una onda suave. */
+  const cols = 64, cells = [];
   let s = seed * 9301 + 49297;
   const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const p = (r + 0.5) / rows;
-      if (rnd() < p) cells.push(<rect key={r * cols + c} x={c} y={r} width="1.02" height="1.02" />);
+      const wave = 0.18 * Math.sin((c / cols) * Math.PI * 4 + seed);
+      const p = Math.min(1, Math.max(0, (r + 0.5) / rows + wave + (rnd() - 0.5) * 0.18));
+      const rad = p * 0.78;
+      if (rad > 0.06) cells.push(<circle key={r * cols + c} cx={c + 0.5} cy={r + 0.5} r={rad.toFixed(3)} />);
     }
   }
   return (
     <div className="dither" aria-hidden="true" style={{ background: `var(${from})` }}>
-      <svg viewBox={`0 0 ${cols} ${rows}`} preserveAspectRatio="none" style={{ fill: `var(${to})` }}>{cells}</svg>
+      <svg viewBox={`0 0 ${cols} ${rows + 1}`} preserveAspectRatio="none" style={{ fill: `var(${to})` }}>
+        {cells}
+        <rect x="0" y={rows - 0.02} width={cols} height="1.04" />
+      </svg>
     </div>
   );
 }

@@ -235,7 +235,10 @@ export function createEngine(){
   function Eight(el, cfg){
     this.el=el; this.cfg=cfg; this.col=cfg.col||{fg:W,cut:COB};
     this.E=eight(true,46,this.col.fg);
-    el.innerHTML='<svg viewBox="0 0 64 64" role="img" aria-label="8, el agente de Priv8"><g class="root"><g>'+this.E.svg+'</g><g class="dyn"></g></g><g class="fx"></g></svg>';
+    /* Fondo de los ojos: los huecos del 8 se rellenan con el color de corte para que 8 no sea transparente
+       por dentro cuando pasa por encima de otros contenidos. */
+    var bg=this.E.eyes.map(function(e){ return '<ellipse cx="'+f(e.x)+'" cy="'+f(e.y)+'" rx="'+f(e.rx+0.6)+'" ry="'+f(e.ry+0.6)+'" fill="'+this.col.cut+'"/>'; },this).join('');
+    el.innerHTML='<svg viewBox="0 0 64 64" role="img" aria-label="8, el agente de Priv8"><g class="root"><g>'+bg+this.E.svg+'</g><g class="dyn"></g></g><g class="fx"></g></svg>';
     this.root=el.querySelector('.root'); this.dyn=el.querySelector('.dyn'); this.fx=el.querySelector('.fx');
     var xs=this.E.eyes.map(function(e){return e.x;}); this.xmin=Math.min.apply(null,xs);
     this.s={px:0,pvx:0,py:0,pvy:0,tx:0,ty:0,hx:0,hvx:0,hy:0,hvy:0,tilt:0,tv:0,l0:0,lv0:0,l1:0,lv1:0,a0:0,av0:0,a1:0,av1:0,low0:0,lowv0:0,low1:0,lowv1:0,
