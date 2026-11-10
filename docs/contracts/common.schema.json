@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://priv8.dev/contracts/common.schema.json",
+  "title": "Tipos comunes de los contratos de Priv8 CUA",
+  "description": "Definiciones compartidas por el resto de contratos. Versión 1.",
+  "$defs": {
+    "token": {
+      "description": "Un token completo, por ejemplo ‹IBAN_1·propio›. Gramática en token.md.",
+      "type": "string",
+      "pattern": "^‹(IBAN|DNI|NIE|CIF|PERSONA|PROVEEDOR|IMPORTE|SUMA|FACTURA|TEL|EMAIL|MOVIMIENTO|RESPUESTA|CODIGO)_[1-9][0-9]*(·(propio|maestro|correo|tercero|titular|positivo|negativo))?›$"
+    },
+    "session": {
+      "description": "Identificador de sesión. Los tokens son estables dentro de una sesión.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "cls": {
+      "description": "Clase del dato: verde (libre), ambar (se tokeniza), rojo (nunca sale).",
+      "enum": ["verde", "ambar", "rojo"]
+    },
+    "op": {
+      "description": "Operaciones que el agente puede pedir con act y que el adaptador sabe ejecutar.",
+      "enum": ["tap", "type", "key", "scroll", "open_app", "back", "send", "call"]
+    },
+    "role": {
+      "description": "Papel del elemento en pantalla, común a web (DOM) y Android (accesibilidad).",
+      "enum": ["text", "textbox", "button", "link", "checkbox", "radio", "switch", "select", "option", "image", "heading", "list", "listitem", "row", "cell", "tab", "menuitem", "dialog", "other"]
+    },
+    "element_id": {
+      "description": "Id del elemento, estable dentro de un snapshot (e7 en web, n4 en Android).",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:-]{1,64}$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "ms": {
+      "description": "Milisegundos, o null si no aplica.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    }
+  }
+}
