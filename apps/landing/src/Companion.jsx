@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Eight from './eight/Eight.jsx';
-import { mood, useCompanion } from './companion.js';
+import { useCompanion } from './companion.js';
 
 /* 8 recorre la web saltando de un punto de anclaje a otro (elementos con data-anchor8).
    Cada escena le pone un sitio, una cara (data-mode) y una frase (data-say).
@@ -53,6 +53,7 @@ export default function Companion({ pal, intro }) {
   const [bubble, setBubble] = useState({ text: '', show: false });
   const box = useRef(null);
   const layer = useRef(null);
+  const flyReq = useRef(false);
   const lastSpot = useRef(null);
   const changeT = useRef(0);
   const bubbleT = useRef(0);
@@ -68,10 +69,15 @@ export default function Companion({ pal, intro }) {
   }, []);
 
   useEffect(() => {
-    let raf = 0, lastC = 0, snapUntil = 0;
+    let raf = 0, snapUntil = 0;
     let cur = null, tween = null, cand = null, candT = 0;
-    const DUR = 460;
     const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+    /* color de 8 según la zona de su sitio: sobre blanco, cobalto; sobre cobalto, blanco. Solo cambia al llegar a otra zona */
+    const zoneColor = (a, el) => {
+      const r = a.getBoundingClientRect();
+      const c = backgroundAt(clamp(r.left + r.width / 2, 1, window.innerWidth - 1), clamp(r.top + r.height / 2, 1, window.innerHeight - 1), el);
+      return toHex(c);
+    };
     const frame = () => {
       raf = 0;
       const el = box.current; if (!el) return;
@@ -79,56 +85,57 @@ export default function Companion({ pal, intro }) {
       const heroA = document.getElementById('hero-anchor');
       const now0 = performance.now();
       const snapping = now0 < snapUntil;
+      if (phase.current === 'intro') {
+        /* bienvenida: 8 grande en el centro, con los ojos abiertos, saluda desde su bocadillo a la izquierda */
+        const D = Math.min(vw * 0.4, vh * 0.5 * 46 / 32, 520), S = D * 64 / 46;
+        el.style.transition = 'none';
+        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
+        cur = { left: vw / 2 - S / 2, top: vh * 0.5 - S / 2, S };
+        lastSpot.current = heroA;
+        return;
+      }
+      if (flyReq.current) {
+        /* de la bienvenida a la portada: el mismo viaje en curva, algo más largo */
+        flyReq.current = false;
+        tween = cur ? { from: { ...cur }, t0: now0, dur: 1000 } : null;
+      }
       /* 8 cambia de sitio solo cuando el nuevo lleva un momento siendo el más centrado: así no va y viene entre dos */
       const picked = phase.current === 'live' ? pickAnchor() : heroA;
-      if (phase.current !== 'live' || !lastSpot.current || !lastSpot.current.isConnected) { lastSpot.current = picked; tween = null; }
-      else if (picked && picked !== lastSpot.current) {
+      if (!lastSpot.current || !lastSpot.current.isConnected) { lastSpot.current = picked; tween = null; if (picked) setBg(zoneColor(picked, el)); }
+      else if (phase.current === 'live' && picked && picked !== lastSpot.current) {
         if (cand !== picked) { cand = picked; candT = now0; }
         if (now0 - candT > 120 || snapping) {
           lastSpot.current = picked; cand = null;
-          tween = snapping || !cur ? null : { from: { ...cur }, t0: now0 };
+          tween = snapping || !cur ? null : { from: { ...cur }, t0: now0, dur: 620 };
+          if (!tween) setBg(zoneColor(picked, el));
           setSpot({ mode: picked.dataset.mode || 'mirar', say: picked.dataset.say || '', side: picked.dataset.side || '', id: Math.random().toString(36) });
         } else ask();
       } else cand = null;
       const anchor = lastSpot.current;
-      let target = null;
-      if (anchor) {
-        const r = anchor.getBoundingClientRect();
-        const D = r.width, S = D * 64 / 46;
-        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-        target = { left: cx - S / 2, top: cy - S / 2, S, D };
-      }
-      if (!target) return;
-      if (phase.current === 'intro') {
-        /* bienvenida: 8 grande en el centro, con los ojos abiertos, saluda desde su bocadillo a la izquierda */
-        const D = Math.min(vw * 0.4, vh * 0.5 * 46 / 32, 520), S = D * 64 / 46;
-        el.style.transition = el.dataset.placed && !snapping ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
-        el.dataset.placed = '1';
-        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
-        cur = { left: vw / 2 - S / 2, top: vh * 0.5 - S / 2, S };
-        return;
-      }
-      if (anchor && (anchor.dataset.mode !== spot.mode || anchor.dataset.say !== spot.say)) {
+      if (!anchor) return;
+      const r = anchor.getBoundingClientRect();
+      const S0 = r.width * 64 / 46;
+      const target = { left: r.left + r.width / 2 - S0 / 2, top: r.top + r.height / 2 - S0 / 2, S: S0 };
+      if (phase.current === 'live' && (anchor.dataset.mode !== spot.mode || anchor.dataset.say !== spot.say)) {
         setSpot((sp) => (sp.mode === anchor.dataset.mode && sp.say === anchor.dataset.say ? sp : { mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) }));
       }
-      /* viaje entre sitios: una sola curva suave, de donde está a donde está ahora su sitio (que se recalcula en cada
-         fotograma), así llega justo, sin quedarse atrás ni pasarse */
+      /* viaje entre sitios: una curva suave hacia donde está ahora su sitio (se recalcula en cada fotograma), con un
+         arco leve hacia un lado y un pequeño encogerse a mitad de camino. Llega justo, sin pasarse. */
       let pos = target;
-      if (tween && phase.current === 'live') {
-        const k = Math.min(1, (now0 - tween.t0) / DUR), e = ease(k);
-        pos = { left: tween.from.left + (target.left - tween.from.left) * e, top: tween.from.top + (target.top - tween.from.top) * e, S: tween.from.S + (target.S - tween.from.S) * e };
-        if (k < 1) ask(); else tween = null;
+      if (tween) {
+        const k = Math.min(1, (now0 - tween.t0) / tween.dur), e = ease(k);
+        const fx = tween.from.left + tween.from.S / 2, fy = tween.from.top + tween.from.S / 2;
+        const tx = target.left + target.S / 2, ty = target.top + target.S / 2;
+        const dx = tx - fx, dy = ty - fy, dist = Math.hypot(dx, dy) || 1;
+        const bow = Math.min(160, dist * 0.18) * Math.sin(Math.PI * e);
+        const cx = fx + dx * e + (-dy / dist) * bow, cy = fy + dy * e + (dx / dist) * bow;
+        const S = (tween.from.S + (target.S - tween.from.S) * e) * (1 - 0.08 * Math.sin(Math.PI * e));
+        pos = { left: cx - S / 2, top: cy - S / 2, S };
+        if (k < 1) ask(); else { tween = null; setBg(zoneColor(anchor, el)); }
       }
-      el.style.transition = phase.current === 'flying' ? 'transform 1.1s cubic-bezier(.34, 1.56, .64, 1)' : 'none';
+      el.style.transition = 'none';
       el.style.transform = `translate3d(${pos.left}px, ${pos.top}px, 0) scale(${pos.S / BASE})`;
       cur = { left: pos.left, top: pos.top, S: pos.S };
-      const now = performance.now();
-      if (now - lastC > 140) {
-        lastC = now;
-        const c = backgroundAt(clamp(target.left + target.S / 2, 1, vw - 1), clamp(target.top + target.S / 2, 1, vh - 1), el);
-        const hex = toHex(c);
-        setBg((p) => (p === hex ? p : hex));
-      }
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
     const snap = () => { snapUntil = performance.now() + 600; if (box.current) box.current.style.transition = 'none'; ask(); };
@@ -156,6 +163,7 @@ export default function Companion({ pal, intro }) {
     if (stage === 'done') { phase.current = 'live'; window.dispatchEvent(new Event('scroll')); return undefined; }
     if (stage !== 'fly' || phase.current !== 'intro') return undefined;
     phase.current = 'flying';
+    flyReq.current = true;
     window.dispatchEvent(new Event('scroll'));
     return undefined;
   }, [stage]);
@@ -183,11 +191,9 @@ export default function Companion({ pal, intro }) {
   const mode = override || (stage === 'wake' || stage === 'fly' ? 'mirar' : spot.mode);
   return (
     <div className="layer8" ref={layer}>
-      <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
-        onClick={() => { mood('risa', 1600); say('Eso hace cosquillas.'); }} onMouseEnter={() => say(spot.say || 'Hola.')}
-        aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
+      <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => say(spot.say || '¡Hola!', spot.side)} role="img" aria-label="8, el agente de Priv8">
         <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
-      </button>
+      </div>
       <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} />
     </div>
   );
@@ -209,8 +215,9 @@ function Bubble({ text, show, big, side, eight }) {
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [geo, setGeo] = useState({ left: true, below: false });
   useEffect(() => {
-    setN(0);
+    /* al ocultarse no se borra el texto: el bocadillo se va con su frase, no vacío */
     if (!show) return undefined;
+    setN(0);
     let i = 0;
     const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 20);
     return () => clearInterval(t);

@@ -4,8 +4,8 @@ import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
 import Field, { Blend } from './Field.jsx';
-import { Empresas, Movil } from './Products.jsx';
-import { SeeScene, NumbersScene, HowScene, TrapScene, Spot } from './Story.jsx';
+import { SeeScene, TrapScene, Spot } from './Story.jsx';
+import { WhyNow, HowFlow } from './Sections.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
 
@@ -68,21 +68,40 @@ function Hero() {
 }
 
 /* ---------------------------------------------------------------- productos */
-function Producto({ pal }) {
-  const [tab, setTab] = useState('empresas');
+function Producto() {
   return (
     <section id="producto" className="block block-paper" aria-labelledby="h-prod">
       <div className="wrap">
         <div className="block-head">
-          <Spot className="spot-inline" mode={tab === 'empresas' ? 'leer' : 'hablar'} say={tab === 'empresas' ? 'Facturas, altas, reclamaciones. Sin API.' : 'Tú hablas. Yo abro tus apps.'} />
+          <Spot className="spot-inline" mode="leer" say="Mismo 8, dos sitios." />
           <p className="eyebrow">Dos productos, un mismo 8</p>
           <h2 id="h-prod">En tu oficina <span className="soft">y en el bolsillo de tus clientes.</span></h2>
-          <div className="seg" role="tablist" aria-label="Productos">
-            <button type="button" role="tab" aria-selected={tab === 'empresas'} onClick={() => setTab('empresas')}>Priv8 para empresas</button>
-            <button type="button" role="tab" aria-selected={tab === 'movil'} onClick={() => setTab('movil')}>8 en el móvil</button>
-          </div>
         </div>
-        <div role="tabpanel" key={tab} className="swap-in">{tab === 'empresas' ? <Empresas /> : <Movil pal={pal} />}</div>
+        {/* los dos productos a la vista, sin pestañas */}
+        <div className="prod-grid">
+          <article className="prod">
+            <p className="eyebrow">Priv8 para empresas</p>
+            <h3>Automatiza lo que la protección de datos te frenaba.</h3>
+            <p>8 trabaja en tu ERP o tu CRM de siempre, aunque no tenga API. El proveedor del modelo solo recibe tokens.</p>
+            <ul className="points">
+              <li>Funciona sobre las pantallas que ya tienes, sin integrar nada.</li>
+              <li>Un correo no puede cambiar un pago: la procedencia lo impide.</li>
+              <li>Verifica por teléfono con el número que ya tenías.</li>
+              <li>Cada paso queda firmado para tus auditorías.</li>
+            </ul>
+          </article>
+          <article className="prod">
+            <p className="eyebrow">8 en el móvil</p>
+            <h3>Tus clientes hablan con 8 y él maneja sus apps del banco.</h3>
+            <p>Lee, suma y prepara sin ver las cuentas. Las cifras las dice la voz del propio móvil; a la nube no llegan.</p>
+            <ul className="points">
+              <li>La clave, la huella y los códigos los pone la persona. 8 mira a otro lado.</li>
+              <li>Nada se mueve sin un «sí», por voz o con un botón.</li>
+              <li>Ejecuta, no aconseja: no recomienda inversiones.</li>
+              <li>Para bancos y brokers que quieren ofrecer su propio agente.</li>
+            </ul>
+          </article>
+        </div>
       </div>
     </section>
   );
@@ -263,12 +282,12 @@ export default function App() {
         <Hero />
         <Blend from="--band" to="--paper" seed={1} overlay />
         <SeeScene />
-        <NumbersScene />
-        <HowScene />
+        <WhyNow />
         <Blend from="--paper" to="--band" seed={4} />
+        <HowFlow />
         <TrapScene />
         <Blend from="--band" to="--paper" seed={5} />
-        <Producto pal={pal} />
+        <Producto />
         <Blend from="--paper" to="--band" seed={6} />
         <Prueba pal={pal} />
         <Blend from="--band" to="--paper" seed={7} />

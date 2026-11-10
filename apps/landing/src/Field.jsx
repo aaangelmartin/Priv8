@@ -60,8 +60,7 @@ export default function Field() {
         const off = Math.abs(cx - W / 2) / (W / 2);
         const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90);
         if (it.t > 0.5) {
-          const red = it.tok === 'nunca sale';
-          ctx.fillStyle = red ? `rgba(255,150,140,${0.95 * fade})` : `rgba(255,255,255,${0.95 * fade})`;
+          ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`;
           /* el token se escribe centrado donde estaba el dato: se tokeniza en su sitio, sin moverse */
           ctx.textAlign = 'center';
           ctx.fillText(it.tok, it.x + it.w / 2, y);
