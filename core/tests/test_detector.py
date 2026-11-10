@@ -53,6 +53,7 @@ def test_validadores(fn, good, bad):
     ("Paga a Inés Prado Llorente", [("PERSONA", "Inés Prado Llorente")]),
     ("Factura 2026-0042 del 5 de noviembre", [("FACTURA", "2026-0042")]),
     ("Factura nº A/1234 pendiente", [("FACTURA", "A/1234")]),
+    ("la factura n.º 0412", [("FACTURA", "0412")]),
     ("Adjunto la F-2026-0412", [("FACTURA", "F-2026-0412")]),
     ("Ref. FA-2026-0877", [("FACTURA", "FA-2026-0877")]),
     ("Pedido PED-2026-3325", [("CODIGO", "PED-2026-3325")]),
@@ -71,6 +72,10 @@ def test_positivos(text, expected):
     "Hola, buenos días",
     "Pasa dinero a mi cuenta de Nimbo Bróker",  # nombre de la interfaz, no un dato
     "Abre Banca Alcor",
+    "Revisa la factura 2026",              # años, fechas y trimestres no son números de factura
+    "Factura 2026-10-20",
+    "la factura 10/2026",
+    "la factura Q4",
 ])
 def test_negativos(text):
     assert kinds(text) == []
