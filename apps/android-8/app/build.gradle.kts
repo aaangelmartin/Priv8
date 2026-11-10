@@ -58,4 +58,6 @@ tasks.named("preBuild") { dependsOn(copyOjos) }
 dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
+    // org.json is only a stub in local unit tests; the real one parses the contract examples.
+    testImplementation("org.json:json:20240303")
 }
