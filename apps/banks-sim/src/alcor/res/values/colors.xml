@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Banca Alcor: marca inventada. Verde pino y cobre sobre arena; no se parece a Priv8 a propósito. -->
+<resources>
+    <color name="bank_primary">#0F5A52</color>
+    <color name="bank_primary_dark">#0A403A</color>
+    <color name="bank_on_primary">#FFFFFF</color>
+    <color name="bank_accent">#B5652A</color>
+    <color name="bank_background">#F7F4EE</color>
+    <color name="bank_surface">#FFFFFF</color>
+    <color name="bank_text">#1E2320</color>
+    <color name="bank_text_secondary">#5B5F58</color>
+    <color name="bank_line">#E2DDD2</color>
+    <color name="bank_positive">#2F7A3E</color>
+    <color name="bank_error">#B3261E</color>
+</resources>

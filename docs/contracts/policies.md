@@ -41,6 +41,13 @@ screens:
 | `extract` | regla ámbar | Regex con un grupo: solo el grupo se tokeniza (`"^Hola, (.+)$"` → `Hola, ‹PERSONA_1·titular›`) |
 | `campo`, `acepta` | regla | Campo de destino y orígenes que pueden escribirse en él. `‹IBAN_2·correo›` en un campo que solo acepta `maestro` da `denied: destino` |
 | `critica` | regla | `transferir`, `invertir`, `firmar`, `enviar` o `llamar`: tocar este elemento queda retenido hasta la confirmación |
+| `resumen` | regla crítica | `sel` de los datos que se leen en la petición de confirmación |
+| `solo_persona` | regla | El agente no puede tocarlo (entrar, huella, confirmar OTP): `act` devuelve `denied: rojo` |
+| `sin_regla` | pantalla | Qué pasa con un elemento sin regla: `detector` (por defecto: lo que detecte se tokeniza, el resto es verde) o `ambar` (se tokeniza entero como `CODIGO`, la opción prudente) |
+| `paused` | pantalla | Toda la pantalla pausa al agente (`autenticacion`): `observe` la devuelve con `paused` |
+| `pause_on_focus` | pantalla | `sel` que, con el foco, pausan al agente mientras la persona escribe |
+
+En `match`, `sel_re` es una regex sobre `sel`, útil para agrupar ids verdes (`'^id/(btn_volver|btn_inicio)$'`).
 
 ## Cómo casan los selectores
 

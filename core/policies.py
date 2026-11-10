@@ -34,6 +34,7 @@ class Match(_Strict):
     """Cómo reconocer un elemento o una pantalla. Todas las claves dadas deben cumplirse."""
 
     sel: str | None = None  # igualdad exacta con element.sel
+    sel_re: str | None = None  # regex sobre element.sel (filas repetidas, familias de ids)
     label: str | None = None  # igualdad exacta con element.label
     label_re: str | None = None  # regex sobre element.label
     text_re: str | None = None  # regex sobre element.text (solo para reconocer pantallas)
@@ -41,15 +42,17 @@ class Match(_Strict):
 
     @model_validator(mode="after")
     def _not_empty(self) -> Match:
-        if not any((self.sel, self.label, self.label_re, self.text_re, self.role)):
-            raise ValueError("match vacío: indica sel, label, label_re, text_re o role")
-        for rx in (self.label_re, self.text_re):
+        if not any((self.sel, self.sel_re, self.label, self.label_re, self.text_re, self.role)):
+            raise ValueError("match vacío: indica sel, sel_re, label, label_re, text_re o role")
+        for rx in (self.sel_re, self.label_re, self.text_re):
             if rx:
                 re.compile(rx)
         return self
 
     def hits(self, el: dict[str, Any]) -> bool:
         if self.sel is not None and el.get("sel") != self.sel:
+            return False
+        if self.sel_re is not None and not re.search(self.sel_re, el.get("sel") or ""):
             return False
         if self.label is not None and el.get("label") != self.label:
             return False
@@ -74,9 +77,13 @@ class Rule(_Strict):
     campo: str | None = None  # campo de destino, p. ej. pago.iban
     acepta: tuple[Origen, ...] | None = None  # orígenes que pueden escribirse en campo
     critica: Critica | None = None  # tocar o enviar pide confirmación
+    resumen: tuple[str, ...] = ()  # sel de los datos que se leen en la confirmación
+    solo_persona: bool = False  # el agente no puede tocarlo (entrar, huella, OTP)
 
     @model_validator(mode="after")
     def _coherent(self) -> Rule:
+        if self.resumen and self.critica is None:
+            raise ValueError("resumen necesita critica")
         if self.cls == "ambar" and self.tipo is None:
             raise ValueError("una regla ambar necesita tipo")
         if self.cls != "ambar" and (self.tipo or self.origen or self.rasgo_signo or self.extract):
@@ -94,7 +101,10 @@ class Screen(_Strict):
     when: tuple[Match, ...] = ()  # alguno de los elementos cumple cada match
     rules: tuple[Rule, ...] = ()
     detector: bool = True  # pasar el detector por lo que no tiene regla
+    sin_regla: Literal["detector", "ambar"] = "detector"  # elemento sin regla: detector, o ámbar entero
     origen: Origen | None = None  # origen de lo que encuentre el detector aquí (inbox: correo)
+    paused: Literal["autenticacion", "dialogo_sistema"] | None = None  # pantalla entera en pausa
+    pause_on_focus: tuple[str, ...] = ()  # sel que, con el foco, pausan al agente
 
     @field_validator("url_re")
     @classmethod

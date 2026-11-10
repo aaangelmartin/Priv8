@@ -6,6 +6,7 @@ Resumen en texto de `docs/arquitectura.html`, que tiene los diagramas, los contr
 
 - **Un núcleo, dos verticales.** B2B (arnés para empresas sobre ERP y CRM antiguos) y B2C (8 en un Android del emulador). Las dos usan el mismo núcleo y los mismos contratos.
 - **Se lee estructura, no píxeles.** DOM con Playwright en web y árbol de accesibilidad en Android. Nuestra medición de OCR por escritorio remoto leyó bien 8 de 120 IBAN.
+- **Un solo proceso.** El núcleo es una librería Python que el servidor MCP importa (`from core import ...`). En el mismo proceso corren el agente, los eventos de la consola (`:8700`) y el puente Android (`:8765`). La frontera que importa es la salida a la nube, y la cierra el bloqueo final. Decidido el 10 nov con Pablo.
 - **Herramientas cerradas.** El agente solo tiene `observe`, `act` y `oracle`. Sin `eval`, sin CDP crudo, sin adb, sin helpers propios.
 - **Tokens como texto:** `‹TIPO_n·etiqueta›`, por ejemplo `‹IBAN_1·propio›` o `‹IMPORTE_3·positivo›`. Estables por sesión; la tabla vive solo en la bóveda local.
 - **Voz mixta.** ElevenLabs lee frases sin datos; la voz local del portátil o del móvil lee cifras y nombres.
@@ -14,7 +15,7 @@ Resumen en texto de `docs/arquitectura.html`, que tiene los diagramas, los contr
 
 | Zona | Qué hay |
 |---|---|
-| Confianza · portátil | Núcleo y bóveda, servidor MCP y bucle del agente, adaptador web, puente Android, registro firmado |
+| Confianza · portátil | Un proceso Python: núcleo y bóveda como librería, servidor MCP y bucle del agente, eventos de la consola, puente Android, registro firmado. Adaptador web (Playwright) |
 | Confianza · emulador | APK de 8 (servicio de accesibilidad, app 8 con los ojos en un WebView, voz local) y apps de banca simuladas |
 | Confianza · navegador | ERP Alba Core, bandeja de correo, consola de auditoría |
 | Nube | API de Claude y ElevenLabs (voz y llamada por Twilio). Solo reciben tokens y frases sin datos |
@@ -35,6 +36,10 @@ Antes de salir hacia la nube, el **bloqueo final** revisa cada petición: si un 
 | Bloqueo final | Revisa toda salida hacia Claude y ElevenLabs |
 | Auditoría firmada | JSONL encadenado por hashes: qué recibió el modelo, qué se bloqueó y qué aprobó la persona |
 
+## Lo que el núcleo expone al agente
+
+En Python, sin HTTP: `observe(session)`, `act(session, op, target, text)`, `oracle(session, op, args)`, `check(payload)` (bloqueo final) y `record(event)` (auditoría). El adaptador `agent/core_adapter.py` las conecta a las interfaces de `agent/core_port.py`; hasta que estén, el agente usa un núcleo simulado (`PRIV8_CORE=fake`).
+
 ## Contratos (`docs/contracts/`, se fijan el martes 10 a las 14:00)
 
 Herramientas MCP `observe` / `act` / `oracle` · gramática de tokens · snapshot de pantalla (común a web y Android) · interfaz de adaptador `snapshot()` / `perform()` y puente Android · evento de auditoría · petición de confirmación · segmento de voz · políticas YAML por sitio. Los ejemplos están en `docs/arquitectura.html`. Un cambio lo aprueban Pablo (Camino 1) y quien lo consume.
@@ -43,9 +48,9 @@ Herramientas MCP `observe` / `act` / `oracle` · gramática de tokens · snapsho
 
 | Proceso | Dónde | Puerto | Arranque |
 |---|---|---|---|
-| Núcleo, API y eventos | portátil | 8700 | `make core` |
-| Servidor MCP y agente | portátil | 8701 | `make agent` |
-| Puente Android | portátil ↔ emulador | 8765 (`adb reverse`) | `make bridge` |
+| Proceso Priv8: núcleo, servidor MCP y agente | portátil | MCP 8701 | `make agent` |
+| · Eventos para la consola, mismo proceso | portátil | 8700 | — |
+| · Puente Android, mismo proceso | portátil ↔ emulador | 8765 (`adb reverse`) | — |
 | ERP Alba Core | navegador | 5173 | `pnpm --filter erp-sim dev` |
 | Bandeja de correo | navegador | 5174 | `pnpm --filter inbox-sim dev` |
 | Consola de auditoría | navegador | 5175 | `pnpm --filter console dev` |
@@ -58,7 +63,7 @@ Datos inventados en `data/seed.json`: Banca Alcor, Brezo Banco, Nimbo Bróker, S
 
 ```
 core/              Python · detector, tokens, bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo, auditoría · Camino 1
-mcp/               Python · servidor MCP, bucle del agente, modo replay · Camino 3
+agent/             Python · servidor MCP, adaptador al núcleo, bucle del agente, modo replay · Camino 3
 adapters/web/      Playwright · Camino 2
 adapters/android/  Kotlin · servicio de accesibilidad y puente · Camino 3
 apps/erp-sim/ apps/inbox-sim/ apps/console/   React + Vite · Camino 2 (correos de prueba: Camino 4)

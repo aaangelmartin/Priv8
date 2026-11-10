@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paleta por defecto (gris neutro). Cada sabor la sustituye en src/<sabor>/res/values/colors.xml. -->
+<resources>
+    <color name="bank_primary">#3A3A3A</color>
+    <color name="bank_primary_dark">#222222</color>
+    <color name="bank_on_primary">#FFFFFF</color>
+    <color name="bank_accent">#7A7A7A</color>
+    <color name="bank_background">#F4F4F4</color>
+    <color name="bank_surface">#FFFFFF</color>
+    <color name="bank_text">#1F1F1F</color>
+    <color name="bank_text_secondary">#5F5F5F</color>
+    <color name="bank_line">#DDDDDD</color>
+    <color name="bank_positive">#2E7D32</color>
+    <color name="bank_error">#B3261E</color>
+</resources>

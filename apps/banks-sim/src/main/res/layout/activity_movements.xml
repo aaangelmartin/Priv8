@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla movimientos. resource-ids: ver policies/banca-alcor.yaml (pantalla "movimientos"). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_movimientos"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout style="@style/Bank.Header">
+
+        <Button
+            android:id="@+id/btn_volver"
+            style="@style/Bank.HeaderButton"
+            android:contentDescription="@string/back_description"
+            android:text="@string/back" />
+
+        <TextView
+            android:id="@+id/titulo"
+            style="@style/Bank.HeaderTitle"
+            android:text="@string/movements_title" />
+    </LinearLayout>
+
+    <ScrollView style="@style/Bank.Screen">
+
+        <LinearLayout style="@style/Bank.Content">
+
+            <LinearLayout style="@style/Bank.Card">
+
+                <TextView
+                    android:id="@+id/mov_cuenta_alias"
+                    style="@style/Bank.Value"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/mov_cuenta_iban"
+                    style="@style/Bank.Value"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="monospace"
+                    android:textColor="@color/bank_text_secondary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/mov_cuenta_saldo_label"
+                    style="@style/Bank.Label"
+                    android:text="@string/movements_balance" />
+
+                <TextView
+                    android:id="@+id/mov_cuenta_saldo"
+                    style="@style/Bank.Value"
+                    android:textSize="26sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_otra_cuenta"
+                style="@style/Bank.Button.Secondary"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="8dp"
+                android:text="@string/movements_other" />
+
+            <TextView
+                android:id="@+id/mov_vacio"
+                style="@style/Bank.Value"
+                android:text="@string/movements_empty"
+                android:visibility="gone" />
+
+            <!-- Filas: layout/item_movimiento.xml -->
+            <LinearLayout
+                android:id="@+id/lista_movimientos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

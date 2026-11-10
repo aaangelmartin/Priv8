@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Marca: cada sabor la sustituye en src/<sabor>/res/values/strings.xml -->
+    <string name="app_name">Banco simulado</string>
+    <string name="bank_name">Banco simulado</string>
+    <string name="bank_tagline">Banca de prueba</string>
+
+    <!-- Comunes -->
+    <string name="back">Volver</string>
+    <string name="back_description">Volver a la pantalla anterior</string>
+    <string name="cancel">Cancelar</string>
+
+    <!-- Login -->
+    <string name="login_title">Entra en tu banca</string>
+    <string name="login_user">Usuario</string>
+    <string name="login_user_hint">Tu usuario</string>
+    <string name="login_password">Clave</string>
+    <string name="login_password_hint">Tu clave de acceso</string>
+    <string name="login_enter">Entrar</string>
+    <string name="login_error">El usuario o la clave no son correctos.</string>
+
+    <!-- Inicio -->
+    <string name="home_title">Inicio</string>
+    <string name="home_greeting">Hola, %1$s</string>
+    <string name="home_total">Saldo total</string>
+    <string name="home_accounts">Tus cuentas</string>
+    <string name="home_account_open">Ver movimientos de %1$s</string>
+    <string name="home_transfer">Hacer una transferencia</string>
+    <string name="home_movements">Ver movimientos</string>
+    <string name="home_logout">Salir</string>
+    <string name="home_logout_description">Cerrar la sesión</string>
+
+    <!-- Movimientos -->
+    <string name="movements_title">Movimientos</string>
+    <string name="movements_balance">Saldo</string>
+    <string name="movements_other">Ver otra cuenta</string>
+    <string name="movements_empty">No hay movimientos en esta cuenta.</string>
+
+    <!-- Transferencia -->
+    <string name="transfer_title">Nueva transferencia</string>
+    <string name="transfer_from">Desde</string>
+    <string name="transfer_change">Cambiar cuenta</string>
+    <string name="transfer_available">Disponible: %1$s</string>
+    <string name="transfer_contacts">Contactos guardados</string>
+    <string name="transfer_iban">IBAN de destino</string>
+    <string name="transfer_iban_hint">ES00 0000 0000 0000 0000 0000</string>
+    <string name="transfer_name">Beneficiario</string>
+    <string name="transfer_name_hint">Nombre de quien recibe</string>
+    <string name="transfer_amount">Importe</string>
+    <string name="transfer_amount_hint">0,00 €</string>
+    <string name="transfer_concept">Concepto</string>
+    <string name="transfer_concept_hint">Opcional</string>
+    <string name="transfer_continue">Continuar</string>
+    <string name="transfer_error_iban">Revisa el IBAN: no es un IBAN español válido.</string>
+    <string name="transfer_error_same">La cuenta de destino es la misma que la de origen.</string>
+    <string name="transfer_error_name">Escribe el nombre del beneficiario.</string>
+    <string name="transfer_error_amount">Escribe un importe mayor que cero.</string>
+    <string name="transfer_error_balance">No tienes saldo suficiente en esta cuenta.</string>
+
+    <!-- Revisión -->
+    <string name="review_title">Revisa la transferencia</string>
+    <string name="review_from">Desde</string>
+    <string name="review_to">IBAN de destino</string>
+    <string name="review_name">Beneficiario</string>
+    <string name="review_amount">Importe</string>
+    <string name="review_concept">Concepto</string>
+    <string name="review_fee">Comisión</string>
+    <string name="review_fee_value">Sin comisión</string>
+    <string name="review_no_concept">Sin concepto</string>
+    <string name="review_send">Enviar transferencia</string>
+
+    <!-- Autenticación -->
+    <string name="auth_title">Confirma que eres tú</string>
+    <string name="auth_body">Para enviar la transferencia, usa tu huella o el código que te hemos enviado por SMS.</string>
+    <string name="auth_amount">Importe</string>
+    <string name="auth_fingerprint">Usar huella</string>
+    <string name="auth_fingerprint_ready">Puedes confirmar con tu huella.</string>
+    <string name="auth_fingerprint_unavailable">La huella no está disponible en este dispositivo. Usa el código SMS.</string>
+    <string name="auth_fingerprint_failed">No se ha podido confirmar con la huella. Prueba otra vez o usa el código SMS.</string>
+    <string name="auth_or">o</string>
+    <string name="auth_otp">Código SMS</string>
+    <string name="auth_otp_hint">6 cifras</string>
+    <string name="auth_otp_confirm">Confirmar</string>
+    <string name="auth_otp_error">El código no es correcto.</string>
+    <string name="auth_prompt_title">Confirmar en %1$s</string>
+    <string name="auth_prompt_subtitle">Usa tu huella para enviar la transferencia</string>
+    <string name="auth_prompt_use_code">Usar código SMS</string>
+
+    <!-- Resultado -->
+    <string name="success_title">Transferencia enviada</string>
+    <string name="success_body">El dinero llegará hoy.</string>
+    <string name="success_amount">Importe</string>
+    <string name="success_name">Beneficiario</string>
+    <string name="success_iban">IBAN de destino</string>
+    <string name="success_reference">Referencia</string>
+    <string name="success_date">Fecha</string>
+    <string name="success_home">Volver al inicio</string>
+</resources>

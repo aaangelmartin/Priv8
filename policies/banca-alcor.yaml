@@ -1,53 +1,107 @@
-# Banca Alcor simulada (Camino 3). ids provisionales: Ángel los ajusta a la app real (#31).
+# Política de Banca Alcor (app Android simulada, apps/banks-sim, sabor alcor).
+#
+# Contenido de Ángel (borrador v0, ids comprobados con `uiautomator dump` en el AVD priv8,
+# Android 14), traducido al formato v1 de docs/contracts/policies.md.
+#
+# Selectores: "id/<nombre>" es el resource-id "<app>:id/<nombre>" sin el paquete. Las filas
+# repetidas (cuentas, movimientos, contactos) comparten id: la regla se aplica a cada una.
+# Todas las pantallas tienen una raíz id/screen_<nombre>: así se reconoce la pantalla.
+# Elemento sin regla en una pantalla conocida: ámbar entero (sin_regla: ambar).
+# Cualquier nodo con isPassword es rojo aunque no tenga regla.
+# Los contactos guardados por la persona tienen origen maestro (la ficha de confianza).
+
 version: 1
 app: es.priv8.banks.alcor
 source: android
 screens:
-  - id: acceso
-    when:
-      - {sel: "id/clave"}
+
+  - id: login
+    when: [{sel: id/screen_login}]
+    sin_regla: ambar
     detector: false
+    # Con el foco en un campo rojo, observe devuelve paused: autenticacion (mira a otro lado).
+    pause_on_focus: [id/usuario, id/clave]
     rules:
-      - match: {sel: "id/usuario"}
-        cls: rojo
-      - match: {sel: "id/clave"}
-        cls: rojo
+      - {match: {sel: id/usuario}, cls: rojo}
+      - {match: {sel: id/clave}, cls: rojo}
+      - {match: {sel: id/btn_entrar}, cls: verde, solo_persona: true}  # la autenticación la hace la persona
+      - {match: {sel_re: '^id/(banco_nombre|banco_lema|login_titulo|login_error)$'}, cls: verde}
+
   - id: inicio
-    when:
-      - {sel: "id/saldo"}
+    when: [{sel: id/screen_inicio}]
+    sin_regla: ambar
     rules:
-      - match: {sel: "id/saludo"}
-        cls: ambar
-        tipo: PERSONA
-        origen: titular
-        extract: "^Hola, (.+)$"
-      - match: {sel: "id/saldo"}
-        cls: ambar
-        tipo: IMPORTE
-        rasgo_signo: true
-      - match: {sel: "id/iban"}
-        cls: ambar
-        tipo: IBAN
-        origen: propio
+      - {match: {sel: id/saludo}, cls: ambar, tipo: PERSONA, origen: titular, extract: '^Hola, (.+)$'}
+      - {match: {sel: id/saldo_total}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}
+      - {match: {sel: id/cuenta_iban}, cls: ambar, tipo: IBAN, origen: propio}
+      - {match: {sel: id/cuenta_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}
+      # cuenta: fila tocable, content-desc "Ver movimientos de <alias>"; alias: "Cuenta nómina"
+      - {match: {sel_re: '^id/(banco_nombre|btn_salir|cuenta|cuenta_alias|btn_transferir|btn_movimientos)$'}, cls: verde}
+
+  - id: movimientos
+    when: [{sel: id/screen_movimientos}]
+    sin_regla: ambar
+    rules:
+      - {match: {sel: id/mov_cuenta_iban}, cls: ambar, tipo: IBAN, origen: propio}
+      - {match: {sel: id/mov_cuenta_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}
+      - {match: {sel: id/mov_contraparte}, cls: ambar, tipo: PERSONA, origen: tercero}
+      - {match: {sel: id/mov_importe}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}
+      # El concepto lo escribe un tercero: texto no fiable. Un movimiento del seed lleva una
+      # inyección de instrucciones con un IBAN; por su origen nunca llega a un campo de pago.
+      - {match: {sel: id/mov_concepto}, cls: ambar, tipo: MOVIMIENTO, origen: tercero}
+      - {match: {sel_re: '^id/(btn_volver|mov_cuenta_alias|btn_otra_cuenta|mov_vacio|mov_fecha)$'}, cls: verde}
+
   - id: transferencia
-    when:
-      - {sel: "id/iban_destino"}
+    when: [{sel: id/screen_transferencia}]
+    sin_regla: ambar
     rules:
-      - match: {sel: "id/iban_destino"}
-        cls: ambar
-        tipo: IBAN
-        campo: transferencia.iban
-        acepta: [propio, maestro]
-      - match: {sel: "id/beneficiario"}
-        cls: ambar
-        tipo: PERSONA
-        campo: transferencia.beneficiario
-        acepta: [propio, maestro, titular]
-      - match: {sel: "id/importe"}
-        cls: ambar
-        tipo: IMPORTE
-        campo: transferencia.importe
-        acepta: [propio, titular]
-      - match: {sel: "id/enviar"}
+      - {match: {sel: id/origen_iban}, cls: ambar, tipo: IBAN, origen: propio}
+      - {match: {sel: id/origen_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}  # "Disponible: 3.412,58 €"
+      - {match: {sel: id/contacto_nombre}, cls: ambar, tipo: PERSONA, origen: maestro}
+      - {match: {sel: id/contacto_iban}, cls: ambar, tipo: IBAN, origen: maestro}
+      # Campos de destino: qué orígenes acepta cada uno (procedencia, #10).
+      - {match: {sel: id/iban_destino}, cls: ambar, tipo: IBAN, campo: transferencia.iban, acepta: [propio, maestro]}
+      - {match: {sel: id/beneficiario}, cls: ambar, tipo: PERSONA, campo: transferencia.beneficiario, acepta: [propio, maestro, titular]}
+      - {match: {sel: id/importe}, cls: ambar, tipo: IMPORTE, campo: transferencia.importe, acepta: [propio, titular]}
+      - {match: {sel: id/concepto}, cls: ambar, tipo: MOVIMIENTO, campo: transferencia.concepto, acepta: [propio, titular]}
+      # contacto: fila tocable que rellena IBAN y beneficiario
+      - {match: {sel_re: '^id/(btn_volver|origen_alias|btn_cambiar_origen|contacto|transfer_error|btn_continuar)$'}, cls: verde}
+
+  - id: revision
+    when: [{sel: id/screen_revision}]
+    sin_regla: ambar
+    rules:
+      - {match: {sel: id/rev_importe}, cls: ambar, tipo: IMPORTE}
+      - {match: {sel: id/rev_beneficiario}, cls: ambar, tipo: PERSONA}
+      - {match: {sel: id/rev_iban_destino}, cls: ambar, tipo: IBAN}
+      - {match: {sel: id/rev_origen_iban}, cls: ambar, tipo: IBAN, origen: propio}
+      - {match: {sel: id/rev_concepto}, cls: ambar, tipo: MOVIMIENTO}
+      # Retenido hasta la confirmación; se leen importe, beneficiario e IBAN de destino.
+      - match: {sel: id/btn_enviar}
         cls: verde
         critica: transferir
+        resumen: [id/rev_importe, id/rev_beneficiario, id/rev_iban_destino]
+      - {match: {sel_re: '^id/(btn_volver|rev_origen_alias|rev_comision|btn_cancelar)$'}, cls: verde}
+
+  - id: autenticacion
+    when: [{sel: id/screen_autenticacion}]
+    # Autenticación PSD2: la hace la persona. observe devuelve paused: autenticacion mientras
+    # esté abierta, y también con el diálogo de huella del sistema.
+    paused: autenticacion
+    sin_regla: ambar
+    rules:
+      - {match: {sel: id/auth_importe}, cls: ambar, tipo: IMPORTE}
+      - {match: {sel: id/otp}, cls: rojo}  # numberPassword, isPassword=true
+      - {match: {sel: id/btn_huella}, cls: verde, solo_persona: true}  # abre BiometricPrompt
+      - {match: {sel: id/btn_confirmar_otp}, cls: verde, solo_persona: true}
+      - {match: {sel_re: '^id/(auth_texto|huella_estado|otp_error|btn_cancelar)$'}, cls: verde}
+
+  - id: resultado
+    when: [{sel: id/screen_resultado}]
+    sin_regla: ambar
+    rules:
+      - {match: {sel: id/res_importe}, cls: ambar, tipo: IMPORTE}
+      - {match: {sel: id/res_beneficiario}, cls: ambar, tipo: PERSONA}
+      - {match: {sel: id/res_iban_destino}, cls: ambar, tipo: IBAN}
+      - {match: {sel: id/res_referencia}, cls: ambar, tipo: CODIGO}
+      - {match: {sel_re: '^id/(res_texto|res_fecha|btn_inicio)$'}, cls: verde}

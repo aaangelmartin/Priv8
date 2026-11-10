@@ -8,3 +8,6 @@ __pycache__/
 *.pyc
 *.egg-info/
 build/
+
+# Copias de trabajo de los agentes
+.claude/worktrees/

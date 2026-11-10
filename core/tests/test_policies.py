@@ -35,7 +35,22 @@ def test_pantalla_android_por_screen_o_por_elementos():
     snap = ex("snapshot.android-inicio")
     assert ps.screen_for(snap).id == "inicio"
     snap["screen"] = None
+    assert ps.screen_for(snap) is None  # sin la raíz id/screen_inicio no se reconoce
+    snap["elements"].append({"id": "n0", "role": "other", "sel": "id/screen_inicio"})
     assert ps.screen_for(snap).id == "inicio"
+
+
+def test_alcor_pausas_solo_persona_y_resumen():
+    alcor = load_policies()["es.priv8.banks.alcor"]
+    by_id = {s.id: s for s in alcor.screens}
+    assert by_id["autenticacion"].paused == "autenticacion"
+    assert "id/clave" in by_id["login"].pause_on_focus
+    assert by_id["login"].rule_for({"sel": "id/btn_entrar"}).solo_persona
+    enviar = by_id["revision"].rule_for({"sel": "id/btn_enviar"})
+    assert enviar.critica == "transferir" and len(enviar.resumen) == 3
+    assert by_id["inicio"].sin_regla == "ambar"
+    assert by_id["inicio"].rule_for({"sel": "id/btn_movimientos"}).cls == "verde"
+    assert by_id["inicio"].rule_for({"sel": "id/otra"}) is None
 
 
 def test_pantalla_sin_politica_no_sale():
@@ -86,6 +101,7 @@ BASE = {"version": 1, "app": "x", "source": "web"}
         ([{"id": "a", "url_re": "/a", "rules": [{"match": {"sel": "#x"}, "cls": "verde", "acepta": ["correo"]}]}], "acepta necesita campo"),
         ([{"id": "a", "url_re": "/a", "rules": [{"match": {"sel": "#x"}, "cls": "ambar", "tipo": "IBAN", "extract": "x"}]}], "grupo"),
         ([{"id": "a", "url_re": "/a", "otra": 1}], "Extra inputs"),
+        ([{"id": "a", "url_re": "/a", "rules": [{"match": {"sel": "#x"}, "cls": "verde", "resumen": ["#y"]}]}], "resumen necesita critica"),
     ],
 )
 def test_politicas_invalidas(screens, msg):
