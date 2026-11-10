@@ -68,7 +68,7 @@ async def test_replay_over_real_core(real, scene, expected):
     kinds = Counter(e["kind"] for e in events if e["kind"] != "task")
     assert dict(kinds) == expected
     calls = Counter(c["name"] for c in result.tool_calls)
-    assert kinds["observe_sent"] == calls["observe"]
+    assert kinds["observe_sent"] + kinds["paused"] == calls["observe"]
     assert kinds["oracle"] == calls["oracle"]
     assert kinds["act"] - kinds["approval"] + kinds["held"] + kinds["blocked"] == calls["act"]
     # The agent side records only its own task events in this case.
