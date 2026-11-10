@@ -13,8 +13,9 @@ in the input) and core results its final block holds back. See AuditPort.
     python -m agent.server --transport stdio   # stdio, for MCP hosts that spawn it
 
 Follows contracts v1 (docs/contracts/tools.schema.json, PR #58). The core runs
-in this same process: PRIV8_CORE=fake (default, `fakes.FakeCore`) or
-PRIV8_CORE=real (`core/`, wired by `core_adapter.build_real_core`).
+in this same process: PRIV8_CORE=real (default, `core/`, wired by
+`core_adapter.build_real_core`, with a demo scene of core/scenes.py as the
+screen: --scene b2b|b2c) or PRIV8_CORE=fake (`fakes.FakeCore`).
 """
 
 from __future__ import annotations
@@ -132,7 +133,7 @@ def build_server(core: Core, *, name: str = "priv8-cua") -> Server[Any]:
 
 
 def default_core() -> Core:
-    """The in-process core the server runs over, chosen by PRIV8_CORE=fake|real (default fake)."""
+    """The in-process core the server runs over, chosen by PRIV8_CORE=real|fake (default real)."""
     from agent.core_adapter import select_core
 
     return select_core()
@@ -169,13 +170,25 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--transport", choices=["http", "stdio"], default="http")
     p.add_argument("--host", default=DEFAULT_HOST)
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
+    p.add_argument("--scene", choices=["b2b", "b2c"], default=None,
+                   help="PRIV8_CORE=real: demo screen of core/scenes.py mounted on the session (default b2b)")
+    p.add_argument("--session", default=None, help="session the scene is mounted on (default: the scene name)")
+    p.add_argument("--simulated-persona", action="store_true",
+                   help="a simulated person approves held actions (replays and tests only)")
     a = p.parse_args(argv)
     # stdout is the protocol channel on stdio: logs go to stderr.
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    from agent.core_adapter import RealCoreUnavailable
+    from agent.core_adapter import DEFAULT_SCENE, RealCoreUnavailable, core_choice, mount_scene
 
     try:
+        real = core_choice() == "real"
+        if (a.scene or a.simulated_persona) and not real:
+            raise ValueError("--scene and --simulated-persona need PRIV8_CORE=real")
         core = default_core()
+        if real:
+            scene = a.scene or DEFAULT_SCENE
+            mount_scene(a.session or scene, scene, simulated_persona=a.simulated_persona)
+            log.info("real core · scene %s on session %s", scene, a.session or scene)
     except (RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
         sys.exit(f"priv8: {e}")
     server = build_server(core)

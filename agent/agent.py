@@ -5,6 +5,11 @@
     python -m agent.agent --server-url http://127.0.0.1:8701/mcp
     python -m agent.agent --replay agent/replays/registrar_factura.json   # no API key
     python -m agent.agent --record out.json                     # live, and save a replay file
+    PRIV8_CORE=fake python -m agent.agent --replay agent/replays/registrar_factura.json
+
+With the real core (PRIV8_CORE=real, the default) the screen is a demo scene of
+core/scenes.py mounted in this process (--scene b2b|b2c), and the task is
+tokenized by the core before it reaches Claude.
 
 The agent gets its tools from the MCP server and refuses to run unless they are
 exactly observe, act and oracle. Each step is an audit event; each request to
@@ -244,7 +249,12 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
 async def _main(a: argparse.Namespace) -> int:
     from agent.server import DEFAULT_HOST, build_server, default_core, serve_http
 
-    core = default_core()  # PRIV8_CORE=fake|real, in this same process
+    from agent.core_adapter import DEFAULT_SCENE, core_choice, mount_scene, tokenize_task
+
+    real = core_choice() == "real"
+    if a.scene and not real:
+        raise ValueError("--scene needs PRIV8_CORE=real: the fake core has its own screen")
+    core = default_core()  # PRIV8_CORE=real|fake, in this same process
     err = lambda s: print(s, file=sys.stderr)  # noqa: E731
 
     model: ModelClient
@@ -254,6 +264,16 @@ async def _main(a: argparse.Namespace) -> int:
         task = a.task_given or model.task or task
     else:
         model = AnthropicModel(record_to=Path(a.record) if a.record else None)
+    a.session = a.session or ((a.scene or DEFAULT_SCENE) if real else "s1")
+
+    if real and not a.server_url:
+        # The real core reads the screen through an adapter: here, a demo scene in this process.
+        # With --server-url the screen and the vault live in the server process instead, and
+        # the task goes out as written, through the loop's final block.
+        persona = bool(a.replay) if a.simulated_persona is None else a.simulated_persona
+        mount_scene(a.session, a.scene or DEFAULT_SCENE, simulated_persona=persona)
+        # What the person asked goes to Claude with their data as tokens of this session.
+        task = tokenize_task(a.session, TASKS.get(task.strip().lower(), task))
 
     async def run_with(target: Any) -> AgentResult:
         async with Client(target) as client:
@@ -295,7 +315,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--server-url", help="connect to a running MCP server instead of an in-process one")
     p.add_argument("--serve", action="store_true", help="serve MCP over HTTP and connect to it")
     p.add_argument("--port", type=int, default=8701)
-    p.add_argument("--session", default="s1")
+    p.add_argument("--session", default=None, help="session id (default: the scene name, or s1 with the fake core)")
+    p.add_argument("--scene", choices=["b2b", "b2c"], default=None,
+                   help="PRIV8_CORE=real: demo screen of core/scenes.py to mount in this process (default b2b)")
+    p.add_argument("--simulated-persona", action=argparse.BooleanOptionalAction, default=None,
+                   help="a simulated person approves held actions (default: on with --replay, off live)")
     p.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
     p.add_argument("--audit-out", help="write the audit events as JSONL (with PRIV8_CORE=real, only the "
                                        "agent-side events: the core keeps the full signed log)")

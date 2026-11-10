@@ -61,7 +61,7 @@ cp .env.example .env
 | Variable | Para qué |
 |---|---|
 | `ANTHROPIC_API_KEY` | Agente en vivo con Claude |
-| `PRIV8_CORE` | Núcleo del agente: `real` (el de `core/`) o `fake` (uno simulado en memoria) |
+| `PRIV8_CORE` | Núcleo del agente: `real` (el de `core/`, por defecto) o `fake` (uno simulado en memoria) |
 | `PRIV8_AUDIT` | Dónde va el registro firmado (por defecto `audit/priv8.jsonl`); `off` lo deja solo en memoria |
 | `PRIV8_AUDIT_KEY` | Clave ed25519 del registro (por defecto `audit/priv8.key`; se crea si no existe) |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | Voz en la nube (ver `voice/README.md`) |
@@ -76,7 +76,7 @@ Para pasar el `.env` a un comando: `uv run --env-file .env …`.
 make demo
 ```
 
-Sin make: `uv run python -m core.replay`. Para una sola escena: `SCENE=b2b make demo` o `uv run python -m core.replay b2c`. (`make replay` es el replay del agente sobre un núcleo simulado; ver `agent/README.md`.)
+Sin make: `uv run python -m core.replay`. Para una sola escena: `SCENE=b2b make demo` o `uv run python -m core.replay b2c`. (`make replay` hace lo mismo desde la entrada del agente, `agent.agent`, y `make replay-fake` lo corre sobre el núcleo simulado; ver `agent/README.md`.)
 
 Corre las dos escenas con el **núcleo real** y respuestas del modelo grabadas (`core/replays/`). Por cada paso se ve lo que recibe y pide el modelo, siempre con tokens. Al final aparece:
 - lo que dice 8 renderizado en local, con los valores reales;
@@ -99,7 +99,7 @@ Y en la B2C:
 uv run --env-file .env python -m agent.agent --serve --task "registrar factura"
 ```
 
-Lee la configuración del `.env` (hace falta `ANTHROPIC_API_KEY` y `PRIV8_CORE=real`). `make agent` lanza lo mismo, pero no lee el `.env`: con make hay que exportar antes las variables en la terminal. Con `--record FICHERO.json` se graba un replay nuevo. Detalles en `agent/README.md`.
+Lee la configuración del `.env` (hace falta `ANTHROPIC_API_KEY`; el núcleo real es el de por defecto). `make agent` lanza lo mismo, pero no lee el `.env`: con make hay que exportar antes las variables en la terminal. Con `--record FICHERO.json` se graba un replay nuevo. Detalles en `agent/README.md`.
 
 ### Comprobar un registro de auditoría
 
