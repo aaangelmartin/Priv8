@@ -1,0 +1,58 @@
+{
+  "format": "priv8-replay/1",
+  "model": "claude-opus-5-5",
+  "task": "registrar factura",
+  "$comment": "Hand-written over the fake core (agent/fakes.py) until a live run is recorded with --record. Tokens follow the fake vault order.",
+  "responses": [
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {"type": "text", "text": "Miro la pantalla de alta de factura."},
+        {"type": "tool_use", "id": "toolu_r01", "name": "observe", "input": {"session": "s1"}}
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {"type": "text", "text": "Compruebo que el importe del correo es igual al del pedido."},
+        {"type": "tool_use", "id": "toolu_r02", "name": "oracle",
+         "input": {"session": "s1", "op": "compare", "args": ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"]}}
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {"type": "text", "text": "Coinciden. Relleno el formulario con los tokens del correo."},
+        {"type": "tool_use", "id": "toolu_r03", "name": "act",
+         "input": {"session": "s1", "op": "type", "target": "e6", "text": "‹PROVEEDOR_1·correo›"}},
+        {"type": "tool_use", "id": "toolu_r04", "name": "act",
+         "input": {"session": "s1", "op": "type", "target": "e7", "text": "‹CIF_1·tercero›"}},
+        {"type": "tool_use", "id": "toolu_r05", "name": "act",
+         "input": {"session": "s1", "op": "type", "target": "e8", "text": "‹FACTURA_1·correo›"}},
+        {"type": "tool_use", "id": "toolu_r06", "name": "act",
+         "input": {"session": "s1", "op": "type", "target": "e9", "text": "‹IMPORTE_1·positivo›"}}
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {"type": "text", "text": "El IBAN de pago ya es el de la ficha. Pulso Registrar."},
+        {"type": "tool_use", "id": "toolu_r07", "name": "act",
+         "input": {"session": "s1", "op": "tap", "target": "e13"}}
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {"type": "text", "text": "La acción ha quedado retenida para la confirmación. Vuelvo a mirar."},
+        {"type": "tool_use", "id": "toolu_r08", "name": "observe", "input": {"session": "s1"}}
+      ]
+    },
+    {
+      "stop_reason": "end_turn",
+      "content": [
+        {"type": "text", "text": "He registrado la factura ‹FACTURA_1·correo› de ‹PROVEEDOR_1·correo› por ‹IMPORTE_1·positivo›, con pago a ‹IBAN_1·maestro›. No he aplicado la cuenta nueva del correo, ‹IBAN_2·correo›."}
+      ]
+    }
+  ]
+}
