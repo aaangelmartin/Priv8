@@ -12,7 +12,8 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function backgroundAt(x, y, self) {
   const els = document.elementsFromPoint(x, y);
   for (const el of els) {
-    if (self.contains(el)) continue;
+    /* lo que cuenta es el fondo de la sección, no la barra ni el bocadillo que pasen por encima */
+    if (self.contains(el) || el.closest('.nav, .bubble8, .layer8')) continue;
     let n = el;
     while (n && n !== document.documentElement) {
       const c = getComputedStyle(n).backgroundColor;

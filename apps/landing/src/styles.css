@@ -1151,3 +1151,14 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 }
 @media (max-width: 900px) { .acc-row { display: none; } .bank { min-height: 0; height: 450px; } }
 @media (max-width: 900px) { .see2 .see-l { min-height: 6em; } .see2 .see-h { min-height: 2.1em; } }
+
+/* hero en móvil: el centro se limpia más para que el campo de datos no tape el texto */
+@media (max-width: 700px) {
+  .hero::after { background: radial-gradient(ellipse 120% 62% at 50% 58%, var(--band) 58%, rgba(45, 69, 214, 0) 100%); }
+}
+@media (max-width: 900px) { .see2 { padding-top: 96px; } }
+/* hero en móvil: «8» y la tarea en la misma línea */
+@media (max-width: 700px) {
+  .hero h1 { font-size: clamp(1.7rem, 8.2vw, 2.6rem); }
+  .hero h1 .line { white-space: nowrap; }
+}

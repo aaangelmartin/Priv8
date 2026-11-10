@@ -27,9 +27,26 @@ export function Scene({ id, screens = 3, tone = 'cobalt', phases = 1, label, chi
     return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); };
   }, []);
   const phase = Math.min(phases - 1, Math.floor(p * phases));
+  /* el contenido de la escena siempre cabe en el alto real de la pantalla (en el móvil la barra del navegador quita
+     sitio): si no cabe, se reduce lo justo */
+  const stage = useRef(null);
+  useEffect(() => {
+    const fit = () => {
+      const st = stage.current; if (!st) return;
+      const w = st.querySelector(':scope > .wrap'); if (!w) return;
+      w.style.zoom = '';
+      const avail = st.clientHeight, h = w.scrollHeight;
+      if (h > avail) w.style.zoom = String(Math.max(0.6, (avail - 8) / h));
+    };
+    fit();
+    const t = setTimeout(fit, 400);
+    window.addEventListener('resize', fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    return () => { clearTimeout(t); window.removeEventListener('resize', fit); };
+  }, []);
   return (
     <section id={id} ref={ref} className={`scene scene-${tone}`} style={{ height: `${screens * 100}vh` }} aria-label={label}>
-      <div className="stage">
+      <div className="stage" ref={stage}>
         {children({ p, phase })}
       </div>
     </section>

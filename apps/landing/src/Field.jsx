@@ -58,7 +58,9 @@ export default function Field() {
         const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly, near = Math.sqrt(dx * dx + dy * dy) < R;
         it.t += ((near ? 1 : 0) - it.t) * 0.12;
         const off = Math.abs(cx - W / 2) / (W / 2);
-        const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90);
+        /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo */
+        const narrow = W < 700 ? 0.35 : 1;
+        const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90) * narrow;
         if (it.t > 0.5) {
           ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`;
           /* el token se escribe centrado donde estaba el dato: se tokeniza en su sitio, sin moverse */
