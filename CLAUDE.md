@@ -132,11 +132,9 @@ El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). S
 
 - [x] Cara de "no ve": asteriscos, una sola para ámbar y rojo.
 - [x] Paleta y fuentes de `docs/plan.html` unificadas con la marca.
+- [x] Pronunciación: Priv8 se lee "priveit" (priv + *eight*); Priv8 CUA, "priveit ce u a".
 - [x] Nombre Priv8 revisado: hay un registro "PRIV8" de Orchid en EE. UU. (clases 35/41, eventos) y "priv8" es jerga de exploits. Para la hackathon se mantiene, escrito siempre "Priv8 CUA". Antes de un uso comercial: búsqueda en EUIPO, OEPM y WIPO (clases 9, 36 y 42).
 
-### Decisiones pendientes
-
-- [ ] Pronunciación de "Priv8": la guía propone "práivet" (como *private*).
 
 ## Archivos
 
