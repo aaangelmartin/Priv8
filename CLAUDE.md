@@ -39,20 +39,25 @@ El modelo responde con plantillas con tokens. Un renderizador local sustituye lo
 - ElevenLabs lee las frases sin datos.
 - La voz local (Web Speech o la del móvil) lee cifras y nombres.
 
-## Qué construir, en orden
+## Qué construimos en la hackathon (decidido el 10 nov 2026)
 
-| | Pieza | Stack sugerido |
+Priv8 CUA es el producto. Sobre el mismo núcleo, dos verticales, y las dos salen en la demo:
+
+- **B2B · Priv8 para empresas:** un arnés para automatizar con IA procesos que hoy no se automatizan por miedo a exponer datos (RGPD, SOC 2), con *computer use* sobre ERP y CRM antiguos. Proceso de la demo: llega un correo con la factura de un proveedor → 8 la registra en el ERP simulado (Alba Core) sin ver los datos → contesta el correo → bloquea el cambio de IBAN que viene en el mismo correo (procedencia) → llama al proveedor al número de la ficha, con una pregunta de comprobación → registro firmado.
+- **B2C · 8 en tu móvil:** una APK para el emulador de Android Studio (no va a Google Play) que maneja el móvil por accesibilidad y habla con voz. Recorre las apps de banca simuladas (Banca Alcor, Brezo Banco, Nimbo Bróker), responde "¿cuánto tengo?", prepara transferencias con confirmación por voz y mira a otro lado mientras la persona pone su huella, clave u OTP. No asesora ni firma.
+
+Se lee el DOM (Playwright) y el árbol de accesibilidad, no píxeles. Las herramientas del agente son solo `observe`, `act` y `oracle`.
+
+### Reparto (issues #4–#56, milestones M1 martes 10, M2 miércoles 11, M3 jueves 12)
+
+| Camino | Responsable | Qué lleva |
 |---|---|---|
-| A | Especificación del protocolo (`SPEC.md`) | Markdown |
-| B | Núcleo / SDK: detector, tokenizador, políticas YAML, oráculo, ejecutor, bloqueo, auditoría | Python |
-| C | Servidor MCP con herramientas cerradas: `observe`, `act`, `oracle` | MCP + Claude API |
-| E | Banca simulada: login, saldo, movimientos, transferencias, domiciliaciones y una trampa de inyección de instrucciones. Nombre inventado, nunca una marca real | React |
-| D | Adaptador web: lee el DOM, toca y escribe | Playwright |
-| F | App de referencia: chat + voz, renderizador local, confirmaciones habladas | React + ElevenLabs + Web Speech |
-| G | Consola de auditoría: vista dividida "lo que ves / lo que ve la IA", fugas bloqueadas, latencia por paso | React |
-| H | Métricas con pantallas sintéticas: % de datos que llegan al modelo, tareas completadas y latencia añadida, con y sin protocolo | Python |
-| I | Entregables de las bases | — |
-| J | (Opcional) Adaptador Android con servicio de accesibilidad | Kotlin |
+| 1 · Núcleo (B2B) | Pablo (`rrojjo`) | Contratos, detector, tokens y bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo final, auditoría, modo replay, `SPEC.md`, README |
+| 2 · Empresa (B2B) | Álvaro (`alvaarocl`) | `seed.json`, ERP y bandeja simulados, adaptador web, consola de auditoría, telefonía (llamada de verificación y llamada al banco), métricas B2B, vídeo, ZIP |
+| 3 · Android, agente, voz y diseño (B2C) | Ángel (`aaangelmartin`) | Servidor MCP y bucle del agente, servicio de accesibilidad, puente, Banca Alcor, voz mixta, confirmaciones habladas y todo el diseño: branding v2, app 8 y 8, kit visual, landing, PDF y diapositivas |
+| 4 · App 8 y bancos (B2C) | Marco (`marcoobarroso`) | App 8 con los ojos, renderizador local, Brezo Banco y Nimbo Bróker, dictado, emulador, correos de prueba, métricas B2C |
+
+La arquitectura completa (componentes, contratos, flujos, despliegue y repositorio) está en `docs/arquitectura.html` y resumida en `docs/arquitectura.md`.
 
 ### Reglas importantes
 
@@ -63,9 +68,9 @@ El modelo responde con plantillas con tokens. Un renderizador local sustituye lo
 ### Demo (unos 3 minutos)
 
 1. El mismo trámite sin protocolo: la consola muestra todo en claro.
-2. Por voz: "¿Cuánto tengo entre mis cuentas?", ya con Priv8 CUA. La consola solo muestra tokens y la cifra real se oye con la voz local.
-3. "Pasa 200 € al broker": el agente lo prepara y pide confirmación por voz.
-4. Una inyección de instrucciones escondida en la página queda bloqueada.
+2. B2B: correo con factura → ERP → respuesta; el cambio de IBAN del correo queda bloqueado y 8 llama al proveedor para verificar.
+3. B2C por voz: "¿Cuánto tengo entre mis bancos?". La consola solo muestra tokens y la cifra real se oye con la voz local.
+4. "Pasa 200 € al bróker": 8 lo prepara, mira a otro lado durante la huella y pide confirmación por voz.
 5. Cierre con las métricas propias.
 
 ## Entregables (según las bases)
@@ -138,10 +143,12 @@ El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). S
 
 ## Archivos
 
-- `docs/plan.html`: plan completo del proyecto (problema, protocolo, arquitectura, rúbrica, fases, demo).
+- `docs/plan.html`: estrategia actual (Priv8 CUA y sus dos verticales, demo, métricas, rúbrica, plan de 2 días).
+- `docs/arquitectura.html`: arquitectura completa, contratos, flujos y reparto por persona. Resumen en `docs/arquitectura.md`.
 - `docs/marca.html`: guía de marca.
 - `docs/ojos.html`: 8 en vivo, con todas las emociones, estados y el código de animación.
 - `docs/logo.html`: exploración antigua del logo (sustituida, se conserva como archivo).
 - `brand/logo/`: logos trazados, icono de app (16 a 512 px) y favicon.
 - `brand/tokens.css`: variables de marca para la app, la consola y la banca simulada.
 - `bases/bases-hackathon.pdf`: bases y rúbrica oficiales.
+- `research_notes/` y `reports/`: investigación de mercado y validaciones que llevaron a la decisión.

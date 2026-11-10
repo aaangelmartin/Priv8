@@ -1,22 +1,20 @@
-# Priv8 CUA · paquete de traspaso
+# Priv8
 
-Todo lo decidido hasta ahora, listo para empezar a construir con Claude Code.
+Priv8 CUA es un protocolo para que un agente de IA use pantallas sin ver los datos: cada dato sensible se cambia por un token antes de llegar al modelo y solo vuelve a su valor real en local, al ejecutar. Proyecto para Hackfinance (Madrid Engineering Week 2026).
 
-## Cómo usarlo
+Este README es provisional. El definitivo, con requisitos, instalación, configuración, ejecución y prueba, es la issue #51.
 
-1. Descomprime esta carpeta dentro del repositorio del proyecto, o como su raíz.
-2. Abre Claude Code en esa carpeta. `CLAUDE.md` se carga solo y le da el contexto completo: qué es Priv8 CUA, las piezas a construir y en qué orden, la marca y el logo.
-3. Primer encargo sugerido: *"Lee CLAUDE.md y escribe SPEC.md con la especificación del protocolo; después monta la estructura del repo para las piezas A–I."*
-
-## Contenido
+## Documentos
 
 | Archivo | Qué es |
 |---|---|
-| `CLAUDE.md` | Contexto del proyecto para Claude Code |
-| `docs/plan.html` | Plan visual completo |
+| `CLAUDE.md` | Contexto del proyecto y reparto, para el equipo y para Claude Code |
+| `docs/plan.html` | Estrategia: Priv8 CUA y sus dos verticales, demo, métricas, rúbrica y plan |
+| `docs/arquitectura.html` | Arquitectura, contratos, flujos, despliegue y reparto (resumen en `docs/arquitectura.md`) |
 | `docs/marca.html` | Guía de marca |
-| `docs/logo.html` | Logo de los ojos, interactivo, con el código de las animaciones |
-| `brand/tokens.css` | Variables de marca listas para usar |
+| `docs/ojos.html` | 8 en vivo, con sus estados y el código de animación |
+| `brand/` | Logos, icono, tokens de marca y esquema de expresiones de 8 |
 | `bases/bases-hackathon.pdf` | Bases y rúbrica oficiales |
+| `research_notes/`, `reports/` | Investigación de mercado y validaciones |
 
 Los `.html` se abren directamente en el navegador.
