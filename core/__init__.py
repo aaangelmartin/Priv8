@@ -37,7 +37,7 @@ from .vault import VaultStore
 
 STORE = VaultStore()
 SESSIONS = Sessions(STORE)
-AUDIT = Audit()
+AUDIT = Audit.from_env()  # audit/priv8.jsonl firmado; PRIV8_AUDIT=off, solo memoria
 TRUSTED: list[tuple[str, str]] = []
 LEAK = LeakCheck(STORE)
 _policies: PolicySet | None = None
@@ -155,6 +155,7 @@ def observe(session: str) -> dict[str, Any]:
                 "ms": {"core": _ms(t0), "adapter": adapter_ms, "model": None}})
         return {"denied": "fuga", "detail": "La pantalla tenía datos sin tokenizar y no sale"}
     sess.last_raw, sess.last_screen, sess.last_paused = raw, screen, obs["paused"]
+    events.publish({"type": "screen", "session": session, "raw": raw, "observed": obs})  # solo local
     toks = sorted({t for e in obs["elements"] for t in e.get("tokens", [])})
     record({"session": session, "kind": "observe_sent", "app": raw.get("app"), "screen": screen.id,
             "model_saw": f"observe {screen.id}", "tokens": toks, "counts": counts,

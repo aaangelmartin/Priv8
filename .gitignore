@@ -12,3 +12,6 @@ build/
 
 # Copias de trabajo de los agentes
 .claude/worktrees/
+
+# Registro y clave locales de la auditoría
+audit/
