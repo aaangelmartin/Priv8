@@ -179,7 +179,8 @@ function Bubble({ text, show, pos }) {
     return () => clearInterval(t);
   }, [text, show]);
   /* al lado de 8, nunca encima del texto: a su derecha si 8 está a la izquierda, y al revés */
-  const top = Math.max(80, pos.y + pos.size * 0.05);
+  /* a la altura de los ojos de 8, con el pico apuntándole */
+  const top = Math.max(96, pos.y + pos.size * 0.35);
   const style = pos.left
     ? { left: pos.x + pos.size + 14, top }
     : { right: Math.max(12, window.innerWidth - pos.x + 14), top };
