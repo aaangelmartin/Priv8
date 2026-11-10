@@ -1,6 +1,6 @@
 """Modo replay sin claves (#14): las dos escenas de la demo con el núcleo real.
 
-    python -m core.replay            # las dos escenas
+    python -m core.replay            # las dos escenas (make demo)
     python -m core.replay b2b        # factura del proveedor (Alba Core y correo)
     python -m core.replay b2c        # saldo y transferencia en Banca Alcor
 
