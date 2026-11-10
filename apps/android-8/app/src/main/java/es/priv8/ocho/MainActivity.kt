@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.speech.RecognitionSupport
+import android.speech.RecognitionSupportCallback
 import android.speech.SpeechRecognizer
 import android.util.Log
 import android.widget.TextView
@@ -43,9 +45,24 @@ class MainActivity : Activity() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
         if (!SpeechRecognizer.isOnDeviceRecognitionAvailable(this)) return
         val recognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this)
-        recognizer.triggerModelDownload(ConfirmActivity.recognizerIntent())
-        Log.i(TAG, "speech: es-ES on-device model download requested")
-        window.decorView.postDelayed({ recognizer.destroy() }, 5_000)
+        val intent = ConfirmActivity.recognizerIntent()
+        recognizer.checkRecognitionSupport(intent, mainExecutor, object : RecognitionSupportCallback {
+            override fun onSupportResult(support: RecognitionSupport) {
+                val installed = support.installedOnDeviceLanguages.any { it.equals("es-ES", ignoreCase = true) }
+                if (installed) {
+                    Log.i(TAG, "speech: es-ES on-device model installed")
+                } else {
+                    recognizer.triggerModelDownload(intent)
+                    Log.i(TAG, "speech: es-ES on-device model missing, download requested")
+                }
+                window.decorView.postDelayed({ recognizer.destroy() }, 5_000)
+            }
+
+            override fun onError(error: Int) {
+                Log.i(TAG, "speech: cannot check on-device support (error $error)")
+                recognizer.destroy()
+            }
+        })
     }
 
     private companion object {
