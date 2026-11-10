@@ -15,7 +15,7 @@ Mientras un campo rojo tiene el foco (la persona escribe su clave o el OTP), hay
 | Situación | Snapshot | Evento |
 |---|---|---|
 | Foco en campo rojo | un solo elemento `n1`, `password: true`, `text: null`; `focus: "n1"`; `screen` sí | `focus_password` con `detail` `clave` u `otp`; al salir, `focus_password` con `detail: "fin"` |
-| Diálogo del sistema | `system_dialog` (`biometria`, `permiso`), sin elementos | `system_dialog` / `system_dialog_closed` |
+| Diálogo del sistema | `system_dialog` (`biometria`, `permiso`, u `oculta` si 8 no puede leer la ventana: en Android 14 el diálogo de permisos está oculto a los servicios que no son herramientas de accesibilidad), sin elementos, `app: "desconocida"` si es oculta | `system_dialog` / `system_dialog_closed` |
 | Confirmación de 8 | `screen: "confirmacion"`, sin elementos | ninguno (el núcleo ya la tiene pendiente) |
 
 Con eso el núcleo pone `paused: autenticacion`, `dialogo_sistema` o `confirmacion` en la observación, y la app 8 pasa a «mirar a otro lado». Durante la pausa todo `perform` devuelve `no_permitido`. La pausa empieza con el foco, antes de la primera tecla, y termina en cuanto el foco sale o cambia la pantalla.
