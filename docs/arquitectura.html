@@ -388,7 +388,7 @@ details.iss ol{margin:0;padding:0 12px 12px 34px;display:flex;flex-direction:col
   <div class="tbl scroll"><table>
     <thead><tr><th>Contrato</th><th>Dueño</th><th>Lo usan</th><th>Archivo</th></tr></thead>
     <tbody>
-      <tr><td>Herramientas MCP <code>observe</code> · <code>act</code> · <code>oracle</code></td><td>Camino 3 (Ángel), sobre el núcleo del 1</td><td>todos, a través del agente</td><td><code>mcp/tools.json</code></td></tr>
+      <tr><td>Herramientas MCP <code>observe</code> · <code>act</code> · <code>oracle</code></td><td>Camino 3 (Ángel), sobre el núcleo del 1</td><td>todos, a través del agente</td><td><code>agent/tools.json</code></td></tr>
       <tr><td>Gramática de tokens</td><td>Camino 1</td><td>2, 3, 4 (renderizador, consola)</td><td><code>docs/contracts/token.md</code></td></tr>
       <tr><td>Snapshot de pantalla</td><td>Camino 1</td><td>2 (web), 3 (Android)</td><td><code>snapshot.schema.json</code></td></tr>
       <tr><td>Interfaz de adaptador y puente</td><td>Camino 1</td><td>2, 3</td><td><code>core/adapter.py</code>, <code>bridge.schema.json</code></td></tr>
@@ -528,9 +528,9 @@ class Adapter(Protocol):
 <!-- 6 · DESPLIEGUE -->
 <section class="sec" id="despliegue" aria-labelledby="h-dep">
   <header><span class="k">Despliegue de la demo</span><h2 id="h-dep">Qué corre dónde el jueves</h2>
-    <p class="lead">Un portátil, un emulador y un navegador. Datos inventados en <code>data/seed.json</code>: Banca Alcor, Brezo Banco, Nimbo Bróker, Suministros Lumen (proveedor) y Talleres Norte (la empresa que paga).</p></header>
+    <p class="lead">Un portátil, un emulador y un navegador. El núcleo corre como librería dentro del mismo proceso que el servidor MCP, el agente, los eventos de la consola y el puente Android: un solo proceso que arrancar (decisión del 10 nov). La frontera que importa no es el proceso sino la salida a la nube, y esa la cierra el bloqueo final. Datos inventados en <code>data/seed.json</code>: Banca Alcor, Brezo Banco, Nimbo Bróker, Suministros Lumen (proveedor) y Talleres Norte (la empresa que paga).</p></header>
   <div class="dep">
-    <div class="card t"><span class="zone">Zona de confianza · portátil</span><h3>macOS, procesos Python</h3><ul><li>Núcleo Priv8 CUA y bóveda</li><li>Servidor MCP y bucle del agente</li><li>Adaptador web (Playwright, Chromium)</li><li>Puente Android y registro firmado</li></ul></div>
+    <div class="card t"><span class="zone">Zona de confianza · portátil</span><h3>macOS, un proceso Python</h3><ul><li>Núcleo Priv8 CUA y bóveda, como librería</li><li>Servidor MCP y bucle del agente, en el mismo proceso</li><li>Adaptador web (Playwright, Chromium)</li><li>Puente Android y registro firmado</li></ul></div>
     <div class="card t"><span class="zone">Zona de confianza · emulador</span><h3>Android Studio, imagen fija</h3><ul><li>APK de 8: servicio de accesibilidad, app 8 con WebView de los ojos, voz local</li><li>Apps de banca simuladas</li><li>Huella simulada desde los controles del emulador</li></ul></div>
     <div class="card t"><span class="zone">Zona de confianza · navegador</span><h3>Chromium del portátil</h3><ul><li>ERP Alba Core</li><li>Bandeja de correo</li><li>Consola de auditoría, pantalla partida</li></ul></div>
     <div class="card c"><span class="zone">Nube</span><h3>Solo tokens y frases sin datos</h3><ul><li>API de Claude</li><li>ElevenLabs: voz y llamada saliente por Twilio</li><li>Un número fijo para la llamada <span class="pd">por decidir</span></li></ul></div>
@@ -538,9 +538,9 @@ class Adapter(Protocol):
   <div class="tbl scroll"><table>
     <thead><tr><th>Proceso</th><th>Dónde</th><th>Puerto</th><th>Arranque</th></tr></thead>
     <tbody>
-      <tr><td>Núcleo: API y eventos (WebSocket <code>/events</code>)</td><td>portátil</td><td><code>:8700</code></td><td><code>make core</code></td></tr>
-      <tr><td>Servidor MCP (HTTP) y bucle del agente</td><td>portátil</td><td><code>:8701</code></td><td><code>make agent</code></td></tr>
-      <tr><td>Puente Android</td><td>portátil ↔ emulador</td><td><code>:8765</code> · <code>adb reverse tcp:8765 tcp:8765</code></td><td><code>make bridge</code></td></tr>
+      <tr><td>Proceso Priv8: núcleo como librería, servidor MCP y agente</td><td>portátil</td><td>MCP <code>:8701</code></td><td><code>make agent</code></td></tr>
+      <tr><td>· Eventos para la consola (WebSocket <code>/events</code>), mismo proceso</td><td>portátil</td><td><code>:8700</code></td><td>—</td></tr>
+      <tr><td>· Puente Android, mismo proceso</td><td>portátil ↔ emulador</td><td><code>:8765</code> · <code>adb reverse tcp:8765 tcp:8765</code></td><td>—</td></tr>
       <tr><td>ERP Alba Core</td><td>navegador</td><td><code>:5173</code></td><td><code>pnpm --filter erp-sim dev</code></td></tr>
       <tr><td>Bandeja de correo</td><td>navegador</td><td><code>:5174</code></td><td><code>pnpm --filter inbox-sim dev</code></td></tr>
       <tr><td>Consola de auditoría</td><td>navegador</td><td><code>:5175</code></td><td><code>pnpm --filter console dev</code></td></tr>
@@ -559,8 +559,9 @@ class Adapter(Protocol):
 │   ├── tokens.py  vault.py  policies.py  provenance.py
 │   ├── oracle.py  executor.py  confirm.py  leak.py  audit.py
 │   └── adapter.py      <span class="c">interfaz snapshot() / perform()</span>
-├── <span class="o">mcp/</span>               <span class="c">Python · SDK de MCP, API de Claude        · Camino 3</span>
+├── <span class="o">agent/</span>             <span class="c">Python · SDK de MCP, API de Claude        · Camino 3</span>
 │   ├── server.py       <span class="c">observe, act, oracle</span>
+│   ├── core_adapter.py <span class="c">núcleo como librería, mismo proceso</span>
 │   └── agent.py        <span class="c">bucle del agente y modo replay</span>
 ├── adapters/
 │   ├── <span class="o">web/</span>           <span class="c">Python · Playwright                       · Camino 2</span>

@@ -46,7 +46,7 @@ Priv8 CUA es el producto. Sobre el mismo núcleo, dos verticales, y las dos sale
 - **B2B · Priv8 para empresas:** un arnés para automatizar con IA procesos que hoy no se automatizan por miedo a exponer datos (RGPD, SOC 2), con *computer use* sobre ERP y CRM antiguos. Proceso de la demo: llega un correo con la factura de un proveedor → 8 la registra en el ERP simulado (Alba Core) sin ver los datos → contesta el correo → bloquea el cambio de IBAN que viene en el mismo correo (procedencia) → llama al proveedor al número de la ficha, con una pregunta de comprobación → registro firmado.
 - **B2C · 8 en tu móvil:** una APK para el emulador de Android Studio (no va a Google Play) que maneja el móvil por accesibilidad y habla con voz. Recorre las apps de banca simuladas (Banca Alcor, Brezo Banco, Nimbo Bróker), responde "¿cuánto tengo?", prepara transferencias con confirmación por voz y mira a otro lado mientras la persona pone su huella, clave u OTP. No asesora ni firma.
 
-Se lee el DOM (Playwright) y el árbol de accesibilidad, no píxeles. Las herramientas del agente son solo `observe`, `act` y `oracle`.
+Se lee el DOM (Playwright) y el árbol de accesibilidad, no píxeles. Las herramientas del agente son solo `observe`, `act` y `oracle`. El núcleo es una librería Python que corre en el mismo proceso que el servidor MCP (`agent/`), los eventos de la consola y el puente Android.
 
 ### Reparto (issues #4–#56, milestones M1 martes 10, M2 miércoles 11, M3 jueves 12)
 
