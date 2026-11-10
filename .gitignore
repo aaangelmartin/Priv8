@@ -1,2 +1,8 @@
 .DS_Store
 priv8-handoff.zip
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
