@@ -138,5 +138,8 @@ def test_llamada_al_telefono_de_la_ficha_y_no_al_del_correo(core):
     obs_f = leer(core, web, erp_ficha())
     tel_ficha = next(e["text"] for e in obs_f["elements"] if e["id"] == "f1")
     assert core.act("s1", "call", text=tel_correo)["denied"] == "destino"
-    assert core.act("s1", "call", text=tel_ficha) == {"ok": True}
-    assert web.performed[-1]["text"] == TEL_FICHA
+    held = core.act("s1", "call", text=tel_ficha)  # llamar también se confirma (#12)
+    cid = held["held"]["confirm"]
+    assert core.approve({"type": "approval_result", "id": cid, "ok": True, "via": "voz",
+                         "by": "persona"}) == {"ok": True}
+    assert web.performed[-1] == {"op": "call", "text": TEL_FICHA}
