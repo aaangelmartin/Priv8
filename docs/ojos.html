@@ -63,6 +63,27 @@ p{margin:0}
 .tok{font-family:var(--f-mono);font-weight:600;font-size:.85em;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:6px;white-space:nowrap}
 .stt.no .tok{background:var(--paper)}
 
+.taller{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px}
+.tl-ctl{display:flex;flex-direction:column;gap:6px}
+.tl-row{display:grid;grid-template-columns:150px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:.85rem}
+.tl-row output{font-family:var(--f-mono);font-size:.75rem;color:var(--muted);text-align:right}
+.tl-row input[type=range]{width:100%;accent-color:var(--accent)}
+.tl-row input:not([type]),.tl-row select{font:inherit;font-size:.85rem;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--fg);grid-column:2/4}
+.tl-row input[type=checkbox]{justify-self:start;accent-color:var(--accent)}
+.tl-movs{display:flex;flex-wrap:wrap;gap:6px 12px;font-family:var(--f-mono);font-size:.75rem;padding:6px 0}
+.tl-movs label{display:flex;gap:4px;align-items:center}
+.tl-out{display:flex;flex-direction:column;gap:10px}
+.tl-prev{background:#2D45D6;border-radius:14px;display:grid;place-items:center;aspect-ratio:1.6}
+.tl-prev > div{width:46%;aspect-ratio:1}
+.tl-prev svg{width:100%;height:100%;overflow:visible;display:block}
+.tl-btns{display:flex;gap:8px}
+.tl-btns button{font-family:var(--f-mono);font-size:.76rem;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--fg);border-radius:999px;padding:7px 12px;cursor:pointer;min-height:34px}
+.tl-btns button:first-child{background:var(--accent);border-color:var(--accent);color:#fff}
+.tl-json{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
+.tl-json textarea{font-family:var(--f-mono);font-size:.75rem;line-height:1.45;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--bg);color:var(--fg);resize:vertical;width:100%}
+.tl-warn{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);min-height:1.2em}
+code{font-family:var(--f-mono);font-size:.85em}
+@media (max-width:760px){.taller{grid-template-columns:minmax(0,1fr)}.tl-row{grid-template-columns:120px minmax(0,1fr) 40px}}
 @media (max-width:1000px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:760px){.hero,.states{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:460px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -88,6 +109,11 @@ p{margin:0}
   <section class="panel">
     <div><span class="eyebrow">Emociones y flujo</span><h2>Todo lo que hace 8</h2><p class="lead">Arriba, sus emociones. Debajo, las caras que necesita el producto en cada paso del trámite. Todo sale de los mismos ojos, sin añadidos.</p></div>
     <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="panel">
+    <div><span class="eyebrow">Expresiones a medida</span><h2>Si 8 necesita una cara que no está</h2><p class="lead">Una expresión es un JSON con una postura (mirada, párpados, ceño, sonrisa, pupilas, inclinación) y hasta cuatro movimientos. El motor la valida y recorta cada valor a su rango, así que el agente puede inventar caras sin romper a 8 ni salirse de la marca: solo ojos, sin adornos ni texto. Esquema: <code>brand/8/expresion.schema.json</code>. Desde código: <code>P8.definir(json)</code>, <code>P8.poner(id)</code>, <code>P8.mezclar(a, b, t)</code>.</p></div>
+    <div class="taller" id="taller"></div>
   </section>
 
 
@@ -219,7 +245,7 @@ p{margin:0}
     {k:'ve',        g:'Datos',     n:'Ve',          d:'Ojos abiertos: 8 puede ver esto.', use:'dato verde, interfaz'},
     {k:'nove',      g:'Datos',     n:'No ve',       d:'Los ojos se cierran en dos asteriscos.', use:'dato ámbar o rojo'}
   ];
-  function emo(k){ for(var i=0;i<EMO.length;i++) if(EMO[i].k===k) return EMO[i]; return EMO[0]; }
+  function emo(k){ for(var i=0;i<EMO.length;i++) if(EMO[i].k===k) return EMO[i]; if(typeof CUSTOM!=='undefined' && CUSTOM[k]) return {k:k,n:CUSTOM[k].nombre,use:CUSTOM[k].descripcion||'expresión a medida',once:CUSTOM[k].duracion?1:0}; return EMO[0]; }
 
   /* No ve: el hueco se cierra desde el borde y queda recortado en forma de asterisco
      macizo de seis brazos, con la proporción del de Sora pero sin sus cortes. */
@@ -255,6 +281,74 @@ p{margin:0}
     var c=eyeClip(e,1.8), lry=e.ry*1.3, lrx=e.rx*1.7, open=e.y+e.ry+lry+1, up=e.y+e.ry*0.2+lry;
     return c.def+'<g clip-path="url(#'+c.id+')"><ellipse cx="'+f(e.x)+'" cy="'+f(open+(up-open)*(amt/0.55))+'" rx="'+f(lrx)+'" ry="'+f(lry)+'" fill="'+fg+'"/></g>';
   }
+
+
+  /* ======================================================================
+     EXPRESIONES A MEDIDA
+     Una expresión es un JSON con una postura y una lista de movimientos. El motor
+     la valida y recorta cada valor a su rango, así que una expresión inventada por
+     el agente nunca rompe a 8 ni se sale de la marca: solo ojos, sin adornos.
+     Esquema completo y documentado: brand/8/expresion.schema.json
+     ====================================================================== */
+  var RANGOS={
+    'mirada.x':[-1,1,0], 'mirada.y':[-1,1,0],
+    'parpados.izq':[0,0.9,0], 'parpados.der':[0,0.9,0],
+    'ceno.izq':[-20,20,0], 'ceno.der':[-20,20,0],
+    'sonrisa.izq':[0,0.6,0], 'sonrisa.der':[0,0.6,0],
+    'pupilas.izq':[0.5,1.3,1], 'pupilas.der':[0.5,1.3,1],
+    'inclinacion':[-15,15,0], 'acercamiento':[0.9,1.08,1],
+    'desplazamiento.x':[-3,3,0], 'desplazamiento.y':[-3,3,0],
+    'duracion':[0.3,10,0]
+  };
+  var MOVS={ /* amplitud 0–1 se traduce a unidades de cada movimiento; ritmo en Hz */
+    balanceo:'sube y baja suave', vaiven:'inclina la cabeza a un lado y a otro', saltitos:'tres saltitos y pausa',
+    sacudir:'niega con la cabeza', asentir:'cabecea', latido:'las pupilas laten', temblor:'tiembla rápido',
+    mirar_alrededor:'la mirada salta a puntos al azar', barrido:'la mirada barre de lado a lado', respirar:'se hincha y deshincha despacio'
+  };
+  function num(v,r,w,k){ var x=(typeof v==='number'&&isFinite(v))?v:r[2]; if(x<r[0]||x>r[1]){ w.push(k+' fuera de rango ('+r[0]+' a '+r[1]+'), recortado'); x=clamp(x,r[0],r[1]); } return x; }
+  function pair(o,key,w){ /* acepta número (los dos ojos) u objeto {izq,der} */
+    var v=o&&o[key], a=RANGOS[key+'.izq'];
+    if(typeof v==='number') v={izq:v,der:v};
+    v=v||{}; return [num(v.izq,a,w,key+'.izq'), num(v.der,RANGOS[key+'.der'],w,key+'.der')];
+  }
+  function normalizar(spec){
+    var w=[], o=(spec&&typeof spec==='object')?spec:{};
+    if(o.extiende && CUSTOM[o.extiende]){ var base=JSON.parse(JSON.stringify(CUSTOM[o.extiende].fuente)); for(var kk in o) if(kk!=='extiende') base[kk]=o[kk]; o=base; }
+    var m=o.mirada||{};
+    var n={
+      id:String(o.id||'a_medida').replace(/[^a-z0-9_\-]/gi,'_').slice(0,40),
+      nombre:String(o.nombre||o.id||'A medida').slice(0,40),
+      descripcion:String(o.descripcion||'').slice(0,140),
+      mirada:{x:num(m.x,RANGOS['mirada.x'],w,'mirada.x'), y:num(m.y,RANGOS['mirada.y'],w,'mirada.y'), sigue:!!m.sigue},
+      parpados:pair(o,'parpados',w), ceno:pair(o,'ceno',w), sonrisa:pair(o,'sonrisa',w), pupilas:pair(o,'pupilas',w),
+      inclinacion:num(o.inclinacion,RANGOS.inclinacion,w,'inclinacion'),
+      acercamiento:num(o.acercamiento,RANGOS.acercamiento,w,'acercamiento'),
+      desplazamiento:{x:num((o.desplazamiento||{}).x,RANGOS['desplazamiento.x'],w,'desplazamiento.x'), y:num((o.desplazamiento||{}).y,RANGOS['desplazamiento.y'],w,'desplazamiento.y')},
+      parpadeo:({normal:1,lento:1,nunca:1}[o.parpadeo]?o.parpadeo:(o.parpadeo!==undefined?(w.push('parpadeo desconocido, uso normal'),'normal'):'normal')),
+      movimientos:[], duracion:0, despues:'mirar'
+    };
+    (Array.isArray(o.movimientos)?o.movimientos:[]).slice(0,4).forEach(function(mv){
+      if(!mv||!MOVS[mv.tipo]){ w.push('movimiento desconocido: '+(mv&&mv.tipo)); return; }
+      n.movimientos.push({tipo:mv.tipo, amplitud:num(mv.amplitud===undefined?0.5:mv.amplitud,[0,1,0.5],w,mv.tipo+'.amplitud'), ritmo:num(mv.ritmo===undefined?1:mv.ritmo,[0.2,3,1],w,mv.tipo+'.ritmo')});
+    });
+    if(o.movimientos && o.movimientos.length>4) w.push('máximo 4 movimientos, el resto se ignora');
+    if(o.duracion){ n.duracion=num(o.duracion,RANGOS.duracion,w,'duracion'); n.despues=(o.despues&&EMO.some(function(e){return e.k===o.despues;}))?o.despues:'mirar'; }
+    /* cualquier otra clave (colores, dibujos, texto en los ojos…) no existe: solo ojos */
+    for(var k in o) if(['id','nombre','descripcion','mirada','parpados','ceno','sonrisa','pupilas','inclinacion','acercamiento','desplazamiento','parpadeo','movimientos','duracion','despues','extiende'].indexOf(k)<0) w.push('clave ignorada: '+k);
+    n.fuente=o; return {expresion:n, avisos:w};
+  }
+  var CUSTOM={};
+  function definir(spec){ var r=normalizar(spec); CUSTOM[r.expresion.id]=r.expresion; return r; }
+  /* Ejemplos: emociones que no están en el juego cerrado, hechas solo con el formato */
+  var EJEMPLOS=[
+    {id:'satisfecho',nombre:'Satisfecho',descripcion:'Ha cuadrado las cuentas: media sonrisa tranquila y un balanceo lento.',sonrisa:0.3,parpados:0.18,mirada:{x:0.2,y:-0.1},inclinacion:4,movimientos:[{tipo:'balanceo',amplitud:0.4,ritmo:0.5}]},
+    {id:'atento_detalle',nombre:'Atento al detalle',descripcion:'Revisa una cifra con cuidado: ojos entornados que barren despacio.',parpados:0.38,ceno:3,acercamiento:1.04,movimientos:[{tipo:'barrido',amplitud:0.7,ritmo:0.35}],parpadeo:'lento'},
+    {id:'impaciente_amable',nombre:'Impaciente, amable',descripcion:'Lleva rato esperando una respuesta del banco, sin perder la calma.',mirada:{x:0,y:-0.3},inclinacion:-3,movimientos:[{tipo:'vaiven',amplitud:0.3,ritmo:0.9},{tipo:'saltitos',amplitud:0.25,ritmo:0.5}]},
+    {id:'alivio',nombre:'Alivio',descripcion:'Pago verificado: suelta el aire y sonríe.',sonrisa:0.35,parpados:0.3,mirada:{x:0,y:0.1},movimientos:[{tipo:'respirar',amplitud:0.8,ritmo:0.4}],duracion:2.5,despues:'mirar'},
+    {id:'sospecha',nombre:'Sospecha',descripcion:'Algo en la página no le cuadra.',parpados:{izq:0.45,der:0.3},ceno:6,mirada:{x:-0.6,y:0},inclinacion:-6,parpadeo:'lento'}
+  ];
+  EJEMPLOS.forEach(definir);
+  function ampMov(mv,t){ return Math.sin(t*mv.ritmo*Math.PI*2); }
 
   /* ---------------------------------------------------------------- instancia */
   var ALL=[], POINTER=null, LASTP=0, STILL=false, BLINKS=true;
@@ -409,8 +503,34 @@ p{margin:0}
         for(var z=0;z<3;z++){ var pz=((t/2.7)+z/3)%1, zs=4+pz*5, zx=32+E.halfW-4+pz*7, zy=32-E.halfH+1-pz*12, op=Math.min(1,pz*4)*(1-pz);
           fx+='<text x="'+f(zx)+'" y="'+f(zy)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(zs)+'" fill="'+col.fg+'" opacity="'+f(op)+'">z</text>'; } break; }
       case 'nove': { blinks=false; s.tx=0; s.ty=0; break; }
+      default: {
+        var X=CUSTOM[m]; if(!X) break;
+        /* postura */
+        lid=X.parpados.slice(); ang=X.ceno.slice(); low=X.sonrisa.slice(); size=X.pupilas.slice();
+        tilt=X.inclinacion; sc=X.acercamiento; ox=X.desplazamiento.x; oy=X.desplazamiento.y;
+        if(!(X.mirada.sigue && POINTER && now-LASTP<3500)){ s.tx=X.mirada.x; s.ty=X.mirada.y; }
+        else { var r3=this.el.getBoundingClientRect(), dx3=POINTER.x-(r3.left+r3.width/2), dy3=POINTER.y-(r3.top+r3.height/2), dd3=Math.sqrt(dx3*dx3+dy3*dy3)||1, k4=Math.min(1,dd3/(Math.max(r3.width,120)*0.75)); s.tx=dx3/dd3*k4; s.ty=dy3/dd3*k4; }
+        /* movimientos */
+        var self2=this;
+        X.movimientos.forEach(function(mv){ var a=mv.amplitud, w=ampMov(mv,t);
+          if(mv.tipo==='balanceo'){ bob=0; oy+=w*2*a; }
+          else if(mv.tipo==='vaiven') tilt+=w*8*a;
+          else if(mv.tipo==='saltitos'){ var per=1/mv.ritmo, ph=t%per, hp=ph/(per*0.5); if(hp<1){ var b3=(hp*3)%1; oy-=Math.sin(b3*Math.PI)*3*a; } }
+          else if(mv.tipo==='sacudir') ox+=w*4*a;
+          else if(mv.tipo==='asentir') oy+=Math.max(0,w)*3*a;
+          else if(mv.tipo==='latido'){ var pl=1+0.2*a*Math.abs(w); size=[size[0]*pl,size[1]*pl]; }
+          else if(mv.tipo==='temblor') ox+=Math.sin(t*45)*0.6*a;
+          else if(mv.tipo==='mirar_alrededor'){ if(now>self2.nextLook){ s.tx=(Math.random()*2-1)*a; s.ty=(Math.random()*2-1)*a*0.8; self2.nextLook=now+1000/mv.ritmo; } }
+          else if(mv.tipo==='barrido') s.tx=w*a;
+          else if(mv.tipo==='respirar') sc*=1+0.025*a*w;
+        });
+        if(X.parpadeo==='nunca') blinks=false;
+        else if(X.parpadeo==='lento'){ if(now>this.nextBlink){ this.blink(now,380); this.nextBlink=now+3000+Math.random()*1500; } blinks=false; }
+        if(X.duracion && e1>X.duracion && !this.cfg.loop && this===BIG){ setBig(X.despues); }
+        break; }
+
     }
-    if(this.cfg.loop && emo(m).once && e1>2.8) this.setMode(m);
+    if(this.cfg.loop && emo(m).once && e1>Math.max(2.8,(CUSTOM[m]&&CUSTOM[m].duracion)||0)+0.3) this.setMode(m);
     /* muelles */
     sp(s,'px','pvx',s.tx,k,d); sp(s,'py','pvy',s.ty,k,d);
     if(m==='cargando'){ var bl0=Math.min(1,e1/0.25); s.px=s.px+(this.spin[0]-s.px)*bl0; s.py=s.py+(this.spin[1]-s.py)*bl0; s.pvx=0; s.pvy=0; }
@@ -451,6 +571,72 @@ p{margin:0}
     this.dyn.innerHTML=dyn;
     this.fx.innerHTML=fx?'<g transform="translate('+f(s.hx+s.ox)+' '+f(s.hy+s.oy+bob)+')">'+fx+'</g>':'';
   };
+
+  /* API para el agente y para la app:
+       P8.definir(json)   valida y registra una expresión; devuelve {expresion, avisos}
+       P8.poner(id|json)  pone una expresión (definida o del juego cerrado) en el 8 grande
+       P8.mezclar(a,b,t)  mezcla dos expresiones a medida (t de 0 a 1) en una nueva
+       P8.estados         lista de estados del juego cerrado
+       P8.rangos          rangos válidos de cada valor */
+  window.P8={
+    definir:definir,
+    poner:function(x){ var id=x; if(x&&typeof x==='object'){ id=definir(x).expresion.id; } if(!CUSTOM[id] && !EMO.some(function(e){return e.k===id;})) return false; setBig(id); return true; },
+    mezclar:function(a,b,t){ var A=CUSTOM[a], B=CUSTOM[b]; if(!A||!B) return null; t=clamp(t,0,1);
+      function L(u,v){ return u+(v-u)*t; } function LP(u,v){ return {izq:L(u[0],v[0]),der:L(u[1],v[1])}; }
+      return definir({id:a+'_'+b, nombre:A.nombre+' y '+B.nombre, descripcion:'Mezcla', mirada:{x:L(A.mirada.x,B.mirada.x),y:L(A.mirada.y,B.mirada.y)},
+        parpados:LP(A.parpados,B.parpados), ceno:LP(A.ceno,B.ceno), sonrisa:LP(A.sonrisa,B.sonrisa), pupilas:LP(A.pupilas,B.pupilas),
+        inclinacion:L(A.inclinacion,B.inclinacion), acercamiento:L(A.acercamiento,B.acercamiento), desplazamiento:{x:L(A.desplazamiento.x,B.desplazamiento.x),y:L(A.desplazamiento.y,B.desplazamiento.y)},
+        movimientos:(t<0.5?A:B).movimientos, parpadeo:(t<0.5?A:B).parpadeo}); },
+    estados:EMO.map(function(e){ return {id:e.k, nombre:e.n, cuando:e.use}; }),
+    rangos:RANGOS, movimientos:MOVS
+  };
+
+  /* ---------------------------------------------------------------- taller */
+  function buildTaller(){
+    var box=document.getElementById('taller'); if(!box) return;
+    var F=[['mirada.x','Mirada horizontal'],['mirada.y','Mirada vertical'],['parpados.izq','Párpado izquierdo'],['parpados.der','Párpado derecho'],['ceno.izq','Ceño izquierdo'],['ceno.der','Ceño derecho'],
+           ['sonrisa.izq','Sonrisa izquierda'],['sonrisa.der','Sonrisa derecha'],['pupilas.izq','Pupila izquierda'],['pupilas.der','Pupila derecha'],['inclinacion','Inclinación'],['acercamiento','Acercamiento'],['desplazamiento.x','Desplazamiento horizontal'],['desplazamiento.y','Desplazamiento vertical']];
+    var h='<div class="tl-ctl">';
+    h+='<label class="tl-row"><span>Ejemplo</span><select id="tl-ej"><option value="">Nueva</option>'+EJEMPLOS.map(function(e){return '<option value="'+e.id+'">'+e.nombre+'</option>';}).join('')+'</select></label>';
+    h+='<label class="tl-row"><span>Nombre</span><input id="tl-nombre" value="Mi expresión" maxlength="40"></label>';
+    F.forEach(function(fd){ var r=RANGOS[fd[0]]; h+='<label class="tl-row"><span>'+fd[1]+'</span><input type="range" data-k="'+fd[0]+'" min="'+r[0]+'" max="'+r[1]+'" step="'+((r[1]-r[0])/100)+'" value="'+r[2]+'"><output>'+r[2]+'</output></label>'; });
+    h+='<label class="tl-row"><span>Sigue el puntero</span><input type="checkbox" id="tl-sigue"></label>';
+    h+='<label class="tl-row"><span>Parpadeo</span><select id="tl-parp"><option>normal</option><option>lento</option><option>nunca</option></select></label>';
+    h+='<div class="tl-movs">'+Object.keys(MOVS).map(function(k){ return '<label title="'+MOVS[k]+'"><input type="checkbox" data-mv="'+k+'"> '+k.replace('_',' ')+'</label>'; }).join('')+'</div>';
+    h+='<label class="tl-row"><span>Amplitud del movimiento</span><input type="range" id="tl-amp" min="0" max="1" step="0.01" value="0.5"><output>0.5</output></label>';
+    h+='<label class="tl-row"><span>Ritmo (Hz)</span><input type="range" id="tl-rit" min="0.2" max="3" step="0.05" value="1"><output>1</output></label>';
+    h+='</div><div class="tl-out"><div class="tl-prev"><div id="tl-eye"></div></div><div class="tl-btns"><button type="button" id="tl-big">Ver en grande</button><button type="button" id="tl-copy">Copiar JSON</button></div>'+
+       '<label class="tl-json"><span>JSON (editable)</span><textarea id="tl-json" spellcheck="false" rows="14"></textarea></label><p class="tl-warn" id="tl-warn" aria-live="polite"></p></div>';
+    box.innerHTML=h;
+    var prev=new Eight(document.getElementById('tl-eye'),{mode:'mirar'});
+    function q(sel){ return box.querySelector(sel); }
+    function fromUI(){
+      var o={id:(q('#tl-nombre').value||'a_medida').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'_'), nombre:q('#tl-nombre').value, mirada:{x:0,y:0,sigue:q('#tl-sigue').checked}, parpados:{}, ceno:{}, sonrisa:{}, pupilas:{}, desplazamiento:{}, parpadeo:q('#tl-parp').value, movimientos:[]};
+      box.querySelectorAll('input[data-k]').forEach(function(i){ var k=i.getAttribute('data-k').split('.'), v=+(+i.value).toFixed(2); i.nextElementSibling.textContent=v; if(k.length===1) o[k[0]]=v; else o[k[0]][k[1]]=v; });
+      var amp=+q('#tl-amp').value, rit=+q('#tl-rit').value; q('#tl-amp').nextElementSibling.textContent=amp; q('#tl-rit').nextElementSibling.textContent=rit;
+      box.querySelectorAll('input[data-mv]:checked').forEach(function(c){ o.movimientos.push({tipo:c.getAttribute('data-mv'),amplitud:amp,ritmo:rit}); });
+      return o;
+    }
+    function toUI(x){ /* x normalizada */
+      q('#tl-nombre').value=x.nombre; q('#tl-sigue').checked=x.mirada.sigue; q('#tl-parp').value=x.parpadeo;
+      var vals={'mirada.x':x.mirada.x,'mirada.y':x.mirada.y,'parpados.izq':x.parpados[0],'parpados.der':x.parpados[1],'ceno.izq':x.ceno[0],'ceno.der':x.ceno[1],'sonrisa.izq':x.sonrisa[0],'sonrisa.der':x.sonrisa[1],'pupilas.izq':x.pupilas[0],'pupilas.der':x.pupilas[1],inclinacion:x.inclinacion,acercamiento:x.acercamiento,'desplazamiento.x':x.desplazamiento.x,'desplazamiento.y':x.desplazamiento.y};
+      box.querySelectorAll('input[data-k]').forEach(function(i){ i.value=vals[i.getAttribute('data-k')]; i.nextElementSibling.textContent=(+i.value).toFixed(2); });
+      box.querySelectorAll('input[data-mv]').forEach(function(c){ c.checked=x.movimientos.some(function(m){return m.tipo===c.getAttribute('data-mv');}); });
+      if(x.movimientos[0]){ q('#tl-amp').value=x.movimientos[0].amplitud; q('#tl-rit').value=x.movimientos[0].ritmo; }
+      q('#tl-amp').nextElementSibling.textContent=(+q('#tl-amp').value).toFixed(2); q('#tl-rit').nextElementSibling.textContent=(+q('#tl-rit').value).toFixed(2);
+    }
+    function apply(o,fromJson){
+      var r=definir(o); prev.setMode(r.expresion.id);
+      if(!fromJson){ var clean=JSON.parse(JSON.stringify(o)); q('#tl-json').value=JSON.stringify(clean,null,2); }
+      q('#tl-warn').textContent=r.avisos.length?('Avisos: '+r.avisos.join(' · ')):'Válida.';
+      return r;
+    }
+    box.addEventListener('input',function(ev){ if(ev.target.id==='tl-json'){ try{ var o=JSON.parse(ev.target.value); var r=apply(o,true); toUI(r.expresion); }catch(e){ q('#tl-warn').textContent='JSON no válido: '+e.message; } return; } if(ev.target.id==='tl-ej') return; apply(fromUI()); });
+    q('#tl-ej').addEventListener('change',function(){ var id=this.value; if(!id){ apply(fromUI()); return; } var ex=EJEMPLOS.filter(function(e){return e.id===id;})[0]; var r=apply(ex); toUI(r.expresion); q('#tl-json').value=JSON.stringify(ex,null,2); });
+    q('#tl-big').addEventListener('click',function(){ var r=apply(fromUI()); setBig(r.expresion.id); document.getElementById('big').scrollIntoView({behavior:'smooth',block:'center'}); });
+    q('#tl-copy').addEventListener('click',function(){ var t=q('#tl-json').value; try{ navigator.clipboard.writeText(t); q('#tl-warn').textContent='JSON copiado.'; }catch(e){ q('#tl-json').select(); } });
+    q('#tl-ej').value='satisfecho'; q('#tl-ej').dispatchEvent(new Event('change'));
+  }
 
   function loop(now){ for(var i=0;i<ALL.length;i++){ try{ ALL[i].tick(now); }catch(e){ console.error(e); } } requestAnimationFrame(loop); }
 
@@ -506,7 +692,7 @@ p{margin:0}
     buildChips();
     BIG=new Eight(document.getElementById('big'),{mode:'saludar'});
     setBig('saludar'); setTimeout(function(){ if(BIG.mode==='saludar' && !story) setBig('mirar'); },2400);
-    buildGrid();
+    buildGrid(); buildTaller();
     var bt1=document.getElementById('blinkToggle'), bt2=document.getElementById('blinkOnce');
     bt1.addEventListener('click',function(){ BLINKS=!BLINKS; bt1.setAttribute('aria-pressed',BLINKS?'true':'false'); bt1.textContent=BLINKS?'Parpadeo: activado':'Parpadeo: desactivado'; });
     bt2.addEventListener('click',function(){ var n=performance.now(); ALL.forEach(function(a){ a.blink(n,140); }); });
