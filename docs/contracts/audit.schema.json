@@ -4,28 +4,81 @@
   "title": "Evento de auditoría",
   "description": "Una línea del registro JSONL encadenado. hash = sha256(prev + línea canónica sin hash ni sig), donde la línea canónica es el JSON con claves ordenadas, sin espacios y en UTF-8. La primera línea de una sesión usa prev = sha256: seguido de 64 ceros. sig es la firma ed25519 de hash con la clave local del núcleo. Lo comprueba 'priv8 audit verify'. No lleva valores ámbar ni rojos, salvo el número marcado en kind: call (único valor que sale, a ElevenLabs con retención cero).",
   "type": "object",
-  "required": ["seq", "ts", "session", "kind", "model_saw", "tokens", "approved_by", "ms", "prev", "hash", "sig"],
+  "required": [
+    "seq",
+    "ts",
+    "session",
+    "kind",
+    "model_saw",
+    "tokens",
+    "approved_by",
+    "ms",
+    "prev",
+    "hash",
+    "sig"
+  ],
   "additionalProperties": false,
   "properties": {
-    "seq": { "type": "integer", "minimum": 0 },
-    "ts": { "type": "string", "format": "date-time" },
-    "session": { "$ref": "common.schema.json#/$defs/session" },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "session": {
+      "$ref": "common.schema.json#/$defs/session"
+    },
     "kind": {
-      "enum": ["observe_sent", "act", "held", "approval", "oracle", "blocked", "voice_out", "call", "paused", "task"]
+      "enum": [
+        "observe_sent",
+        "act",
+        "held",
+        "approval",
+        "oracle",
+        "blocked",
+        "voice_out",
+        "call",
+        "paused",
+        "task"
+      ]
     },
     "reason": {
       "description": "Obligatorio si kind es blocked.",
-      "enum": ["fuga", "destino", "rojo", "presupuesto", "sin_regla", "token_desconocido", "caducado", "cancelado"]
+      "enum": [
+        "fuga",
+        "destino",
+        "rojo",
+        "presupuesto",
+        "sin_regla",
+        "token_desconocido",
+        "caducado",
+        "cancelado",
+        "adaptador"
+      ]
     },
-    "app": { "type": "string" },
-    "screen": { "type": ["string", "null"] },
+    "app": {
+      "type": "string"
+    },
+    "screen": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "model_saw": {
       "description": "Resumen en una línea de lo que vio o pidió el modelo, solo con tokens.",
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "tokens": {
       "type": "array",
-      "items": { "$ref": "common.schema.json#/$defs/token" }
+      "items": {
+        "$ref": "common.schema.json#/$defs/token"
+      }
     },
     "confirm": {
       "description": "Id de la confirmación, en held y approval.",
@@ -33,33 +86,74 @@
     },
     "approved_by": {
       "description": "persona si la aprobó, null en el resto.",
-      "enum": ["persona", null]
+      "enum": [
+        "persona",
+        null
+      ]
     },
     "counts": {
       "description": "Solo observe_sent: elementos de cada clase. Lo usan la consola y las métricas.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "verde": { "type": "integer", "minimum": 0 },
-        "ambar": { "type": "integer", "minimum": 0 },
-        "rojo": { "type": "integer", "minimum": 0 }
+        "verde": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ambar": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rojo": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
-    "detail": { "type": "string" },
+    "detail": {
+      "type": "string"
+    },
     "ms": {
       "type": "object",
-      "required": ["core", "adapter", "model"],
+      "required": [
+        "core",
+        "adapter",
+        "model"
+      ],
       "additionalProperties": false,
       "properties": {
-        "core": { "$ref": "common.schema.json#/$defs/ms" },
-        "adapter": { "$ref": "common.schema.json#/$defs/ms" },
-        "model": { "$ref": "common.schema.json#/$defs/ms" }
+        "core": {
+          "$ref": "common.schema.json#/$defs/ms"
+        },
+        "adapter": {
+          "$ref": "common.schema.json#/$defs/ms"
+        },
+        "model": {
+          "$ref": "common.schema.json#/$defs/ms"
+        }
       }
     },
-    "prev": { "$ref": "common.schema.json#/$defs/hash" },
-    "hash": { "$ref": "common.schema.json#/$defs/hash" },
-    "sig": { "type": "string", "pattern": "^ed25519:[A-Za-z0-9+/=]+$" }
+    "prev": {
+      "$ref": "common.schema.json#/$defs/hash"
+    },
+    "hash": {
+      "$ref": "common.schema.json#/$defs/hash"
+    },
+    "sig": {
+      "type": "string",
+      "pattern": "^ed25519:[A-Za-z0-9+/=]+$"
+    }
   },
-  "if": { "properties": { "kind": { "const": "blocked" } } },
-  "then": { "required": ["reason"] }
+  "if": {
+    "properties": {
+      "kind": {
+        "const": "blocked"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "reason"
+    ]
+  }
 }
