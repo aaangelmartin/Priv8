@@ -96,7 +96,7 @@ def run() -> dict[str, Any]:
             "data_to_model": len(prot["exposed"]), "values": prot["exposed"],
             "tasks_completed": int(prot["done"]), "steps": prot["steps"],
             "added_ms_per_step": prot["added_ms_per_step"],
-            "injections_blocked": sum(prot["blocked"].values()), "blocked_by_reason": prot["blocked"],
+            "injections_blocked": sum(n for r, n in prot["blocked"].items() if r in ("destino", "fuga")), "blocked_by_reason": prot["blocked"],
         },
         "without_protocol": {
             "data_to_model": len(raw_exposed), "values": raw_exposed,

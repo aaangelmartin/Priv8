@@ -30,12 +30,18 @@ El agente solo tiene tres herramientas: `observe`, `act` y `oracle` (calcula sin
 | Voz mixta: ElevenLabs y voz local | `voice/` | Funciona, con tests |
 | Servicio de accesibilidad, puente y app 8 | `apps/android-8/`, `adapters/android/` | Ver su README |
 | Banca Alcor simulada | `apps/banks-sim/` | Ver su README |
-| ERP, bandeja de correo, consola de auditoría y adaptador web | Todavía no están en el repositorio | En curso |
+| ERP Alba Core, bandeja de correo y factura en PDF | `apps/erp-sim/`, `apps/inbox-sim/` | Funciona |
+| Adaptador web (Playwright) | `adapters/web/` | Funciona, con tests |
+| Consola de auditoría | `apps/console/` | Funciona |
+| Llamada de verificación | `voice/call.py` | Simulada; la llamada real con ElevenLabs y Twilio está sin probar |
+| Métricas B2B con y sin protocolo | `metrics/` | Funciona (el caso sin protocolo es un modelo, no una ejecución) |
+| Datos inventados | `data/seed.json` | Validados con `data/check_seed.py` |
 
 ## Requisitos
 
 - **[uv](https://docs.astral.sh/uv/)**. Instala Python 3.12 y las dependencias por su cuenta. No hace falta tener Python instalado.
 - **make** (opcional). En Windows sin make, usa los comandos `uv run …` que acompañan a cada `make`.
+- **Para la parte web (B2B en vivo):** Node 20 o superior y [pnpm](https://pnpm.io). Una vez: `make web-install`.
 - **Para la parte Android:** Android Studio con un emulador de Android 14. Ver `apps/android-8/README.md`.
 - **Claves** (solo para el modo en vivo): API de Claude y, para la voz en la nube, ElevenLabs. **El modo replay no necesita ninguna.**
 
@@ -101,6 +107,18 @@ uv run --env-file .env python -m agent.agent --serve --task "registrar factura"
 
 Lee la configuración del `.env` (hace falta `ANTHROPIC_API_KEY`; el núcleo real es el de por defecto). `make agent` lanza lo mismo, pero no lee el `.env`: con make hay que exportar antes las variables en la terminal. Con `--record FICHERO.json` se graba un replay nuevo. Detalles en `agent/README.md`.
 
+### B2B en vivo: ERP, correo y consola
+
+```bash
+make web-install          # una vez: dependencias de las tres apps y Chromium
+make web                  # Alba Core :5173, correo :5174, consola :5175
+make agent-web            # en otra terminal; necesita ANTHROPIC_API_KEY
+```
+
+Abre la consola en http://127.0.0.1:5175. Entra en Alba Core con `admin.alba` / `Alba-2026!` en la ventana de Chromium que abre el agente (la clave la escribe la persona, nunca 8). 8 lee el correo, registra la factura y la deja retenida: se aprueba desde la consola. La llamada a la ficha del proveedor va en modo simulado salvo que estén las variables de `voice/.env.example`.
+
+Métricas con y sin protocolo, sin claves: `make metrics`.
+
 ### Comprobar un registro de auditoría
 
 ```bash
@@ -128,8 +146,9 @@ make test
 Sin make:
 
 ```bash
-uv run pytest agent/tests core/tests voice/tests
+uv run pytest agent/tests core/tests voice/tests adapters/web/tests metrics
 uv run python docs/contracts/validate.py
+uv run python data/check_seed.py
 ```
 
 Debe terminar todo en verde. Entre otras cosas, comprueba:
@@ -138,7 +157,8 @@ Debe terminar todo en verde. Entre otras cosas, comprueba:
 - que la confirmación caduca;
 - que el oráculo no deja reconstruir una cifra;
 - que la auditoría detecta alteraciones;
-- que las dos escenas del replay terminan sin fugas.
+- que las dos escenas del replay terminan sin fugas;
+- que el ERP y el correo reales, por el adaptador web, no sueltan ningún dato del seed y el IBAN del correo no entra en el pago (los tests arrancan las apps si están instaladas y, si no, se saltan).
 
 La lista de conformidad del protocolo, con el test que prueba cada punto, está en `docs/SPEC.md`.
 

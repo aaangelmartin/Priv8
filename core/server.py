@@ -33,7 +33,8 @@ HOST, PORT = "127.0.0.1", 8700
 # Navegadores que pueden abrir el canal. Un cliente nativo (app 8, agente) no manda Origin.
 # Sin esto, cualquier web abierta en el mismo ordenador podría leer las pantallas reales
 # y mandar approval_result (cross-site WebSocket hijacking).
-ALLOWED_ORIGINS = {"http://127.0.0.1:5175", "http://localhost:5175"}
+ALLOWED_ORIGINS = {"http://127.0.0.1:5175", "http://localhost:5175",
+                   "http://127.0.0.1:8710"}  # consola y vista previa de la app 8 en navegador
 
 
 async def events_ws(ws: WebSocket) -> None:
@@ -51,6 +52,8 @@ async def events_ws(ws: WebSocket) -> None:
             msg = await queue.get()
             await ws.send_text(json.dumps(msg, ensure_ascii=False))
 
+    for req in core.pending():  # confirmaciones que ya esperaban antes de conectarse
+        queue.put_nowait(req)
     sender = asyncio.create_task(pump())
     try:
         while True:

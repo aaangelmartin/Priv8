@@ -33,6 +33,10 @@ screens:
         origen: maestro
         campo: pago.iban
         acepta: [maestro]
+      - match: {sel: "#pedido"}
+        cls: ambar
+        tipo: FACTURA
+        origen: maestro
       - match: {sel: "#importe-pedido"}
         cls: ambar
         tipo: IMPORTE
@@ -44,7 +48,7 @@ screens:
         resumen: ["#num-factura", "#importe", "#pago-iban"]
       - {match: {sel_re: '^#(ver-proveedor|aviso)$'}, cls: verde}
   - id: proveedor.ficha
-    url_re: /proveedores/
+    url_re: /proveedores/\d+
     rules:
       - match: {sel: "#nombre"}
         cls: ambar
@@ -80,3 +84,18 @@ screens:
         cls: rojo
       - match: {sel: "#clave"}
         cls: rojo
+  - id: facturas.lista
+    url_re: /facturas/?$
+    rules:
+      # Cada fila es una factura con número, proveedor, pedido e importe: entera ámbar.
+      - match: {sel_re: '^#factura-\d+$'}
+        cls: ambar
+        tipo: FACTURA
+        origen: maestro
+  - id: proveedores.lista
+    url_re: /proveedores/?$
+    rules:
+      - match: {sel_re: '^#prov-\d+$'}
+        cls: ambar
+        tipo: PROVEEDOR
+        origen: maestro

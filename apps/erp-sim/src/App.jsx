@@ -358,7 +358,7 @@ function Facturas({ state }) {
         </thead>
         <tbody>
           {todas.map((f, i) => (
-            <tr key={i} id={`factura-${i}`} data-p8="row" data-p8-label={`Factura ${f.numero}`}>
+            <tr key={i} id={`factura-${i}`} data-p8="row" data-p8-label={`Factura ${i + 1}`}>
               <td>{f.numero}</td>
               <td>{nombre(f.proveedor)}</td>
               <td>{f.pedido}</td>

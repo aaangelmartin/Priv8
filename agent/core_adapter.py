@@ -191,7 +191,9 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     from check_seed import known
 
     mod.trust(known())
-    web = WebAdapter(start=start)
+    from voice.call import make_on_call  # llamada de verificación al teléfono de la ficha (#23)
+
+    web = WebAdapter(start=start, on_call=make_on_call(session))
     mod.connect(session, web)
     if events:
         importlib.import_module(f"{module}.server").start()
