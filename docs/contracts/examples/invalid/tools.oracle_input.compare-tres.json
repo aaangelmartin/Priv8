@@ -1,0 +1,9 @@
+{
+  "session": "s1",
+  "op": "compare",
+  "args": [
+    "‹IMPORTE_1›",
+    "‹IMPORTE_2›",
+    "‹IMPORTE_3›"
+  ]
+}

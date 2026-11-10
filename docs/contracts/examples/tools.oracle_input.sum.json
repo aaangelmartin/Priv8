@@ -1,0 +1,9 @@
+{
+  "session": "s2",
+  "op": "sum",
+  "args": [
+    "‹IMPORTE_1·positivo›",
+    "‹IMPORTE_2·positivo›",
+    "‹IMPORTE_3·positivo›"
+  ]
+}

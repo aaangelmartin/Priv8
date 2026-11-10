@@ -1,0 +1,99 @@
+{
+  "type": "screen",
+  "session": "s2",
+  "raw": {
+    "source": "android",
+    "app": "es.alcor.banca",
+    "screen": "inicio",
+    "seq": 12,
+    "focus": "n4",
+    "system_dialog": null,
+    "elements": [
+      {
+        "id": "n2",
+        "role": "text",
+        "label": null,
+        "text": "Hola, Lucía Ferrer",
+        "bounds": [
+          32,
+          180,
+          680,
+          228
+        ],
+        "sel": "id/saludo"
+      },
+      {
+        "id": "n3",
+        "role": "text",
+        "label": "Saldo",
+        "text": "3.412,58 €",
+        "sel": "id/saldo"
+      },
+      {
+        "id": "n4",
+        "role": "textbox",
+        "label": "Clave",
+        "password": true,
+        "text": "••••",
+        "actions": [
+          "type"
+        ]
+      },
+      {
+        "id": "n5",
+        "role": "button",
+        "label": "Transferir",
+        "actions": [
+          "tap"
+        ]
+      }
+    ]
+  },
+  "observed": {
+    "session": "s2",
+    "app": "es.alcor.banca",
+    "screen": "inicio",
+    "seq": 12,
+    "paused": "autenticacion",
+    "budget_left": 28,
+    "elements": [
+      {
+        "id": "n2",
+        "role": "text",
+        "label": null,
+        "text": "Hola, ‹PERSONA_1·titular›",
+        "cls": "ambar",
+        "tokens": [
+          "‹PERSONA_1·titular›"
+        ]
+      },
+      {
+        "id": "n3",
+        "role": "text",
+        "label": "Saldo",
+        "text": "‹IMPORTE_1·positivo›",
+        "cls": "ambar",
+        "tokens": [
+          "‹IMPORTE_1·positivo›"
+        ]
+      },
+      {
+        "id": "n4",
+        "role": "textbox",
+        "label": "Clave",
+        "text": null,
+        "cls": "rojo"
+      },
+      {
+        "id": "n5",
+        "role": "button",
+        "label": "Transferir",
+        "text": null,
+        "cls": "verde",
+        "actions": [
+          "tap"
+        ]
+      }
+    ]
+  }
+}
