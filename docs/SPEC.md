@@ -43,7 +43,7 @@ Detalle completo en `docs/contracts/token.md`.
 3. **Oráculo.** `sum`, `compare` y `matches` sin revelar cifras. `sum` devuelve un `‹SUMA_n›` nuevo y su tramo. Hay presupuesto por sesión y por token, de modo que una búsqueda binaria contra importes de referencia no reconstruye una cifra.
 4. **Ejecutor.** El modelo escribe tokens; el ejecutor los cambia por el valor real en local y llama al adaptador. Un token que no existe en la sesión no se escribe. Antes comprueba la **procedencia**: un campo de destino solo admite tokens de su tipo vistos en un origen aceptado. Un IBAN que solo ha llegado por correo no entra en el IBAN de pago, y una llamada solo va a un teléfono de la ficha.
 5. **Confirmación humana.** Transferir, invertir, firmar, enviar y llamar quedan retenidos (`held`) hasta que la persona aprueba, por voz o en pantalla, con un resumen en voz mixta. Caduca a los 5 minutos. La autenticación del banco (SCA de PSD2) y los controles marcados `solo_persona` los hace siempre la persona; mientras se autentica, el agente queda en pausa.
-6. **Auditoría.** JSONL encadenado por hashes y firmado con ed25519. Registra qué recibió el modelo, qué se bloqueó y qué aprobó la persona. `python -m core.audit verify` detecta una línea alterada.
+6. **Auditoría.** JSONL encadenado por hashes y firmado con ed25519. Registra qué recibió el modelo, qué se bloqueó y qué aprobó la persona. `python -m core.verify` detecta una línea alterada.
 
 **Bloqueo final.** Cada petición hacia el modelo o la voz en la nube se revisa entera antes de salir: patrones validados, datos rojos y cualquier valor real de la bóveda o de la lista de confianza. Si aparece uno, la petición no sale y queda `blocked: fuga`. Falla cerrado.
 
