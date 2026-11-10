@@ -1,2 +1,5 @@
 .DS_Store
 priv8-handoff.zip
+
+# Copias de trabajo de los agentes
+.claude/worktrees/
