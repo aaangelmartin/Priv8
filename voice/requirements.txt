@@ -1,0 +1,3 @@
+# Python 3.12 · pip install -r voice/requirements.txt
+elevenlabs==2.77.0
+pytest==9.2.0
