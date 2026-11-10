@@ -43,6 +43,7 @@ import shlex
 import sys
 import threading
 import time
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -249,7 +250,9 @@ class Preview(http.server.SimpleHTTPRequestHandler):
         if path == "/ocho/ojos.html":
             return str(OJOS)
         if path.startswith("/ocho/"):
-            return str(ASSETS / path.removeprefix("/ocho/"))
+            target = (ASSETS / urllib.parse.unquote(path.removeprefix("/ocho/"))).resolve()
+            if target.is_relative_to(ASSETS.resolve()):
+                return str(target)
         return str(ASSETS / "__none__")
 
     def log_message(self, *args: Any) -> None:
