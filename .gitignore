@@ -2,10 +2,12 @@
 priv8-handoff.zip
 
 # Python
-.venv/
+.venv*/
 __pycache__/
 .pytest_cache/
 *.pyc
+*.egg-info/
+build/
 .env
 
 # Copias de trabajo de los agentes
