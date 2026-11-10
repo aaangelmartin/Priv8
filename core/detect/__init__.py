@@ -34,6 +34,11 @@ AMOUNT_RE = re.compile(
     r"|(?:€|EUR)\s?[-+]?\d{1,3}(?:\.\d{3})*(?:,\d{1,2})?(?![\d])"
 )
 PHONE_RE = re.compile(r"(?<![\w+])(?:\+34[ ]?)?[6789]\d{2}(?:[ ]?\d{3}[ ]?\d{3}|(?:[ ]?\d{2}){3})(?![\d])")
+# Números de documento con serie y año: F-2026-0412, FA-2026-0877 (factura); PED-2026-3325 (otro código).
+DOC_RE = re.compile(r"\b([A-Za-z]{1,4})[-/](?:19|20)\d{2}[-/]\d{2,6}\b")
+FACTURA_SERIES = {"F", "FA", "FAC", "FRA", "FV", "FC"}
+# "Factura nº 1234", "factura 2026/88": lo que sigue a la palabra, si lleva una cifra.
+FACTURA_KW_RE = re.compile(r"(?i)\bfactura\s+(?:n[º°o]\.?\s*|n[uú]m(?:ero|\.)?\s*)?([A-Za-z0-9][\w/\-]*\d[\w/\-]*)")
 EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
 OTP_RE = re.compile(r"(?i)(?:c[oó]digo|code|otp|clave|pin|contraseña|password)\D{0,25}?(\d{4,8})\b")
 NAME_AFTER_RE = re.compile(
@@ -89,6 +94,10 @@ class FinanceDetector:
                 add(m.start(), m.end(), "CIF")
         for m in EMAIL_RE.finditer(text):
             add(m.start(), m.end(), "EMAIL")
+        for m in DOC_RE.finditer(text):
+            add(m.start(), m.end(), "FACTURA" if m.group(1).upper() in FACTURA_SERIES else "CODIGO")
+        for m in FACTURA_KW_RE.finditer(text):
+            add(m.start(1), m.end(1), "FACTURA")
         for m in AMOUNT_RE.finditer(text):
             s, e = m.span()
             while s < e and text[s] == " ":
