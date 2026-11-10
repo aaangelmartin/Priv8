@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { BankScreen } from './Sections.jsx';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
@@ -64,19 +65,7 @@ export function SeeScene() {
                 ? 'La misma pantalla, la misma tarea. El modelo sabe qué es cada campo y puede trabajar con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina, y la clave ni siquiera sale.'
                 : 'Para usar una web o una app, el agente manda la pantalla entera al proveedor del modelo: nombres, IBAN, saldos y movimientos. Por eso los bancos no dejan a la IA tocar procesos con datos de clientes.'}</p>
             </div>
-            <div className={'screen ' + (safe ? 'is-safe' : 'is-raw')}>
-              <div className="screen-bar"><i /><i /><i /><b>Banca Alcor</b><span>lo que recibe el modelo</span></div>
-              {ROWS.map(([k, real, tok], i) => (
-                <div className="srow" key={k} style={{ '--i': i }}>
-                  <span className="k">{k}</span>
-                  <span className="v">
-                    <span className="real">{real}</span>
-                    <span className={'tokv' + (tok === 'nunca sale' ? ' never' : '')}>{tok}</span>
-                  </span>
-                </div>
-              ))}
-              <div className="leakmeter"><b>{safe ? '0' : '5'}</b><span>{safe ? 'datos reales salen de tu máquina' : 'datos reales salen hacia el modelo'}</span></div>
-            </div>
+            <BankScreen safe={safe} />
           </div>
         );
       }}

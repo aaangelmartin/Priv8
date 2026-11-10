@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
-import Demos from './Demos.jsx';
 import Field, { Blend } from './Field.jsx';
-import { SeeScene, TrapScene, Spot } from './Story.jsx';
-import { WhyNow, HowFlow } from './Sections.jsx';
+import { SeeScene, Spot } from './Story.jsx';
+import { WhyNow, HowCase, Products } from './Sections.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
 
@@ -68,62 +67,6 @@ function Hero() {
 }
 
 /* ---------------------------------------------------------------- productos */
-function Producto() {
-  return (
-    <section id="producto" className="block block-paper" aria-labelledby="h-prod">
-      <div className="wrap">
-        <div className="block-head">
-          <Spot className="spot-inline" mode="leer" say="Mismo 8, dos sitios." />
-          <p className="eyebrow">Dos productos, un mismo 8</p>
-          <h2 id="h-prod">En tu oficina <span className="soft">y en el bolsillo de tus clientes.</span></h2>
-        </div>
-        {/* los dos productos a la vista, sin pestañas */}
-        <div className="prod-grid">
-          <article className="prod">
-            <p className="eyebrow">Priv8 para empresas</p>
-            <h3>Automatiza lo que la protección de datos te frenaba.</h3>
-            <p>8 trabaja en tu ERP o tu CRM de siempre, aunque no tenga API. El proveedor del modelo solo recibe tokens.</p>
-            <ul className="points">
-              <li>Funciona sobre las pantallas que ya tienes, sin integrar nada.</li>
-              <li>Un correo no puede cambiar un pago: la procedencia lo impide.</li>
-              <li>Verifica por teléfono con el número que ya tenías.</li>
-              <li>Cada paso queda firmado para tus auditorías.</li>
-            </ul>
-          </article>
-          <article className="prod">
-            <p className="eyebrow">8 en el móvil</p>
-            <h3>Tus clientes hablan con 8 y él maneja sus apps del banco.</h3>
-            <p>Lee, suma y prepara sin ver las cuentas. Las cifras las dice la voz del propio móvil; a la nube no llegan.</p>
-            <ul className="points">
-              <li>La clave, la huella y los códigos los pone la persona. 8 mira a otro lado.</li>
-              <li>Nada se mueve sin un «sí», por voz o con un botón.</li>
-              <li>Ejecuta, no aconseja: no recomienda inversiones.</li>
-              <li>Para bancos y brokers que quieren ofrecer su propio agente.</li>
-            </ul>
-          </article>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------------------------------------------------------- pruébalo */
-function Prueba({ pal }) {
-  return (
-    <section id="demo" className="block block-cobalt" aria-labelledby="h-demo">
-      <div className="wrap">
-        <div className="block-head">
-          <Spot className="spot-inline" mode="leer" say="Mira lo que llega al modelo." />
-          <p className="eyebrow">Demostración</p>
-          <h2 id="h-demo">Te lo demostramos. <span className="soft">Aquí mismo.</span></h2>
-          <p className="lead">Con datos inventados: lo que recibe el modelo con y sin Priv8, un correo con trampa y el oráculo que responde sin dar la cifra.</p>
-        </div>
-        <Demos pal={pal} />
-      </div>
-    </section>
-  );
-}
-
 /* ---------------------------------------------------------------- confianza y preguntas */
 const FAQ = [
   ['¿Tengo que integrar algo en mis sistemas?', 'No. 8 trabaja sobre las pantallas que ya usas: el navegador para tu ERP o tu CRM y el móvil para las apps. Lee la estructura de la pantalla, no los píxeles.'],
@@ -202,8 +145,8 @@ function Footer({ pal }) {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#demo">Demostración</a></div>
-            <div><b>Confianza</b><a href="#trampa">Pagos seguros</a><a href="#faq">Datos y modelo</a><a href="#faq">Registro firmado</a></div>
+            <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a></div>
+            <div><b>Confianza</b><a href="#como">Pagos seguros</a><a href="#faq">Datos y modelo</a><a href="#faq">Registro firmado</a></div>
             <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#problema">Por qué Priv8</a></div>
           </nav>
         </div>
@@ -282,15 +225,11 @@ export default function App() {
         <Hero />
         <Blend from="--band" to="--paper" seed={1} overlay />
         <SeeScene />
+        <Blend from="--paper" to="--band" seed={2} />
         <WhyNow />
-        <Blend from="--paper" to="--band" seed={4} />
-        <HowFlow />
-        <TrapScene />
-        <Blend from="--band" to="--paper" seed={5} />
-        <Producto />
-        <Blend from="--paper" to="--band" seed={6} />
-        <Prueba pal={pal} />
-        <Blend from="--band" to="--paper" seed={7} />
+        <Blend from="--band" to="--paper" seed={3} />
+        <HowCase />
+        <Products />
         <Faq />
         <Blend from="--paper" to="--band" seed={8} />
         <Cierre />
