@@ -174,7 +174,7 @@ export default function App() {
     root.classList.add('js');
     if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
     const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
-    const t = setTimeout(end, 2300);
+    const t = setTimeout(end, 2100);
     const skip = () => { clearTimeout(t); end(); };
     window.addEventListener('keydown', skip, { once: true });
     window.addEventListener('wheel', skip, { once: true, passive: true });
@@ -201,7 +201,7 @@ export default function App() {
       <Nav />
       <main>
         <Hero />
-        <Blend from="--band" to="--night" seed={1} />
+        <Blend from="--band" to="--night" seed={1} overlay />
         <SeeScene />
         <Blend from="--night" to="--band" seed={2} />
         <NumbersScene />

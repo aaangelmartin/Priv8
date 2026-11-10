@@ -109,7 +109,7 @@ function useWidth() {
   }, []);
   return [ref, w];
 }
-export function Blend({ from, to, variant = 'pixels', seed = 1 }) {
+export function Blend({ from, to, variant = 'pixels', seed = 1, overlay = false }) {
   const [ref, w] = useWidth();
   if (variant === 'curve') {
     const H = 160;
@@ -181,7 +181,7 @@ export function Blend({ from, to, variant = 'pixels', seed = 1 }) {
       }
     }
     return (
-      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={{ background: `var(${from})`, height: H }}>
+      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={overlay ? { background: 'transparent', height: H, marginTop: -H, zIndex: 2 } : { background: `var(${from})`, height: H }}>
         {w > 0 && (
           <svg width={w} height={H + 1} viewBox={`0 0 ${w} ${H + 1}`} style={{ fill: `var(${to})` }}>
             <path d={paths.join(' ')} stroke={`var(${to})`} strokeWidth="0.6" strokeLinejoin="round" />

@@ -47,7 +47,7 @@ function pickAnchor() {
 
 export default function Companion({ pal, intro }) {
   const { override } = useCompanion();
-  const [stage, setStage] = useState(intro ? 'sleep' : 'done');
+  const [stage, setStage] = useState(intro ? 'wake' : 'done');
   const [bg, setBg] = useState(null);
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
@@ -60,11 +60,10 @@ export default function Companion({ pal, intro }) {
 
   /* arranque: 8 duerme, despierta y saluda */
   useEffect(() => {
-    if (stage !== 'sleep') return undefined;
-    const a = setTimeout(() => setStage('wake'), 500);
-    const f = setTimeout(() => setStage('fly'), 1500);
-    const b = setTimeout(() => setStage('done'), 2600);
-    return () => { clearTimeout(a); clearTimeout(f); clearTimeout(b); };
+    if (stage !== 'wake') return undefined;
+    const f = setTimeout(() => setStage('fly'), 1300);
+    const b = setTimeout(() => setStage('done'), 2400);
+    return () => { clearTimeout(f); clearTimeout(b); };
   }, []);
 
   useEffect(() => {
@@ -96,7 +95,7 @@ export default function Companion({ pal, intro }) {
         const D = Math.min(vw * 0.5, vh * 0.62 * 46 / 32, 640), S = D * 64 / 46;
         el.style.transition = el.dataset.placed ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
         el.dataset.placed = '1';
-        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.42 - S / 2}px, 0) scale(${S / BASE})`;
+        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
         return;
       }
       const changed = anchor !== lastSpot.current;
@@ -110,7 +109,9 @@ export default function Companion({ pal, intro }) {
       const moving = performance.now() - changeT.current < 950;
       el.style.transition = phase.current === 'flying' ? 'transform 1.1s cubic-bezier(.34, 1.56, .64, 1)' : (moving ? 'transform .9s cubic-bezier(.2, .8, .2, 1)' : 'none');
       el.style.transform = `translate3d(${target.left}px, ${target.top}px, 0) scale(${target.S / BASE})`;
+      const moved = Math.abs(target.gy - pos.current.y) + Math.abs(target.gx - pos.current.x) > 24;
       pos.current = { x: target.gx, y: target.gy, size: target.D, left: target.gx + target.D / 2 < vw / 2 };
+      if (moved) setBubble((b) => (b.show ? { ...b, show: false } : b));
       const now = performance.now();
       if (now - lastC > 140) {
         lastC = now;
@@ -129,11 +130,11 @@ export default function Companion({ pal, intro }) {
 
   /* al despertar, crece hasta su sitio en la portada */
   useEffect(() => {
+    if (stage === 'done') { phase.current = 'live'; window.dispatchEvent(new Event('scroll')); return undefined; }
     if (stage !== 'fly' || phase.current !== 'intro') return undefined;
     phase.current = 'flying';
     window.dispatchEvent(new Event('scroll'));
-    const t = setTimeout(() => { phase.current = 'live'; window.dispatchEvent(new Event('scroll')); }, 1200);
-    return () => clearTimeout(t);
+    return undefined;
   }, [stage]);
 
   /* bocadillo: cada vez que cambia de sitio o de frase */
@@ -155,7 +156,7 @@ export default function Companion({ pal, intro }) {
   const rgb = [1, 3, 5].map((i) => parseInt(under.slice(i, i + 2), 16));
   const light = lum(rgb) > 0.55;
   const col = { fg: light ? band : '#FFFFFF', cut: under };
-  const mode = override || (stage === 'sleep' ? 'dormir' : stage === 'wake' ? 'saludar' : stage === 'fly' ? 'alegria' : spot.mode);
+  const mode = override || (stage === 'wake' || stage === 'fly' ? 'saludar' : spot.mode);
   return (
     <>
       <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
@@ -168,7 +169,8 @@ export default function Companion({ pal, intro }) {
   );
 }
 
-/* Bocadillo de 8: se escribe letra a letra encima de él. */
+/* Bocadillo de 8: al lado de 8 y por encima de sus ojos, con el pico en la esquina de abajo apuntándole.
+   Si no cabe arriba, va por debajo con el pico en la esquina de arriba. Siempre con aire entre los dos. */
 function Bubble({ text, show, pos }) {
   const [n, setN] = useState(0);
   useEffect(() => {
@@ -178,14 +180,14 @@ function Bubble({ text, show, pos }) {
     const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 20);
     return () => clearInterval(t);
   }, [text, show]);
-  /* al lado de 8, nunca encima del texto: a su derecha si 8 está a la izquierda, y al revés */
-  /* a la altura de los ojos de 8, con el pico apuntándole */
-  const top = Math.max(96, pos.y + pos.size * 0.35);
-  const style = pos.left
-    ? { left: pos.x + pos.size + 14, top }
-    : { right: Math.max(12, window.innerWidth - pos.x + 14), top };
+  const gap = Math.max(18, pos.size * 0.08);
+  const eye = pos.y + pos.size * 0.3;
+  const below = eye - gap < 150;
+  const v = below ? { top: pos.y + pos.size * 0.42 + gap } : { bottom: window.innerHeight - (eye - gap) };
+  const h = pos.left ? { left: pos.x + pos.size + gap } : { right: window.innerWidth - pos.x + gap };
+  const cls = 'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '') + (below ? ' below' : '');
   return (
-    <div className={'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '')} style={style} role="status" aria-live="polite">
+    <div className={cls} style={{ ...v, ...h }} role="status" aria-live="polite">
       <svg className="tail" viewBox="0 0 16 22" aria-hidden="true"><path d="M16 0 V22 C 10 22 3 21 0 18 C 6 15 10 9 10 0 Z" /></svg>
       <span>{text.slice(0, n)}</span><span className="ghost" aria-hidden="true">{text.slice(n)}</span>
     </div>
