@@ -9,7 +9,8 @@ Proyecto del equipo para la hackathon de finanzas de la Madrid Engineering Week 
 - **Núcleo general:** sirve para cualquier sector.
 - **Perfil Finanzas:** la primera aplicación y el foco de la hackathon.
 - **Modelo:** B2B. Lo adoptan bancos y brokers que quieren ofrecer agentes, empresas que los construyen y departamentos financieros.
-- **Frase clave:** "Visa y Google resolvieron cómo paga un agente. Priv8 CUA resuelve qué ve mientras trabaja."
+- **Nombres:** la marca y el producto son **Priv8**. **Priv8 CUA** es el protocolo sobre el que funciona (se usa al hablar del protocolo, con quien lo integra). El agente es **8**.
+- **Frase clave:** "Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja."
 
 ## Las seis piezas del protocolo
 
@@ -98,8 +99,8 @@ El modelo responde con plantillas con tokens. Un renderizador local sustituye lo
 Las variables están en `brand/tokens.css` y la guía completa en `docs/marca.html`.
 
 - **Colores:**
-  - Noche `#0B1B33`: seriedad.
-  - Cobalto `#2D45D6`: marca y acciones.
+  - Cobalto `#2D45D6`: el color principal de la marca. Fondo de portadas, diapositivas, icono y 8; acción principal en interfaces.
+  - Noche `#0B1B33`: texto principal y fondos oscuros (consola).
   - Cobalto claro `#8FA2FF`: sobre fondo oscuro.
   - Niebla `#EEF2F8`: fondos.
   - Pizarra `#5A6478`: texto secundario.
@@ -111,33 +112,36 @@ Las variables están en `brand/tokens.css` y la guía completa en `docs/marca.ht
 - **Tokens visuales:** siempre en Plex Mono, con comillas ‹ ›, fondo cobalto suave.
 - **Tono:** preciso y tranquilo. Sin superlativos, exclamaciones ni emojis.
 
-## Logo: los ojos
+## 8, el agente (los ojos)
 
-La implementación de referencia es el `<script>` de `docs/logo.html`.
+El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). Sus ojos son el logo. La referencia viva y el código de todas las animaciones están en `docs/ojos.html`; la guía en `docs/marca.html`.
 
-- **Construcción:** el 8 de Sora con su anillo inferior reflejado arriba, de modo que los dos huecos son iguales, y girado 90°. Los dos huecos son los ojos. El script mide el glifo real de Sora en un canvas y coloca pupilas y párpados en los huecos.
-- **Comportamiento**, inspirado en GrokBot:
-  - Todo con muelles amortiguados.
-  - Pupilas redondas con escorzo hacia el borde.
-  - Cabeza que sigue a la mirada con retraso.
-  - Parpadeos simples, dobles y guiños.
-  - Estados: mirar (sigue el puntero), pensar (entrecierra y mira arriba), cargando (se encoge en tres puntos), listo (rebote y ojos sonrientes), sorpresa, sueño y proteger dato.
-- **Sistema de estados de los datos:**
-  - Ojos abiertos (verde): libre.
-  - Ojos cerrados (ámbar): tokenizado.
-  - "No mira" (rojo): nunca sale.
-- **24 opciones animadas de "no ver"**, sin vendas: manos, manos espiando, telón, bóveda, cerradura, candado, asteriscos, contraseña, ojos apretados, mirar a otro lado, ojos en blanco, dormido, gafas de sol, persiana, cremallera, pixelado, niebla, huella, tokens, almohadilla, binario, glitch, escudo y texto tachado.
+- **Construcción:** el 8 de Sora 700 con su anillo inferior reflejado arriba (los dos huecos iguales), girado 90°. Los huecos son los ojos, con pupilas redondas. El script mide el glifo real en un canvas.
+- **Movimiento:** muelles amortiguados en mirada, párpados, tamaño e inclinación; la cabeza sigue a la mirada con retraso; transición con anticipación y parpadeo en cada cambio de estado; gestos sueltos en reposo.
+- **Parpadeo:** en almendra, como un ojo real: cierra desde las esquinas en 70 ms, cerrado 30 ms, abre en 160 ms. Parte de la pose de la emoción. No parpadea con los ojos ya cerrados (risa, inactivo, no ve).
+- **Solo ojos:** nada de manos, vendas, iconos ni adornos tipo emoji. La única excepción son las "z" en Sora de inactivo.
+- **Emociones (10):** alegría, risa, agradecer, sorpresa, tristeza, enfado, miedo, curiosidad, duda, disculpa.
+- **Flujo (18):** reposo, saludar, llamar, interrumpido, escuchar, hablar, pensar, leer, cargando, pedir permiso, esperar, mirar a otro lado (mientras el usuario escribe su clave u OTP), listo, confirmado, cancelado, no puedo (asesoría de inversión o dato rojo), sin conexión, inactivo.
+- **Datos:** la cara cuenta lo que 8 puede hacer con el dato. **Ve** (verde): ojos abiertos. **Tokenizado** (ámbar): lo tiene pero tapado, los huecos se cierran en dos asteriscos. **Nunca sale** (rojo): ni lo mira, cierra los ojos como al parpadear y se queda así. La interfaz lo acompaña con el chip de token o la etiqueta "nunca sale".
+- **Tamaño:** a partir de 32 px se distinguen todas las caras; por debajo, 8 va siempre animado.
+- **En la app:** hablar y escuchar deben moverse con el volumen real de la voz y del micrófono.
+- **Archivos:** logos trazados, icono de app y favicon en `brand/logo/`.
+- **Expresiones a medida:** si ningún estado encaja, el agente crea una con un JSON (esquema en `brand/8/expresion.schema.json`). El motor lo valida y recorta a rangos seguros; API `P8.definir`, `P8.poner`, `P8.mezclar`. Taller en `docs/ojos.html`.
 
-### Decisiones pendientes
+### Decisiones tomadas
 
-- [ ] Elegir la opción de "no ver" definitiva (o una para "tokenizado" y otra para "nunca sale").
-- [ ] Comprobar que el nombre Priv8 no choca con otra marca.
-- [ ] Unificar la paleta de `docs/plan.html` con la de la marca (el plan usa un azul anterior, `#2F43D0`).
+- [x] Caras de datos: asteriscos para tokenizado y ojos cerrados (cierre de parpadeo) para nunca sale.
+- [x] Paleta y fuentes de `docs/plan.html` unificadas con la marca.
+- [x] Pronunciación: Priv8 se lee "priveit" (priv + *eight*); Priv8 CUA, "priveit ce u a".
+- [x] Nombre Priv8 revisado: hay un registro "PRIV8" de Orchid en EE. UU. (clases 35/41, eventos) y "priv8" es jerga de exploits. Para la hackathon se mantiene, escrito siempre "Priv8 CUA". Antes de un uso comercial: búsqueda en EUIPO, OEPM y WIPO (clases 9, 36 y 42).
+
 
 ## Archivos
 
 - `docs/plan.html`: plan completo del proyecto (problema, protocolo, arquitectura, rúbrica, fases, demo).
 - `docs/marca.html`: guía de marca.
-- `docs/logo.html`: logo de los ojos, interactivo, con todo el código de animación.
+- `docs/ojos.html`: 8 en vivo, con todas las emociones, estados y el código de animación.
+- `docs/logo.html`: exploración antigua del logo (sustituida, se conserva como archivo).
+- `brand/logo/`: logos trazados, icono de app (16 a 512 px) y favicon.
 - `brand/tokens.css`: variables de marca para la app, la consola y la banca simulada.
 - `bases/bases-hackathon.pdf`: bases y rúbrica oficiales.

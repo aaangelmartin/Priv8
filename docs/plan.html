@@ -1,33 +1,34 @@
 <title>Priv8 CUA</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="../brand/logo/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap">
 <style>
 /* Layout: columna editorial de láminas; cada sección carga su propia figura. Motivo: barras de redacción y tokens en monoespaciada. */
 :root{
-  --bg:#eef1f5; --paper:#ffffff; --ink:#111827; --muted:#5b6474; --line:#d5dbe4;
-  --accent:#2f43d0; --accent-soft:#e3e7fb; --redact:#111827; --token-bg:#e3e7fb; --token-fg:#2433a8;
-  --red:#c2362b; --red-soft:#fbe5e3; --amber:#a86400; --amber-soft:#fcefd9; --green:#1d7a46; --green-soft:#dff2e6;
-  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
-  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --bg:#F6F8FB; --paper:#FFFFFF; --ink:#0B1B33; --muted:#5A6478; --line:#D6DCE8;
+  --accent:#2D45D6; --accent-soft:#E4E9FD; --redact:#0B1B33; --token-bg:#E4E9FD; --token-fg:#2236B5;
+  --red:#A83228; --red-soft:#FBE5E3; --amber:#8A5200; --amber-soft:#FCEFD9; --green:#18734C; --green-soft:#DFF2E7;
+  --f-display:"Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0d1118; --paper:#151b25; --ink:#e8ecf3; --muted:#9aa4b5; --line:#2a3342;
-  --accent:#8b9bff; --accent-soft:#1f2747; --redact:#e8ecf3; --token-bg:#1f2747; --token-fg:#b8c2ff;
-  --red:#ff8a80; --red-soft:#3a1d1b; --amber:#f2b55a; --amber-soft:#3a2b14; --green:#6fd39a; --green-soft:#16301f; color-scheme:dark}}
+  --bg:#08121F; --paper:#0F1D33; --ink:#E9EEF7; --muted:#9DA8BC; --line:#22324D;
+  --accent:#8FA2FF; --accent-soft:#1C2A55; --redact:#E9EEF7; --token-bg:#1C2A55; --token-fg:#BFCBFF;
+  --red:#FF8A80; --red-soft:#3A1D1B; --amber:#F2B55A; --amber-soft:#3A2B14; --green:#6FD39A; --green-soft:#16301F; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0d1118; --paper:#151b25; --ink:#e8ecf3; --muted:#9aa4b5; --line:#2a3342;
-  --accent:#8b9bff; --accent-soft:#1f2747; --redact:#e8ecf3; --token-bg:#1f2747; --token-fg:#b8c2ff;
-  --red:#ff8a80; --red-soft:#3a1d1b; --amber:#f2b55a; --amber-soft:#3a2b14; --green:#6fd39a; --green-soft:#16301f; color-scheme:dark}
+  --bg:#08121F; --paper:#0F1D33; --ink:#E9EEF7; --muted:#9DA8BC; --line:#22324D;
+  --accent:#8FA2FF; --accent-soft:#1C2A55; --redact:#E9EEF7; --token-bg:#1C2A55; --token-fg:#BFCBFF;
+  --red:#FF8A80; --red-soft:#3A1D1B; --amber:#F2B55A; --amber-soft:#3A2B14; --green:#6FD39A; --green-soft:#16301F; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
   padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));padding-block:32px 64px}
 .wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
 h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.08}
-h1{font-size:clamp(2.1rem,5vw,3.9rem);font-weight:800;letter-spacing:-.02em}
+h1{font-size:clamp(2.1rem,5vw,3.9rem);font-weight:700;letter-spacing:-.02em}
 h2{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:700;letter-spacing:-.01em}
 h3{font-size:1.06rem;font-weight:700}
 p{margin:0}
@@ -56,9 +57,11 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* HERO */
 .hero{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:32px;align-items:center;padding-block:8px}
 .hero .copy{display:flex;flex-direction:column;gap:18px}
-.logo{display:flex;align-items:baseline;gap:12px;font-family:var(--f-display);font-weight:800;font-size:clamp(2.8rem,6.4vw,4.2rem);letter-spacing:-.03em;line-height:1}
-.logo .eight{color:var(--accent)}
-.logo .cua{font-family:var(--f-mono);font-weight:700;font-size:.42em;letter-spacing:.08em;border:2px solid var(--ink);border-radius:8px;padding:.18em .45em;align-self:center}
+.logo{display:flex;margin-left:-14px}
+.logo img{width:clamp(220px,34vw,320px);height:auto}
+.logo .lk-d{display:none}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .logo .lk-l{display:none}:root:not([data-theme="light"]) .logo .lk-d{display:block}}
+:root[data-theme="dark"] .logo .lk-l{display:none} :root[data-theme="dark"] .logo .lk-d{display:block}
 .hero h1 .hl{color:var(--accent)}
 .swap{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;font-family:var(--f-mono);font-size:.92rem}
 .swap .row{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center}
@@ -70,6 +73,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @keyframes realA{0%,40%{opacity:1}50%,90%{opacity:0}100%{opacity:1}}
 @keyframes fakeA{0%,40%{opacity:0}50%,90%{opacity:1}100%{opacity:0}}
 .swap .cap{display:flex;justify-content:space-between;font-family:var(--f-body);font-size:.8rem;color:var(--muted);border-top:1px dashed var(--line);padding-top:12px}
+@media (max-width:520px){.swap{padding:16px;font-size:.74rem}.swap .row{grid-template-columns:64px minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){.swap .real{animation:none;opacity:0}.swap .fake{animation:none;opacity:1}}
 
 /* CUA explainer */
@@ -116,8 +120,8 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cc .gap{font-size:.86rem;border-top:1px dashed var(--line);padding-top:10px}
 .cc .gap b{color:var(--red)}
 .stat{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-.stat .from{font-family:var(--f-display);font-size:1.6rem;font-weight:800;color:var(--red)}
-.stat .to{font-family:var(--f-display);font-size:1.6rem;font-weight:800;color:var(--green)}
+.stat .from{font-family:var(--f-display);font-size:1.6rem;font-weight:700;color:var(--red)}
+.stat .to{font-family:var(--f-display);font-size:1.6rem;font-weight:700;color:var(--green)}
 .stat .arr{color:var(--muted)}
 
 /* SPEC */
@@ -194,7 +198,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
 /* RUBRIC */
 .rub{display:flex;flex-direction:column;gap:12px}
-.rrow{display:grid;grid-template-columns:190px 120px 110px minmax(0,1fr);gap:16px;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.rrow{display:grid;grid-template-columns:190px 120px 150px minmax(0,1fr);gap:16px;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .rrow:last-child{border-bottom:0;padding-bottom:0}
 .rrow .name{font-weight:700;font-size:.95rem}
 .track{height:24px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden}
@@ -245,7 +249,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 /* METRICS */
 .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .mt{border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px}
-.mt .val{font-family:var(--f-display);font-size:1.5rem;font-weight:800;color:var(--muted)}
+.mt .val{font-family:var(--f-display);font-size:1.5rem;font-weight:700;color:var(--muted)}
 .mt p{font-size:.86rem;color:var(--muted)}
 
 /* DELIVER */
@@ -266,7 +270,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .steps,.spec,.comp{grid-template-columns:repeat(2,minmax(0,1fr))}
   .build,.phases,.deliv{grid-template-columns:repeat(3,minmax(0,1fr))}
   .fin,.metrics,.team,.lay-prof,.adapters{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .rrow{grid-template-columns:150px minmax(0,1fr) 100px}
+  .rrow{grid-template-columns:150px minmax(0,1fr) 150px}
   .rrow .how{grid-column:1 / -1}
 }
 @media (max-width:760px){
@@ -293,7 +297,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 <!-- HERO -->
 <header class="hero">
   <div class="copy">
-    <div class="logo" aria-label="Priv8 CUA"><span>Priv<span class="eight">8</span></span><span class="cua">CUA</span></div>
+    <div class="logo"><img src="../brand/logo/priv8-cua-claro.svg" alt="Priv8 CUA" width="300" height="77" class="lk-l"><img src="../brand/logo/priv8-cua-oscuro.svg" alt="Priv8 CUA" width="300" height="77" class="lk-d"></div>
     <span class="eyebrow">Hackathon de finanzas · Madrid Engineering Week</span>
     <h1>El agente hace el trámite.<br><span class="hl">Nunca ve tus datos.</span></h1>
     <p class="lead">Priv8 CUA es un protocolo de privacidad para agentes de IA que usan pantallas. Todo dato sensible se cambia por un token antes de llegar al modelo y se vuelve a poner solo al ejecutar. Empezamos por finanzas.</p>
@@ -401,14 +405,14 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
         <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--green)"/></marker>
       </defs>
       <rect x="10" y="20" width="700" height="390" rx="16" fill="var(--bg)" stroke="var(--line)"/>
-      <text x="30" y="48" font-family="JetBrains Mono, monospace" font-size="12" fill="var(--muted)" letter-spacing="1.5">ENTORNO DE CONFIANZA · DISPOSITIVO O SERVIDOR DEL BANCO</text>
+      <text x="30" y="48" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--muted)" letter-spacing="1.5">ENTORNO DE CONFIANZA · DISPOSITIVO O SERVIDOR DEL BANCO</text>
       <rect x="760" y="20" width="230" height="390" rx="16" fill="var(--accent-soft)" stroke="var(--accent)"/>
-      <text x="780" y="48" font-family="JetBrains Mono, monospace" font-size="12" fill="var(--accent)" letter-spacing="1.5">NUBE</text>
+      <text x="780" y="48" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--accent)" letter-spacing="1.5">NUBE</text>
       <line x1="735" y1="20" x2="735" y2="410" stroke="var(--red)" stroke-width="2" stroke-dasharray="6 6"/>
-      <text x="735" y="425" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--red)">frontera: solo tokens</text>
+      <text x="735" y="425" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--red)">frontera: solo tokens</text>
 
       <rect x="30" y="76" width="150" height="300" rx="14" fill="var(--paper)" stroke="var(--line)"/>
-      <text x="105" y="102" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">Pantallas</text>
+      <text x="105" y="102" text-anchor="middle" font-family="Sora, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">Pantallas</text>
       <rect x="46" y="118" width="118" height="34" rx="8" fill="var(--bg)" stroke="var(--line)"/><text x="105" y="140" text-anchor="middle" font-size="12" fill="var(--ink)">Banca web</text>
       <rect x="46" y="160" width="118" height="34" rx="8" fill="var(--bg)" stroke="var(--line)"/><text x="105" y="182" text-anchor="middle" font-size="12" fill="var(--ink)">Broker</text>
       <rect x="46" y="202" width="118" height="34" rx="8" fill="var(--bg)" stroke="var(--line)"/><text x="105" y="224" text-anchor="middle" font-size="12" fill="var(--ink)">Hacienda, becas</text>
@@ -417,8 +421,8 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <text x="105" y="326" text-anchor="middle" font-size="11" fill="var(--muted)">web y Android</text>
 
       <rect x="220" y="62" width="320" height="330" rx="16" fill="var(--paper)" stroke="var(--accent)" stroke-width="2"/>
-      <text x="238" y="90" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="17" fill="var(--ink)">Núcleo Priv8 CUA</text>
-      <text x="238" y="108" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--accent)">+ perfil Finanzas</text>
+      <text x="238" y="90" font-family="Sora, sans-serif" font-weight="700" font-size="17" fill="var(--ink)">Núcleo Priv8 CUA</text>
+      <text x="238" y="108" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--accent)">+ perfil Finanzas</text>
       <rect x="238" y="120" width="284" height="36" rx="8" fill="var(--bg)" stroke="var(--line)"/><text x="250" y="143" font-size="13" fill="var(--ink)">Redactor · detecta y tokeniza</text>
       <rect x="238" y="164" width="284" height="36" rx="8" fill="var(--bg)" stroke="var(--line)"/><text x="250" y="187" font-size="13" fill="var(--ink)">Políticas · rojo, ámbar, verde</text>
       <rect x="238" y="208" width="284" height="36" rx="8" fill="var(--bg)" stroke="var(--line)"/><text x="250" y="231" font-size="13" fill="var(--ink)">Oráculo · con presupuesto de fugas</text>
@@ -427,21 +431,21 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <text x="250" y="366" font-size="12" fill="var(--muted)">Servidor MCP: observar · actuar · oráculo</text>
 
       <rect x="575" y="80" width="120" height="78" rx="12" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
-      <text x="635" y="113" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">Bóveda</text>
+      <text x="635" y="113" text-anchor="middle" font-family="Sora, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">Bóveda</text>
       <text x="635" y="133" text-anchor="middle" font-size="11" fill="var(--muted)">datos y documentos</text>
       <rect x="575" y="180" width="120" height="78" rx="12" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
-      <text x="635" y="213" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">App y consola</text>
+      <text x="635" y="213" text-anchor="middle" font-family="Sora, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">App y consola</text>
       <text x="635" y="233" text-anchor="middle" font-size="11" fill="var(--muted)">de referencia</text>
       <rect x="575" y="280" width="120" height="78" rx="12" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.5"/>
-      <text x="635" y="313" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">Usuario</text>
+      <text x="635" y="313" text-anchor="middle" font-family="Sora, sans-serif" font-weight="700" font-size="14" fill="var(--ink)">Usuario</text>
       <text x="635" y="333" text-anchor="middle" font-size="11" fill="var(--muted)">ve, oye y confirma</text>
 
       <rect x="785" y="100" width="180" height="100" rx="14" fill="var(--paper)" stroke="var(--accent)" stroke-width="2"/>
-      <text x="875" y="140" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="16" fill="var(--ink)">Agente · Claude</text>
+      <text x="875" y="140" text-anchor="middle" font-family="Sora, sans-serif" font-weight="700" font-size="16" fill="var(--ink)">Agente · Claude</text>
       <text x="875" y="162" text-anchor="middle" font-size="12" fill="var(--muted)">planifica sobre tokens</text>
       <text x="875" y="180" text-anchor="middle" font-size="12" fill="var(--muted)">o cualquier otro modelo</text>
       <rect x="785" y="270" width="180" height="86" rx="14" fill="var(--paper)" stroke="var(--accent)" stroke-width="1.5"/>
-      <text x="875" y="306" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="700" font-size="15" fill="var(--ink)">ElevenLabs</text>
+      <text x="875" y="306" text-anchor="middle" font-family="Sora, sans-serif" font-weight="700" font-size="15" fill="var(--ink)">ElevenLabs</text>
       <text x="875" y="328" text-anchor="middle" font-size="12" fill="var(--muted)">voz de frases sin datos</text>
 
       <path d="M182 160 H218" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr)"/>
@@ -454,7 +458,7 @@ a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       <path d="M697 140 C740 140 750 140 783 140" fill="none" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrA)"/>
       <path d="M542 160 C620 160 560 60 740 60 C770 60 770 120 783 125" fill="none" stroke="none"/>
       <path d="M783 175 C740 175 730 245 697 240" fill="none" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrA)"/>
-      <text x="740" y="130" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="var(--accent)">‹tokens›</text>
+      <text x="740" y="130" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="var(--accent)">‹tokens›</text>
       <path d="M697 310 C740 310 750 312 783 312" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrA)"/>
     </svg>
   </div>
