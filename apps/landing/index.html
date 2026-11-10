@@ -15,7 +15,13 @@
       try {
         var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         document.documentElement.classList.add('js');
-        if (!still && !location.hash && window.scrollY < 40) document.documentElement.classList.add('intro');
+        if (location.hash !== '#transiciones') {
+          /* la bienvenida sale siempre al cargar: arriba del todo y sin el ancla de la última sección visitada */
+          if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+          if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+          window.scrollTo(0, 0);
+          if (!still) document.documentElement.classList.add('intro');
+        }
       } catch (e) {}
     </script>
   </head>
