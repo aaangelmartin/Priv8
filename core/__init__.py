@@ -24,6 +24,7 @@ import time
 from typing import Any
 
 from . import events, executor, provenance
+from . import oraculo as _oracle
 from .adapter import Adapter
 from .audit import Audit
 from .confirm import Confirmations, Pending
@@ -184,4 +185,13 @@ def act(session: str, op: str, target: str | None = None, text: str | None = Non
 
 
 def oracle(session: str, op: str, args: list[str]) -> dict[str, Any]:
-    return {"denied": "sin_regla", "detail": "oráculo pendiente (#11)"}
+    t0 = time.perf_counter()
+    result = _oracle.ask(SESSIONS.get(session), op, list(args))
+    base = {"session": session, "model_saw": f"oracle {op} " + " ".join(args),
+            "tokens": [a for a in args if T.parse(a)],
+            "ms": {"core": _ms(t0), "adapter": None, "model": None}}
+    if "denied" in result:
+        record({**base, "kind": "blocked", "reason": result["denied"], "detail": result["detail"]})
+    else:
+        record({**base, "kind": "oracle", "detail": str(result.get("tramo") or result["result"])})
+    return result
