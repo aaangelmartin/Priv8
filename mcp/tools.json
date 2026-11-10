@@ -1,0 +1,55 @@
+{
+  "$comment": "Priv8 CUA · the only three tools the agent sees. Draft built on docs/arquitectura.html; fixed with the contracts in docs/contracts/ (#4).",
+  "tools": [
+    {
+      "name": "observe",
+      "description": "Devuelve el árbol de la pantalla actual ya tokenizado. Los datos sensibles llegan como tokens ‹TIPO_n·etiqueta› (por ejemplo ‹IBAN_1·maestro›), estables en la sesión. Los elementos con cls \"rojo\" llegan sin valor y no se pueden leer ni escribir. Si \"paused\" no es null, la persona está haciendo un paso que no te corresponde (autenticación, confirmación): espera y vuelve a observar.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "session": {"type": "string", "description": "Identificador de la sesión, por ejemplo \"s1\"."}
+        },
+        "required": ["session"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "act",
+      "description": "Ejecuta una acción en la pantalla. Escribe solo tokens que hayas visto en observe o texto de interfaz sin datos: el ejecutor pone el valor real en local. Respuestas: {\"ok\":true}; {\"held\":{\"confirm\":\"c1\"}} si la acción espera la confirmación de la persona; {\"denied\":motivo,\"detail\":...} si la política la bloquea (fuga, destino, rojo, presupuesto, sin_regla). Un bloqueo no se reintenta con otro valor.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "session": {"type": "string"},
+          "op": {
+            "type": "string",
+            "enum": ["tap", "type", "key", "scroll", "open_app", "back", "send", "call"],
+            "description": "tap pulsa; type escribe text en target; key envía la tecla de text (Enter, Tab); scroll desplaza (text: up|down); open_app abre la app de target; back vuelve; send envía el formulario de target; call llama al contacto de target."
+          },
+          "target": {"type": "string", "description": "id del elemento según observe (e7, n4...)."},
+          "text": {"type": "string", "description": "Tokens o texto de interfaz. Nunca un dato real."}
+        },
+        "required": ["session", "op"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "oracle",
+      "description": "Calcula en local sin revelar valores. sum suma importes y devuelve un token nuevo con su tramo; compare devuelve igual, mayor o menor; matches devuelve coincide o no coincide. Tiene presupuesto de preguntas por sesión.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "session": {"type": "string"},
+          "op": {"type": "string", "enum": ["sum", "compare", "matches"]},
+          "args": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+            "description": "Tokens. compare y matches usan exactamente dos."
+          }
+        },
+        "required": ["session", "op", "args"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}
