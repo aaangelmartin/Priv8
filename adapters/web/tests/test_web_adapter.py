@@ -116,6 +116,17 @@ def test_snapshot_valida_y_trae_los_selectores(web, snapshot_schema, app, path, 
     assert set(expected) <= set(by_sel(snap))
 
 
+def test_campos_del_pdf_salen_del_pdf_real(web):
+    a = next(m for m in SEED["correo"]["mensajes"] if m["id"] == 9)["adjunto"]
+    web.goto("inbox", "/correo/9")
+    snap = web.snapshot()
+    s = by_sel(snap)
+    for sel, clave in (("#pdf-proveedor", "proveedor"), ("#pdf-cif", "cif"),
+                       ("#pdf-numero", "numero"), ("#pdf-importe", "importe")):
+        assert s[sel]["text"] == a[clave] and s[sel]["label"].endswith("(PDF)")
+    assert len({e["id"] for e in snap["elements"]}) == len(snap["elements"])
+
+
 def test_erp_logueado_valida(web, snapshot_schema):
     _login(web)
     snap = web.snapshot()

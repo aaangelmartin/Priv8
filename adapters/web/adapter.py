@@ -21,10 +21,13 @@ pasa por una cola.
 from __future__ import annotations
 
 import queue
+import re
 import threading
+import urllib.request
 from collections.abc import Callable
 from concurrent.futures import Future
 from typing import Any
+from urllib.parse import urljoin, urlparse
 
 APPS: dict[str, str] = {
     "alba-core": "http://127.0.0.1:5173",
@@ -81,9 +84,44 @@ _SNAPSHOT_JS = r"""
     out.push(item);
   }
   const f = document.activeElement && document.activeElement.getAttribute('data-p8-ref');
-  return {elements: out, focus: f || null};
+  const adj = document.querySelector('#adjunto');
+  const pdf = {};
+  if (adj && adj.getAttribute('href')) {
+    for (const id of ['pdf-proveedor', 'pdf-cif', 'pdf-numero', 'pdf-importe']) {
+      const e = document.getElementById(id);
+      if (!e) continue;
+      const r = e.getBoundingClientRect();
+      pdf[id] = [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)];
+    }
+  }
+  return {elements: out, focus: f || null, pdfHref: adj ? adj.getAttribute('href') : null, pdfBounds: pdf};
 }
 """
+
+
+_PDF_CAMPOS = (("proveedor", "Proveedor", "pdf-proveedor"), ("cif", "CIF", "pdf-cif"),
+               ("numero", "Numero", "pdf-numero"), ("importe", "Total", "pdf-importe"))
+_PDF_ETIQUETA = {"pdf-proveedor": "Proveedor (PDF)", "pdf-cif": "CIF (PDF)",
+                 "pdf-numero": "Número (PDF)", "pdf-importe": "Importe (PDF)"}
+
+
+def pdf_texto(data: bytes) -> str:
+    """Texto de un PDF sencillo (sin comprimir): los operandos de Tj, una línea cada uno."""
+    lineas = []
+    for m in re.finditer(rb"\(((?:\\.|[^\\)])*)\)\s*Tj", data):
+        raw = re.sub(rb"\\(.)", rb"\1", m.group(1), flags=re.S)
+        lineas.append(raw.decode("cp1252", "replace"))
+    return "\n".join(lineas)
+
+
+def pdf_campos(texto: str) -> dict[str, str]:
+    """proveedor, cif, numero e importe de la factura a partir de su texto."""
+    out = {}
+    for clave, etiqueta, _ in _PDF_CAMPOS:
+        m = re.search(rf"^{etiqueta}:\s*(.+)$", texto, re.M)
+        if m:
+            out[clave] = m.group(1).strip()
+    return out
 
 
 class WebAdapter:
@@ -154,10 +192,30 @@ class WebAdapter:
             page = self._page(self.app)
             page.wait_for_load_state("domcontentloaded")
             dom = page.evaluate(_SNAPSHOT_JS)
+            elements = dom["elements"] + self._pdf_elements(page.url, dom)
             self.seq += 1
             return {"source": "web", "app": self.app, "screen": None, "url": page.url, "seq": self.seq,
-                    "focus": dom["focus"], "system_dialog": None, "elements": dom["elements"]}
+                    "focus": dom["focus"], "system_dialog": None, "elements": elements}
         return self._call(job)
+
+    def _pdf_elements(self, url: str, dom: dict[str, Any]) -> list[dict[str, Any]]:
+        """Lee el PDF adjunto en local (mismo origen) y lo emite como elementos del snapshot."""
+        if not dom.get("pdfHref"):
+            return []
+        pdf_url = urljoin(url, dom["pdfHref"])
+        if urlparse(pdf_url).netloc != urlparse(url).netloc:  # solo el adjunto de la propia app
+            return []
+        with urllib.request.urlopen(pdf_url, timeout=5) as r:
+            campos = pdf_campos(pdf_texto(r.read()))
+        n = len(dom["elements"])
+        out = []
+        for clave, _, sel in _PDF_CAMPOS:
+            if clave not in campos or sel not in dom["pdfBounds"]:
+                continue
+            n += 1
+            out.append({"id": f"e{n}", "role": "text", "label": _PDF_ETIQUETA[sel], "text": campos[clave],
+                        "enabled": True, "bounds": dom["pdfBounds"][sel], "actions": [], "sel": "#" + sel})
+        return out
 
     def perform(self, action: dict[str, Any]) -> dict[str, Any]:
         return self._call(lambda: self._perform(action))
