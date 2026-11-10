@@ -23,8 +23,9 @@ from . import validators as V
 
 ROJO = "ROJO"
 
-IBAN_RE = re.compile(r"\b[A-Z]{2}\d{2}(?:[ ]?[A-Z0-9]{4}){3,7}(?:[ ]?[A-Z0-9]{1,3})?\b")
-CARD_RE = re.compile(r"(?<![\d])\d(?:[ -]?\d){12,18}(?![\d])")
+# Mayúsculas o minúsculas; grupos separados por espacio, guion o salto de línea.
+IBAN_RE = re.compile(r"\b[A-Za-z]{2}\d{2}(?:[ \t\- ]?\n?[ \t]*[A-Za-z0-9]{4}){3,7}(?:[ \-]?[A-Za-z0-9]{1,3})?\b")
+CARD_RE = re.compile(r"(?<![\w])\d(?:[ -]?\d){12,18}(?![\d])")
 DNI_RE = re.compile(r"\b\d{8}[ -]?[A-Za-z]\b")
 NIE_RE = re.compile(r"\b[XYZxyz][ -]?\d{7}[ -]?[A-Za-z]\b")
 CIF_RE = re.compile(r"\b[ABCDEFGHJNPQRSUVWabcdefghjnpqrsuvw][ -]?\d{7}[0-9A-Ja-j]\b")
@@ -65,14 +66,15 @@ class FinanceDetector:
         def add(start, end, tipo):
             spans.append(Span(start, end, tipo))
 
+        ibans = _ibans(text)
+        for s, e in ibans:
+            add(s, e, "IBAN")
         for m in OTP_RE.finditer(text):
             add(m.start(1), m.end(1), ROJO)
         for m in CARD_RE.finditer(text):
-            if V.luhn(m.group(0)):
+            inside_iban = any(s <= m.start() and m.end() <= e for s, e in ibans)
+            if V.luhn(m.group(0)) and not inside_iban:
                 add(m.start(), m.end(), ROJO)
-        for m in IBAN_RE.finditer(text):
-            if V.iban(m.group(0)):
-                add(m.start(), m.end(), "IBAN")
         for m in NIE_RE.finditer(text):
             if V.nie(m.group(0)):
                 add(m.start(), m.end(), "NIE")
@@ -97,6 +99,20 @@ class FinanceDetector:
         for m in NAME_AFTER_RE.finditer(text):
             add(m.start(1), m.end(1), "PERSONA")
         return _resolve(spans)
+
+
+def _ibans(text: str) -> list[tuple[int, int]]:
+    """IBAN válidos. El patrón puede tragarse una palabra de después ("… 1332 para"):
+    se prueban finales cada vez más cortos, en límites de grupo, hasta que valide."""
+    found = []
+    for m in IBAN_RE.finditer(text):
+        s = m.start()
+        ends = [r.end() + s for r in re.finditer(r"[A-Za-z0-9]+", m.group(0))]
+        for end in reversed(ends):
+            if V.iban(text[s:end]):
+                found.append((s, end))
+                break
+    return found
 
 
 _PRIORITY = {ROJO: 0, "IBAN": 1, "NIE": 2, "DNI": 2, "CIF": 2, "EMAIL": 3,
