@@ -77,7 +77,5 @@ def execute(sess: Session, op: str, target: str | None = None, text: str | None 
         action["direction"] = direction
     result = sess.adapter.perform(action)
     if result.get("ok"):
-        if op == "type" and target:  # lo escrito, con tokens, para el resumen de la confirmación
-            sess.extra.setdefault("typed", {})[target] = text
         return {"ok": True}
     return denied("sin_regla", f"el adaptador no pudo: {result.get('error', 'otro')}")
