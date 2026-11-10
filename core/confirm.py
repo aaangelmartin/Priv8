@@ -31,8 +31,10 @@ PHRASES = {
 }
 SAY_AS = {"IMPORTE": "currency", "SUMA": "currency", "PERSONA": "name", "PROVEEDOR": "name",
           "IBAN": "iban", "TEL": "phone", "DNI": "digits", "NIE": "digits", "CIF": "digits"}
-CONNECT = {"IMPORTE": None, "PERSONA": "a", "PROVEEDOR": "a", "IBAN": "en la cuenta",
-           "TEL": "al número", "FACTURA": "de la factura"}
+CONNECT = {"IMPORTE": "por", "PERSONA": "a", "PROVEEDOR": "a", "IBAN": "en la cuenta",
+           "TEL": "al número", "FACTURA": "la factura", "EMAIL": "a"}
+# En transferir, el importe va justo después de «Voy a transferir».
+NO_CONNECT_FIRST = {"transferir", "invertir"}
 
 
 @dataclass
@@ -70,6 +72,7 @@ class Confirmations:
                 action["label"] = el["label"]
         if text:
             action["text"] = text
+        summary = self._summary(sess, kind, rule, text)  # lee la pantalla: fuera del candado
         with self._lock:
             for p in self._pending.values():  # misma acción ya retenida: misma petición
                 if not p.done and p.session is sess and p.action == action:
@@ -79,7 +82,7 @@ class Confirmations:
             req = {
                 "type": "confirm_request", "id": cid, "session": sess.id, "kind": kind,
                 "action": {k: v for k, v in action.items() if k in ("op", "target", "label", "text")},
-                "summary": self._summary(sess, kind, rule, text),
+                "summary": summary,
                 "channels": ["voz", "pantalla"],
                 "sca": "persona" if kind in ("transferir", "invertir") else None,
                 "expires_s": EXPIRES_S,
@@ -91,16 +94,20 @@ class Confirmations:
     def _summary(self, sess: Session, kind: str, rule: Rule | None, text: str | None) -> list[dict]:
         toks: list[str] = []
         if rule and rule.resumen and sess.last_screen is not None:
+            # Lo que la persona aprueba es lo que hay ahora en pantalla, no lo que escribió el agente.
+            elements = _current_elements(sess)
             for sel in rule.resumen:
-                for el in (sess.last_raw or {}).get("elements", []):
+                for el in elements:
                     if el.get("sel") == sel:
                         toks += _tokens_of(sess, el)
         toks += T.find(text or "")
         lead, ask = PHRASES[kind]
         segs: list[dict] = [{"voice": "cloud", "text": lead}]
-        for tok in dict.fromkeys(toks):
+        for i, tok in enumerate(dict.fromkeys(toks)):
             tipo = T.parse(tok).tipo
-            if CONNECT.get(tipo):
+            if i == 0 and kind in NO_CONNECT_FIRST and tipo == "IMPORTE":
+                pass
+            elif CONNECT.get(tipo):
                 segs.append({"voice": "cloud", "text": CONNECT[tipo]})
             seg = {"voice": "local", "token": tok}
             if tipo in SAY_AS:
@@ -154,11 +161,26 @@ class Confirmations:
                     if not p.done and (session is None or p.session.id == session)]
 
 
+def _current_elements(sess: Session) -> list[dict]:
+    """La pantalla tal como está ahora. Si no se puede leer, la última observada."""
+    raw = None
+    if sess.adapter is not None:
+        try:
+            raw = sess.adapter.snapshot()
+        except Exception:  # noqa: BLE001 - sin lectura nueva, la última que hay
+            raw = None
+    return (raw or sess.last_raw or {}).get("elements", [])
+
+
 def _tokens_of(sess: Session, el: dict) -> list[str]:
-    """Tokens del elemento según la última observación (mismo valor, mismo token)."""
-    text = el.get("text") or ""
-    out = []
-    for entry in sess.vault.entries():
-        if entry.value and entry.value in text:
-            out.append(entry.token)
-    return out
+    """Tokens del valor que muestra el elemento, con la regla de su pantalla. Un valor
+    nuevo entra en la bóveda (mismo valor, mismo token): así se dice lo que hay de verdad."""
+    from .screen import _apply_rule
+
+    text = T.neutralize(el.get("text") or "")
+    if not text.strip():
+        return []
+    rule = sess.last_screen.rule_for(el) if sess.last_screen else None
+    if rule is not None and rule.cls == "ambar":
+        return T.find(_apply_rule(text, rule, sess.vault, sess.last_screen.origen))
+    return [e.token for e in sess.vault.entries() if e.value and e.value in text]

@@ -33,9 +33,16 @@ screens:
         origen: maestro
         campo: pago.iban
         acepta: [maestro]
+      - match: {sel: "#importe-pedido"}
+        cls: ambar
+        tipo: IMPORTE
+        origen: maestro
+        rasgo_signo: true
       - match: {sel: "#registrar"}
         cls: verde
         critica: firmar
+        resumen: ["#num-factura", "#importe", "#pago-iban"]
+      - {match: {sel_re: '^#(ver-proveedor|aviso)$'}, cls: verde}
   - id: proveedor.ficha
     url_re: /proveedores/
     rules:
@@ -56,6 +63,7 @@ screens:
       - match: {sel: "#guardar"}
         cls: verde
         critica: firmar
+      - {match: {sel: "#volver"}, cls: verde}
   - id: login
     url_re: /login
     detector: false

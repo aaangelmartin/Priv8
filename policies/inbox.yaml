@@ -19,8 +19,19 @@ screens:
         cls: ambar
         tipo: EMAIL
         origen: correo
+      - match: {sel: "#asunto"}
+        cls: ambar
+        tipo: FACTURA
+        origen: correo
+        extract: "^Factura (.+)$"
       - match: {sel: "#adjunto"}
         cls: verde
+      # Campos que se leen del PDF adjunto en local (#20). Todo es de origen correo.
+      - {match: {sel: "#pdf-proveedor"}, cls: ambar, tipo: PROVEEDOR, origen: correo}
+      - {match: {sel: "#pdf-cif"}, cls: ambar, tipo: CIF, origen: correo}
+      - {match: {sel: "#pdf-numero"}, cls: ambar, tipo: FACTURA, origen: correo}
+      - {match: {sel: "#pdf-importe"}, cls: ambar, tipo: IMPORTE, origen: correo, rasgo_signo: true}
+      - {match: {sel: "#responder"}, cls: verde}
   - id: correo.respuesta
     url_re: /responder/
     origen: correo
@@ -34,3 +45,4 @@ screens:
       - match: {sel: "#enviar"}
         cls: verde
         critica: enviar
+        resumen: ["#para"]

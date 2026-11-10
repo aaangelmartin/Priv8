@@ -4,7 +4,7 @@ Cada línea lleva prev (hash de la anterior), hash = sha256(prev + línea
 canónica sin hash ni sig) y sig = firma ed25519 del hash con la clave local
 del núcleo. Una línea alterada, quitada o reordenada rompe la cadena.
 
-    python -m core.audit verify audit/priv8.jsonl [--pub clave.pub]
+    python -m core.verify audit/priv8.jsonl [--pub clave.pub]
 
 Clave: PRIV8_AUDIT_KEY (por defecto audit/priv8.key); se crea si no existe y
 su pública queda al lado (.pub). Registro: PRIV8_AUDIT (por defecto
@@ -142,7 +142,7 @@ def verify(lines: list[str], pub: Ed25519PublicKey | None = None) -> list[str]:
 
 def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[0] != "verify":
-        print("uso: python -m core.audit verify FICHERO.jsonl [--pub CLAVE.pub]")
+        print("uso: python -m core.verify FICHERO.jsonl [--pub CLAVE.pub]")
         return 2
     path = Path(argv[1])
     pub = None

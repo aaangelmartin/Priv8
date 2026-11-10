@@ -38,9 +38,12 @@ EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+(?:\.[\w-]+)+\b")
 OTP_RE = re.compile(r"(?i)(?:c[oó]digo|code|otp|clave|pin|contraseña|password)\D{0,25}?(\d{4,8})\b")
 NAME_AFTER_RE = re.compile(
     r"(?:\bHola,?|\bEstimad[oa]s?|\bQuerid[oa]|\bSr\.|\bSra\.|\bD\.|\bDña\.|\bAtentamente,?|"
-    r"\bSaludos,?|\bUn saludo,?|\bFirmado:?|\bTitular:?|\bBeneficiario:?|\bde)\s+"
+    r"\bSaludos,?|\bUn saludo,?|\bFirmado:?|\bTitular:?|\bBeneficiario:?|\bde|\ba)\s+"
     r"((?:[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)(?:\s+(?:de\s+|del\s+)?[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,3})"
 )
+# Nombres de la interfaz que no son datos: las entidades simuladas de la demo. Ante la
+# duda, un nombre propio tras "de" o "a" se tokeniza; solo estos quedan en claro.
+PUBLIC_NAMES = frozenset({"banca alcor", "brezo banco", "nimbo bróker", "alba core"})
 
 
 class FinanceDetector:
@@ -97,7 +100,8 @@ class FinanceDetector:
             for m in re.finditer(re.escape(value), text, flags=re.IGNORECASE):
                 add(m.start(), m.end(), tipo)
         for m in NAME_AFTER_RE.finditer(text):
-            add(m.start(1), m.end(1), "PERSONA")
+            if m.group(1).casefold() not in PUBLIC_NAMES:
+                add(m.start(1), m.end(1), "PERSONA")
         return _resolve(spans)
 
 
