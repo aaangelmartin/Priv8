@@ -11,6 +11,13 @@ screens:
         cls: ambar
         tipo: EMAIL
         origen: correo
+      # Asunto de cada fila: el número de factura o pedido se tokeniza y el resto queda verde.
+      - match: {sel: ".asunto"}
+        cls: ambar
+        tipo: FACTURA
+        origen: correo
+        extract: '\b([A-Z]{1,3}-\d{4}-\d{3,6})\b'
+      - {match: {sel_re: '^#(abrir-\d+|nav-bandeja|nav-enviados|aviso)$'}, cls: verde}
   - id: correo.lectura
     url_re: /correo/
     origen: correo
@@ -42,6 +49,11 @@ screens:
         origen: correo
         campo: correo.para
         acepta: [correo, maestro]
+      - match: {sel: "#asunto-resp"}
+        cls: ambar
+        tipo: FACTURA
+        origen: correo
+        extract: '\b([A-Z]{1,3}-\d{4}-\d{3,6})\b'
       - match: {sel: "#enviar"}
         cls: verde
         critica: enviar

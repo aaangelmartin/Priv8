@@ -3,7 +3,7 @@
 Only the ficha number may be dialled (never the one from the email). The call
 opens with an AI disclosure and a recording notice, asks the challenge
 question, and the transcript is tokenized before the model sees it. The
-answer is compared locally through the oracle (`matches`); no value is
+answer is compared locally in the vault (no oracle budget is spent); no value is
 returned. The phone number is the only value that leaves (audit kind "call").
 
 Modes
@@ -112,7 +112,7 @@ class VerificationCall:
         expected = core.SESSIONS.get(self.session).vault.tokenize("FACTURA", self._esperada, "maestro")
         verificado = False
         for tok in FACTURA_TOKEN_RE.findall(tokens_text):
-            if core.oracle(self.session, "matches", [expected, tok]).get("result") == "coincide":
+            if tok == expected:  # mismo valor normalizado en la sesión → mismo token
                 verificado = True
                 break
         return {"ok": True, "verificado": verificado, "transcript_tokens": tokens_text}

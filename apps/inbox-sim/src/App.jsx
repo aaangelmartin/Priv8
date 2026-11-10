@@ -104,13 +104,14 @@ function Bandeja({ state, go }) {
               id={`abrir-${m.id}`}
               data-p8="link"
               data-p8-label={`Abrir correo ${m.id}`}
+              data-p8-text=""
               onClick={(e) => {
                 e.preventDefault()
                 go(`/correo/${m.id}`)
               }}
             >
               <span className="remitente" data-p8="text">{m.de}</span>
-              <span className="asunto">{m.asunto}</span>
+              <span className="asunto" data-p8="text">{m.asunto}</span>
               <span className="fecha">{fecha(m.fecha)}</span>
               {m.adjunto && <span className="clip" title="Con adjunto">PDF</span>}
             </a>

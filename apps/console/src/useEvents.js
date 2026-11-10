@@ -44,7 +44,7 @@ export function useEvents() {
   const resolve = useCallback((id, ok) => {
     const ws = wsRef.current
     if (!ws || ws.readyState !== WebSocket.OPEN) return false
-    ws.send(JSON.stringify({ type: 'approval_result', id, ok, via: 'pantalla', by: 'persona' }))
+    ws.send(JSON.stringify({ type: 'approval_result', id, ok, via: 'pantalla', by: 'persona', ...(ok ? {} : { reason: 'cancelado' }) }))
     setPending((p) => p.filter((x) => x.id !== id))
     return true
   }, [])

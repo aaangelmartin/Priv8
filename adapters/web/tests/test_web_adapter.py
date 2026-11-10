@@ -233,6 +233,8 @@ def test_punta_a_punta_factura_y_trampa(web, core):
     ("inbox", "/responder/9", "correo.respuesta"),
     ("alba-core", "/facturas/alta", "factura.alta"),
     ("alba-core", "/proveedores/7", "proveedor.ficha"),
+    ("alba-core", "/facturas", "facturas.lista"),
+    ("alba-core", "/proveedores", "proveedores.lista"),
 ])
 def test_ninguna_pantalla_suelta_datos_del_seed(web, core, app, path, screen):
     if app == "alba-core":
@@ -245,4 +247,8 @@ def test_ninguna_pantalla_suelta_datos_del_seed(web, core, app, path, screen):
     sys.path.insert(0, str(ROOT / "data"))
     from check_seed import known
     leaks = [v for t, v in known() if t in ("IBAN", "CIF", "DNI", "NIE", "TEL", "EMAIL") and v in sent]
+    seed = json.loads((ROOT / "data" / "seed.json").read_text(encoding="utf-8"))
+    numeros = [f["numero"] for f in seed["erp"]["facturas"]] + [p["numero"] for p in seed["erp"]["pedidos"]]
+    numeros.append(seed["correo"]["mensajes"][0]["adjunto"]["numero"])
+    leaks += [n for n in numeros if n in sent]
     assert leaks == []

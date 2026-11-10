@@ -74,7 +74,8 @@ _SNAPSHOT_JS = r"""
     if (disabled) actions = [];
     const parent = el.parentElement && el.parentElement.closest('[data-p8-ref]');
     const item = {id: ref, role, label: labelOf(el),
-                  text: field ? el.value : (clean(el.textContent) || null),
+                  text: el.dataset.p8Text !== undefined ? (el.dataset.p8Text || null)
+                        : field ? el.value : (clean(el.innerText) || null),
                   enabled: !disabled,
                   bounds: [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)],
                   actions};
@@ -205,8 +206,11 @@ class WebAdapter:
         pdf_url = urljoin(url, dom["pdfHref"])
         if urlparse(pdf_url).netloc != urlparse(url).netloc:  # solo el adjunto de la propia app
             return []
-        with urllib.request.urlopen(pdf_url, timeout=5) as r:
-            campos = pdf_campos(pdf_texto(r.read()))
+        try:
+            with urllib.request.urlopen(pdf_url, timeout=5) as r:
+                campos = pdf_campos(pdf_texto(r.read()))
+        except OSError:  # sin adjunto legible: la pantalla sale sin los campos del PDF
+            return []
         n = len(dom["elements"])
         out = []
         for clave, _, sel in _PDF_CAMPOS:
