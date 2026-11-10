@@ -112,6 +112,46 @@ def test_orden_de_voz_se_tokeniza(core):
     assert core.check(t)["allowed"]
 
 
+class Fijo:
+    def __init__(self, raw):
+        self.raw, self.performed = raw, []
+
+    def snapshot(self):
+        return json.loads(json.dumps(self.raw))
+
+    def perform(self, a):
+        self.performed.append(a)
+        return {"ok": True}
+
+
+@pytest.mark.parametrize("raw, reason", [
+    ({"source": "android", "app": "es.priv8.ocho", "screen": "confirmacion", "seq": 3, "elements": []},
+     "confirmacion"),
+    ({"source": "android", "app": "com.android.permissioncontroller", "screen": None, "seq": 4,
+      "system_dialog": "permiso", "elements": []}, "dialogo_sistema"),
+    ({"source": "android", "app": "desconocida", "screen": None, "seq": 5, "system_dialog": "oculta",
+      "elements": []}, "dialogo_sistema"),
+    ({"source": "android", "app": "es.priv8.banks.alcor", "screen": None, "seq": 6, "focus": "n1",
+      "elements": [{"id": "n1", "role": "textbox", "password": True, "text": None}]}, "autenticacion"),
+])
+def test_pausa_antes_que_la_politica(core, raw, reason):
+    """Ventanas sin política (diálogos, la confirmación de 8) dan pausa, no sin_regla (#78)."""
+    core.connect("p", Fijo(raw))
+    obs = core.observe("p")
+    assert obs["paused"] == reason and obs["elements"] == []
+    assert not list(validator("observation.schema.json").iter_errors(obs))
+    assert core.AUDIT.events[-1]["kind"] == "paused"
+    assert core.act("p", "key", text="back")["denied"] == "rojo"
+
+
+def test_fallo_del_adaptador(core):
+    web = FakeWeb()
+    web.perform = lambda a: {"ok": False, "error": "target_no_encontrado"}
+    core.connect("s1", web)
+    core.observe("s1")
+    assert core.act("s1", "tap", "e9")["denied"] == "adaptador"
+
+
 def test_el_audit_encadena(core):
     a = core.record({"session": "s", "kind": "task"})
     b = core.record({"session": "s", "kind": "task"})

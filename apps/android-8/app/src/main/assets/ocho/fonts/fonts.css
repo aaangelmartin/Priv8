@@ -1,0 +1,10 @@
+/* Sora (SIL OFL 1.1, ver OFL.txt), local: la app no pide nada a Google Fonts.
+   Los ojos de 8 se construyen midiendo el 8 de Sora 700, así que sin esta
+   fuente saldrían con otra forma. */
+@font-face {
+  font-family: "Sora";
+  src: url("Sora.ttf") format("truetype");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: block;
+}

@@ -109,7 +109,7 @@ def _perform_pending(p: Pending) -> dict[str, Any]:
                                               p.action.get("text")) if x),
             "tokens": T.find(p.action.get("text", ""))})
     return {"ok": True} if res.get("ok") else {
-        "denied": "sin_regla", "detail": f"el adaptador no pudo: {res.get('error', 'otro')}"}
+        "denied": "adaptador", "detail": f"el adaptador no pudo: {res.get('error', 'otro')}"}
 
 
 def approve(result: dict[str, Any]) -> dict[str, Any]:
@@ -132,6 +132,22 @@ def render_values(session: str, toks: list[str]) -> dict[str, str]:
     return {t: vault.value(t) for t in toks if t in vault}
 
 
+APP_OCHO = "es.priv8.ocho"
+
+
+def pause_before_policy(raw: dict[str, Any]) -> str | None:
+    """Regla de pausa de los contratos v1.1, que se mira antes que la política y en este orden:
+    diálogo del sistema; pantalla de confirmación de 8; foco en un campo rojo."""
+    if raw.get("system_dialog"):
+        return "dialogo_sistema"
+    if raw.get("app") == APP_OCHO and raw.get("screen") == "confirmacion":
+        return "confirmacion"
+    focus = raw.get("focus")
+    if focus and any(e.get("id") == focus and e.get("password") for e in raw.get("elements", [])):
+        return "autenticacion"
+    return None
+
+
 def observe(session: str) -> dict[str, Any]:
     t0 = time.perf_counter()
     sess = SESSIONS.get(session)
@@ -140,6 +156,14 @@ def observe(session: str) -> dict[str, Any]:
     ta = time.perf_counter()
     raw = sess.adapter.snapshot()
     adapter_ms = _ms(ta)
+    paused = pause_before_policy(raw)
+    if paused:  # la pausa manda sobre la política: no se lee nada de esa ventana
+        sess.last_paused = paused
+        obs = {"session": session, "app": raw.get("app", ""), "screen": raw.get("screen"),
+               "seq": raw.get("seq", 0), "paused": paused, "elements": [], "budget_left": sess.budget_left}
+        record({"session": session, "kind": "paused", "app": raw.get("app"), "screen": raw.get("screen"),
+                "detail": paused, "ms": {"core": _ms(t0) - adapter_ms, "adapter": adapter_ms, "model": None}})
+        return obs
     screen = policies().screen_for(raw)
     if screen is None:
         sess.last_raw, sess.last_screen = None, None

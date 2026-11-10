@@ -9,8 +9,8 @@ import org.json.JSONObject
  *
  * [reason] uses the values of `paused` in observation.schema.json
  * (autenticacion, dialogo_sistema, confirmacion); [detail] is what goes in the
- * bridge event (clave or otp for focus_password, biometria or permiso for
- * system_dialog).
+ * bridge event (clave or otp for focus_password, biometria, permiso or oculta
+ * for system_dialog; contracts v1.1).
  *
  * While paused, a snapshot carries nothing from the window: no texts, no
  * labels, no ids of other elements. Only what the core needs to set
@@ -69,8 +69,6 @@ data class Pause(val reason: String, val detail: String?) {
         const val CONFIRM = "confirmacion"
         /** 8's own app in front, not confirming: not a pause of the contract, but nothing of it goes out either. */
         const val OWN = "app_propia"
-        /** detail of the focus_password event sent when the rojo field loses the focus. */
-        const val END = "fin"
         private const val FIELD_ID = "n1"
 
         val CONFIRMATION = Pause(CONFIRM, null)

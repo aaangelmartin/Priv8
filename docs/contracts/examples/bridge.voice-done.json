@@ -1,0 +1,9 @@
+{
+  "type": "voice.done",
+  "utterance": "u18",
+  "ok": true,
+  "gap_ms": {
+    "max": 180,
+    "mean": 95
+  }
+}

@@ -41,10 +41,11 @@ def execute(sess: Session, op: str, target: str | None = None, text: str | None 
         return denied("sin_regla", f"{op} necesita text")
     if sess.adapter is None:
         return denied("sin_regla", "la sesión no tiene adaptador conectado")
+    if sess.last_paused:
+        return denied("rojo", f"en pausa ({sess.last_paused}): lo está haciendo la persona; "
+                              "espera y vuelve a observar")
     if sess.last_raw is None or sess.last_screen is None:
         return denied("sin_regla", "observa la pantalla antes de actuar")
-    if sess.last_paused == "autenticacion":
-        return denied("rojo", "la persona se está autenticando: espera y vuelve a observar")
 
     el, rule = None, None
     if target:
@@ -78,4 +79,4 @@ def execute(sess: Session, op: str, target: str | None = None, text: str | None 
     result = sess.adapter.perform(action)
     if result.get("ok"):
         return {"ok": True}
-    return denied("sin_regla", f"el adaptador no pudo: {result.get('error', 'otro')}")
+    return denied("adaptador", f"el adaptador no pudo: {result.get('error', 'otro')}")

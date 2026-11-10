@@ -4,18 +4,32 @@
   "title": "Snapshot de pantalla (crudo)",
   "description": "Lo que entrega un adaptador (web o Android) al núcleo. Lleva valores reales: nunca sale de la zona de confianza. Lo produce adapter.snapshot() en web y el mensaje 'snapshot' del puente en Android.",
   "type": "object",
-  "required": ["source", "app", "screen", "seq", "elements"],
+  "required": [
+    "source",
+    "app",
+    "screen",
+    "seq",
+    "elements"
+  ],
   "additionalProperties": false,
   "properties": {
-    "source": { "enum": ["web", "android"] },
+    "source": {
+      "enum": [
+        "web",
+        "android"
+      ]
+    },
     "app": {
-      "description": "Aplicación o sitio. Web: clave de la política (alba-core, inbox). Android: paquete (es.alcor.banca).",
+      "description": "Aplicación o sitio. Web: clave de la política (alba-core, inbox). Android: paquete (es.priv8.banks.alcor).",
       "type": "string",
       "minLength": 1
     },
     "screen": {
       "description": "Nombre de la pantalla si el adaptador lo sabe (factura.alta, inicio). Si es null, lo decide la política.",
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "url": {
       "description": "Solo web: URL actual.",
@@ -28,33 +42,61 @@
     },
     "focus": {
       "description": "Id del elemento con el foco, o null.",
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "system_dialog": {
-      "description": "Diálogo del sistema visible (huella, OTP del sistema, permisos), o null. Mientras haya uno, el núcleo pausa al agente.",
-      "type": ["string", "null"],
-      "examples": ["biometria", "otp", "permiso", null]
+      "description": "Diálogo del sistema visible (huella, OTP del sistema, permisos), o null. Mientras haya uno, el núcleo pausa al agente. 'oculta': una ventana que el servicio no puede leer.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "examples": [
+        "biometria",
+        "otp",
+        "permiso",
+        "oculta",
+        null
+      ]
     },
     "elements": {
       "type": "array",
-      "items": { "$ref": "#/$defs/element" }
+      "items": {
+        "$ref": "#/$defs/element"
+      },
+      "description": "Solo lo visible. Sin contenedores de layout: parent apunta al ancestro conservado más cercano; lo que queda fuera de pantalla necesita scroll. Sin ventana activa, va vacío. En pausa Android no manda nada de la ventana, salvo con foco en un campo rojo: entonces solo ese campo, con password: true y sin texto ni etiqueta, y focus apuntándolo."
     }
   },
   "$defs": {
     "element": {
       "type": "object",
-      "required": ["id", "role"],
+      "required": [
+        "id",
+        "role"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "common.schema.json#/$defs/element_id" },
-        "role": { "$ref": "common.schema.json#/$defs/role" },
+        "id": {
+          "$ref": "common.schema.json#/$defs/element_id"
+        },
+        "role": {
+          "$ref": "common.schema.json#/$defs/role"
+        },
         "label": {
           "description": "Etiqueta accesible (aria-label, label, contentDescription o hint).",
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "text": {
           "description": "Texto visible o contenido del campo (value en web, text en Android). Valor real.",
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "password": {
           "description": "Campo de contraseña (type=password en web, isPassword en Android). Siempre rojo.",
@@ -67,18 +109,27 @@
         "bounds": {
           "description": "[izquierda, arriba, derecha, abajo] en píxeles de pantalla.",
           "type": "array",
-          "items": { "type": "integer" },
+          "items": {
+            "type": "integer"
+          },
           "minItems": 4,
           "maxItems": 4
         },
-        "enabled": { "type": "boolean" },
+        "enabled": {
+          "type": "boolean"
+        },
         "parent": {
           "description": "Id del elemento padre, si el adaptador conserva la jerarquía.",
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "actions": {
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/op" },
+          "items": {
+            "$ref": "common.schema.json#/$defs/op"
+          },
           "uniqueItems": true
         }
       }
