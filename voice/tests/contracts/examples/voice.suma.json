@@ -1,0 +1,15 @@
+{
+  "utterance": "u18",
+  "session": "s2",
+  "segments": [
+    {
+      "voice": "cloud",
+      "text": "Entre tus tres cuentas tienes"
+    },
+    {
+      "voice": "local",
+      "token": "‹SUMA_1›",
+      "say_as": "currency"
+    }
+  ]
+}
