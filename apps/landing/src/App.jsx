@@ -52,7 +52,8 @@ function Hero() {
     <section id="inicio" className="hero" aria-labelledby="h-hero">
       <Field />
       <div className="wrap hero-stage">
-        <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="Hola." aria-hidden="true" />
+        <p className="meet in-1">Conoce a 8</p>
+        <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="¡Hola!" aria-hidden="true" />
         <h1 id="h-hero" className="in-2"><span className="line">8 <Rotator /></span><span className="soft line">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">
           Un agente de IA que usa tu ERP, tu correo o la app del banco como lo harías tú.
@@ -234,10 +235,11 @@ export default function App() {
   return (
     <>
       <Nav />
-      <p className="intro-title" aria-hidden="true"><span>Conoce</span> <span>a</span> <span className="eight-word">8</span></p>
       <main>
         <Hero />
+        <Blend from="--band" to="--paper" seed={1} overlay />
         <SeeScene />
+        <Blend from="--paper" to="--band" seed={2} />
         <NumbersScene />
         <HowScene />
         <TrapScene />

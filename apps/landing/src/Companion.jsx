@@ -47,7 +47,7 @@ function pickAnchor() {
 
 export default function Companion({ pal, intro }) {
   const { override } = useCompanion();
-  const [stage, setStage] = useState(intro ? 'sleep' : 'done');
+  const [stage, setStage] = useState(intro ? 'wake' : 'done');
   const [bg, setBg] = useState(null);
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
@@ -57,13 +57,13 @@ export default function Companion({ pal, intro }) {
   const bubbleT = useRef(0);
   const phase = useRef(intro ? 'intro' : 'live');
 
-  /* arranque: 8 duerme, se despierta saludando y vuela a su sitio en la portada */
+  /* arranque: 8 ya está despierto, saluda en su bocadillo y vuela a su sitio en la portada */
   useEffect(() => {
-    if (stage !== 'sleep') return undefined;
-    const w = setTimeout(() => setStage('wake'), 750);
-    const f = setTimeout(() => setStage('fly'), 1850);
-    const b = setTimeout(() => setStage('done'), 2950);
-    return () => { clearTimeout(w); clearTimeout(f); clearTimeout(b); };
+    if (stage !== 'wake') return undefined;
+    const h = setTimeout(() => setBubble({ text: '¡Hola, soy 8!', show: true, big: true, side: 'left' }), 350);
+    const f = setTimeout(() => { setBubble((b) => ({ ...b, show: false })); setStage('fly'); }, 1950);
+    const b = setTimeout(() => setStage('done'), 3050);
+    return () => { clearTimeout(h); clearTimeout(f); clearTimeout(b); };
   }, []);
 
   useEffect(() => {
@@ -87,27 +87,11 @@ export default function Companion({ pal, intro }) {
       }
       if (!target) return;
       if (phase.current === 'intro') {
-        /* bienvenida: 8 grande en el centro de la pantalla */
-        const D = Math.min(vw * 0.5, vh * 0.62 * 46 / 32, 640), S = D * 64 / 46;
+        /* bienvenida: 8 grande en el centro, con los ojos abiertos, saluda desde su bocadillo a la izquierda */
+        const D = Math.min(vw * 0.4, vh * 0.5 * 46 / 32, 520), S = D * 64 / 46;
         el.style.transition = el.dataset.placed && !snapping ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
         el.dataset.placed = '1';
-        /* variante B: 8 se coloca a la derecha de «Conoce a», en la misma línea, haciendo de «8» */
-        const root = document.documentElement;
-        if (root.classList.contains('intro-b')) {
-          const w = document.querySelector('.intro-title span:nth-child(2)');
-          const r = w ? w.getBoundingClientRect() : null;
-          const DB = Math.min(vw * 0.17, 230), SB = DB * 64 / 46;
-          const cx = r ? r.right + r.height * 0.3 + DB / 2 : vw * 0.62;
-          el.style.transform = `translate3d(${cx - SB / 2}px, ${vh * 0.5 - SB / 2}px, 0) scale(${SB / BASE})`;
-        } else {
-          const cy = root.classList.contains('intro-d') ? vh * 0.56 : vh * 0.5;
-          el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${cy - S / 2}px, 0) scale(${S / BASE})`;
-        }
-        /* variante C: 8 lo dice en su bocadillo */
-        if (root.classList.contains('intro-c') && !el.dataset.said) {
-          el.dataset.said = '1';
-          setTimeout(() => setBubble({ text: 'Conoce a 8', show: true, big: true }), 250);
-        }
+        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
         return;
       }
       const changed = anchor !== lastSpot.current;
@@ -156,12 +140,12 @@ export default function Companion({ pal, intro }) {
   const say = (text) => {
     clearTimeout(bubbleT.current);
     if (!text) { setBubble((b) => ({ ...b, show: false })); return; }
-    setBubble({ text, show: true, big: false });
+    setBubble({ text, show: true, big: false, side: '' });
     bubbleT.current = setTimeout(() => setBubble((b) => ({ ...b, show: false })), 4200);
   };
   useEffect(() => {
     if (stage !== 'done') return undefined;
-    setBubble((b) => ({ ...b, show: false, big: false }));
+    setBubble((b) => ({ ...b, show: false, big: false, side: '' }));
     const t = setTimeout(() => say(spot.say), 650);
     return () => clearTimeout(t);
   }, [spot.id, stage]);
@@ -171,8 +155,8 @@ export default function Companion({ pal, intro }) {
   const rgb = [1, 3, 5].map((i) => parseInt(under.slice(i, i + 2), 16));
   const light = lum(rgb) > 0.55;
   const col = { fg: light ? band : '#FFFFFF', cut: under };
-  /* en la bienvenida, ojos abiertos desde el primer momento: alegría y dos saltitos, sin el parpadeo de despertar */
-  const mode = override || (stage === 'sleep' ? 'dormir' : stage === 'wake' ? 'saludar' : stage === 'fly' ? 'alegria' : spot.mode);
+  /* en la bienvenida, ojos bien abiertos todo el rato: nada de párpados entornados */
+  const mode = override || (stage === 'wake' || stage === 'fly' ? 'mirar' : spot.mode);
   return (
     <>
       <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
@@ -180,7 +164,7 @@ export default function Companion({ pal, intro }) {
         aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
         <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
       </button>
-      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} eight={box} />
+      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} />
     </>
   );
 }
@@ -195,7 +179,7 @@ function bubblePath(W, H, R, th) {
     + `C${p(1, 18)} ${p(0.6, 16.4)} ${p(3.4, 15.4)} C${p(11, 12.6)} ${p(14, 7)} ${p(14, 0)} V${R} A${R} ${R} 0 0 1 ${T + R} 0 Z`;
 }
 
-function Bubble({ text, show, big, eight }) {
+function Bubble({ text, show, big, side, eight }) {
   const [n, setN] = useState(0);
   const ref = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
@@ -229,7 +213,8 @@ function Bubble({ text, show, big, eight }) {
       el.style.maxWidth = (big ? 'none' : `${Math.max(150, Math.min(260, Math.max(roomR, roomL, vw - 2 * m - T)))}px`);
       const w = el.offsetWidth, h = el.offsetHeight;
       let left, top, onRight = true, below = false, room = true;
-      if (roomR >= w) { left = R + gap + T; onRight = true; }
+      if (side === 'left' && roomL >= w) { left = L - gap - T - w; onRight = false; }
+      else if (roomR >= w) { left = R + gap + T; onRight = true; }
       else if (roomL >= w) { left = L - gap - T - w; onRight = false; }
       else {
         /* no cabe al lado: encima de 8, con la cola hacia él */
@@ -246,7 +231,7 @@ function Bubble({ text, show, big, eight }) {
     };
     place();
     return () => cancelAnimationFrame(raf);
-  }, [show, big, text]);
+  }, [show, big, text, side]);
   const cls = 'bubble8' + (show ? ' on' : '') + (geo.left ? ' l' : '') + (geo.below ? ' below' : '') + (big ? ' big' : '');
   const R = big ? 28 : 20, th = big ? 30 : 18, T = 14 * th / 18;
   const flip = `scale(${geo.left ? 1 : -1}, ${geo.below ? -1 : 1})`;

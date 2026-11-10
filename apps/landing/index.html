@@ -21,9 +21,6 @@
           if (location.hash) history.replaceState(null, '', location.pathname + location.search);
           window.scrollTo(0, 0);
           if (!still) document.documentElement.classList.add('intro');
-          /* bienvenida: 8 duerme, se despierta y vuela a la portada. Variantes con título para comparar: ?intro=a|b|c|d */
-          var v = (new URLSearchParams(location.search).get('intro') || 'w').toLowerCase();
-          document.documentElement.classList.add('intro-' + (/^[abcdw]$/.test(v) ? v : 'w'));
         }
       } catch (e) {}
     </script>

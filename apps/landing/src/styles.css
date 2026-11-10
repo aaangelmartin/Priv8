@@ -65,7 +65,7 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
   animation: navdrop .9s var(--ease) both;
 }
 .nav a { color: inherit; text-decoration: none; }
-.nav .brand { display: flex; align-items: center; gap: 9px; font: 700 1.05rem/1 var(--f-display); letter-spacing: -.02em; }
+.nav .brand { display: flex; align-items: center; gap: 9px; font: 700 1.05rem/1 var(--f-display); letter-spacing: -.02em; color: #2d45d6; }
 .nav-eight { width: 40px; height: 40px; flex: none; }
 .nav-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .nav .links { display: flex; gap: 2px; list-style: none; margin: 0 auto; padding: 0; }
@@ -111,7 +111,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: clamp(92px, 15vh, 136px); padding-bottom: clamp(32px, 8vh, 72px); }
 /* con zoom la pantalla es baja: 8 se ajusta también al alto para que el titular siga a la vista */
 .hero-anchor { width: clamp(110px, min(24vw, 30vh), 340px); aspect-ratio: 46 / 32; margin: clamp(18px, 2.4vw, 30px) 0 clamp(14px, 2vw, 26px); }
-.meet { font: 700 clamp(1.4rem, 1rem + 1.2vw, 2rem)/1 var(--f-display); letter-spacing: -.03em; color: #c4cdff; }
+.meet { margin-bottom: clamp(4px, 1vh, 10px); font: 600 .8rem/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: #c4cdff; }
 .hero h1 { font-size: clamp(2rem, min(1rem + 5vw, 10.5vh), 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
 .hero h1 .line { display: block; white-space: nowrap; }
 @media (max-width: 700px) { .hero h1 .line { white-space: normal; } }
@@ -127,7 +127,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 62ch; text-wrap: balance; }
 .hero-sub .tok { background: #fff; color: #1f33b0; }
 .hero .cta { justify-content: center; }
-@media (max-width: 700px) { .hero-anchor { width: clamp(96px, min(62vw, 30vh), 260px); } }
+@media (max-width: 700px) { .meet { margin-bottom: 64px; } .hero-anchor { width: clamp(96px, min(62vw, 30vh), 260px); } }
 
 /* ---------- escenas fijadas: la misma composición que la portada ----------
    Cobalto, el campo de datos tenue detrás, todo centrado: 8 arriba, etiqueta, titular blanco con la segunda parte
@@ -145,6 +145,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .scene .lead { color: #dbe1ff; margin-top: clamp(10px, 1.8vh, 18px); max-width: 52ch; text-wrap: balance; }
 .swap { animation: swapin .8s var(--ease) both; }
 @keyframes swapin { from { opacity: 0; transform: translateY(24px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.scene > .stage > .dots { display: none; }
 .dots { position: absolute; right: max(var(--margin), 16px); top: 50%; transform: translateY(-50%); display: grid; gap: 10px; z-index: 2; }
 .dots i { width: 6px; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, .25); transition: background .3s ease, height .4s var(--ease); }
 .dots i.on { background: #fff; height: 40px; }
@@ -219,6 +220,14 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 @keyframes pulse-g { 0%, 100% { box-shadow: 0 0 0 0 rgba(31, 138, 91, .5); } 50% { box-shadow: 0 0 0 8px rgba(31, 138, 91, 0); } }
 /* en pantallas bajas la frase sobra: manda la pieza visual */
 @media (max-height: 760px) { .scene .scn .lead { display: none; } }
+/* escena en blanco, justo después de la portada: el mismo campo de datos en cobalto muy suave */
+.scene-paper { background: var(--paper); color: var(--ink); }
+.scene-paper .stage::after { background: radial-gradient(ellipse 46% 56% at 50% 55%, var(--paper) 40%, rgba(255, 255, 255, 0) 82%); }
+.scene-paper .texture { color: rgba(45, 69, 214, .08); }
+.scene-paper .eyebrow { color: var(--accent); }
+.scene-paper .soft { color: var(--accent); }
+.scene-paper .lead { color: var(--ink-2); }
+.scene-paper .screen { box-shadow: 0 30px 80px rgba(11, 27, 51, .14), 0 0 0 1px rgba(11, 27, 51, .05); }
 
 /* ---------- bloques normales: misma composición centrada que la portada ----------
    Cobalto (con el campo de datos) o blanco, nada más. En blanco el titular va en noche con la segunda parte en cobalto. */
@@ -422,25 +431,4 @@ html.js .rv.in { opacity: 1; transform: none; }
 
 html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-delay: .22s; } html.landed .in-3 { transition-delay: .36s; } html.landed .in-4 { transition-delay: .5s; }
 
-/* «Conoce a 8» solo en la bienvenida. Cuatro variantes para probar con ?intro=a|b|c|d */
-.intro-title { position: fixed; z-index: 45; left: 50%; margin: 0; font: 700 clamp(2rem, 1.2rem + 3vw, 3.6rem)/1.15 var(--f-display); letter-spacing: -.04em; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transform: translateX(-50%); }
-.intro-title span { display: inline-block; }
-html.intro .intro-title { visibility: visible; }
-/* A: debajo de 8, sube y se desvanece */
-html.intro-a .intro-title { top: calc(50vh + min(50vw, 89.125vh, 640px) * .3478 + 22px); }
-html.intro.intro-a .intro-title { animation: introA 1.35s var(--ease) both; }
-@keyframes introA { 0% { opacity: 0; transform: translate(-50%, 16px); } 30%, 78% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
-/* B: «Conoce a» a la izquierda y 8 haciendo de «8» */
-html.intro-b .intro-title { top: 50vh; left: 50%; transform: translate(-78%, -50%); font-size: clamp(2.6rem, 1.4rem + 4.5vw, 5.4rem); }
-html.intro-b .intro-title .eight-word { visibility: hidden; }
-html.intro.intro-b .intro-title { animation: introB 1.35s var(--ease) both; }
-@keyframes introB { 0% { opacity: 0; } 20%, 80% { opacity: 1; } 100% { opacity: 0; } }
-/* C: lo dice 8 en su bocadillo (sin título) */
-html.intro-c .intro-title { display: none; }
-.bubble8.big { white-space: nowrap; max-width: none; font: 700 clamp(1.6rem, 1rem + 2vw, 2.6rem)/1.15 var(--f-display); letter-spacing: -.03em; padding: .5em .8em .55em; }
-/* D: encima de 8, palabra a palabra */
-html.intro-d .intro-title { top: calc(56vh - min(50vw, 89.125vh, 640px) * .3478 - 1.4em); }
-html.intro.intro-d .intro-title { opacity: 1; }
-html.intro.intro-d .intro-title span { animation: introD 1.35s var(--ease) both; }
-html.intro.intro-d .intro-title span:nth-child(2) { animation-delay: .1s; } html.intro.intro-d .intro-title span:nth-child(3) { animation-delay: .2s; }
-@keyframes introD { 0% { opacity: 0; transform: translateY(18px); filter: blur(8px); } 30%, 78% { opacity: 1; transform: none; filter: none; } 100% { opacity: 0; transform: translateY(-10px); } }
+.bubble8.big { white-space: nowrap; max-width: none; font: 700 clamp(1.4rem, .9rem + 1.5vw, 2.2rem)/1.15 var(--f-display); letter-spacing: -.03em; padding: .5em .8em .55em; }

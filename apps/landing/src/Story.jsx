@@ -41,11 +41,6 @@ export function Scene({ id, screens = 3, tone = 'cobalt', phases = 1, label, chi
       <div className="stage">
         <Texture />
         {children({ p, phase })}
-        {phases > 1 && (
-          <div className="dots" aria-hidden="true">
-            {Array.from({ length: phases }, (_, i) => <i key={i} className={i === phase ? 'on' : i < phase ? 'past' : ''} />)}
-          </div>
-        )}
       </div>
     </section>
   );
@@ -67,7 +62,7 @@ const ROWS = [
 /* 1 · Lo que ve un agente normal frente a lo que ve 8. Composición de la portada: 8 arriba, titular, pantalla debajo. */
 export function SeeScene() {
   return (
-    <Scene id="problema" screens={3} phases={2} label="Lo que ve la IA">
+    <Scene id="problema" screens={3} tone="paper" phases={2} label="Lo que ve la IA">
       {({ phase }) => {
         const safe = phase === 1;
         return (
