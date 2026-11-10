@@ -125,7 +125,12 @@ export default function Companion({ pal, intro }) {
     const tick = setInterval(ask, 200);
     window.addEventListener('scroll', ask, { passive: true });
     window.addEventListener('resize', ask);
-    return () => { clearInterval(tick); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); cancelAnimationFrame(raf); };
+    /* zoom del navegador: cambia el tamaño visible y la densidad de píxeles */
+    const vv = window.visualViewport; if (vv) vv.addEventListener('resize', ask);
+    let mq = null; const watchDpr = () => { if (mq) mq.removeEventListener('change', onDpr); mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener('change', onDpr); };
+    function onDpr() { box.current && (box.current.style.transition = 'none'); ask(); watchDpr(); }
+    watchDpr();
+    return () => { clearInterval(tick); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); if (vv) vv.removeEventListener('resize', ask); if (mq) mq.removeEventListener('change', onDpr); cancelAnimationFrame(raf); };
   }, []);
 
   /* al despertar, crece hasta su sitio en la portada */
@@ -188,7 +193,7 @@ function Bubble({ text, show, pos }) {
   const cls = 'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '') + (below ? ' below' : '');
   return (
     <div className={cls} style={{ ...v, ...h }} role="status" aria-live="polite">
-      <svg className="tail" viewBox="0 0 16 22" aria-hidden="true"><path d="M16 0 V22 C 10 22 3 21 0 18 C 6 15 10 9 10 0 Z" /></svg>
+      <svg className="tail" viewBox="0 0 22 18" aria-hidden="true"><path d="M2 0 H22 L7.5 15.5 Q4 19 3 14 Z" /></svg>
       <span>{text.slice(0, n)}</span><span className="ghost" aria-hidden="true">{text.slice(n)}</span>
     </div>
   );

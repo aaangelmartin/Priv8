@@ -86,18 +86,17 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .companion-eight { position: absolute; inset: 0; }
 .companion-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 17px; border-radius: 20px; background: #ffffff; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); box-shadow: 0 14px 36px rgba(5, 16, 31, .22); opacity: 0; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
-.bubble8 .tail { position: absolute; bottom: 0; width: 16px; height: 22px; fill: #ffffff; overflow: visible; }
-/* pico abajo del todo, en la esquina que mira a 8 */
-.bubble8.l { border-bottom-left-radius: 4px; transform-origin: 0 100%; }
-.bubble8.l .tail { left: -10px; }
-.bubble8:not(.l) { border-bottom-right-radius: 4px; transform-origin: 100% 100%; }
-.bubble8:not(.l) .tail { right: -10px; transform: scaleX(-1); }
-/* si va por debajo de 8: pico arriba del todo */
-.bubble8.below .tail { bottom: auto; top: 0; }
-.bubble8.below.l { border-bottom-left-radius: 20px; border-top-left-radius: 4px; transform-origin: 0 0; }
-.bubble8.below.l .tail { transform: scaleY(-1); }
-.bubble8.below:not(.l) { border-bottom-right-radius: 20px; border-top-right-radius: 4px; transform-origin: 100% 0; }
-.bubble8.below:not(.l) .tail { transform: scale(-1, -1); }
+/* pico: un triángulo de punta redondeada que sale de la esquina y señala a 8 en diagonal */
+.bubble8 .tail { position: absolute; width: 22px; height: 18px; fill: #ffffff; overflow: visible; bottom: -15px; }
+.bubble8.l { transform-origin: 14px 110%; }
+.bubble8.l .tail { left: 12px; transform: scaleX(-1); }
+.bubble8:not(.l) { transform-origin: calc(100% - 14px) 110%; }
+.bubble8:not(.l) .tail { right: 12px; }
+.bubble8.below .tail { bottom: auto; top: -15px; }
+.bubble8.below.l { transform-origin: 14px -10%; }
+.bubble8.below.l .tail { transform: scale(-1, -1); }
+.bubble8.below:not(.l) { transform-origin: calc(100% - 14px) -10%; }
+.bubble8.below:not(.l) .tail { transform: scaleY(-1); }
 .bubble8.on { opacity: 1; transform: none; }
 .bubble8 span { position: relative; }
 .bubble8 .ghost { visibility: hidden; }
@@ -108,9 +107,18 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 42% 48% at 50% 60%, var(--band) 46%, transparent 80%); }
 .hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: 136px; padding-bottom: 72px; }
-.hero-anchor { width: clamp(200px, 24vw, 340px); aspect-ratio: 46 / 32; margin-bottom: clamp(18px, 2.6vw, 32px); }
+.hero-anchor { width: clamp(200px, 24vw, 340px); aspect-ratio: 46 / 32; margin: clamp(18px, 2.4vw, 30px) 0 clamp(14px, 2vw, 26px); }
 .meet { font: 700 clamp(1.3rem, 1rem + 1vw, 1.9rem)/1 var(--f-display); letter-spacing: -.03em; color: #fff; padding: 12px 22px; border-radius: 999px; background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .24); backdrop-filter: blur(6px); }
-.hero h1 { font-size: clamp(2.8rem, 1rem + 5.6vw, 6rem); letter-spacing: -.05em; line-height: .96; margin-top: 22px; max-width: 14ch; }
+.hero h1 { font-size: clamp(2.6rem, 1rem + 5vw, 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
+.hero h1 .line { display: block; white-space: nowrap; }
+@media (max-width: 700px) { .hero h1 .line { white-space: normal; } }
+.rotator { position: relative; display: inline-grid; vertical-align: bottom; text-align: left; overflow: hidden; padding-bottom: .14em; margin-bottom: -.14em; transition: width .6s var(--ease); }
+.rot-sizer { visibility: hidden; grid-area: 1 / 1; }
+.rot-item { position: relative; grid-area: 1 / 1; justify-self: start; white-space: nowrap; transform: translateY(105%); opacity: 0; transition: transform .7s var(--ease), opacity .5s ease; color: #fff; }
+.rot-item.on { transform: none; opacity: 1; }
+.rot-item.out { transform: translateY(-105%); opacity: 0; }
+.rot-item.on::after { content: ""; position: absolute; left: 0; right: 0; bottom: .04em; height: .08em; border-radius: 99px; background: #c4cdff; transform-origin: left; animation: underline 2.2s var(--ease) both; }
+@keyframes underline { 0% { transform: scaleX(0); } 30%, 80% { transform: scaleX(1); } 100% { transform: scaleX(1); opacity: .0; } }
 .hero h1 .soft { color: #c4cdff; }
 .hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 60ch; }
 .hero-sub .tok { background: #fff; color: #1f33b0; }

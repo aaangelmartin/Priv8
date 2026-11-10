@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
@@ -12,17 +12,48 @@ import { PALETTE } from './useTheme.js';
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
 /* ---------------------------------------------------------------- portada */
+/* Lo que hace 8, rotando en el titular: una tarea cada vez, entra desde abajo y sale por arriba. */
+const TASKS = ['registra facturas.', 'paga a proveedores.', 'llama al banco.', 'contesta correos.', 'concilia cuentas.', 'hace tus trámites.'];
+function Rotator() {
+  const [i, setI] = useState(0);
+  const box = useRef(null);
+  /* el hueco se ajusta al ancho de la tarea que se ve, así el titular queda siempre centrado */
+  useEffect(() => {
+    const el = box.current; if (!el) return;
+    const item = el.querySelectorAll('.rot-item')[i];
+    if (item) el.style.width = item.scrollWidth + 'px';
+  }, [i]);
+  useEffect(() => {
+    const on = () => { const el = box.current; const item = el && el.querySelectorAll('.rot-item')[i]; if (item) el.style.width = item.scrollWidth + 'px'; };
+    window.addEventListener('resize', on);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(on);
+    return () => window.removeEventListener('resize', on);
+  });
+  useEffect(() => {
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
+    if (still) return undefined;
+    const t = setInterval(() => setI((v) => (v + 1) % TASKS.length), 2200);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <span className="rotator" ref={box} aria-live="polite">
+      {TASKS.map((t, k) => <span key={t} className={'rot-item' + (k === i ? ' on' : k === (i + TASKS.length - 1) % TASKS.length ? ' out' : '')} aria-hidden={k !== i}>{t}</span>)}
+    </span>
+  );
+}
+
 function Hero() {
   return (
     <section id="inicio" className="hero" aria-labelledby="h-hero">
       <Field />
       <div className="wrap hero-stage">
-        <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="Hola." aria-hidden="true" />
         <p className="meet in-1">Conoce a 8</p>
-        <h1 id="h-hero" className="in-2">Hace el trabajo. <span className="soft">Sin ver tus datos.</span></h1>
+        <div id="hero-anchor" className="hero-anchor" data-anchor8="" data-mode="mirar" data-say="Hola." aria-hidden="true" />
+        <h1 id="h-hero" className="in-2"><span className="line">8 <Rotator /></span><span className="soft line">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">
-          8 entra en tu ERP, tu correo o la app del banco y hace el trámite como lo harías tú.
-          Cada dato sensible viaja al modelo convertido en un token, y el valor real nunca sale de tu máquina.
+          Un agente de IA que usa tu ERP, tu correo o la app del banco como lo harías tú.
+          Cada dato sensible le llega como un token; el valor real nunca sale de tu máquina.
         </p>
         <div className="cta in-4">
           <a className="btn btn-white" href="#contacto">Pide una demo</a>
