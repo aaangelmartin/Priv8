@@ -242,10 +242,9 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
 # ------------------------------------------------------------------ CLI
 
 async def _main(a: argparse.Namespace) -> int:
-    from agent.fakes import build_fake_core  # until the real core lands (#4)
-    from agent.server import DEFAULT_HOST, build_server, serve_http
+    from agent.server import DEFAULT_HOST, build_server, default_core, serve_http
 
-    core, _fake = build_fake_core()
+    core = default_core()  # PRIV8_CORE=fake|real, in this same process
     err = lambda s: print(s, file=sys.stderr)  # noqa: E731
 
     model: ModelClient
@@ -301,7 +300,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--audit-out", help="write the audit events as JSONL")
     a = p.parse_args(argv)
     a.task = a.task_given or "registrar factura"
-    return anyio.run(_main, a)
+    from agent.core_adapter import RealCoreUnavailable
+
+    try:
+        return anyio.run(_main, a)
+    except (RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
+        print(f"priv8: {e}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

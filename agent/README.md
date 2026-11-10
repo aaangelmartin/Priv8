@@ -2,7 +2,7 @@
 
 Camino 3, issue #25. El agente (Claude) solo ve tres herramientas: `observe`, `act` y `oracle`. No hay más herramientas, ni recursos, ni prompts.
 
-Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo; aún sin fusionar): `tools.schema.json`, `observation.schema.json`, `snapshot.schema.json` y `audit.schema.json`. El núcleo real (`core/`, #4–#14) aún no existe: todo pasa por la interfaz `core_port.py`, y mientras tanto corre sobre el núcleo falso `fakes.py`.
+Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo; aún sin fusionar): `tools.schema.json`, `observation.schema.json`, `snapshot.schema.json` y `audit.schema.json`. Todo pasa por la interfaz `core_port.py`. El núcleo corre **en el mismo proceso** (decisión del equipo, opción A): `PRIV8_CORE=fake` (por defecto) usa el núcleo falso `fakes.py`, y `PRIV8_CORE=real` usa `core/` a través de `core_adapter.py`, que aún no existe (#4–#14).
 
 ## Archivos
 
@@ -10,6 +10,7 @@ Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo; aún sin fusi
 |---|---|
 | `tools.json` | Cómo se describen las tres herramientas al modelo: nombre, descripción y `input_schema`, que es el `*_input` de `docs/contracts/tools.schema.json` con las referencias resueltas. La API de Claude no admite `allOf` arriba del todo, así que las reglas condicionales del contrato (qué `op` necesita `target` o `text`) van en `x-priv8-rules` y solo las aplica el servidor |
 | `core_port.py` | Interfaz con el núcleo: `ScreenPort.observe`, `ActPort.act`, `OraclePort.oracle`, `LeakCheckPort.check` (bloqueo final), `AuditPort.record`, agrupadas en `Core` |
+| `core_adapter.py` | Adaptador al núcleo real en el mismo proceso: `build_real_core()` importa `core` solo cuando se pide y conecta los cinco puertos a sus funciones; `select_core()` elige según `PRIV8_CORE` |
 | `fakes.py` | Núcleo falso en memoria: pantalla de alta de factura de Alba Core, bóveda, política de destino, oráculo con presupuesto, ejecutor que rehidrata, confirmación, bloqueo final y auditoría encadenada por hashes. Datos inventados en `SEED` |
 | `server.py` | Servidor MCP (SDK oficial `mcp`, servidor de bajo nivel con esquemas explícitos). Streamable HTTP en `127.0.0.1:8701/mcp` o stdio |
 | `agent.py` | Bucle del agente con el SDK oficial `anthropic` (`claude-opus-5-5`, pensamiento adaptativo), límite de pasos, auditoría por paso, modo replay y grabación |
@@ -82,8 +83,32 @@ PRIV8_CONTRACTS_DIR=/tmp/priv8/docs/contracts uv run pytest
 
 La auditoría falsa escribe `sig` con un marcador fijo (`ed25519:…` de «priv8-fake-unsigned»): cumple el patrón del esquema pero no es una firma. La firma real es del núcleo.
 
+## Lo que el núcleo expone
+
+Decisión del equipo (opción A): el núcleo (`core/`, Camino 1) es una biblioteca de Python que corre en el mismo proceso que el servidor MCP y el agente. No hay HTTP entre ellos. Ese mismo proceso sirve también el WebSocket de eventos de la consola (`:8700`) y el puente de Android (`:8765`).
+
+`agent/core_adapter.py` espera que `import core` dé estas cinco funciones de módulo (en `core/__init__.py`, o reexportadas allí). Todo lo que devuelven es un `dict` compatible con JSON:
+
+| Función | Devuelve | Contrato |
+|---|---|---|
+| `observe(session) -> dict` | La pantalla tokenizada, o `{"denied": motivo, "detail": ...}`. Los elementos rojos llegan con `text: None` | `observation.schema.json` |
+| `act(session, op, target=None, text=None, direction=None) -> dict` | `{"ok": true}`, `{"held": {"confirm": "c3"}}` o `{"denied": motivo, "detail": ...}`. `text` solo trae tokens o texto verde: el ejecutor rehidrata en local. `direction` solo llega en `scroll` (el adaptador no lo pasa si es `None`, así que una firma sin él vale para el resto) | `tools.schema.json` `act_input` / `act_result` |
+| `oracle(session, op, args) -> dict` | `sum`: `{"result": "‹SUMA_n›", "tramo": ..., "budget_left": n}`; `compare`: `igual`/`mayor`/`menor`; `matches`: `coincide`/`no coincide`; sin presupuesto, `{"denied": "presupuesto"}` | `tools.schema.json` `oracle_input` / `oracle_result` |
+| `check(payload: str) -> veredicto` | Bloqueo final sobre el texto serializado que va a salir: `allowed: bool` y `findings: list[str]` con el tipo de patrón (`"IBAN"`, `"vault"`), nunca el valor. Vale un `dict` o un objeto con esos atributos. Si `allowed` no es un `bool`, el adaptador bloquea | — |
+| `record(event: dict) -> dict` | El evento tal como queda guardado, con `seq`, `ts`, `prev`, `hash` y `sig` añadidos. Recibe `session`, `kind` y cualquiera de `reason`, `app`, `screen`, `model_saw`, `tokens`, `confirm`, `approved_by`, `counts`, `detail`, `ms` | `audit.schema.json` |
+
+Elección del núcleo: `PRIV8_CORE=fake|real` (por defecto `fake` hasta que llegue el núcleo). La usan `server.default_core()` y la entrada de `agent.agent`:
+
+```bash
+PRIV8_CORE=real make replay
+PRIV8_CORE=real uv run python -m agent.server
+```
+
+Si `core` no se importa o le falta alguna función, `build_real_core()` lanza `RealCoreUnavailable` con los nombres que faltan (`core.check, core.record`), y los comandos salen con ese mensaje en lugar de una traza. `tests/test_core_adapter.py` simula un núcleo mínimo con las cinco funciones y comprueba que el adaptador, el bloqueo final y la auditoría pasan por él.
+
 ## Cuando llegue el núcleo
 
-1. Si cambian los contratos, ajustar `tools.json` (y `x-priv8-rules`) y `core_port.py`; `test_contracts.py` dirá qué no cuadra.
-2. Escribir un adaptador sobre `core/` que implemente los cinco puertos y usarlo en `server.default_core()` y en `agent._main()` en lugar de `build_fake_core()`.
-3. Mantener `fakes.py` para los tests, o pasar los tests al núcleo real y borrarlo.
+1. Exponer en `core` las cinco funciones de arriba. Con eso, `PRIV8_CORE=real make replay` ya corre el trámite contra el núcleo real.
+2. Si cambian los contratos o las firmas, ajustar `tools.json` (y `x-priv8-rules`), `core_port.py` y `core_adapter.py`; `test_contracts.py` dirá qué no cuadra.
+3. Cambiar el valor por defecto de `PRIV8_CORE` a `real` en `core_adapter.py` cuando el núcleo esté listo.
+4. Mantener `fakes.py` para los tests, o pasar los tests al núcleo real y borrarlo.

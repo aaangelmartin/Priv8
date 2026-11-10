@@ -7,8 +7,9 @@ audit event (audit.schema.json).
     python -m agent.server                     # streamable HTTP on 127.0.0.1:8701/mcp
     python -m agent.server --transport stdio   # stdio, for MCP hosts that spawn it
 
-Follows contracts v1 (docs/contracts/tools.schema.json, PR #58). Until the real
-core lands, the server runs over `fakes.FakeCore`.
+Follows contracts v1 (docs/contracts/tools.schema.json, PR #58). The core runs
+in this same process: PRIV8_CORE=fake (default, `fakes.FakeCore`) or
+PRIV8_CORE=real (`core/`, wired by `core_adapter.build_real_core`).
 """
 
 from __future__ import annotations
@@ -150,11 +151,10 @@ def build_server(core: Core, *, name: str = "priv8-cua") -> Server[Any]:
 
 
 def default_core() -> Core:
-    """The core the server runs over. Swap for the real `core/` adapter when it lands."""
-    from agent.fakes import build_fake_core
+    """The in-process core the server runs over, chosen by PRIV8_CORE=fake|real (default fake)."""
+    from agent.core_adapter import select_core
 
-    core, _ = build_fake_core()
-    return core
+    return select_core()
 
 
 async def serve_http(server: Server[Any], host: str = DEFAULT_HOST, port: int = DEFAULT_PORT,
@@ -191,7 +191,13 @@ def main(argv: list[str] | None = None) -> None:
     a = p.parse_args(argv)
     # stdout is the protocol channel on stdio: logs go to stderr.
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    server = build_server(default_core())
+    from agent.core_adapter import RealCoreUnavailable
+
+    try:
+        core = default_core()
+    except (RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
+        sys.exit(f"priv8: {e}")
+    server = build_server(core)
     if a.transport == "stdio":
         anyio.run(serve_stdio, server)
     else:
