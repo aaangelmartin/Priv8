@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla resultado. resource-ids: ver policies/banca-alcor.yaml (pantalla "resultado"). -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_resultado"
+    style="@style/Bank.Screen">
+
+    <LinearLayout
+        style="@style/Bank.Content"
+        android:paddingTop="40dp">
+
+        <TextView
+            android:id="@+id/titulo"
+            style="@style/Bank.Title"
+            android:layout_marginBottom="4dp"
+            android:text="@string/success_title"
+            android:textColor="@color/bank_positive" />
+
+        <TextView
+            android:id="@+id/res_texto"
+            style="@style/Bank.Value"
+            android:layout_marginBottom="16dp"
+            android:text="@string/success_body" />
+
+        <LinearLayout style="@style/Bank.Card">
+
+            <TextView android:id="@+id/res_importe_label" style="@style/Bank.Label" android:layout_marginTop="0dp" android:text="@string/success_amount" />
+            <TextView
+                android:id="@+id/res_importe"
+                style="@style/Bank.Value"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView android:id="@+id/res_beneficiario_label" style="@style/Bank.Label" android:text="@string/success_name" />
+            <TextView android:id="@+id/res_beneficiario" style="@style/Bank.Value" />
+
+            <TextView android:id="@+id/res_iban_destino_label" style="@style/Bank.Label" android:text="@string/success_iban" />
+            <TextView
+                android:id="@+id/res_iban_destino"
+                style="@style/Bank.Value"
+                android:fontFamily="monospace"
+                android:textSize="15sp" />
+
+            <TextView android:id="@+id/res_referencia_label" style="@style/Bank.Label" android:text="@string/success_reference" />
+            <TextView android:id="@+id/res_referencia" style="@style/Bank.Value" android:fontFamily="monospace" />
+
+            <TextView android:id="@+id/res_fecha_label" style="@style/Bank.Label" android:text="@string/success_date" />
+            <TextView android:id="@+id/res_fecha" style="@style/Bank.Value" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_inicio"
+            style="@style/Bank.Button"
+            android:text="@string/success_home" />
+    </LinearLayout>
+</ScrollView>

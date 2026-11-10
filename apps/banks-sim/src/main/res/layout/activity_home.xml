@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla inicio. resource-ids: ver policies/banca-alcor.yaml (pantalla "inicio"). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screen_inicio"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout style="@style/Bank.Header">
+
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_bank" />
+
+        <TextView
+            android:id="@+id/banco_nombre"
+            style="@style/Bank.HeaderTitle"
+            android:text="@string/bank_name" />
+
+        <Button
+            android:id="@+id/btn_salir"
+            style="@style/Bank.HeaderButton"
+            android:contentDescription="@string/home_logout_description"
+            android:text="@string/home_logout" />
+    </LinearLayout>
+
+    <ScrollView style="@style/Bank.Screen">
+
+        <LinearLayout style="@style/Bank.Content">
+
+            <TextView
+                android:id="@+id/saludo"
+                style="@style/Bank.Title"
+                android:textSize="22sp" />
+
+            <LinearLayout
+                style="@style/Bank.Card"
+                android:background="@drawable/bg_card_primary">
+
+                <TextView
+                    android:id="@+id/saldo_total_label"
+                    style="@style/Bank.Value"
+                    android:text="@string/home_total"
+                    android:textColor="@color/bank_on_primary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/saldo_total"
+                    style="@style/Bank.Value"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/bank_on_primary"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/cuentas_titulo"
+                style="@style/Bank.Section"
+                android:text="@string/home_accounts" />
+
+            <!-- Filas: layout/item_cuenta.xml -->
+            <LinearLayout
+                android:id="@+id/lista_cuentas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <Button
+                android:id="@+id/btn_transferir"
+                style="@style/Bank.Button"
+                android:text="@string/home_transfer" />
+
+            <Button
+                android:id="@+id/btn_movimientos"
+                style="@style/Bank.Button.Secondary"
+                android:layout_marginTop="10dp"
+                android:text="@string/home_movements" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

@@ -6,3 +6,6 @@ priv8-handoff.zip
 __pycache__/
 .pytest_cache/
 *.pyc
+
+# Copias de trabajo de los agentes
+.claude/worktrees/

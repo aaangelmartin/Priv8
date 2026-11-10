@@ -1,0 +1,10 @@
+{
+  "utterance": "u1",
+  "session": "s1",
+  "segments": [
+    {
+      "voice": "cloud",
+      "token": "‹IMPORTE_1›"
+    }
+  ]
+}
