@@ -53,12 +53,12 @@ p{margin:0}
 
 .states{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .stt{border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line)}
-.stt.ok{background:var(--ok-soft)} .stt.no{background:var(--accent-soft)}
+.stt.ok{background:var(--ok-soft)} .stt.no{background:var(--accent-soft)} .stt.bad{background:#FBE5E3} .states.three{grid-template-columns:repeat(3,minmax(0,1fr))}
 .stt .ico{width:130px;aspect-ratio:1;border-radius:24px;background:#fff;border:1px solid #D6DCE8;display:grid;place-items:center;align-self:flex-start}
 .stt .ico > div{width:84%;aspect-ratio:1}
 .stt .ico svg{width:100%;height:100%;overflow:visible;display:block}
 .lvl{font-family:var(--f-mono);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.stt.ok .lvl{color:var(--ok)} .stt.no .lvl{color:var(--accent)}
+.stt.ok .lvl{color:var(--ok)} .stt.no .lvl{color:var(--accent)} .stt.bad .lvl{color:#A83228} .stt.bad{color:#0B1B33}
 .stt p{font-size:.9rem}
 .tok{font-family:var(--f-mono);font-weight:600;font-size:.85em;background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:6px;white-space:nowrap}
 .stt.no .tok{background:var(--paper)}
@@ -85,7 +85,7 @@ p{margin:0}
 code{font-family:var(--f-mono);font-size:.85em}
 @media (max-width:760px){.taller{grid-template-columns:minmax(0,1fr)}.tl-row{grid-template-columns:120px minmax(0,1fr) 40px}}
 @media (max-width:1000px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media (max-width:760px){.hero,.states{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:760px){.hero,.states,.states.three{grid-template-columns:minmax(0,1fr)}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:460px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
@@ -118,10 +118,11 @@ code{font-family:var(--f-mono);font-size:.85em}
 
 
   <section class="panel">
-    <div><span class="eyebrow">Datos</span><h2>Ve o no ve</h2><p class="lead">8 no ve ni un dato tokenizado ni uno que nunca sale, así que hay una sola cara para no ver. La diferencia entre ámbar y rojo la cuenta la interfaz (el token <span class="tok">‹IBAN_1›</span> frente a la etiqueta "nunca sale"), no los ojos.</p></div>
-    <div class="states">
+    <div><span class="eyebrow">Datos</span><h2>Ve, tokenizado o nunca sale</h2><p class="lead">La cara cuenta lo que 8 puede hacer con el dato. Con un token lo tiene, pero tapado: sus ojos son asteriscos. Lo que nunca sale ni lo mira: cierra los ojos. La interfaz lo acompaña con el chip <span class="tok">‹IBAN_1›</span> o la etiqueta "nunca sale".</p></div>
+    <div class="states three">
       <div class="stt ok"><span class="ico"><div id="s-ok"></div></span><span class="lvl">Verde · 8 lo ve</span><h3>Ve</h3><p>Interfaz: menús, botones, textos.</p></div>
-      <div class="stt no"><span class="ico"><div id="s-no"></div></span><span class="lvl">Ámbar y rojo · 8 no lo ve</span><h3>No ve</h3><p>Los ojos se cierran en dos asteriscos. Tokens como <span class="tok">‹SALDO_1›</span> y lo que nunca sale, como contraseñas y códigos.</p></div>
+      <div class="stt no"><span class="ico"><div id="s-no"></div></span><span class="lvl">Ámbar · tokenizado</span><h3>Tokenizado</h3><p>Lo tiene, pero tapado: trabaja con <span class="tok">‹SALDO_1›</span> sin ver la cifra.</p></div>
+      <div class="stt bad"><span class="ico"><div id="s-nunca"></div></span><span class="lvl">Rojo · nunca sale</span><h3>Nunca sale</h3><p>Ni lo mira: contraseñas, PIN y códigos del banco los pone el usuario.</p></div>
     </div>
   </section>
 
@@ -243,7 +244,8 @@ code{font-family:var(--f-mono);font-size:.85em}
     {k:'dormir',    g:'Flujo',     n:'Inactivo',    d:'Ojos cerrados que respiran, con zetas en Sora.', use:'app en segundo plano'},
 
     {k:'ve',        g:'Datos',     n:'Ve',          d:'Ojos abiertos: 8 puede ver esto.', use:'dato verde, interfaz'},
-    {k:'nove',      g:'Datos',     n:'No ve',       d:'Los ojos se cierran en dos asteriscos.', use:'dato ámbar o rojo'}
+    {k:'nove',      g:'Datos',     n:'Tokenizado',  d:'Los ojos se cierran en dos asteriscos: lo tiene, pero tapado.', use:'dato ámbar: saldos, IBAN, nombres'},
+    {k:'nuncasale', g:'Datos',     n:'Nunca sale',  d:'Cierra los ojos como al parpadear y se queda así: ni lo mira.', use:'dato rojo: contraseñas y códigos'}
   ];
   function emo(k){ for(var i=0;i<EMO.length;i++) if(EMO[i].k===k) return EMO[i]; if(typeof CUSTOM!=='undefined' && CUSTOM[k]) return {k:k,n:CUSTOM[k].nombre,use:CUSTOM[k].descripcion||'expresión a medida',once:CUSTOM[k].duracion?1:0}; return EMO[0]; }
 
@@ -344,7 +346,15 @@ code{font-family:var(--f-mono);font-size:.85em}
   /* ---------------------------------------------------------------- instancia */
   var ALL=[], POINTER=null, LASTP=0, STILL=false, BLINKS=true;
   try{ STILL=window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
-  function spring(cur, vel, target, k, d){ var v=vel*d+(target-cur)*k; return [cur+v, v]; }
+  /* Muelles con el tiempo real: FDT = fotogramas de 60 Hz transcurridos desde el último
+     dibujo (0,5 a 120 Hz). Así el movimiento es igual de suave a 60, 120 o con un fotograma
+     tardío, sin acelerarse ni dar saltos. Se integra en pasos de medio fotograma. */
+  var FDT=1;
+  function spring(cur, vel, target, k, d){
+    var n=Math.max(1,Math.ceil(FDT/0.5)), h=FDT/n;
+    for(var i=0;i<n;i++){ vel=vel*Math.pow(d,h)+(target-cur)*k*h; cur+=vel*h; }
+    return [cur, vel];
+  }
   function sp(o,key,vkey,target,k,d){ var r=spring(o[key],o[vkey],target,k,d); o[key]=r[0]; o[vkey]=r[1]; }
 
   function Eight(el, cfg){
@@ -354,7 +364,7 @@ code{font-family:var(--f-mono);font-size:.85em}
     this.root=el.querySelector('.root'); this.dyn=el.querySelector('.dyn'); this.fx=el.querySelector('.fx');
     var xs=this.E.eyes.map(function(e){return e.x;}); this.xmin=Math.min.apply(null,xs);
     this.s={px:0,pvx:0,py:0,pvy:0,tx:0,ty:0,hx:0,hvx:0,hy:0,hvy:0,tilt:0,tv:0,l0:0,lv0:0,l1:0,lv1:0,a0:0,av0:0,a1:0,av1:0,low0:0,lowv0:0,low1:0,lowv1:0,
-      z0:1,zv0:0,z1:1,zv1:0,sx:1,svx:0,sy:1,svy:0,sh:1,shv:0,P:0,Pv:0,ox:0,ovx:0,oy:0,ovy:0};
+      z0:1,zv0:0,z1:1,zv1:0,sx:1,svx:0,sy:1,svy:0,sh:1,shv:0,P:0,Pv:0,ox:0,ovx:0,oy:0,ovy:0,cl:0,clv:0};
     this.blinkQ=[]; this.nextBlink=0; this.nextLook=0; this.visible=true; this.spin=[0,0];
     this.setMode(cfg.mode||'mirar');
     ALL.push(this);
@@ -373,17 +383,19 @@ code{font-family:var(--f-mono);font-size:.85em}
     var kick={listo:[-0.2,0.26],enfado:[0.1,-0.12],sorpresa:[-0.1,0.2],miedo:[0.06,-0.1],nove:[0.08,-0.1]}[m];
     if(kick){ s.svx=kick[0]; s.svy=kick[1]; }
     if(m==='nove'){ s.P=0; s.Pv=0; }
+    if(m==='saludar'){ s.cl=0.9; s.clv=0; }
     if(prev==='cargando' && m!=='cargando'){ s.svx=-0.1; s.svy=0.14; }
     /* transición: pequeña anticipación y un parpadeo, como cuando alguien cambia de atención */
     if(prev && prev!==m && !kick){ s.svx+=0.03; s.svy-=0.05; }
-    if(prev && prev!==m && ['nove','risa','dormir','agradecer','saludar'].indexOf(m)<0) this.blinkSoon=true;
+    if(prev && prev!==m && ['nove','nuncasale','risa','dormir','agradecer','saludar'].indexOf(m)<0) this.blinkSoon=true;
     this.idle=null; this.nextIdle=performance.now()+5000+Math.random()*5000;
   };
   Eight.prototype.endIdle=function(now){ this.idle=null; this.nextIdle=now+7000+Math.random()*7000; };
   Eight.prototype.tick=function(now){
+    FDT=this.lastNow?clamp((now-this.lastNow)/16.667,0.1,4):1; this.lastNow=now;
     var s=this.s, m=this.mode, t=STILL?0.62:now/1000, e1=STILL?2.5:(now-this.t0)/1000, E=this.E, xmin=this.xmin, left0=(E.eyes[0].x===xmin), col=this.col;
     var lid=[0,0], ang=[0,0], low=[0,0], size=[1,1], tilt=0, ox=0, oy=0, bob=Math.sin(t*1.6)*0.35, blinks=true, k=0.2, d=0.62, sc=1, noPup=false, pre='', post='', fx='';
-    var hide=(m==='nove');
+    var hide=(m==='nove'), clT=0;
     /* mirada que sigue al puntero */
     var follow=(m==='mirar'||m==='ve'||m==='alegria');
     if(follow && POINTER && now-LASTP<3500){
@@ -409,7 +421,7 @@ code{font-family:var(--f-mono);font-size:.85em}
       case 'agradecer': {
         /* parpadeo lento de confianza: cierra despacio, mantiene, abre con sonrisa */
         blinks=false; s.tx=0; s.ty=0.05; var ap=t%2.8; tilt=5;
-        if(ap<0.7) lid=[1.02*easeOut(ap/0.7),1.02*easeOut(ap/0.7)]; else if(ap<1.1) lid=[1.02,1.02]; else if(ap<1.8) lid=[1.02*(1-easeOut((ap-1.1)/0.7)),1.02*(1-easeOut((ap-1.1)/0.7))];
+        clT=(ap<1.1)?0.9:0; /* cierra en almendra como un parpadeo lento y se queda un instante */
         low=[0.4,0.4]; k=0.1; d=0.75; break; }
       case 'disculpa': {
         /* mira abajo y se encoge; a los 1,2 s vuelve a mirarte con media sonrisa */
@@ -437,13 +449,13 @@ code{font-family:var(--f-mono);font-size:.85em}
           if(!this.idle && now>this.nextIdle){ var acts=['look','yawn','hop','look']; this.idle={k:acts[Math.floor(Math.random()*acts.length)],t0:now}; }
           if(this.idle){ var ie=(now-this.idle.t0)/1000;
             if(this.idle.k==='look'){ if(ie<0.7){ s.tx=-0.9; s.ty=-0.1; tilt=-5; } else if(ie<1.4){ s.tx=0.9; s.ty=-0.1; tilt=5; } else this.endIdle(now); }
-            else if(this.idle.k==='yawn'){ if(ie<1.5){ var yy=Math.sin(ie/1.5*Math.PI); lid=[0.75*yy,0.75*yy]; s.svy+=yy*0.006; s.ty=-0.3*yy; blinks=false; } else this.endIdle(now); }
+            else if(this.idle.k==='yawn'){ if(ie<1.5){ var yy=Math.sin(ie/1.5*Math.PI); lid=[0.75*yy,0.75*yy]; s.svy+=(yy*0.006)*FDT; s.ty=-0.3*yy; blinks=false; } else this.endIdle(now); }
             else if(this.idle.k==='hop'){ if(ie<0.5){ oy=-2.2*Math.sin(ie/0.5*Math.PI); if(!this.idle.kick){ s.svx=-0.06; s.svy=0.1; this.idle.kick=1; } } else this.endIdle(now); }
           }
         }
         break; }
       case 'saludar': { blinks=false; s.tx=0; s.ty=-0.12;
-        if(e1<0.3){ lid=[1.02,1.02]; sc=0.92; }
+        if(e1<0.3){ clT=0.9; sc=0.92; }
         if(e1>=0.3 && e1<0.8){ oy=-3.2*Math.sin((e1-0.3)/0.5*Math.PI); if(!this.kicked){ s.svx=-0.12; s.svy=0.2; this.kicked=1; } }
         if(e1>=0.45 && e1<2.2) low=[0.45,0.45];
         tilt=(e1>0.4 && e1<2.2)?7:0; break; }
@@ -468,8 +480,8 @@ code{font-family:var(--f-mono);font-size:.85em}
         if(e1<0.6){ size=[1.12,1.12]; s.tx=0; s.ty=0; sc=0.95; oy=0.8; if(!this.kicked){ s.svx=0.07; s.svy=-0.1; this.kicked=1; } }
         else { s.tx=0; s.ty=-0.08; tilt=5; size=[1.05,1.05]; }
         bob=0; break; }
-      case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=amp*0.004; break; }
-      case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=syl*0.012; s.svx-=syl*0.006; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
+      case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=(amp*0.004)*FDT; break; }
+      case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=(syl*0.012)*FDT; s.svx-=(syl*0.006)*FDT; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
       case 'pensar': { if(now>this.nextLook){ var q=[[-0.8,-0.65],[0.8,-0.6],[0.45,-0.95],[-0.35,-0.95],[0.9,-0.25],[-0.9,-0.3]][Math.floor(Math.random()*6)]; s.tx=q[0]; s.ty=q[1]; this.nextLook=now+220+Math.random()*380; this.tiltT=q[0]*5; } lid=[0.22,0.22]; tilt=this.tiltT||0; break; }
       case 'leer': { var u=(t*0.55)%1, line=Math.floor(u*3), fr=(u*3)%1; s.tx=fr<0.85?-0.75+1.5*(fr/0.85):0.75-1.5*((fr-0.85)/0.15); s.ty=-0.5+line*0.5; k=0.32; d=0.55; lid=[0.14,0.14]; break; }
       case 'cargando': {
@@ -492,8 +504,12 @@ code{font-family:var(--f-mono);font-size:.85em}
         break; }
       case 'dormir': { s.tx=0; s.ty=0.3; var br=0.86+0.04*Math.sin(t*1.3); lid=[br,br]; blinks=false; bob=Math.sin(t*1.3)*0.6; sc=1+0.012*Math.sin(t*1.3);
         for(var z=0;z<3;z++){ var pz=((t/2.7)+z/3)%1, zs=4+pz*5, zx=32+E.halfW-4+pz*7, zy=32-E.halfH+1-pz*12, op=Math.min(1,pz*4)*(1-pz);
-          fx+='<text x="'+f(zx)+'" y="'+f(zy)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(zs)+'" fill="'+col.fg+'" opacity="'+f(op)+'">z</text>'; } break; }
+          fx+='<text transform="translate('+f(zx)+' '+f(zy)+') scale('+(zs/6).toFixed(4)+')" font-family=\''+FONT+'\' font-weight="700" font-size="6" text-rendering="geometricPrecision" fill="'+col.fg+'" opacity="'+f(op)+'">z</text>'; } break; }
       case 'nove': { blinks=false; s.tx=0; s.ty=0; break; }
+      case 'nuncasale': {
+        /* nunca sale: el mismo cierre en almendra del parpadeo, más lento, que se queda en
+           la línea casi cerrada. Quieto, sin respirar. */
+        blinks=false; bob=0; s.tx=0; s.ty=0.15; break; }
       default: {
         var X=CUSTOM[m]; if(!X) break;
         /* postura */
@@ -537,6 +553,8 @@ code{font-family:var(--f-mono);font-size:.85em}
       sp(s,'z'+i2,'zv'+i2,size[i2],0.18,0.6);
     }
     s.b=hide?0:blinkAt(this.blinkQ,now);
+    sp(s,'cl','clv',(m==='nuncasale')?0.9:clT,(m==='agradecer')?0.12:0.07,0.8); if(s.cl<0) s.cl=0; if(s.cl>0.92){ s.cl=0.92; if(s.clv>0) s.clv=0; }
+    var bAll=Math.max(s.b,s.cl);
     sp(s,'sh','shv',sc,0.12,0.7);
     sp(s,'sx','svx',1,0.18,0.72); sp(s,'sy','svy',1,0.18,0.72);
     sp(s,'P','Pv',hide?1:0,0.07,0.78); if(s.P<0) s.P=0;
@@ -545,14 +563,14 @@ code{font-family:var(--f-mono);font-size:.85em}
     /* pintar */
     var dyn=pre, P=s.P;
     this.root.setAttribute('transform','translate('+f(32+s.hx+s.ox)+' '+f(32+s.hy+s.oy+bob)+') rotate('+f(s.tilt)+') scale('+f(s.sx*s.sh)+' '+f(s.sy*s.sh*(1-0.025*s.b))+') translate(-32 -32)');
-    if(!noPup) E.eyes.forEach(function(e,i){ var pr=pupilR(e)*s['z'+i]*(1-Math.min(1,P/0.3)); if(pr>0.05) dyn+=pupilAt(e,s.px,Math.min(1,s.py+0.25*s.b),pr,col.fg); });
+    if(!noPup) E.eyes.forEach(function(e,i){ var pr=pupilR(e)*s['z'+i]*(1-Math.min(1,P/0.3))*(1-clamp(s.cl/0.75,0,1)); if(pr>0.05) dyn+=pupilAt(e,s.px,Math.min(1,s.py+0.25*bAll),pr,col.fg); });
     E.eyes.forEach(function(e,i){ dyn+=lidA(e,col.fg,s['l'+i],s['a'+i],e.x===xmin)+lowLid(e,col.fg,s['low'+i]); });
     /* Parpadeo: la abertura del ojo es una almendra entre dos arcos que se juntan por las
        esquinas y se cierran en una línea algo por debajo del centro. El de arriba recorre
        más que el de abajo. Parte de la pose: solo se ve cuando pasa por debajo del párpado
        que ya haya. Todo lo que queda fuera de la almendra se rellena con la tinta del 8. */
-    if(s.b>0.001) E.eyes.forEach(function(e){
-      var bt=s.b, W=e.rx*1.7, yc=e.y+e.ry*0.18, hu=e.ry*1.45*(1-bt), hl=e.ry*1.05*(1-bt), c=eyeClip(e,1.8);
+    if(bAll>0.001) E.eyes.forEach(function(e){
+      var bt=bAll, W=e.rx*1.7, yc=e.y+e.ry*0.18, hu=e.ry*1.45*(1-bt), hl=e.ry*1.05*(1-bt), c=eyeClip(e,1.8);
       var R='M'+f(e.x-e.rx-3)+' '+f(e.y-e.ry-3)+'h'+f(2*e.rx+6)+'v'+f(2*e.ry+6)+'h'+f(-2*e.rx-6)+'Z';
       var A=' M'+f(e.x-W)+' '+f(yc)+' Q'+f(e.x)+' '+f(yc-2*hu)+' '+f(e.x+W)+' '+f(yc)+' Q'+f(e.x)+' '+f(yc+2*hl)+' '+f(e.x-W)+' '+f(yc)+' Z';
       dyn+=c.def+'<g clip-path="url(#'+c.id+')"><path d="'+R+A+'" fill-rule="evenodd" fill="'+col.fg+'"/></g>';
@@ -689,6 +707,7 @@ code{font-family:var(--f-mono);font-size:.85em}
       setTimeout(function(){ if(BIG.mode==='risa' && !story){ setBig('mirar'); } },1600); });
     new Eight(document.getElementById('s-ok'),{mode:'ve',col:{fg:'#1F8A5B',cut:W}});
     new Eight(document.getElementById('s-no'),{mode:'nove',col:{fg:NOCHE,cut:W}});
+    new Eight(document.getElementById('s-nunca'),{mode:'nuncasale',col:{fg:'#C23A2E',cut:W}});
     window.addEventListener('pointermove',function(ev){ POINTER={x:ev.clientX,y:ev.clientY}; LASTP=performance.now(); },{passive:true});
     if(STILL) ALL.forEach(function(a){ a.cfg.loop=false; a.cfg.idle=false; });
     requestAnimationFrame(loop);
