@@ -70,6 +70,8 @@ scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.a
 
 `emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
 
+Todo el lado del móvil en un comando (issue #48): `scripts/movil.sh` compila la app 8 y los tres bancos (Alcor, Brezo, Nimbo), llama a `emu.sh` con las cuatro APK y abre los puertos 8765 (puente) y 8700 (eventos). Con `--no-build` instala lo ya compilado; `--headless` pasa a `emu.sh`. Necesita `JAVA_HOME` con un JDK 17.
+
 ## Probar el puente sin el núcleo
 
 `adapters/android/bridge_dev_server.py` hace de núcleo: acepta la conexión, valida cada mensaje en los dos sentidos contra los contratos y pide snapshots o manda acciones. Es una herramienta de desarrollo; el lado real es del núcleo.
