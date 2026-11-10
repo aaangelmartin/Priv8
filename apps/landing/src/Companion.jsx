@@ -19,11 +19,12 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const ease = (t) => 1 - Math.pow(1 - t, 3);
 
 /* El 8 que vive en la portada y, al bajar, sale de ella y te acompaña por la web. */
-export default function Companion({ band }) {
+export default function Companion({ band, intro }) {
   const { section, override } = useCompanion();
   const [greet, setGreet] = useState(true);
   const box = useRef(null);
   const docked = useRef(null);
+  const phase = useRef(intro ? 'intro' : 'live');
 
   useEffect(() => { const t = setTimeout(() => setGreet(false), 2400); return () => clearTimeout(t); }, []);
 
@@ -45,6 +46,18 @@ export default function Companion({ band }) {
       const el = box.current; const anchor = document.getElementById('hero-anchor');
       if (!el || !anchor) return;
       const vw = window.innerWidth, vh = window.innerHeight, a = anchor.getBoundingClientRect();
+      if (phase.current === 'intro') {
+        const S = Math.min(vw * 0.5, vh * 0.5, 440);
+        el.style.transition = 'none';
+        el.style.transform = `translate3d(${(vw - S) / 2}px, ${(vh - S) / 2}px, 0) scale(${S / BASE})`;
+        el.style.setProperty('--disc', '0');
+        return;
+      }
+      if (phase.current === 'flying') {
+        el.style.transition = 'transform 1.15s cubic-bezier(.65, 0, .15, 1)';
+        el.style.transform = `translate3d(${a.left}px, ${a.top}px, 0) scale(${a.width / BASE})`;
+        return;
+      }
       const small = vw < 1320;
       const D = small ? 58 : 92, m = small ? 16 : 28;
       const side = (SECTIONS[document.body.dataset.section] || SECTIONS.inicio).side;
@@ -71,6 +84,15 @@ export default function Companion({ band }) {
   }, []);
 
   useEffect(() => { document.body.dataset.section = section; }, [section]);
+
+  /* al terminar la bienvenida, 8 vuela del centro a su sitio en la portada */
+  useEffect(() => {
+    if (intro || phase.current !== 'intro') return undefined;
+    phase.current = 'flying';
+    window.dispatchEvent(new Event('scroll'));
+    const t = setTimeout(() => { phase.current = 'live'; window.dispatchEvent(new Event('scroll')); }, 1200);
+    return () => clearTimeout(t);
+  }, [intro]);
 
   const mode = override || (greet && section === 'inicio' ? 'saludar' : (SECTIONS[section] || SECTIONS.inicio).mode);
   return (

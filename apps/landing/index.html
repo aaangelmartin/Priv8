@@ -10,6 +10,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" />
+    <script>
+      /* La bienvenida empieza antes de pintar: fondo cobalto y 8 en el centro. Sin ella si se pide menos movimiento. */
+      try {
+        var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.documentElement.classList.add('js');
+        if (!still && !location.hash && window.scrollY < 40) document.documentElement.classList.add('intro');
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

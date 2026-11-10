@@ -11,7 +11,7 @@ const Tok = ({ children }) => <span className="tok">{children}</span>;
 /* Cada sección es una pantalla con su notch arriba, donde va el nombre. */
 function Panel({ id, tab, tone = '', children, labelledby }) {
   return (
-    <section id={id} className={'panel ' + tone} aria-labelledby={labelledby}>
+    <section id={id} className={'panel reveal ' + tone} aria-labelledby={labelledby}>
       {tab && <span className="tab">{tab}</span>}
       <div className="inner">{children}</div>
     </section>
@@ -24,16 +24,16 @@ function Hero() {
     <section id="inicio" className="panel hero" aria-labelledby="h-hero">
       <div className="inner hero-grid">
         <div className="hero-copy">
-          <p className="eyebrow on-band">Priv8 CUA · privacidad para agentes que usan pantallas</p>
-          <h1 id="h-hero">El agente hace el trámite. <span className="soft">Nunca ve tus datos.</span></h1>
-          <p className="lead on-band">
-            Priv8 cambia cada dato sensible de la pantalla por un token antes de que llegue al modelo, y solo lo devuelve a su valor real en tu máquina, al ejecutar.
+          <p className="eyebrow on-band in-1">Agentes de IA que usan pantallas, sin ver tus datos</p>
+          <h1 id="h-hero" className="in-2">El agente hace el trámite. <span className="soft">Nunca ve tus datos.</span></h1>
+          <p className="lead on-band in-3">
+            Automatiza con IA tu back-office y deja que 8 maneje el móvil de tus clientes. Priv8 cambia cada dato sensible por un token antes de que llegue al modelo y solo lo devuelve a su valor real en tu máquina, al ejecutar.
           </p>
-          <div className="cta">
-            <a className="btn white" href="#demo">Pruébalo</a>
-            <a className="btn line" href="#producto">Conoce a 8</a>
+          <div className="cta in-4">
+            <a className="btn white" href="#contacto">Pide una demo</a>
+            <a className="btn line" href="#demo">Pruébalo ahora</a>
           </div>
-          <div className="hero-tokens" aria-hidden="true">
+          <div className="hero-tokens in-5" aria-hidden="true">
             <span className="real">ES43 9100 0001 5740 1234 5678</span>
             <span className="arrow">→</span>
             <span className="tok on-band-tok">‹IBAN_1·propio›</span>
@@ -311,33 +311,76 @@ function Confianza() {
   );
 }
 
+const NEEDS = ['Facturas y pagos a proveedores', 'Atención al cliente y reclamaciones', 'Agentes para los clientes de mi banco', 'Otro proceso'];
+
 function Cierre() {
+  const [sent, setSent] = useState(false);
+  const submit = (e) => { e.preventDefault(); setSent(true); mood('agradecer', 2600); };
   return (
-    <section id="contacto" className="panel hero close" aria-labelledby="h-close">
-      <span className="tab">Hablemos</span>
-      <div className="inner">
-        <h2 id="h-close">Visa y Google resolvieron cómo paga un agente. <span className="soft">Priv8 resuelve qué ve mientras trabaja.</span></h2>
-        <p className="lead on-band">Lo presentamos el 12 de noviembre de 2026 en Hackfinance, Madrid Engineering Week. Equipo: Ángel, Álvaro, Marco y Pablo.</p>
-        <div className="cta"><a className="btn white" href="#demo">Volver a probarlo</a></div>
+    <section id="contacto" className="panel hero close reveal" aria-labelledby="h-close">
+      <span className="tab">Pide una demo</span>
+      <div className="inner close-grid">
+        <div>
+          <h2 id="h-close">Enséñanos un proceso. <span className="soft">Te lo enseñamos hecho, sin que la IA vea un dato.</span></h2>
+          <p className="lead on-band">Una sesión de 30 minutos con tus pantallas, o con las nuestras si aún no quieres compartir nada.</p>
+          <ul className="close-points">
+            <li>Sin integrar nada: trabaja sobre las pantallas que ya tienes.</li>
+            <li>Al proveedor del modelo solo le llegan tokens.</li>
+            <li>Todo lo irreversible lo confirma una persona.</li>
+          </ul>
+        </div>
+        <form className="lead-form" onSubmit={submit}>
+          {sent ? (
+            <div className="sent" role="status">
+              <b>Gracias.</b>
+              <p>Esta versión de la web todavía no envía el formulario. Lo conectamos en cuanto tengamos dirección de contacto.</p>
+            </div>
+          ) : (<>
+            <label htmlFor="f-name">Nombre<input id="f-name" name="name" autoComplete="name" required /></label>
+            <label htmlFor="f-company">Empresa<input id="f-company" name="company" autoComplete="organization" required /></label>
+            <label htmlFor="f-email">Correo del trabajo<input id="f-email" name="email" type="email" autoComplete="email" required /></label>
+            <label htmlFor="f-need">Qué quieres automatizar
+              <select id="f-need" name="need" defaultValue={NEEDS[0]}>{NEEDS.map((n) => <option key={n}>{n}</option>)}</select>
+            </label>
+            <button type="submit" className="btn white">Pedir la demo</button>
+          </>)}
+        </form>
       </div>
     </section>
   );
 }
 
-/* ---------------------------------------------------------------- selector de estilo (temporal, para elegir) */
-const VARIANTS = [['notch', 'Notch'], ['isla', 'Isla'], ['flotante', 'Flotante']];
-function readVariant() { try { return localStorage.getItem('priv8-nav') || 'notch'; } catch (e) { return 'notch'; } }
-
 export default function App() {
   const { effective, cycle } = useTheme();
   const pal = PALETTE[effective];
-  const [variant, setVariant] = useState(readVariant);
-  useEffect(() => { try { localStorage.setItem('priv8-nav', variant); } catch (e) { /* sin almacenamiento */ } }, [variant]);
+  const [intro, setIntro] = useState(() => document.documentElement.classList.contains('intro'));
+  useEffect(() => {
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
+    const root = document.documentElement;
+    root.classList.add('js');
+    if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
+    const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
+    const t = setTimeout(end, 2300);
+    const skip = () => { clearTimeout(t); end(); };
+    window.addEventListener('keydown', skip, { once: true });
+    window.addEventListener('wheel', skip, { once: true, passive: true });
+    window.addEventListener('touchstart', skip, { once: true, passive: true });
+    return () => { clearTimeout(t); window.removeEventListener('keydown', skip); window.removeEventListener('wheel', skip); window.removeEventListener('touchstart', skip); };
+  }, []);
+  /* aparición suave de cada sección al entrar en pantalla */
+  useEffect(() => {
+    const els = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -4% 0px' });
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
   return (
     <>
-      <Nav variant={variant} dark={effective === 'dark'} onTheme={cycle} pal={pal} />
+      <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
       <main className="page">
         <Hero />
+        <Producto pal={pal} />
         <Panel id="demo" tab="Pruébalo" labelledby="h-demo">
           <div className="head">
             <h2 id="h-demo">Mira qué recibe la IA. Y qué no.</h2>
@@ -347,22 +390,15 @@ export default function App() {
         </Panel>
         <Problem />
         <Protocol />
-        <Producto pal={pal} />
         <Quien pal={pal} />
         <Confianza />
         <Cierre />
         <footer>
-          <span>Priv8 · Hackfinance 2026 · Madrid Engineering Week</span>
-          <span>Datos de la demo inventados. Banca Alcor, Nimbo Bróker y Suministros Lumen son nombres inventados.</span>
+          <span>Priv8 · Privacidad para agentes de IA</span>
+          <span>Los datos de las demos son inventados. Banca Alcor, Nimbo Bróker y Suministros Lumen son nombres de ejemplo.</span>
         </footer>
       </main>
-      <Companion band={pal.band} />
-      <div className="variant" role="group" aria-label="Estilo de la barra (para elegir)">
-        <span>Barra</span>
-        {VARIANTS.map(([id, label]) => (
-          <button key={id} type="button" aria-pressed={variant === id} onClick={() => setVariant(id)}>{label}</button>
-        ))}
-      </div>
+      <Companion band={pal.band} intro={intro} />
     </>
   );
 }
