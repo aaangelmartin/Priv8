@@ -1011,9 +1011,10 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .gp-v { color: var(--ink); }
 /* dos secciones seguidas del mismo color: el contenido de la primera baja y el de la segunda sube, para que no
    quede un hueco grande entre ellas (cada una sigue midiendo una pantalla) */
+/* dos secciones seguidas del mismo color: miden lo que su contenido, sin huecos, y se juntan */
 @media (min-width: 901px) {
-  .block-paper:has(+ .block-paper), .block-cobalt:has(+ .block-cobalt) { align-content: end; padding-bottom: 32px; }
-  .block-paper + .block-paper, .block-cobalt + .block-cobalt { align-content: start; }
+  .block-paper:has(+ .block-paper), .block-cobalt:has(+ .block-cobalt) { height: auto; min-height: 0; padding-bottom: clamp(40px, 6vh, 64px); }
+  .block-paper + .block-paper, .block-cobalt + .block-cobalt { height: auto; min-height: 0; padding-top: clamp(40px, 6vh, 64px); }
 }
 /* enlaces a las páginas de detalle */
 .more { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; text-decoration: none; color: var(--accent); }
@@ -1023,3 +1024,19 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .more-row { margin-top: clamp(14px, 2.4vh, 26px); text-align: center; }
 .tcap-r { display: grid; gap: 12px; justify-items: end; }
 .prod .more { margin-top: 4px; }
+
+/* modelos en una fila */
+.tz-cloud .models { flex-wrap: nowrap; gap: 5px; }
+.tz-cloud .models i { padding: 6px 9px; font-size: .74rem; white-space: nowrap; }
+/* más claridad sobre azul: el campo de datos se aparta más del contenido */
+.block-cobalt::after { background: radial-gradient(ellipse 72% 74% at 50% 52%, var(--band) 52%, rgba(45, 69, 214, 0) 92%); }
+.scene-cobalt .stage::after { background: radial-gradient(ellipse 66% 72% at 50% 55%, var(--band) 50%, rgba(45, 69, 214, 0) 90%); }
+.cmp-h > span { color: #fff; }
+.cmp-r > span { background: #3f55da; }
+.tcap h3, .tcap p { text-shadow: none; }
+/* productos: los enlaces a la misma altura */
+.prod-grid { align-items: stretch; }
+.prod { display: flex; flex-direction: column; gap: 14px; }
+.prod .more { margin-top: auto; padding-top: 10px; }
+.dev-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.dev h2 { font-size: clamp(2rem, min(1rem + 2.6vw, 7vh), 3.4rem); }
