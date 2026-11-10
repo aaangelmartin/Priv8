@@ -22,7 +22,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--band); color: var(--ink); font: 400 1rem/1.6 var(--f-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { margin: 0; background: var(--band) var(--texture, none) repeat 0 0 / 2200px auto; color: var(--ink); font: 400 1rem/1.6 var(--f-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--band); }
 img, svg { max-width: 100%; }
 a { color: var(--accent); text-underline-offset: 3px; }
@@ -131,11 +131,10 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 /* ---------- escenas fijadas: la misma composición que la portada ----------
    Cobalto, el campo de datos tenue detrás, todo centrado: 8 arriba, etiqueta, titular blanco con la segunda parte
    en cobalto claro, una frase y la pieza visual debajo. 8 se queda en el mismo sitio mientras cambia la escena. */
-.scene { position: relative; background: var(--band); color: #fff; }
+.scene { position: relative; background: transparent; color: #fff; }
 .scene .stage { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; align-items: center; overflow: hidden; }
 .scene .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 46% 56% at 50% 55%, var(--band) 40%, rgba(45, 69, 214, 0) 82%); }
 .scene .stage > .wrap { position: relative; z-index: 1; width: 100%; }
-.texture { position: absolute; inset: -20px 0 0; overflow: hidden; pointer-events: none; font: 400 .9rem/2.15 var(--f-mono); color: rgba(255, 255, 255, .13); white-space: pre; user-select: none; }
 .scn { display: grid; justify-items: center; text-align: center; padding-top: clamp(84px, 11vh, 110px); padding-bottom: 24px; }
 .spot-scn { width: clamp(84px, min(11vw, 13vh), 150px); aspect-ratio: 46 / 32; margin-bottom: clamp(10px, 2vh, 22px); }
 .scene .eyebrow { color: #c4cdff; }
@@ -222,8 +221,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 /* escena en blanco, justo después de la portada: el mismo campo de datos en cobalto muy suave */
 .scene-paper { background: var(--paper); color: var(--ink); }
 .scene-paper .stage::after { background: radial-gradient(ellipse 46% 56% at 50% 55%, var(--paper) 40%, rgba(255, 255, 255, 0) 82%); }
-.scene-paper .texture { color: rgba(45, 69, 214, .08); }
-.scene-paper .eyebrow { color: var(--accent); }
+.scene-paper .scene-paper .eyebrow { color: var(--accent); }
 .scene-paper .soft { color: var(--accent); }
 .scene-paper .lead { color: var(--ink-2); }
 .scene-paper .screen { box-shadow: 0 30px 80px rgba(11, 27, 51, .14), 0 0 0 1px rgba(11, 27, 51, .05); }
@@ -233,7 +231,7 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .block { position: relative; overflow: hidden; padding-block: clamp(96px, 12vw, 150px); }
 .block > .wrap { position: relative; z-index: 1; }
 .block-paper { background: var(--paper); color: var(--ink); }
-.block-cobalt { background: var(--band); color: #fff; }
+.block-cobalt { background: transparent; color: #fff; }
 .block-cobalt::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 50% 50% at 50% 40%, var(--band) 40%, rgba(45, 69, 214, 0) 85%); }
 .block .eyebrow { color: var(--accent); }
 .block-cobalt .eyebrow { color: #c4cdff; }
@@ -391,8 +389,9 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .foot-cols b { font: 600 .74rem/1 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #c4cdff; margin-bottom: 6px; }
 .foot-cols a { color: #fff; text-decoration: none; opacity: .78; transition: opacity .2s ease, transform .25s var(--ease); justify-self: start; }
 .foot-cols a:hover { opacity: 1; transform: translateX(3px); }
-.foot-word { display: flex; align-items: center; justify-content: center; margin-top: clamp(56px, 8vw, 100px); margin-bottom: clamp(-60px, -4vw, -24px); font: 700 clamp(5.5rem, 1rem + 20vw, 21rem)/.8 var(--f-display); letter-spacing: -.07em; user-select: none; }
-.foot-word > span { background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, .55) 55%, rgba(255, 255, 255, 0) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.foot-word { display: flex; align-items: center; justify-content: center; gap: .14em; margin-top: clamp(48px, 7vw, 90px); padding-bottom: clamp(28px, 4vw, 56px); font: 700 clamp(4.5rem, 1rem + 15vw, 16rem)/.9 var(--f-display); letter-spacing: -.055em; color: var(--band); user-select: none; }
+.foot-word > span { color: var(--band); }
+.spot-foot { width: 1.05em; aspect-ratio: 46 / 32; flex: none; }
 .foot-word-eight { width: .98em; height: .98em; margin-left: .02em; flex: none; }
 .foot-word-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
 
@@ -459,4 +458,3 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .foot-logo { color: var(--band); }
 .foot-cols b { color: var(--ink-2); }
 .foot-cols a { color: var(--ink); }
-.foot-word > span { background: linear-gradient(180deg, #2d45d6 0%, rgba(45, 69, 214, .55) 55%, rgba(45, 69, 214, 0) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }

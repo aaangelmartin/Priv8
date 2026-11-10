@@ -2,18 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
-/* El fondo de la portada en pequeño: filas de datos en mono, muy tenues, con el centro limpio.
-   Así todas las escenas comparten el mismo mundo que la portada. */
-const DATA = ['ES43 9100 0001 5740 1234 5678', 'Lucía Ferrer', '3.412,58 €', '‹IBAN_1›', '12345678Z', 'Suministros Lumen', '1.180,00 €', '‹IMPORTE_2›', 'lucia.ferrer@correo.es', 'B12345674', '‹NOMBRE_1›', '+34 600 000 000', 'ES71 9400 0007 0206 0223 3441', '200,00 €'];
-export function Texture() {
-  const rows = Array.from({ length: 26 }, (_, r) => Array.from({ length: 9 }, (_, c) => DATA[(r * 5 + c * 3) % DATA.length]).join('     '));
-  return (
-    <div className="texture" aria-hidden="true">
-      {rows.map((t, i) => <div key={i} style={{ marginLeft: `${-((i * 137) % 260)}px` }}>{t}</div>)}
-    </div>
-  );
-}
-
 /* Escena fijada: la sección mide `screens` pantallas de alto y su contenido se queda fijo mientras bajas.
    Pasa a sus hijos el progreso de 0 a 1 y la fase en la que está. */
 export function Scene({ id, screens = 3, tone = 'cobalt', phases = 1, label, children }) {
@@ -39,7 +27,6 @@ export function Scene({ id, screens = 3, tone = 'cobalt', phases = 1, label, chi
   return (
     <section id={id} ref={ref} className={`scene scene-${tone}`} style={{ height: `${screens * 100}vh` }} aria-label={label}>
       <div className="stage">
-        <Texture />
         {children({ p, phase })}
       </div>
     </section>

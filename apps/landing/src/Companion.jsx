@@ -34,7 +34,7 @@ function pickAnchor() {
   const vh = window.innerHeight;
   let best = null, bestD = Infinity;
   document.querySelectorAll('[data-anchor8]').forEach((el) => {
-    const host = el.closest('section') || el;
+    const host = el.closest('section, footer') || el;
     const r = host.getBoundingClientRect();
     if (r.bottom < vh * 0.25 || r.top > vh * 0.75) return;
     const a = el.getBoundingClientRect();

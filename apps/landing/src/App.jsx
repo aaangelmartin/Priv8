@@ -5,7 +5,7 @@ import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
 import Field, { Blend } from './Field.jsx';
 import { Empresas, Movil } from './Products.jsx';
-import { SeeScene, NumbersScene, HowScene, TrapScene, Spot, Texture } from './Story.jsx';
+import { SeeScene, NumbersScene, HowScene, TrapScene, Spot } from './Story.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
 
@@ -92,7 +92,6 @@ function Producto({ pal }) {
 function Prueba({ pal }) {
   return (
     <section id="demo" className="block block-cobalt" aria-labelledby="h-demo">
-      <Texture />
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="leer" say="Quítame la protección y verás." />
@@ -159,7 +158,6 @@ function DemoForm({ compact = false }) {
 function Cierre() {
   return (
     <section id="contacto" className="block block-cobalt close" aria-labelledby="h-close">
-      <Texture />
       <div className="wrap close-grid">
         <div className="block-head">
           <Spot className="spot-inline" mode="alegria" say="¿Me enseñas tu proceso?" />
@@ -190,9 +188,10 @@ function Footer({ pal }) {
             <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#problema">Por qué Priv8</a></div>
           </nav>
         </div>
-        <div className="foot-word" aria-hidden="true">
-          <span>Priv</span>
-          <Eight className="foot-word-eight" mode="mirar" fg={pal.band} cut="#FFFFFF" label="8" />
+        {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
+        <div className="foot-word">
+          <Spot className="spot-foot" mode="alegria" />
+          <span>Priv8</span>
         </div>
       </div>
     </footer>
@@ -208,13 +207,16 @@ export default function App() {
     const root = document.documentElement;
     root.classList.add('js');
     if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
-    const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
+    /* durante la bienvenida no se puede bajar: ni rueda, ni dedo, ni teclas de desplazamiento */
+    const block = (e) => { e.preventDefault(); };
+    const keys = (e) => { if ([' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) e.preventDefault(); };
+    window.addEventListener('wheel', block, { passive: false });
+    window.addEventListener('touchmove', block, { passive: false });
+    window.addEventListener('keydown', keys);
+    const release = () => { window.removeEventListener('wheel', block); window.removeEventListener('touchmove', block); window.removeEventListener('keydown', keys); };
+    const end = () => { release(); window.scrollTo(0, 0); root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
     const t = setTimeout(end, 2050);
-    const skip = () => { clearTimeout(t); end(); };
-    window.addEventListener('keydown', skip, { once: true });
-    window.addEventListener('wheel', skip, { once: true, passive: true });
-    window.addEventListener('touchstart', skip, { once: true, passive: true });
-    return () => { clearTimeout(t); window.removeEventListener('keydown', skip); window.removeEventListener('wheel', skip); window.removeEventListener('touchstart', skip); };
+    return () => { clearTimeout(t); release(); };
   }, []);
   /* sección visible, para la barra */
   useEffect(() => {

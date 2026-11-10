@@ -181,13 +181,19 @@ export function Blend({ from, to, variant = 'pixels', seed = 1, overlay = false 
       }
     }
     return (
-      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={overlay ? { background: 'transparent', height: H, marginTop: -H, zIndex: 2 } : { background: `var(${from})`, height: H }}>
-        {w > 0 && (
+      /* el cobalto nunca se pinta aquí: se deja transparente para que se vea el fondo de datos de la página, continuo.
+         Hacia cobalto se dibuja el blanco con los píxeles como huecos. */
+      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={overlay ? { background: 'transparent', height: H, marginTop: -H, zIndex: 2 } : { background: from === '--band' || to === '--band' ? 'transparent' : `var(${from})`, height: H }}>
+        {w > 0 && (to === '--band' && !overlay ? (
+          <svg width={w} height={H} viewBox={`0 0 ${w} ${H}`} style={{ fill: `var(${from})`, display: 'block' }}>
+            <path fillRule="evenodd" d={`M0 0 H${w} V${H} H0 Z ` + paths.join(' ')} />
+          </svg>
+        ) : (
           <svg width={w} height={H + 1} viewBox={`0 0 ${w} ${H + 1}`} style={{ fill: `var(${to})` }}>
             <path d={paths.join(' ')} stroke={`var(${to})`} strokeWidth="0.6" strokeLinejoin="round" />
             <rect x="0" y={H} width={w} height="1.5" />
           </svg>
-        )}
+        ))}
       </div>
     );
   }
