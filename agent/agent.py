@@ -297,7 +297,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=8701)
     p.add_argument("--session", default="s1")
     p.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
-    p.add_argument("--audit-out", help="write the audit events as JSONL")
+    p.add_argument("--audit-out", help="write the audit events as JSONL (with PRIV8_CORE=real, only the "
+                                       "agent-side events: the core keeps the full signed log)")
     a = p.parse_args(argv)
     a.task = a.task_given or "registrar factura"
     from agent.core_adapter import RealCoreUnavailable
