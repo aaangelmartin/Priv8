@@ -179,7 +179,7 @@ function Footer({ pal }) {
         <div className="foot-mid">
           <div className="foot-brand">
             <a className="foot-logo" href="#inicio" aria-label="Priv8, volver arriba">
-              <Eight className="foot-eight" mode="mirar" fg="#FFFFFF" cut={pal.band} label="8" />
+              <Eight className="foot-eight" mode="mirar" fg={pal.band} cut="#FFFFFF" label="8" />
               <span>Priv8</span>
             </a>
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
@@ -192,7 +192,7 @@ function Footer({ pal }) {
         </div>
         <div className="foot-word" aria-hidden="true">
           <span>Priv</span>
-          <Eight className="foot-word-eight" mode="mirar" fg="#FFFFFF" cut={pal.band} label="8" />
+          <Eight className="foot-word-eight" mode="mirar" fg={pal.band} cut="#FFFFFF" label="8" />
         </div>
       </div>
     </footer>
@@ -238,9 +238,9 @@ export default function App() {
         <Hero />
         <Blend from="--band" to="--paper" seed={1} overlay />
         <SeeScene />
-        <Blend from="--paper" to="--band" seed={2} />
         <NumbersScene />
         <HowScene />
+        <Blend from="--paper" to="--band" seed={4} />
         <TrapScene />
         <Blend from="--band" to="--paper" seed={5} />
         <Producto pal={pal} />
@@ -250,6 +250,7 @@ export default function App() {
         <Faq />
         <Blend from="--paper" to="--band" seed={8} />
         <Cierre />
+        <Blend from="--band" to="--paper" seed={9} />
       </main>
       <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />

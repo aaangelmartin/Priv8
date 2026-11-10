@@ -98,7 +98,7 @@ const NUMS = [
 ];
 export function NumbersScene() {
   return (
-    <Scene id="cifras" screens={3} tone="cobalt" phases={3} label="Las cifras">
+    <Scene id="cifras" screens={3} tone="paper" phases={3} label="Las cifras">
       {({ phase }) => {
         const d = NUMS[phase];
         return (
@@ -123,7 +123,7 @@ const STEPS = [
 ];
 export function HowScene() {
   return (
-    <Scene id="como" screens={3} phases={3} label="Cómo funciona">
+    <Scene id="como" screens={3} tone="paper" phases={3} label="Cómo funciona">
       {({ phase }) => {
         const s = STEPS[phase];
         return (

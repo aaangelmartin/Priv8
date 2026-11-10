@@ -431,3 +431,32 @@ html.js .rv.in { opacity: 1; transform: none; }
 html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-delay: .22s; } html.landed .in-3 { transition-delay: .36s; } html.landed .in-4 { transition-delay: .5s; }
 
 .bubble8.big { white-space: nowrap; max-width: none; font: 700 clamp(1.4rem, .9rem + 1.5vw, 2.2rem)/1.15 var(--f-display); letter-spacing: -.03em; padding: .5em .8em .55em; }
+
+/* barra sobre blanco: cobalto con texto blanco */
+.nav { transition: background .35s ease, color .35s ease, border-color .35s ease; }
+.nav.on-white { background: rgba(45, 69, 214, .97); border-color: transparent; box-shadow: 0 12px 40px rgba(45, 69, 214, .28); }
+.nav.on-white .brand { color: #fff; }
+.nav.on-white .links a { color: rgba(255, 255, 255, .78); }
+.nav.on-white .links a:hover, .nav.on-white .links a[aria-current="true"] { color: #fff; background: rgba(255, 255, 255, .16); }
+.nav.on-white .pill { background: #fff; color: #1f33b0; }
+
+/* escenas en blanco: cifras y cómo funciona */
+.scene-paper .num-big { color: var(--band); }
+.scene-paper .num-text { color: var(--ink); }
+.scene-paper .num-src { color: var(--ink-2); }
+.scene-paper .pair .real { background: #eef2fb; color: var(--ink-2); text-decoration-color: rgba(11, 27, 51, .35); }
+.scene-paper .pair .arrow { background: var(--band); }
+.scene-paper .pair .arrow::after { border-left-color: var(--band); }
+.scene-paper .pair .tok, .scene-paper .hv-2 .q .tok { background: var(--tok-bg); color: var(--tok-fg); }
+.scene-paper .hv-2 .q { color: var(--ink); }
+.scene-paper .hv-2 .a { color: var(--band); }
+.scene-paper .hv-2 .budget { color: var(--ink-2); }
+.scene-paper .hv-3 .confirm { box-shadow: 0 30px 80px rgba(11, 27, 51, .14), 0 0 0 1px rgba(11, 27, 51, .06); }
+
+/* pie en blanco */
+.foot { background: var(--paper); color: var(--ink); border-top: 0; }
+.foot-brand p { color: var(--ink-2); }
+.foot-logo { color: var(--band); }
+.foot-cols b { color: var(--ink-2); }
+.foot-cols a { color: var(--ink); }
+.foot-word > span { background: linear-gradient(180deg, #2d45d6 0%, rgba(45, 69, 214, .55) 55%, rgba(45, 69, 214, 0) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }

@@ -22,15 +22,42 @@ export default function Nav() {
     return () => mo.disconnect();
   }, []);
   const onLight = tone === 'dark';
+  /* sobre blanco la barra se vuelve cobalto, para no fundirse con el fondo */
+  const [onWhite, setOnWhite] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const nav = document.querySelector('.nav'); if (!nav) return;
+      const r = nav.getBoundingClientRect();
+      const y = r.top + r.height / 2;
+      let light = false;
+      for (const el of document.elementsFromPoint(window.innerWidth / 2, y)) {
+        if (nav.contains(el) || el.closest('.companion, .bubble8')) continue;
+        let n = el, c = null;
+        while (n && n !== document.documentElement) {
+          const m = getComputedStyle(n).backgroundColor.match(/rgba?\(([^)]+)\)/);
+          if (m) { const p = m[1].split(',').map(parseFloat); if (p.length < 4 || p[3] > 0.6) { c = p; break; } }
+          n = n.parentElement;
+        }
+        if (c) { light = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 > 0.6; break; }
+      }
+      setOnWhite(light);
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(check); };
+    ask(); window.addEventListener('scroll', ask, { passive: true }); window.addEventListener('resize', ask);
+    const t = setInterval(ask, 400);
+    return () => { clearInterval(t); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); cancelAnimationFrame(raf); };
+  }, []);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
     on(); window.addEventListener('scroll', on, { passive: true });
     return () => window.removeEventListener('scroll', on);
   }, []);
   return (
-    <nav className={`nav${scrolled ? ' scrolled' : ''}`} aria-label="Principal">
+    <nav className={`nav${scrolled ? ' scrolled' : ''}${onWhite ? ' on-white' : ''}`} aria-label="Principal">
       <a className="brand" href="#inicio" aria-label="Priv8, inicio">
-        <Eight className="nav-eight" mode="mirar" fg="#2D45D6" cut="#FFFFFF" label="8" />
+        <Eight className="nav-eight" mode="mirar" fg={onWhite ? '#FFFFFF' : '#2D45D6'} cut={onWhite ? '#2D45D6' : '#FFFFFF'} label="8" />
         <span className="word">Priv8</span>
       </a>
       <span className="now" aria-hidden="true">{NAMES[section] || 'Priv8'}</span>
