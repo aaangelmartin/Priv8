@@ -33,6 +33,9 @@ function Hero() {
             <a className="btn white" href="#contacto">Pide una demo</a>
             <a className="btn line" href="#demo">Pruébalo ahora</a>
           </div>
+          <ul className="proof in-5" aria-label="Sobre qué funciona">
+            <li>Construido sobre Claude</li><li>Voz con ElevenLabs</li><li>Web y Android</li><li>Sin integrar tus sistemas</li>
+          </ul>
           <div className="hero-tokens in-5" aria-hidden="true">
             <span className="real">ES43 9100 0001 5740 1234 5678</span>
             <span className="arrow">→</span>
@@ -42,6 +45,40 @@ function Hero() {
         <div id="hero-anchor" className="hero-anchor" aria-hidden="true" />
       </div>
     </section>
+  );
+}
+
+/* ---------------------------------------------------------------- cinta de tokens */
+const MARQ = [['Lucía Ferrer', '‹NOMBRE_1·propio›'], ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1·propio›'], ['3.412,58 €', '‹IMPORTE_1·positivo›'], ['B12345674', '‹CIF_1·proveedor›'], ['1.180,00 €', '‹IMPORTE_2·factura›'], ['12345678Z', '‹DNI_1·propio›'], ['+34 600 000 000', '‹TELEFONO_1·ficha›']];
+function Marquee() {
+  const row = MARQ.map(([r, t]) => (
+    <span className="mq" key={t}><span className="mq-real">{r}</span><span className="mq-arrow">→</span><span className="tok">{t}</span></span>
+  ));
+  return (
+    <div className="marquee" aria-hidden="true"><div className="track">{row}{row}</div></div>
+  );
+}
+
+/* ---------------------------------------------------------------- preguntas */
+const FAQ = [
+  ['¿Tengo que integrar algo en mis sistemas?', 'No. 8 trabaja sobre las pantallas que ya usas: el navegador para tu ERP o tu CRM y el móvil para las apps. Lee la estructura de la pantalla, no los píxeles.'],
+  ['¿Qué recibe exactamente el proveedor del modelo?', 'Tokens como ‹IBAN_1·propio› y la interfaz. La tabla que traduce cada token a su valor real se queda en tu máquina o en el móvil.'],
+  ['¿Y si un dato sensible se escapa sin tokenizar?', 'El bloqueo final revisa cada petición que sale hacia la nube. Si encuentra un patrón sensible, como un IBAN válido o un DNI, la petición no sale y queda registrado.'],
+  ['¿Quién aprueba los pagos?', 'Siempre una persona. Transferir, firmar o enviar quedan retenidos hasta que alguien dice que sí, y la autenticación del banco la hace siempre el usuario.'],
+  ['¿Puede 8 recomendar inversiones?', 'No. El asesoramiento financiero es una actividad regulada. 8 ejecuta lo que decides; si le pides consejo, te dice que no puede.'],
+];
+function Faq() {
+  return (
+    <Panel id="faq" tab="Preguntas" labelledby="h-faq">
+      <div className="faq-grid">
+        <div className="head"><h2 id="h-faq">Lo que nos preguntan antes de una demo</h2></div>
+        <div className="faq">
+          {FAQ.map(([q, a]) => (
+            <details key={q}><summary>{q}</summary><p>{a}</p></details>
+          ))}
+        </div>
+      </div>
+    </Panel>
   );
 }
 
@@ -137,13 +174,13 @@ function Protocol() {
       <Diagram />
       <div className="flow">
         {PIECES.map(([t, d], i) => (
-          <article className="piece" key={t} onMouseEnter={() => mood(i === 2 ? 'enfado' : i === 3 ? 'pensar' : i === 5 ? 'esperar' : 'leer', 1600)}>
+          <article className={'piece b' + (i + 1)} key={t} onMouseEnter={() => mood(i === 2 ? 'enfado' : i === 3 ? 'pensar' : i === 5 ? 'esperar' : 'leer', 1600)}>
             <span className="num">{String(i + 1).padStart(2, '0')}</span>
             <h3>{t}</h3>
             <p>{d}</p>
           </article>
         ))}
-        <article className="piece block" onMouseEnter={() => mood('nuncasale', 1800)}>
+        <article className="piece block b8" onMouseEnter={() => mood('nuncasale', 1800)}>
           <span className="num">Siempre</span>
           <h3>Bloqueo final</h3>
           <p>Si un dato sensible se escapa sin tokenizar, la petición no sale.</p>
@@ -380,6 +417,7 @@ export default function App() {
       <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
       <main className="page">
         <Hero />
+        <Marquee />
         <Producto pal={pal} />
         <Panel id="demo" tab="Pruébalo" labelledby="h-demo">
           <div className="head">
@@ -392,13 +430,14 @@ export default function App() {
         <Protocol />
         <Quien pal={pal} />
         <Confianza />
+        <Faq />
         <Cierre />
         <footer>
           <span>Priv8 · Privacidad para agentes de IA</span>
           <span>Los datos de las demos son inventados. Banca Alcor, Nimbo Bróker y Suministros Lumen son nombres de ejemplo.</span>
         </footer>
       </main>
-      <Companion band={pal.band} intro={intro} />
+      <Companion band={pal.band} accent={pal.accent} panel={pal.bg} intro={intro} />
     </>
   );
 }

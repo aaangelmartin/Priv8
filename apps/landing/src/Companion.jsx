@@ -11,6 +11,7 @@ const SECTIONS = {
   producto: { mode: 'hablar', side: 'left' },
   quien: { mode: 'alegria', side: 'right' },
   confianza: { mode: 'agradecer', side: 'left' },
+  faq: { mode: 'duda', side: 'right' },
   contacto: { mode: 'mirar', side: 'right' },
 };
 
@@ -19,9 +20,10 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const ease = (t) => 1 - Math.pow(1 - t, 3);
 
 /* El 8 que vive en la portada y, al bajar, sale de ella y te acompaña por la web. */
-export default function Companion({ band, intro }) {
+export default function Companion({ band, accent, panel, intro }) {
   const { section, override } = useCompanion();
   const [greet, setGreet] = useState(true);
+  const [onPage, setOnPage] = useState(false);
   const box = useRef(null);
   const docked = useRef(null);
   const phase = useRef(intro ? 'intro' : 'live');
@@ -47,7 +49,7 @@ export default function Companion({ band, intro }) {
       if (!el || !anchor) return;
       const vw = window.innerWidth, vh = window.innerHeight, a = anchor.getBoundingClientRect();
       if (phase.current === 'intro') {
-        const S = Math.min(vw * 0.5, vh * 0.5, 440);
+        const S = Math.min(vw * 0.92, vh * 1.25, 1150);
         el.style.transition = 'none';
         el.style.transform = `translate3d(${(vw - S) / 2}px, ${(vh - S) / 2}px, 0) scale(${S / BASE})`;
         el.style.setProperty('--disc', '0');
@@ -59,7 +61,7 @@ export default function Companion({ band, intro }) {
         return;
       }
       const small = vw < 1320;
-      const D = small ? 58 : 92, m = small ? 16 : 28;
+      const D = small ? 64 : 116, m = small ? 14 : 24;
       const side = (SECTIONS[document.body.dataset.section] || SECTIONS.inicio).side;
       const dx = small || side === 'right' ? vw - D - m : m;
       const dy = small ? vh - D - m : vh * 0.56 - D / 2;
@@ -71,7 +73,7 @@ export default function Companion({ band, intro }) {
       el.style.transition = isDocked && docked.current ? 'transform .9s cubic-bezier(.2,.8,.2,1)' : 'none';
       el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${size / BASE})`;
       el.classList.toggle('docked', isDocked);
-      el.style.setProperty('--disc', String(clamp((p - 0.55) / 0.45, 0, 1)));
+      setOnPage(p > 0.6);
       docked.current = isDocked;
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
@@ -98,8 +100,7 @@ export default function Companion({ band, intro }) {
   return (
     <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
       onClick={() => mood('risa', 1600)} aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
-      <span className="disc" aria-hidden="true" />
-      <Eight className="companion-eight" mode={mode} fg="#FFFFFF" cut={band} label="8" />
+      <Eight className="companion-eight" mode={mode} fg={onPage ? accent : '#FFFFFF'} cut={onPage ? panel : band} label="8" />
     </button>
   );
 }
