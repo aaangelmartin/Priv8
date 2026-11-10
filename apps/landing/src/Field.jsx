@@ -79,41 +79,24 @@ export default function Field() {
   return <canvas ref={ref} className="field" aria-hidden="true" />;
 }
 
-/* Transición entre bandas hecha de notches: pestañas con el radio del notch que cuelgan de la banda de arriba,
-   con alturas distintas, y algunas pastillas sueltas debajo, como una pantalla que se va tokenizando.
-   Se dibuja en píxeles reales para que los radios no se deformen con el ancho. */
-export function Notches({ from, to, seed = 1, height = 96 }) {
-  const ref = useRef(null);
-  const [w, setW] = useState(0);
-  useEffect(() => {
-    const el = ref.current; if (!el) return undefined;
-    const ro = new ResizeObserver(() => setW(Math.round(el.getBoundingClientRect().width)));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  const tabs = [], pills = [];
-  if (w > 0) {
-    let s = seed * 9301 + 49297;
-    const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-    const cols = Math.max(8, Math.round(w / 64)), cw = w / cols, gap = Math.min(10, cw * 0.16);
-    const H = height, e = 9;
-    for (let c = 0; c < cols; c++) {
-      const x0 = c * cw + gap / 2, x1 = (c + 1) * cw - gap / 2, tw = x1 - x0;
-      const wave = 0.5 + 0.32 * Math.sin((c / cols) * Math.PI * 3 + seed * 1.7);
-      const k = Math.min(1, Math.max(0.12, wave + (rnd() - 0.5) * 0.42));
-      const h = Math.max(e + 10, H * 0.62 * k);
-      const r = Math.min(tw / 2, 18, h - e);
-      tabs.push(<path key={'t' + c} style={{ '--d': (c % 12) * 40 + 'ms' }} d={`M${x0 - e},0 A${e},${e} 0 0 1 ${x0},${e} L${x0},${h - r} A${r},${r} 0 0 0 ${x0 + r},${h} L${x1 - r},${h} A${r},${r} 0 0 0 ${x1},${h - r} L${x1},${e} A${e},${e} 0 0 1 ${x1 + e},0 Z`} />);
-      if (k < 0.75 && rnd() < 0.7) {
-        const ph = 12 + rnd() * 14, py = h + 10 + rnd() * (H - h - ph - 6);
-        const pw = tw * (0.35 + rnd() * 0.5), px = x0 + (tw - pw) / 2;
-        if (py + ph < H) pills.push(<rect key={'p' + c} style={{ '--d': (c % 12) * 40 + 120 + 'ms' }} x={px} y={py} width={pw} height={ph} rx={Math.min(ph / 2, 10)} />);
-      }
-    }
-  }
+/* Transición entre secciones: degradado con curva suave (sin bandas), grano fino y una línea de horizonte
+   luminosa en el centro con un brillo que la recorre despacio. */
+const EASE = [0, 0.03, 0.1, 0.21, 0.35, 0.5, 0.65, 0.79, 0.9, 0.97, 1];
+const LIGHT = ['--paper', '--mist'];
+export function Blend({ from, to }) {
+  /* entre un tono claro y uno oscuro, el medio pasa por cobalto para no quedar gris */
+  const via = LIGHT.includes(from) !== LIGHT.includes(to);
+  const col = (t) => {
+    if (!via) return `color-mix(in oklab, var(${from}), var(${to}) ${Math.round(t * 100)}%)`;
+    return t < 0.5
+      ? `color-mix(in oklab, var(${from}), var(--band) ${Math.round(t * 200)}%)`
+      : `color-mix(in oklab, var(--band), var(${to}) ${Math.round((t - 0.5) * 200)}%)`;
+  };
+  const stops = EASE.map((t, i) => `${col(t)} ${i * 10}%`).join(', ');
   return (
-    <div ref={ref} className="notches" aria-hidden="true" style={{ background: `var(${to})`, height }}>
-      {w > 0 && <svg width={w} height={height} viewBox={`0 0 ${w} ${height}`} style={{ fill: `var(${from})` }}>{tabs}{pills}</svg>}
+    <div className="blend" aria-hidden="true" style={{ background: `linear-gradient(180deg, ${stops})` }}>
+      <span className="blend-glow" />
+      <span className="blend-line" />
     </div>
   );
 }
