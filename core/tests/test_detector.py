@@ -48,6 +48,9 @@ def test_validadores(fn, good, bad):
     ("Tarjeta 4111 1111 1111 1111", [(ROJO, "4111 1111 1111 1111")]),
     ("Hola, Lucía Ferrer", [("PERSONA", "Lucía Ferrer")]),
     ("Atentamente, Marta Ruiz Gil", [("PERSONA", "Marta Ruiz Gil")]),
+    ("Recibo de Marta Ruiz Gil", [("PERSONA", "Marta Ruiz Gil")]),
+    ("Transferencia de Juan Pérez García", [("PERSONA", "Juan Pérez García")]),
+    ("Paga a Inés Prado Llorente", [("PERSONA", "Inés Prado Llorente")]),
 ])
 def test_positivos(text, expected):
     assert kinds(text) == expected
@@ -62,6 +65,8 @@ def test_positivos(text, expected):
     "Cuenta nómina",
     "Paso 3 de 4",
     "Hola, buenos días",
+    "Pasa dinero a mi cuenta de Nimbo Bróker",  # nombre de la interfaz, no un dato
+    "Abre Banca Alcor",
 ])
 def test_negativos(text):
     assert kinds(text) == []
