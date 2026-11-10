@@ -4,23 +4,23 @@ import { mood, setSection, useCompanion } from './companion.js';
 
 /* Cara y lado de la pantalla en cada sección. */
 const SECTIONS = {
-  inicio: { mode: 'mirar', side: 'right' },
-  demo: { mode: 'leer', side: 'right' },
-  problema: { mode: 'curiosidad', side: 'left' },
-  protocolo: { mode: 'pensar', side: 'right' },
-  producto: { mode: 'hablar', side: 'left' },
-  quien: { mode: 'alegria', side: 'right' },
-  confianza: { mode: 'agradecer', side: 'left' },
-  faq: { mode: 'duda', side: 'right' },
-  contacto: { mode: 'mirar', side: 'right' },
-};
+  inicio: { mode: 'mirar', side: 'right', tone: 'band' },
+  problema: { mode: 'curiosidad', side: 'right', tone: 'night' },
+  coste: { mode: 'pensar', side: 'left', tone: 'paper' },
+  como: { mode: 'leer', side: 'right', tone: 'mist' },
+  demo: { mode: 'leer', side: 'right', tone: 'night' },
+  producto: { mode: 'hablar', side: 'left', tone: 'paper' },
+  confianza: { mode: 'agradecer', side: 'right', tone: 'mist' },
+  faq: { mode: 'duda', side: 'left', tone: 'paper' },
+  contacto: { mode: 'alegria', side: 'right', tone: 'band' },
+}
 
 const BASE = 360; // tamaño de dibujo; se escala con transform
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const ease = (t) => 1 - Math.pow(1 - t, 3);
 
 /* El 8 que vive en la portada y, al bajar, sale de ella y te acompaña por la web. */
-export default function Companion({ band, accent, panel, intro }) {
+export default function Companion({ pal, intro }) {
   const { section, override } = useCompanion();
   const [greet, setGreet] = useState(true);
   const [onPage, setOnPage] = useState(false);
@@ -96,11 +96,15 @@ export default function Companion({ band, accent, panel, intro }) {
     return () => clearTimeout(t);
   }, [intro]);
 
+  const tone = onPage ? (SECTIONS[section] || SECTIONS.inicio).tone : 'band';
+  const col = tone === 'band' ? { fg: '#FFFFFF', cut: pal.band }
+    : tone === 'night' ? { fg: '#FFFFFF', cut: pal.night }
+    : { fg: pal.accent, cut: tone === 'mist' ? pal.mist : pal.paper };
   const mode = override || (greet && section === 'inicio' ? 'saludar' : (SECTIONS[section] || SECTIONS.inicio).mode);
   return (
     <button type="button" ref={box} className="companion" style={{ width: BASE, height: BASE }}
       onClick={() => mood('risa', 1600)} aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
-      <Eight className="companion-eight" mode={mode} fg={onPage ? accent : '#FFFFFF'} cut={onPage ? panel : band} label="8" />
+      <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
     </button>
   );
 }

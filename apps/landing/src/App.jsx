@@ -1,134 +1,188 @@
-import { useEffect, useState } from 'react';
-import Eight from './eight/Eight.jsx';
+import { useEffect, useRef, useState } from 'react';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
+import Field, { Dither } from './Field.jsx';
+import { Empresas, Movil } from './Products.jsx';
 import { mood } from './companion.js';
 import { useTheme, PALETTE } from './useTheme.js';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
-/* Cada sección es una pantalla con su notch arriba, donde va el nombre. */
-function Panel({ id, tab, tone = '', children, labelledby }) {
-  return (
-    <section id={id} className={'panel reveal ' + tone} aria-labelledby={labelledby}>
-      {tab && <span className="tab">{tab}</span>}
-      <div className="inner">{children}</div>
-    </section>
-  );
+/* Titular que entra palabra a palabra cuando aparece en pantalla. Acepta texto y <span className>. */
+function Words({ as: Tag = 'h2', id, children }) {
+  let n = 0;
+  const split = (text, key) => text.split(/(\s+)/).map((w, i) => (/^\s+$/.test(w) || !w ? w : <span className="w" key={key + i}><span style={{ '--i': n++ }}>{w}</span></span>));
+  const out = [].concat(children).map((c, k) => (typeof c === 'string' ? split(c, 'a' + k) : <span className={c.props.className} key={'b' + k}>{split(String(c.props.children), 'c' + k)}</span>));
+  return <Tag id={id} className="words">{out}</Tag>;
+}
+
+/* Cifra que cuenta hasta su valor al aparecer. */
+function Count({ to }) {
+  const ref = useRef(null);
+  const [v, setV] = useState(to);
+  useEffect(() => {
+    const el = ref.current; if (!el) return undefined;
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
+    if (still) return undefined;
+    setV(0);
+    const io = new IntersectionObserver((en) => {
+      if (!en[0].isIntersecting) return;
+      io.disconnect();
+      const t0 = performance.now(), D = 1400;
+      const step = (now) => { const k = Math.min(1, (now - t0) / D); setV(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [to]);
+  return <span ref={ref}>{v}</span>;
+}
+
+function Eyebrow({ n, children }) {
+  return <p className="eyebrow"><span className="num">{n}</span><i className="dot" />{children}</p>;
 }
 
 /* ---------------------------------------------------------------- portada */
 function Hero() {
   return (
-    <section id="inicio" className="panel hero" aria-labelledby="h-hero">
-      <div className="inner hero-grid">
+    <section id="inicio" className="band band-cobalt hero" aria-labelledby="h-hero">
+      <Field />
+      <div className="wrap hero-grid">
         <div className="hero-copy">
-          <p className="eyebrow on-band in-1">Agentes de IA que usan pantallas, sin ver tus datos</p>
-          <h1 id="h-hero" className="in-2">El agente hace el trámite. <span className="soft">Nunca ve tus datos.</span></h1>
-          <p className="lead on-band in-3">
-            Automatiza con IA tu back-office y deja que 8 maneje el móvil de tus clientes. Priv8 cambia cada dato sensible por un token antes de que llegue al modelo y solo lo devuelve a su valor real en tu máquina, al ejecutar.
+          <p className="kicker in-1">Priv8 · agentes de IA que usan pantallas</p>
+          <h1 id="h-hero" className="in-2">La IA hace el trámite. <span className="soft">Tus datos no salen de casa.</span></h1>
+          <p className="hero-sub in-3">
+            Priv8 deja que un agente trabaje en tu ERP, tu correo o la app del banco cambiando cada dato sensible por un token.
+            El modelo trabaja con <Tok>‹IBAN_1›</Tok>; el valor real solo existe en tu máquina.
           </p>
           <div className="cta in-4">
-            <a className="btn white" href="#contacto">Pide una demo</a>
-            <a className="btn line" href="#demo">Pruébalo ahora</a>
+            <a className="btn btn-white" href="#contacto">Pide una demo</a>
+            <a className="btn btn-ghost" href="#demo">Pruébalo en un minuto</a>
           </div>
           <ul className="proof in-5" aria-label="Sobre qué funciona">
             <li>Construido sobre Claude</li><li>Voz con ElevenLabs</li><li>Web y Android</li><li>Sin integrar tus sistemas</li>
           </ul>
-          <div className="hero-tokens in-5" aria-hidden="true">
-            <span className="real">ES43 9100 0001 5740 1234 5678</span>
-            <span className="arrow">→</span>
-            <span className="tok on-band-tok">‹IBAN_1·propio›</span>
-          </div>
         </div>
         <div id="hero-anchor" className="hero-anchor" aria-hidden="true" />
+      </div>
+      <p className="hero-hint in-5" aria-hidden="true">Pasa el cursor por los datos: así los ve la IA</p>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- 01 problema */
+function Lanes() {
+  return (
+    <div className="lanes" role="img" aria-label="Sin Priv8 el dato viaja tal cual al modelo; con Priv8 cruza convertido en token">
+      <div className="lane bad">
+        <span className="lane-label">Hoy</span>
+        <div className="track">
+          <span className="pkt real">ES43 9100 0001…</span>
+          <span className="pkt real d2">3.412,58 €</span>
+          <span className="pkt real d3">Lucía Ferrer</span>
+          <span className="dest">Modelo</span>
+        </div>
+        <p className="lane-cap">La pantalla entera viaja al proveedor del modelo.</p>
+      </div>
+      <div className="lane good">
+        <span className="lane-label">Con Priv8</span>
+        <div className="track">
+          <span className="gate">Priv8</span>
+          <span className="pkt swap"><b>ES43 9100 0001…</b><i>‹IBAN_1›</i></span>
+          <span className="pkt swap d2"><b>3.412,58 €</b><i>‹IMPORTE_1›</i></span>
+          <span className="pkt swap d3"><b>Lucía Ferrer</b><i>‹NOMBRE_1›</i></span>
+          <span className="dest">Modelo</span>
+        </div>
+        <p className="lane-cap">Cruza el token. El valor se queda contigo.</p>
+      </div>
+    </div>
+  );
+}
+
+function Problem() {
+  return (
+    <section id="problema" className="band band-night" aria-labelledby="h-prob">
+      <div className="wrap">
+        <div className="head">
+          <Eyebrow n="01">El problema</Eyebrow>
+          <Words id="h-prob">Tu equipo no automatiza porque <span className="soft">la IA lo vería todo.</span></Words>
+          <p className="lead">Un agente que usa pantallas manda al modelo cada nombre, IBAN y saldo que aparece. Por eso los procesos con datos de clientes se siguen haciendo a mano.</p>
+        </div>
+        <Lanes />
+        <div className="stats">
+          <div className="stat">
+            <svg className="donut" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="15.9" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="5" /><circle className="arc" cx="21" cy="21" r="15.9" fill="none" stroke="#8FA2FF" strokeWidth="5" strokeDasharray="52 48" strokeDashoffset="25" strokeLinecap="round" /></svg>
+            <span className="n"><Count to={52} /><small>%</small></span>
+            <p>de los directivos pone la seguridad, la privacidad o el cumplimiento como primer freno de los agentes de IA.</p>
+            <a className="src" href="https://securitybrief.co.uk/story/security-fears-keep-half-of-agentic-ai-stuck-in-pilots" target="_blank" rel="noreferrer">Dynatrace, vía SecurityBrief</a>
+          </div>
+          <div className="stat">
+            <div className="bars" aria-hidden="true"><div>Sin protección<i style={{ '--w': '97%', '--c': '#F07A6E' }} /></div><div>Con anonimización<i style={{ '--w': '19%', '--c': '#E3A447' }} /></div></div>
+            <span className="n"><Count to={97} /><small>%</small></span>
+            <p>de los datos sensibles de la pantalla llega al modelo cuando un agente trabaja sin protección.</p>
+            <a className="src" href="https://arxiv.org/html/2602.10139v2" target="_blank" rel="noreferrer">Tsinghua, «Available but Invisible»</a>
+          </div>
+          <div className="stat">
+            <div className="dotgrid" aria-hidden="true">{Array.from({ length: 120 }, (_, i) => <i key={i} className={i < 8 ? 'ok' : ''} />)}</div>
+            <span className="n"><Count to={8} /><small>/120</small></span>
+            <p>IBAN bien leídos por OCR a través de un escritorio remoto. Priv8 lee la estructura de la pantalla, no los píxeles.</p>
+            <span className="src">Medición propia</span>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-/* ---------------------------------------------------------------- cinta de tokens */
-const MARQ = [['Lucía Ferrer', '‹NOMBRE_1·propio›'], ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1·propio›'], ['3.412,58 €', '‹IMPORTE_1·positivo›'], ['B12345674', '‹CIF_1·proveedor›'], ['1.180,00 €', '‹IMPORTE_2·factura›'], ['12345678Z', '‹DNI_1·propio›'], ['+34 600 000 000', '‹TELEFONO_1·ficha›']];
-function Marquee() {
-  const row = MARQ.map(([r, t]) => (
-    <span className="mq" key={t}><span className="mq-real">{r}</span><span className="mq-arrow">→</span><span className="tok">{t}</span></span>
-  ));
+/* ---------------------------------------------------------------- 02 lo que cuesta */
+function Coste() {
   return (
-    <div className="marquee" aria-hidden="true"><div className="track">{row}{row}</div></div>
+    <section id="coste" className="band band-paper" aria-labelledby="h-coste">
+      <div className="wrap">
+        <div className="head">
+          <Eyebrow n="02">Lo que cuesta</Eyebrow>
+          <Words id="h-coste">No automatizar es lento. <span className="soft">Automatizar a ciegas sale caro.</span></Words>
+          <p className="lead">Llega por correo una factura de 1.180 €. En el pie, alguien ha escrito «hemos cambiado de banco, pagad a este IBAN».</p>
+        </div>
+        <div className="three">
+          <article className="opt">
+            <span className="opt-k">A mano</span>
+            <span className="opt-n">0 €</span>
+            <p>No se pierde nada, pero alguien teclea cada factura. El proceso no escala.</p>
+            <span className="opt-tag neutral">Lento</span>
+          </article>
+          <article className="opt">
+            <span className="opt-k">IA a ciegas</span>
+            <span className="opt-n bad">−1.180 €</span>
+            <p>El agente obedece al pie del correo, cambia el IBAN y paga. Y el proveedor del modelo vio todos los datos.</p>
+            <span className="opt-tag bad">Dinero y datos fuera</span>
+          </article>
+          <article className="opt best">
+            <span className="opt-k">Con Priv8</span>
+            <span className="opt-n good">1.180 €<small>a quien toca</small></span>
+            <p>La factura se registra sola, el IBAN del correo no puede entrar en el pago y 8 llama al proveedor para comprobarlo.</p>
+            <span className="opt-tag good">Automatizado y con prueba</span>
+          </article>
+        </div>
+        <p className="note">Ejemplo ilustrativo con datos inventados.</p>
+      </div>
+    </section>
   );
 }
 
-/* ---------------------------------------------------------------- preguntas */
-const FAQ = [
-  ['¿Tengo que integrar algo en mis sistemas?', 'No. 8 trabaja sobre las pantallas que ya usas: el navegador para tu ERP o tu CRM y el móvil para las apps. Lee la estructura de la pantalla, no los píxeles.'],
-  ['¿Qué recibe exactamente el proveedor del modelo?', 'Tokens como ‹IBAN_1·propio› y la interfaz. La tabla que traduce cada token a su valor real se queda en tu máquina o en el móvil.'],
-  ['¿Y si un dato sensible se escapa sin tokenizar?', 'El bloqueo final revisa cada petición que sale hacia la nube. Si encuentra un patrón sensible, como un IBAN válido o un DNI, la petición no sale y queda registrado.'],
-  ['¿Quién aprueba los pagos?', 'Siempre una persona. Transferir, firmar o enviar quedan retenidos hasta que alguien dice que sí, y la autenticación del banco la hace siempre el usuario.'],
-  ['¿Puede 8 recomendar inversiones?', 'No. El asesoramiento financiero es una actividad regulada. 8 ejecuta lo que decides; si le pides consejo, te dice que no puede.'],
-];
-function Faq() {
-  return (
-    <Panel id="faq" tab="Preguntas" labelledby="h-faq">
-      <div className="faq-grid">
-        <div className="head"><h2 id="h-faq">Lo que nos preguntan antes de una demo</h2></div>
-        <div className="faq">
-          {FAQ.map(([q, a]) => (
-            <details key={q}><summary>{q}</summary><p>{a}</p></details>
-          ))}
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-/* ---------------------------------------------------------------- problema */
-function Problem() {
-  return (
-    <Panel id="problema" tab="El problema" labelledby="h-prob">
-      <div className="head">
-        <h2 id="h-prob">Los agentes ya saben usar pantallas. Nadie quiere enseñarles los datos.</h2>
-      </div>
-      <div className="stats">
-        <div className="stat">
-          <div className="viz"><svg className="donut" viewBox="0 0 42 42" aria-hidden="true"><circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--line)" strokeWidth="6" /><circle cx="21" cy="21" r="15.9" fill="none" stroke="var(--accent)" strokeWidth="6" strokeDasharray="52 48" strokeDashoffset="25" strokeLinecap="round" /></svg></div>
-          <span className="n">52<small>%</small></span>
-          <p>de los directivos de grandes empresas pone la seguridad, la privacidad o el cumplimiento como primer freno de los agentes de IA.</p>
-          <a className="src" href="https://securitybrief.co.uk/story/security-fears-keep-half-of-agentic-ai-stuck-in-pilots" target="_blank" rel="noreferrer">Dynatrace, vía SecurityBrief</a>
-        </div>
-        <div className="stat">
-          <div className="viz"><div className="bars" aria-hidden="true">
-            <div>Sin protección<i style={{ '--w': '97%', '--c': 'var(--bad)' }} /></div>
-            <div>Con anonimización<i style={{ '--w': '19%', '--c': 'var(--warn)' }} /></div>
-          </div></div>
-          <span className="n">97<small>%</small></span>
-          <p>de los datos sensibles de la pantalla llega al modelo cuando un agente trabaja sin protección.</p>
-          <a className="src" href="https://arxiv.org/html/2602.10139v2" target="_blank" rel="noreferrer">Tsinghua, «Available but Invisible»</a>
-        </div>
-        <div className="stat">
-          <div className="viz"><div className="dotgrid" aria-hidden="true">{Array.from({ length: 120 }, (_, i) => <i key={i} className={i < 8 ? 'ok' : ''} />)}</div></div>
-          <span className="n">8<small>/120</small></span>
-          <p>IBAN bien leídos por OCR a través de un escritorio remoto. Por eso Priv8 lee la estructura de la pantalla, no los píxeles.</p>
-          <span className="src">Medición propia</span>
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-/* ---------------------------------------------------------------- protocolo */
+/* ---------------------------------------------------------------- 03 cómo funciona */
 const PIECES = [
-  ['Tokens', <>Cada dato se cambia por un token tipado y estable en la sesión: <Tok>‹IBAN_1·propio›</Tok>.</>],
-  ['Clases de dato', 'Verde se ve, ámbar se tokeniza y rojo (claves, PIN, códigos) nunca sale.'],
-  ['Procedencia', 'Lo que llega por correo o de un tercero no puede entrar en un campo de pago ni cambiar la operación.'],
-  ['Oráculo', 'Suma, compara y comprueba sin revelar cifras, con un presupuesto de preguntas.'],
-  ['Ejecutor', 'El modelo escribe tokens y el ejecutor pone el valor real en pantalla, en local.'],
-  ['Confirmación', 'Transferir, firmar o enviar espera a que tú digas que sí.'],
-  ['Auditoría firmada', 'Queda registrado qué recibió el modelo, qué se bloqueó y qué aprobaste.'],
+  ['Tokens', <>Cada dato se cambia por un token estable: <Tok>‹IBAN_1·propio›</Tok>. El modelo razona igual de bien.</>],
+  ['Clases de dato', 'Verde se ve. Ámbar se tokeniza. Rojo (claves, PIN, códigos) nunca sale.'],
+  ['Procedencia', 'Un dato que llega por correo no puede entrar en un campo de pago.'],
+  ['Oráculo', '¿Cubre el saldo 200 €? «Sí». Sin dar la cifra, y con presupuesto de preguntas.'],
+  ['Ejecutor', 'El modelo escribe tokens; el valor real se pone en pantalla, en local.'],
+  ['Confirmación', 'Pagar, firmar o enviar espera a que una persona diga que sí.'],
+  ['Auditoría firmada', 'Qué vio el modelo, qué se bloqueó y quién aprobó.'],
 ];
 
-/* El recorrido del dato: la pantalla, la zona de confianza, el bloqueo final y la nube.
-   Los paquetes ámbar (valor real) se convierten en paquetes cobalto (token) al cruzar el tokenizador. */
 function Diagram() {
   return (
     <div className="diagram">
@@ -164,226 +218,185 @@ function Diagram() {
   );
 }
 
-function Protocol() {
+function Como() {
   return (
-    <Panel id="protocolo" tab="Priv8 CUA" labelledby="h-proto">
-      <div className="head">
-        <h2 id="h-proto">Un protocolo que cualquier agente puede adoptar</h2>
-        <p className="lead">El agente solo tiene tres herramientas cerradas: <code>observe</code>, <code>act</code> y <code>oracle</code>. Todo lo demás pasa por estas piezas.</p>
-      </div>
-      <Diagram />
-      <div className="flow">
-        {PIECES.map(([t, d], i) => (
-          <article className={'piece b' + (i + 1)} key={t} onMouseEnter={() => mood(i === 2 ? 'enfado' : i === 3 ? 'pensar' : i === 5 ? 'esperar' : 'leer', 1600)}>
-            <span className="num">{String(i + 1).padStart(2, '0')}</span>
-            <h3>{t}</h3>
-            <p>{d}</p>
-          </article>
-        ))}
-        <article className="piece block b8" onMouseEnter={() => mood('nuncasale', 1800)}>
-          <span className="num">Siempre</span>
-          <h3>Bloqueo final</h3>
-          <p>Si un dato sensible se escapa sin tokenizar, la petición no sale.</p>
-        </article>
-      </div>
-      <div className="boundary" role="group" aria-label="Qué se queda en tu máquina y qué sale a la nube">
-        <div>
-          <span className="zone">Tu máquina o tu móvil</span>
-          <h3>Todo lo que tiene datos reales</h3>
-          <ul><li>La tabla de tokens y valores</li><li>El ejecutor que escribe en pantalla</li><li>La voz local que lee cifras y nombres</li><li>El registro firmado</li></ul>
+    <section id="como" className="band band-mist" aria-labelledby="h-como">
+      <div className="wrap">
+        <div className="head">
+          <Eyebrow n="03">Cómo funciona</Eyebrow>
+          <Words id="h-como">Tres herramientas para el agente. <span className="soft">Ocho piezas que le ponen límites.</span></Words>
+          <p className="lead">El agente solo puede <code>observe</code>, <code>act</code> y <code>oracle</code>. Todo lo demás pasa por Priv8 CUA, el protocolo que corre en tu máquina.</p>
         </div>
-        <div className="gate"><span>Bloqueo final</span></div>
-        <div>
-          <span className="zone">Nube</span>
-          <h3>Solo tokens y frases sin datos</h3>
-          <ul><li>Claude razona con tokens</li><li>ElevenLabs lee frases sin cifras ni nombres</li></ul>
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-/* ---------------------------------------------------------------- productos */
-function Empresas() {
-  return (
-    <div className="vert">
-      <div className="copy">
-        <h3 className="h3big">Automatiza lo que la protección de datos te frenaba</h3>
-        <p className="lead">8 trabaja en tu ERP o tu CRM de siempre, aunque no tenga API, y el proveedor del modelo solo recibe tokens.</p>
-        <ul className="points">
-          <li>Funciona sobre las pantallas que ya tienes, sin integrar nada.</li>
-          <li>Un correo no puede cambiar un pago: la procedencia lo impide por diseño.</li>
-          <li>Verifica por teléfono con el número que ya tenías, diciendo que es una IA.</li>
-          <li>Cada paso queda firmado, listo para tus auditorías.</li>
-        </ul>
-      </div>
-      <ol className="steps" aria-label="Ejemplo: una factura de proveedor">
-        <li><b>Llega la factura de Suministros Lumen</b><span>8 la abre en la bandeja de siempre.</span></li>
-        <li><b>La lee sin ver los datos</b><span>Al modelo le llegan <Tok>‹CIF_1›</Tok> e <Tok>‹IMPORTE_2›</Tok>.</span></li>
-        <li><b>La registra en el ERP</b><span>El ejecutor escribe los valores reales en local.</span></li>
-        <li className="trap"><b>El pie del correo pide pagar a un IBAN nuevo</b><span>Bloqueado: un dato que llega por correo no puede entrar en el campo de pago.</span></li>
-        <li><b>Llama al proveedor al número de su ficha</b><span>Se presenta como IA y hace una pregunta de comprobación.</span></li>
-        <li><b>Contesta el correo y firma el registro</b><span>Qué vio el modelo, qué se bloqueó y quién aprobó.</span></li>
-      </ol>
-    </div>
-  );
-}
-
-const SCENES = [
-  { id: 'cuanto', label: '¿Cuánto tengo?', mode: 'hablar', state: 'Habla' },
-  { id: 'pasa', label: 'Pasa 200 € al bróker', mode: 'esperar', state: 'Espera tu sí' },
-  { id: 'clave', label: 'Mientras pones tu clave', mode: 'apartar', state: 'Mira a otro lado' },
-  { id: 'fondo', label: '¿En qué fondo lo meto?', mode: 'rechazar', state: 'No puedo' },
-];
-
-function Movil({ pal }) {
-  const [scene, setScene] = useState('cuanto');
-  const [answer, setAnswer] = useState(null);
-  const sc = SCENES.find((s) => s.id === scene);
-  const mode = scene === 'pasa' && answer ? (answer === 'si' ? 'listo' : 'negar') : sc.mode;
-  const pick = (id) => { setScene(id); setAnswer(null); };
-  return (
-    <div className="vert">
-      <div className="copy">
-        <h3 className="h3big">8 maneja tu móvil por ti, sin ver tus cuentas</h3>
-        <p className="lead">Le hablas y 8 abre tus apps de banca, lee, suma y prepara. Las cifras te las dice la voz del móvil; a la nube no llegan.</p>
-        <div className="chips-row" role="group" aria-label="Escenas">
-          {SCENES.map((s) => (
-            <button key={s.id} type="button" aria-pressed={scene === s.id} onClick={() => pick(s.id)}>{s.label}</button>
+        <Diagram />
+        <div className="bento">
+          {PIECES.map(([t, d], i) => (
+            <article className={'piece b' + (i + 1)} key={t} onMouseEnter={() => mood(i === 2 ? 'enfado' : i === 3 ? 'pensar' : i === 5 ? 'esperar' : 'leer', 1600)}>
+              <span className="num">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{t}</h3>
+              <p>{d}</p>
+            </article>
           ))}
-        </div>
-        <ul className="points">
-          <li>Tu clave, tu huella y los códigos los pones tú. 8 mira a otro lado.</li>
-          <li>Nada se mueve sin tu «sí», por voz o con un botón.</li>
-          <li>Ejecuta, no aconseja: no recomienda inversiones ni firma créditos.</li>
-        </ul>
-      </div>
-      <div className="phone-wrap">
-        <div className="phone" aria-label="Simulación de 8 en el móvil">
-          <span className="island" aria-hidden="true" />
-          <div className="scr">
-            <div className="top">
-              <Eight className="eye" mode={mode} fg="#FFFFFF" cut={pal.band} label="8 en el móvil" />
-              <small>{scene === 'pasa' && answer ? (answer === 'si' ? 'Hecho' : 'Cancelado') : sc.state}</small>
-            </div>
-            <div className="chat" aria-live="polite">
-              {scene === 'cuanto' && (<>
-                <p className="bubble me">¿Cuánto tengo entre mis bancos?</p>
-                <p className="bubble eight">Entre tus cuentas tienes 15.462,58 €.<span className="local">La cifra la dice la voz del móvil. Al modelo solo le llegó ‹SUMA_1›.</span></p>
-              </>)}
-              {scene === 'pasa' && (<>
-                <p className="bubble me">Pasa 200 € al bróker.</p>
-                <p className="bubble eight">Lo tengo preparado. Falta tu confirmación.</p>
-                {answer === 'si' && <p className="bubble eight">Hecho. Te dejo el justificante.</p>}
-                {answer === 'no' && <p className="bubble eight">Cancelado. No se ha movido nada.</p>}
-              </>)}
-              {scene === 'clave' && (<>
-                <p className="bubble eight">Pon tu clave. No miro.</p>
-                <p className="bubble me mono">••••••••</p>
-                <p className="bubble eight">Gracias. Sigo.<span className="local">El agente no recibe nada mientras escribes.</span></p>
-              </>)}
-              {scene === 'fondo' && (<>
-                <p className="bubble me">¿En qué fondo lo meto?</p>
-                <p className="bubble eight">Eso sería asesorarte y no lo hago. Si eliges un fondo, lo preparo.</p>
-              </>)}
-            </div>
-            {scene === 'pasa' && !answer && (
-              <div className="confirm">
-                <b>200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?</b>
-                <div className="row2">
-                  <button type="button" onClick={() => { setAnswer('no'); mood('negar', 1500); }}>Cancelar</button>
-                  <button type="button" className="yes" onClick={() => { setAnswer('si'); mood('asentir', 1500); }}>Confirmar</button>
-                </div>
-              </div>
-            )}
-          </div>
+          <article className="piece block b8" onMouseEnter={() => mood('nuncasale', 1800)}>
+            <span className="num">Siempre</span>
+            <h3>Bloqueo final</h3>
+            <p>Si un dato sensible se escapa sin tokenizar, la petición no sale.</p>
+          </article>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
 
+/* ---------------------------------------------------------------- 04 pruébalo */
+function Prueba({ pal }) {
+  return (
+    <section id="demo" className="band band-night" aria-labelledby="h-demo">
+      <div className="wrap">
+        <div className="head">
+          <Eyebrow n="04">Pruébalo</Eyebrow>
+          <Words id="h-demo">Mira qué recibe la IA. <span className="soft">Y qué no.</span></Words>
+          <p className="lead">Tres demos con datos inventados. 8 te acompaña y reacciona a lo que pasa.</p>
+        </div>
+        <Demos pal={pal} />
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- 05 productos */
 function Producto({ pal }) {
   const [tab, setTab] = useState('empresas');
   return (
-    <Panel id="producto" tab="Un núcleo, dos productos" labelledby="h-prod">
-      <div className="head row-head">
-        <h2 id="h-prod">Para tu empresa y para tu móvil</h2>
-        <div className="seg" role="tablist" aria-label="Productos">
-          <button type="button" role="tab" aria-selected={tab === 'empresas'} onClick={() => setTab('empresas')}>Priv8 para empresas</button>
-          <button type="button" role="tab" aria-selected={tab === 'movil'} onClick={() => setTab('movil')}>8 en tu móvil</button>
+    <section id="producto" className="band band-paper" aria-labelledby="h-prod">
+      <div className="wrap">
+        <div className="head row-head">
+          <div className="head-in">
+            <Eyebrow n="05">Productos</Eyebrow>
+            <Words id="h-prod">Un núcleo. <span className="soft">Dos formas de usarlo.</span></Words>
+          </div>
+          <div className="seg" role="tablist" aria-label="Productos">
+            <button type="button" role="tab" aria-selected={tab === 'empresas'} onClick={() => setTab('empresas')}>Priv8 para empresas</button>
+            <button type="button" role="tab" aria-selected={tab === 'movil'} onClick={() => setTab('movil')}>8 en tu móvil</button>
+          </div>
         </div>
-      </div>
-      <div role="tabpanel">{tab === 'empresas' ? <Empresas /> : <Movil pal={pal} />}</div>
-    </Panel>
-  );
-}
-
-/* ---------------------------------------------------------------- para quién y confianza */
-function Quien({ pal }) {
-  return (
-    <Panel id="quien" tab="Para quién" labelledby="h-quien">
-      <div className="head"><h2 id="h-quien">Quien usa el agente, quien lo ofrece y quien lo construye</h2></div>
-      <div className="who-grid">
-        <article className="who-card"><div className="mini" aria-hidden="true"><div className="mbar"><i /><i /><i /></div><div className="mrow">Proveedor <span className="tok">‹NOMBRE_2›</span></div><div className="mrow">Importe <span className="tok">‹IMPORTE_2›</span></div><div className="mrow bad">IBAN del correo · bloqueado</div></div><span className="tag">Empresas</span><h3>Operaciones y finanzas</h3><p>Automatiza facturas, reclamaciones y altas en los programas de siempre sin enviar datos de clientes al modelo.</p></article>
-        <article className="who-card"><div className="mini" aria-hidden="true"><div className="mbar"><i /><i /><i /></div><div className="mrow">Saldo <span className="tok">‹IMPORTE_1›</span></div><div className="mrow">Clave <span>nunca sale</span></div><div className="mrow ok">Confirmado por el cliente</div></div><span className="tag">Bancos y brókers</span><h3>Ofrece agentes a tus clientes</h3><p>Deja que 8 opere en tu app sin abrir tus sistemas ni exponer datos, con la confirmación siempre en manos del cliente.</p></article>
-        <article className="who-card"><div className="mini phoneish" aria-hidden="true"><div className="mscr"><Eight className="eye" mode="hablar" fg="#FFFFFF" cut={pal.band} label="8" /><span>Tienes 15.462,58 €</span></div></div><span className="tag">Personas</span><h3>8 en el bolsillo</h3><p>Pregunta cuánto tienes, prepara una transferencia o pide que llame al banco. Tus datos se quedan en tu móvil.</p></article>
-      </div>
-    </Panel>
-  );
-}
-
-function Confianza() {
-  return (
-    <Panel id="confianza" tab="Confianza" labelledby="h-conf">
-      <div className="head"><h2 id="h-conf">Pensado para lo que pide un responsable de datos</h2></div>
-      <div className="trust">
-        <article><div className="tviz" aria-hidden="true"><div className="line"><span className="tok">‹IBAN_1›</span>→<span className="cloudbox">Claude</span></div></div><h3>El proveedor del modelo solo recibe tokens</h3>
-          <p>El Tribunal de Justicia de la UE admitió en 2025 que unos datos seudonimizados pueden no ser datos personales para quien no puede reidentificarlos. Tu empresa sigue siendo responsable de sus datos. <a href="https://cm.twobirds.com/en/insights/2025/eu-the-srb-decision-a-new-era-for-personal-data-and-data-processing-agreements" target="_blank" rel="noreferrer">Sentencia C-413/23 P</a></p></article>
-        <article><div className="tviz" aria-hidden="true"><span className="ok-btn">Confirmar 200,00 €</span></div><h3>Lo irreversible lo confirmas tú</h3><p>Transferir, firmar o enviar espera a tu aprobación, y la autenticación del banco la haces siempre tú.</p></article>
-        <article><div className="tviz" aria-hidden="true"><div className="chain"><i>a3f</i><b /><i>9c1</i><b /><i>e07</i><b /><i>5bd</i></div></div><h3>Cada paso, firmado</h3><p>Un registro encadenado de qué vio el modelo, qué se bloqueó y quién aprobó, útil como evidencia en auditorías de seguridad.</p></article>
-        <article><div className="tviz" aria-hidden="true"><span className="say">Hola, soy 8, un asistente de IA.</span></div><h3>8 dice que es una IA</h3><p>Cuando llama por ti a un proveedor o a tu banco, se presenta como asistente de IA desde el primer momento.</p></article>
-      </div>
-    </Panel>
-  );
-}
-
-const NEEDS = ['Facturas y pagos a proveedores', 'Atención al cliente y reclamaciones', 'Agentes para los clientes de mi banco', 'Otro proceso'];
-
-function Cierre() {
-  const [sent, setSent] = useState(false);
-  const submit = (e) => { e.preventDefault(); setSent(true); mood('agradecer', 2600); };
-  return (
-    <section id="contacto" className="panel hero close reveal" aria-labelledby="h-close">
-      <span className="tab">Pide una demo</span>
-      <div className="inner close-grid">
-        <div>
-          <h2 id="h-close">Enséñanos un proceso. <span className="soft">Te lo enseñamos hecho, sin que la IA vea un dato.</span></h2>
-          <p className="lead on-band">Una sesión de 30 minutos con tus pantallas, o con las nuestras si aún no quieres compartir nada.</p>
-          <ul className="close-points">
-            <li>Sin integrar nada: trabaja sobre las pantallas que ya tienes.</li>
-            <li>Al proveedor del modelo solo le llegan tokens.</li>
-            <li>Todo lo irreversible lo confirma una persona.</li>
-          </ul>
-        </div>
-        <form className="lead-form" onSubmit={submit}>
-          {sent ? (
-            <div className="sent" role="status">
-              <b>Gracias.</b>
-              <p>Esta versión de la web todavía no envía el formulario. Lo conectamos en cuanto tengamos dirección de contacto.</p>
-            </div>
-          ) : (<>
-            <label htmlFor="f-name">Nombre<input id="f-name" name="name" autoComplete="name" required /></label>
-            <label htmlFor="f-company">Empresa<input id="f-company" name="company" autoComplete="organization" required /></label>
-            <label htmlFor="f-email">Correo del trabajo<input id="f-email" name="email" type="email" autoComplete="email" required /></label>
-            <label htmlFor="f-need">Qué quieres automatizar
-              <select id="f-need" name="need" defaultValue={NEEDS[0]}>{NEEDS.map((n) => <option key={n}>{n}</option>)}</select>
-            </label>
-            <button type="submit" className="btn white">Pedir la demo</button>
-          </>)}
-        </form>
+        <div role="tabpanel" key={tab} className="swap-in">{tab === 'empresas' ? <Empresas /> : <Movil pal={pal} />}</div>
       </div>
     </section>
+  );
+}
+
+/* ---------------------------------------------------------------- 06 confianza */
+function Confianza() {
+  return (
+    <section id="confianza" className="band band-mist" aria-labelledby="h-conf">
+      <div className="wrap">
+        <div className="head">
+          <Eyebrow n="06">Confianza</Eyebrow>
+          <Words id="h-conf">Lo que pregunta tu responsable de datos, <span className="soft">respondido de serie.</span></Words>
+        </div>
+        <div className="trust">
+          <article><div className="tviz" aria-hidden="true"><div className="line"><span className="tok">‹IBAN_1›</span><span className="arrow-r" /><span className="cloudbox">Claude</span></div></div><h3>El proveedor del modelo solo recibe tokens</h3>
+            <p>El TJUE admitió en 2025 que unos datos seudonimizados pueden no ser personales para quien no puede reidentificarlos. Tu empresa sigue siendo responsable. <a href="https://cm.twobirds.com/en/insights/2025/eu-the-srb-decision-a-new-era-for-personal-data-and-data-processing-agreements" target="_blank" rel="noreferrer">C-413/23 P</a></p></article>
+          <article><div className="tviz" aria-hidden="true"><span className="ok-btn">Confirmar 200,00 €</span></div><h3>Lo irreversible lo confirma una persona</h3><p>Pagar, firmar o enviar espera a una aprobación. La autenticación del banco la hace siempre el usuario.</p></article>
+          <article><div className="tviz" aria-hidden="true"><div className="chain"><i>a3f</i><b /><i>9c1</i><b /><i>e07</i><b /><i>5bd</i></div></div><h3>Cada paso, firmado</h3><p>Un registro encadenado de qué vio el modelo, qué se bloqueó y quién aprobó. Evidencia para tus auditorías.</p></article>
+          <article><div className="tviz" aria-hidden="true"><span className="say">Hola, soy 8, un asistente de IA.</span></div><h3>8 dice que es una IA</h3><p>Cuando llama a un proveedor o a un banco, se presenta como asistente de IA desde la primera frase.</p></article>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- 07 preguntas */
+const FAQ = [
+  ['¿Tengo que integrar algo en mis sistemas?', 'No. 8 trabaja sobre las pantallas que ya usas: el navegador para tu ERP o tu CRM y el móvil para las apps. Lee la estructura de la pantalla, no los píxeles.'],
+  ['¿Qué recibe exactamente el proveedor del modelo?', 'Tokens como ‹IBAN_1·propio› y la interfaz. La tabla que traduce cada token a su valor real se queda en tu máquina o en el móvil.'],
+  ['¿Y si un dato sensible se escapa sin tokenizar?', 'El bloqueo final revisa cada petición que sale hacia la nube. Si encuentra un patrón sensible, como un IBAN válido o un DNI, la petición no sale y queda registrado.'],
+  ['¿Quién aprueba los pagos?', 'Siempre una persona. Pagar, firmar o enviar quedan retenidos hasta que alguien dice que sí, y la autenticación del banco la hace siempre el usuario.'],
+  ['¿Puede 8 recomendar inversiones?', 'No. El asesoramiento financiero es una actividad regulada. 8 ejecuta lo que decides; si le pides consejo, te dice que no puede.'],
+  ['¿En qué se diferencia de los asistentes que ya manejan el móvil?', 'También pueden abrir apps, pero su modelo ve la pantalla entera. Con 8, el modelo solo ve tokens y los datos se quedan en el teléfono.'],
+];
+function Faq() {
+  return (
+    <section id="faq" className="band band-paper" aria-labelledby="h-faq">
+      <div className="wrap faq-grid">
+        <div className="head sticky">
+          <Eyebrow n="07">Preguntas</Eyebrow>
+          <Words id="h-faq">Lo que nos preguntan <span className="soft">antes de una demo.</span></Words>
+        </div>
+        <div className="faq">
+          {FAQ.map(([q, a], i) => (
+            <details key={q}><summary><span className="qn">{String(i + 1).padStart(2, '0')}</span>{q}</summary><p>{a}</p></details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------------------------------------------- 08 pide una demo */
+const NEEDS = ['Facturas y pagos a proveedores', 'Atención al cliente y reclamaciones', 'Agentes para los clientes de mi banco', 'Otro proceso'];
+function DemoForm({ compact = false }) {
+  const [sent, setSent] = useState(false);
+  const submit = (e) => { e.preventDefault(); setSent(true); mood('agradecer', 2600); };
+  if (sent) return (<div className="sent" role="status"><b>Gracias.</b><p>Esta versión de la web todavía no envía el formulario. Lo conectamos en cuanto tengamos dirección de contacto.</p></div>);
+  const p = compact ? 'g-' : 'f-';
+  return (
+    <form className={'lead-form' + (compact ? ' compact' : '')} onSubmit={submit}>
+      {!compact && <label htmlFor={p + 'name'}>Nombre<input id={p + 'name'} name="name" autoComplete="name" required /></label>}
+      {!compact && <label htmlFor={p + 'company'}>Empresa<input id={p + 'company'} name="company" autoComplete="organization" required /></label>}
+      <label htmlFor={p + 'email'}>Correo del trabajo<input id={p + 'email'} name="email" type="email" autoComplete="email" required placeholder={compact ? 'tu@empresa.com' : undefined} /></label>
+      {!compact && (
+        <label htmlFor={p + 'need'}>Qué quieres automatizar
+          <select id={p + 'need'} name="need" defaultValue={NEEDS[0]}>{NEEDS.map((x) => <option key={x}>{x}</option>)}</select>
+        </label>
+      )}
+      <button type="submit" className="btn btn-white">Pedir la demo</button>
+    </form>
+  );
+}
+
+function Cierre() {
+  return (
+    <section id="contacto" className="band band-cobalt close" aria-labelledby="h-close">
+      <div className="wrap close-grid">
+        <div className="head">
+          <Eyebrow n="08">Pide una demo</Eyebrow>
+          <Words id="h-close">Enséñanos un proceso. <span className="soft">Te lo devolvemos hecho, sin que la IA vea un dato.</span></Words>
+          <p className="lead">Treinta minutos con tus pantallas, o con las nuestras si todavía no quieres compartir nada.</p>
+          <ul className="close-points">
+            <li>Sin integrar nada: trabaja sobre lo que ya tienes.</li>
+            <li>Al proveedor del modelo solo le llegan tokens.</li>
+            <li>Lo irreversible lo confirma una persona.</li>
+          </ul>
+        </div>
+        <DemoForm />
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="band band-ink foot">
+      <div className="wrap">
+        <div className="foot-top">
+          <div className="foot-brand">
+            <p className="foot-claim">Visa y Google resolvieron cómo paga un agente. <span className="soft">Priv8 resuelve qué ve mientras trabaja.</span></p>
+            <DemoForm compact />
+          </div>
+          <nav className="foot-cols" aria-label="Pie">
+            <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Priv8 para empresas</a><a href="#producto">8 en tu móvil</a><a href="#demo">Pruébalo</a></div>
+            <div><b>Confianza</b><a href="#confianza">Datos y modelo</a><a href="#confianza">Auditoría</a><a href="#faq">Preguntas</a></div>
+            <div><b>Priv8</b><a href="#contacto">Pide una demo</a><a href="#problema">Por qué existe</a></div>
+          </nav>
+        </div>
+        <div className="foot-word" aria-hidden="true">Priv<span>8</span></div>
+        <div className="foot-legal">
+          <span>Priv8 CUA · privacidad para agentes de IA</span>
+          <span>Las demos usan datos inventados. Banca Alcor, Nimbo Bróker y Suministros Lumen son nombres de ejemplo.</span>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -405,39 +418,36 @@ export default function App() {
     window.addEventListener('touchstart', skip, { once: true, passive: true });
     return () => { clearTimeout(t); window.removeEventListener('keydown', skip); window.removeEventListener('wheel', skip); window.removeEventListener('touchstart', skip); };
   }, []);
-  /* aparición suave de cada sección al entrar en pantalla */
+  /* aparición al entrar en pantalla */
   useEffect(() => {
-    const els = document.querySelectorAll('.reveal');
-    const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -4% 0px' });
+    const els = document.querySelectorAll('.band .head, .stats, .three, .bento, .trust, .lanes, .diagram, .faq, .demos, .swap-in, .lead-form');
+    els.forEach((el) => el.classList.add('rv'));
+    const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
   return (
     <>
       <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
-      <main className="page">
+      <main>
         <Hero />
-        <Marquee />
-        <Producto pal={pal} />
-        <Panel id="demo" tab="Pruébalo" labelledby="h-demo">
-          <div className="head">
-            <h2 id="h-demo">Mira qué recibe la IA. Y qué no.</h2>
-            <p className="lead">Tres demos con datos inventados. 8 te acompaña y reacciona a lo que pasa.</p>
-          </div>
-          <Demos pal={pal} />
-        </Panel>
+        <Dither from="--band" to="--night" seed={1} />
         <Problem />
-        <Protocol />
-        <Quien pal={pal} />
+        <Dither from="--night" to="--paper" seed={2} />
+        <Coste />
+        <Como />
+        <Dither from="--mist" to="--night" seed={3} />
+        <Prueba pal={pal} />
+        <Dither from="--night" to="--paper" seed={4} />
+        <Producto pal={pal} />
         <Confianza />
         <Faq />
+        <Dither from="--paper" to="--band" seed={5} />
         <Cierre />
-        <footer>
-          <span>Priv8 · Privacidad para agentes de IA</span>
-          <span>Los datos de las demos son inventados. Banca Alcor, Nimbo Bróker y Suministros Lumen son nombres de ejemplo.</span>
-        </footer>
+        <Dither from="--band" to="--ink-band" seed={6} />
       </main>
-      <Companion band={pal.band} accent={pal.accent} panel={pal.bg} intro={intro} />
+      <Footer />
+      <Companion pal={pal} intro={intro} />
     </>
   );
 }

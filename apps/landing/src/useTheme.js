@@ -26,6 +26,6 @@ export function useTheme() {
 }
 
 export const PALETTE = {
-  light: { page: '#E9EDF8', bg: '#FFFFFF', bg2: '#F4F6FD', band: '#2D45D6', ink: '#0B1B33', accent: '#2D45D6', navLight: '#FFFFFF', ok: '#1F8A5B', warn: '#A86400', bad: '#C23A2E' },
-  dark: { page: '#050B20', bg: '#0D1740', bg2: '#13205A', band: '#1F33B0', ink: '#020617', accent: '#8FA2FF', navLight: '#0D1740', ok: '#4CC38A', warn: '#E3A447', bad: '#F07A6E' },
+  light: { band: '#2D45D6', night: '#0B1B33', paper: '#FFFFFF', mist: '#EEF2FB', accent: '#2D45D6', ink: '#05101F', bg: '#FFFFFF', bg2: '#F4F6FD', ok: '#1F8A5B', warn: '#A86400', bad: '#C23A2E' },
+  dark: { band: '#2238C4', night: '#050B1C', paper: '#0B1430', mist: '#0F1B3E', accent: '#8FA2FF', ink: '#02060F', bg: '#0B1430', bg2: '#13205A', ok: '#4CC38A', warn: '#E3A447', bad: '#F07A6E' },
 };

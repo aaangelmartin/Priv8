@@ -48,7 +48,7 @@ function ScreenDemo({ pal }) {
             <div key={f.k} className={'row' + (hover === i ? ' on' : '')} onMouseEnter={() => { setHover(i); if (on) mood(f.face, 1400); }} onMouseLeave={() => setHover(-1)}>
               <span className="k">{f.k}</span>
               <span className={'v' + (f.mono ? ' mono' : '')}>{f.shown || f.real}</span>
-              <Eight className="face" mode={on ? f.face : 've'} fg={on ? pal[f.tone] : pal.bad} cut={hover === i ? pal.bg2 : pal.bg} label={'8 en ' + f.k} />
+              <Eight className="face" mode={on ? f.face : 've'} fg={on ? pal[f.tone] : pal.bad} cut={hover === i ? pal.bg2 : pal.paper} label={'8 en ' + f.k} />
             </div>
           ))}
         </div>
