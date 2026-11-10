@@ -146,19 +146,43 @@ export function Blend({ from, to, variant = 'pixels', seed = 1 }) {
     );
   }
   if (variant === 'pixels') {
-    /* los cuadrados originales: rejilla de 72 x 6 que se llena fila a fila */
-    const cols = 72, rows = 6, cells = [];
-    let sd = seed * 9301 + 49297;
-    const rnd = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const p = (r + 0.5) / rows;
-        if (rnd() < p) cells.push(<rect key={r * cols + c} x={c} y={r} width="1.02" height="1.02" />);
+    /* La rejilla de 72 x 6 de siempre. Las formas que salen al juntarse los cuadrados llevan las esquinas como la barra:
+       las de fuera redondeadas y los rincones de dentro con una curva hacia fuera (como sus orejas).
+       Se calcula por celda mirando a sus vecinas, así los cuadrados no se deforman. */
+    const cols = 72, rows = 6, H = Math.round(Math.max(30, Math.min(56, w * 0.04))) || 52, paths = [];
+    if (w > 0) {
+      const cw = w / cols, ch = H / rows, r = Math.min(cw, ch) * 0.5;
+      let sd = seed * 9301 + 49297;
+      const rnd = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
+      const g = [];
+      for (let y = 0; y < rows; y++) { g.push([]); for (let x = 0; x < cols; x++) g[y].push(rnd() < (y + 0.5) / rows); }
+      const on = (x, y) => (y >= rows ? true : y < 0 ? false : g[y][Math.max(0, Math.min(cols - 1, x))]);
+      const f = (n) => n.toFixed(2);
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const X = x * cw, Y = y * ch, X2 = X + cw, Y2 = Y + ch;
+          if (on(x, y)) {
+            const tl = !on(x, y - 1) && !on(x - 1, y) ? r : 0, tr = !on(x, y - 1) && !on(x + 1, y) ? r : 0;
+            const br = !on(x, y + 1) && !on(x + 1, y) ? r : 0, bl = !on(x, y + 1) && !on(x - 1, y) ? r : 0;
+            paths.push(`M${f(X + tl)} ${f(Y)} L${f(X2 - tr)} ${f(Y)} ${tr ? `A${f(tr)} ${f(tr)} 0 0 1 ${f(X2)} ${f(Y + tr)}` : ''} L${f(X2)} ${f(Y2 - br)} ${br ? `A${f(br)} ${f(br)} 0 0 1 ${f(X2 - br)} ${f(Y2)}` : ''} L${f(X + bl)} ${f(Y2)} ${bl ? `A${f(bl)} ${f(bl)} 0 0 1 ${f(X)} ${f(Y2 - bl)}` : ''} L${f(X)} ${f(Y + tl)} ${tl ? `A${f(tl)} ${f(tl)} 0 0 1 ${f(X + tl)} ${f(Y)}` : ''} Z`);
+          } else {
+            /* rincones: celda vacía con dos vecinas llenas que forman esquina */
+            if (on(x, y - 1) && on(x - 1, y)) paths.push(`M${f(X)} ${f(Y)} L${f(X + r)} ${f(Y)} A${f(r)} ${f(r)} 0 0 0 ${f(X)} ${f(Y + r)} Z`);
+            if (on(x, y - 1) && on(x + 1, y)) paths.push(`M${f(X2)} ${f(Y)} L${f(X2)} ${f(Y + r)} A${f(r)} ${f(r)} 0 0 0 ${f(X2 - r)} ${f(Y)} Z`);
+            if (on(x, y + 1) && on(x + 1, y)) paths.push(`M${f(X2)} ${f(Y2)} L${f(X2 - r)} ${f(Y2)} A${f(r)} ${f(r)} 0 0 0 ${f(X2)} ${f(Y2 - r)} Z`);
+            if (on(x, y + 1) && on(x - 1, y)) paths.push(`M${f(X)} ${f(Y2)} L${f(X)} ${f(Y2 - r)} A${f(r)} ${f(r)} 0 0 0 ${f(X + r)} ${f(Y2)} Z`);
+          }
+        }
       }
     }
     return (
-      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={{ background: `var(${from})` }}>
-        <svg viewBox={`0 0 ${cols} ${rows}`} preserveAspectRatio="none" style={{ fill: `var(${to})` }}>{cells}</svg>
+      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={{ background: `var(${from})`, height: H }}>
+        {w > 0 && (
+          <svg width={w} height={H + 1} viewBox={`0 0 ${w} ${H + 1}`} style={{ fill: `var(${to})` }}>
+            <path d={paths.join(' ')} stroke={`var(${to})`} strokeWidth="0.6" strokeLinejoin="round" />
+            <rect x="0" y={H} width={w} height="1.5" />
+          </svg>
+        )}
       </div>
     );
   }
