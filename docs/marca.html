@@ -115,14 +115,15 @@ code,.mono{font-family:var(--f-mono);font-size:.86em}
 .files span{color:var(--muted);font-family:var(--f-body);font-size:.84rem}
 
 /* 8 */
-.face{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.face{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:980px){.face{grid-template-columns:minmax(0,1fr)}}
 .fc{border-radius:16px;padding:18px;display:flex;gap:16px;align-items:center;border:1px solid var(--line)}
-.fc.ok{background:var(--ok-soft)} .fc.no{background:var(--accent-soft)}
+.fc.ok{background:var(--ok-soft)} .fc.no{background:var(--accent-soft)} .fc.bad{background:var(--bad-soft)}
 .fc img{width:120px;height:auto;border-radius:18px;flex:none;border:1px solid #D6DCE8}
 .fc .t{display:flex;flex-direction:column;gap:6px;min-width:0}
 .fc .t p{font-size:.9rem}
 .lvl{font-family:var(--f-mono);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-.fc.ok .lvl{color:var(--ok)} .fc.no .lvl{color:var(--accent)}
+.fc.ok .lvl{color:var(--ok)} .fc.no .lvl{color:var(--accent)} .fc.bad .lvl{color:var(--bad)}
 .stab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 28px}
 .stab h3{grid-column:1/-1;font-family:var(--f-mono);font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
 .stab h3:first-child{margin-top:0}
@@ -375,9 +376,10 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
   </div>
   <div class="face">
     <div class="fc ok"><img src="../brand/logo/8-reposo-blanco.svg" alt="8 con los ojos abiertos" width="120" height="99"><div class="t"><span class="lvl">Verde · 8 lo ve</span><h3>Ve</h3><p>Ojos abiertos. Interfaz: menús, botones, textos.</p></div></div>
-    <div class="fc no"><img src="../brand/logo/8-nove-blanco.svg" alt="8 con los ojos cerrados en dos asteriscos" width="120" height="99"><div class="t"><span class="lvl">Ámbar y rojo · 8 no lo ve</span><h3>No ve</h3><p>Cada ojo se cierra en un asterisco macizo de seis brazos. Vale para un token como <span class="tok">‹IBAN_1›</span> y para lo que nunca sale.</p></div></div>
+    <div class="fc no"><img src="../brand/logo/8-nove-blanco.svg" alt="8 con los ojos cerrados en dos asteriscos" width="120" height="99"><div class="t"><span class="lvl">Ámbar · tokenizado</span><h3>Tokenizado</h3><p>Lo tiene, pero tapado: cada ojo se cierra en un asterisco. Trabaja con <span class="tok">‹IBAN_1›</span> sin ver el valor.</p></div></div>
+    <div class="fc bad"><img src="../brand/logo/8-nuncasale-blanco.svg" alt="8 con los ojos cerrados" width="120" height="99"><div class="t"><span class="lvl">Rojo · nunca sale</span><h3>Nunca sale</h3><p>Ni lo mira: cierra los ojos como al parpadear y se queda así. Contraseñas, PIN y códigos los pone el usuario.</p></div></div>
   </div>
-  <p class="lead small">Solo hay dos caras de datos. Si un dato es ámbar o rojo lo dice la interfaz (el chip del token frente a la etiqueta <span class="st bad">nunca sale</span>), nunca los ojos.</p>
+  <p class="lead small">La cara cuenta lo que 8 puede hacer con el dato: verlo, tenerlo tapado o ni mirarlo. La interfaz lo acompaña con el chip del token o la etiqueta <span class="st bad">nunca sale</span>.</p>
 
   <div class="stab">
     <h3>Emociones</h3>

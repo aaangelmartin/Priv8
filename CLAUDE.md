@@ -122,7 +122,7 @@ El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). S
 - **Solo ojos:** nada de manos, vendas, iconos ni adornos tipo emoji. La única excepción son las "z" en Sora de inactivo.
 - **Emociones (10):** alegría, risa, agradecer, sorpresa, tristeza, enfado, miedo, curiosidad, duda, disculpa.
 - **Flujo (18):** reposo, saludar, llamar, interrumpido, escuchar, hablar, pensar, leer, cargando, pedir permiso, esperar, mirar a otro lado (mientras el usuario escribe su clave u OTP), listo, confirmado, cancelado, no puedo (asesoría de inversión o dato rojo), sin conexión, inactivo.
-- **Datos:** 8 **ve** (verde) o **no ve** (ámbar y rojo), con una sola cara para no ver: los huecos se cierran en dos asteriscos macizos. La diferencia entre ámbar y rojo la muestra la interfaz (chip de token frente a etiqueta "nunca sale"), nunca los ojos.
+- **Datos:** la cara cuenta lo que 8 puede hacer con el dato. **Ve** (verde): ojos abiertos. **Tokenizado** (ámbar): lo tiene pero tapado, los huecos se cierran en dos asteriscos. **Nunca sale** (rojo): ni lo mira, cierra los ojos como al parpadear y se queda así. La interfaz lo acompaña con el chip de token o la etiqueta "nunca sale".
 - **Tamaño:** a partir de 32 px se distinguen todas las caras; por debajo, 8 va siempre animado.
 - **En la app:** hablar y escuchar deben moverse con el volumen real de la voz y del micrófono.
 - **Archivos:** logos trazados, icono de app y favicon en `brand/logo/`.
@@ -130,7 +130,7 @@ El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). S
 
 ### Decisiones tomadas
 
-- [x] Cara de "no ve": asteriscos, una sola para ámbar y rojo.
+- [x] Caras de datos: asteriscos para tokenizado y ojos cerrados (cierre de parpadeo) para nunca sale.
 - [x] Paleta y fuentes de `docs/plan.html` unificadas con la marca.
 - [x] Pronunciación: Priv8 se lee "priveit" (priv + *eight*); Priv8 CUA, "priveit ce u a".
 - [x] Nombre Priv8 revisado: hay un registro "PRIV8" de Orchid en EE. UU. (clases 35/41, eventos) y "priv8" es jerga de exploits. Para la hackathon se mantiene, escrito siempre "Priv8 CUA". Antes de un uso comercial: búsqueda en EUIPO, OEPM y WIPO (clases 9, 36 y 42).
