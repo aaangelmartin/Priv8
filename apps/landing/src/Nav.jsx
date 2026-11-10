@@ -6,10 +6,10 @@ const LINKS = [
   ['problema', 'Qué ve'],
   ['como', 'Cómo funciona'],
   ['producto', 'Productos'],
-  ['demo', 'Pruébalo'],
+  ['demo', 'Demostración'],
   ['faq', 'Preguntas'],
 ];
-const NAMES = { inicio: 'Priv8', demo: 'Pruébalo', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Pide una demo' };
+const NAMES = { inicio: 'Priv8', demo: 'Demostración', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Pide una demo' };
 
 /* Barra suelta y blanca, con el radio del notch. 8 vive dentro y te sigue con la mirada. */
 export default function Nav() {
@@ -29,10 +29,11 @@ export default function Nav() {
     const check = () => {
       raf = 0;
       const nav = document.querySelector('.nav'); if (!nav) return;
+      if (window.visualViewport && window.visualViewport.scale > 1.01) return;
       const r = nav.getBoundingClientRect();
       const y = r.top + r.height / 2;
       let light = false;
-      for (const el of document.elementsFromPoint(window.innerWidth / 2, y)) {
+      for (const el of document.elementsFromPoint(document.documentElement.clientWidth / 2, y)) {
         if (nav.contains(el) || el.closest('.companion, .bubble8')) continue;
         let n = el, c = null;
         while (n && n !== document.documentElement) {

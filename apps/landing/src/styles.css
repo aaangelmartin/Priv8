@@ -88,11 +88,12 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 }
 
 /* ---------- 8 y su bocadillo ---------- */
-.layer8 { position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; transform-origin: 0 0; }
-.companion { position: fixed; left: 0; top: 0; z-index: 40; pointer-events: auto; padding: 0; border: 0; background: transparent; cursor: default; transform-origin: 0 0; }
+/* 8 y su bocadillo viven en la página (no fijos a la pantalla): con el zoom se amplían y se mueven con el contenido */
+.layer8 { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 40; }
+.companion { position: absolute; left: 0; top: 0; z-index: 40; pointer-events: auto; padding: 0; border: 0; background: transparent; cursor: default; transform-origin: 0 0; }
 .companion-eight { position: absolute; inset: 0; }
 .companion-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 17px; background: transparent; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); filter: drop-shadow(0 12px 22px rgba(5, 16, 31, .2)); opacity: 0; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
+.bubble8 { position: absolute; z-index: 41; max-width: 260px; padding: 12px 17px; background: transparent; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); filter: drop-shadow(0 12px 22px rgba(5, 16, 31, .2)); opacity: 0; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
 /* cola de chat con la base plana: sale del lado que mira a 8 y su borde de abajo sigue la línea del bocadillo */
 /* forma del bocadillo: un único trazado (ver Bubble en Companion.jsx) */
 .bubble8 .shape { position: absolute; top: 0; max-width: none; height: 100%; fill: #ffffff; overflow: visible; display: block; pointer-events: none; }
@@ -446,7 +447,7 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .bubble8.big { white-space: nowrap; max-width: none; font: 700 clamp(1.4rem, .9rem + 1.5vw, 2.2rem)/1.15 var(--f-display); letter-spacing: -.03em; padding: .5em .8em .55em; }
 
 /* barra sobre blanco: cobalto con texto blanco */
-.nav { transition: background .35s ease, color .35s ease, border-color .35s ease; }
+
 .nav.on-white { background: rgba(45, 69, 214, .97); border-color: transparent; box-shadow: 0 12px 40px rgba(45, 69, 214, .28); }
 .nav.on-white .brand { color: #fff; }
 .nav.on-white .links a { color: rgba(255, 255, 255, .78); }
@@ -535,17 +536,38 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .flow-q { background: var(--band); justify-self: center; margin: clamp(16px, 3vh, 30px) auto clamp(12px, 2vh, 22px); width: max-content; padding: 12px 18px; border-radius: 16px; border: 1px dashed rgba(255, 255, 255, .5); color: #fff; font: 600 clamp(1rem, .9rem + .4vw, 1.3rem)/1.2 var(--f-display); }
 .flow-q .tag { margin-right: 10px; }
 .flow-outs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; text-align: left; }
-.out { padding: 18px 20px; border-radius: 20px; background: #4459dc; border-top: 3px solid #c4cdff; }
-.out h4 { color: #fff; font-size: 1.05rem; margin-bottom: 6px; }
-.out p { color: #dbe1ff; font-size: .9rem; line-height: 1.45; }
-.out-stop { border-top-color: #fff; background: #5468e0; }
+.fout { padding: 18px 20px; border-radius: 20px; background: #4459dc; border-top: 3px solid #c4cdff; }
+.fout h4 { color: #fff; font-size: 1.05rem; margin-bottom: 6px; }
+.fout p { color: #dbe1ff; font-size: .9rem; line-height: 1.45; }
+.fout-stop { border-top-color: #fff; background: #5468e0; }
 .flow-foot { text-align: center; margin-top: clamp(14px, 2.4vh, 26px); color: #dbe1ff; font: 500 .9rem/1 var(--f-mono); }
 /* aparición en orden */
-.flow .node, .flow .link, .flow .flow-q, .flow .out, .flow .flow-foot { opacity: 0; transform: translateY(14px); transition: opacity .6s var(--ease), transform .7s var(--ease); transition-delay: calc(var(--d) * 110ms); }
-.flow.seen .node, .flow.seen .link, .flow.seen .flow-q, .flow.seen .out, .flow.seen .flow-foot { opacity: 1; transform: none; }
+.flow .node, .flow .link, .flow .flow-q, .flow .fout, .flow .flow-foot { opacity: 0; transform: translateY(14px); transition: opacity .6s var(--ease), transform .7s var(--ease); transition-delay: calc(var(--d) * 110ms); }
+.flow.seen .node, .flow.seen .link, .flow.seen .flow-q, .flow.seen .fout, .flow.seen .flow-foot { opacity: 1; transform: none; }
 @media (max-width: 900px) {
   .flow-row { grid-template-columns: 1fr; gap: 10px; }
   .link { width: 2px; height: 22px; justify-self: center; margin: 0; background: repeating-linear-gradient(180deg, rgba(255, 255, 255, .7) 0 6px, transparent 6px 11px); background-size: 2px 22px; animation: none; }
   .link::after { right: -4px; top: auto; bottom: -4px; border: 5px solid transparent; border-top-color: #fff; border-bottom: 0; }
   .flow-outs { grid-template-columns: 1fr 1fr; }
 }
+
+/* formulario: campos que no se salen y desplegable igual que los demás */
+.lead-form label { min-width: 0; }
+.lead-form input, .lead-form select { width: 100%; min-width: 0; height: 52px; box-sizing: border-box; border-radius: 16px; }
+.lead-form select { -webkit-appearance: none; appearance: none; padding-right: 42px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%23ffffff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
+
+/* la barra cambia de color con una transición corta */
+.nav { transition: background-color .22s ease, box-shadow .22s ease; }
+.nav .brand, .nav .links a { transition: color .22s ease, background-color .22s ease; }
+.nav .pill { transition: color .22s ease, background-color .22s ease, transform .2s var(--ease); }
+
+/* 1 · lo que ve: más grande. 8 y la explicación a la izquierda, la pantalla grande a la derecha */
+.see2 { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: clamp(32px, 5vw, 90px); align-items: center; padding-top: clamp(84px, 11vh, 110px); }
+.see2 .see-copy { display: grid; gap: 14px; justify-items: start; text-align: left; }
+.see2 .spot-scn { width: clamp(110px, min(12vw, 16vh), 170px); margin: 0 0 6px; }
+.see2 h2 { margin-top: 0; font-size: clamp(2.4rem, min(1rem + 4vw, 9vh), 5rem); }
+.see2 .lead { margin-top: 4px; max-width: 46ch; text-wrap: pretty; }
+.see2 .screen { width: 100%; margin-top: 0; font-size: 1.08rem; }
+.see2 .srow { padding-block: clamp(12px, 2vh, 18px); }
+.see2 .srow .real, .see2 .srow .tokv { font-size: .98rem; }
+@media (max-width: 900px) { .see2 { grid-template-columns: 1fr; } .see2 .lead { display: none; } }

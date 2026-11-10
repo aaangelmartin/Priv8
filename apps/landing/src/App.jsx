@@ -113,10 +113,10 @@ function Prueba({ pal }) {
     <section id="demo" className="block block-cobalt" aria-labelledby="h-demo">
       <div className="wrap">
         <div className="block-head">
-          <Spot className="spot-inline" mode="leer" say="Quítame la protección y verás." />
-          <p className="eyebrow">Pruébalo</p>
-          <h2 id="h-demo">No te lo creas. <span className="soft">Toca.</span></h2>
-          <p className="lead">Tres demos con datos inventados. Quita la protección, mete una trampa o pregunta al oráculo.</p>
+          <Spot className="spot-inline" mode="leer" say="Mira lo que llega al modelo." />
+          <p className="eyebrow">Demostración</p>
+          <h2 id="h-demo">Te lo demostramos. <span className="soft">Aquí mismo.</span></h2>
+          <p className="lead">Con datos inventados: lo que recibe el modelo con y sin Priv8, un correo con trampa y el oráculo que responde sin dar la cifra.</p>
         </div>
         <Demos pal={pal} />
       </div>
@@ -202,14 +202,14 @@ function Footer({ pal }) {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#demo">Pruébalo</a></div>
+            <div><b>Producto</b><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">8 en el móvil</a><a href="#demo">Demostración</a></div>
             <div><b>Confianza</b><a href="#trampa">Pagos seguros</a><a href="#faq">Datos y modelo</a><a href="#faq">Registro firmado</a></div>
             <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#problema">Por qué Priv8</a></div>
           </nav>
         </div>
         {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
         <div className="foot-word">
-          <Spot className="spot-foot" mode="alegria" say="¡Hola!" side="left" />
+          <Spot className="spot-foot" mode="mirar" />
           <span>Priv8</span>
         </div>
       </div>
@@ -247,7 +247,7 @@ export default function App() {
   /* una sección, una pantalla: si el contenido de un bloque no cabe en su alto, se reduce con zoom lo justo */
   useEffect(() => {
     const fit = () => {
-      const wide = window.innerWidth > 900;
+      const wide = document.documentElement.clientWidth > 900;
       document.querySelectorAll('.block').forEach((b) => {
         const w = b.querySelector(':scope > .wrap'); if (!w) return;
         w.style.zoom = '';

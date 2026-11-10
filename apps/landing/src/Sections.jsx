@@ -110,10 +110,10 @@ export function HowFlow() {
         </div>
         <div className="flow-q" style={{ '--d': 7 }}><span className="tag"><b>q</b></span>¿Qué quiere hacer el agente?</div>
         <div className="flow-outs">
-          <article className="out" style={{ '--d': 8 }}><h4>Consultar</h4><p>Un oráculo local responde «sí» o «no», sin dar la cifra.</p></article>
-          <article className="out" style={{ '--d': 9 }}><h4>Escribir</h4><p>El ejecutor pone el valor real en local, justo antes de pulsar.</p></article>
-          <article className="out" style={{ '--d': 10 }}><h4>Pagar o firmar</h4><p>Espera el «sí» de una persona. La clave la pone ella.</p></article>
-          <article className="out out-stop" style={{ '--d': 11 }}><h4>Usar un dato de un correo</h4><p>Bloqueado: no puede entrar en un campo de pago.</p></article>
+          <article className="fout" style={{ '--d': 8 }}><h4>Consultar</h4><p>Un oráculo local responde «sí» o «no», sin dar la cifra.</p></article>
+          <article className="fout" style={{ '--d': 9 }}><h4>Escribir</h4><p>El ejecutor pone el valor real en local, justo antes de pulsar.</p></article>
+          <article className="fout" style={{ '--d': 10 }}><h4>Pagar o firmar</h4><p>Espera el «sí» de una persona. La clave la pone ella.</p></article>
+          <article className="fout fout-stop" style={{ '--d': 11 }}><h4>Usar un dato de un correo</h4><p>Bloqueado: no puede entrar en un campo de pago.</p></article>
         </div>
         <p className="flow-foot" style={{ '--d': 12 }}>Y cada paso queda en un registro firmado.</p>
       </div>

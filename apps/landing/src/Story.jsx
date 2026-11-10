@@ -12,8 +12,10 @@ export function Scene({ id, screens = 3, tone = 'cobalt', phases = 1, label, chi
     const frame = () => {
       raf = 0;
       const el = ref.current; if (!el) return;
+      /* con zoom de dos dedos la escena no cambia de fase */
+      if (window.visualViewport && window.visualViewport.scale > 1.01) return;
       const r = el.getBoundingClientRect();
-      const run = r.height - window.innerHeight;
+      const run = r.height - document.documentElement.clientHeight;
       const v = run > 0 ? Math.min(1, Math.max(0, -r.top / run)) : 0;
       setP((old) => (Math.abs(old - v) > 0.002 ? v : old));
     };
@@ -53,10 +55,15 @@ export function SeeScene() {
       {({ phase }) => {
         const safe = phase === 1;
         return (
-          <div className="wrap scn">
-            <Spot className="spot-scn" mode={safe ? 'nove' : 'miedo'} say={safe ? 'Así sí. No veo nada que no deba.' : 'Esto no debería verlo nadie.'} />
-            <p className="eyebrow">{safe ? 'Con Priv8' : 'Sin Priv8'}</p>
-            <h2 key={phase} className="swap">{safe ? <>8 ve <span className="soft">esto.</span></> : <>Un agente normal <span className="soft">ve esto.</span></>}</h2>
+          <div className="wrap see2">
+            <div className="see-copy">
+              <Spot className="spot-scn" mode={safe ? 'nove' : 'miedo'} say={safe ? 'Así sí. No veo nada que no deba.' : 'Esto no debería verlo nadie.'} />
+              <p className="eyebrow">{safe ? 'Con Priv8' : 'Sin Priv8'}</p>
+              <h2 key={phase} className="swap">{safe ? <>8 ve <span className="soft">esto.</span></> : <>Un agente normal <span className="soft">ve esto.</span></>}</h2>
+              <p key={'l' + phase} className="lead swap">{safe
+                ? 'La misma pantalla, la misma tarea. El modelo sabe qué es cada campo y puede trabajar con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina, y la clave ni siquiera sale.'
+                : 'Para usar una web o una app, el agente manda la pantalla entera al proveedor del modelo: nombres, IBAN, saldos y movimientos. Por eso los bancos no dejan a la IA tocar procesos con datos de clientes.'}</p>
+            </div>
             <div className={'screen ' + (safe ? 'is-safe' : 'is-raw')}>
               <div className="screen-bar"><i /><i /><i /><b>Banca Alcor</b><span>lo que recibe el modelo</span></div>
               {ROWS.map(([k, real, tok], i) => (

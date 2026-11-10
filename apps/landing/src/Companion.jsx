@@ -31,7 +31,7 @@ const toHex = (c) => '#' + c.slice(0, 3).map((v) => Math.round(v).toString(16).p
 
 /* elige el anclaje más centrado de los que se ven */
 function pickAnchor() {
-  const vh = window.innerHeight;
+  const vh = document.documentElement.clientHeight;
   let best = null, bestD = Infinity;
   document.querySelectorAll('[data-anchor8]').forEach((el) => {
     const host = el.closest('section, footer') || el;
@@ -45,6 +45,26 @@ function pickAnchor() {
   return best;
 }
 
+/* pasa de un color a otro en 220 ms */
+function useTweenColor(target) {
+  const [c, setC] = useState(target);
+  const from = useRef(target);
+  useEffect(() => {
+    const a = from.current; if (a === target) return undefined;
+    const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16)), pb = [1, 3, 5].map((i) => parseInt(target.slice(i, i + 2), 16));
+    const t0 = performance.now(); let raf = 0;
+    const step = (now) => {
+      const k = Math.min(1, (now - t0) / 220), e = 1 - Math.pow(1 - k, 3);
+      const hex = '#' + pa.map((v, i) => Math.round(v + (pb[i] - v) * e).toString(16).padStart(2, '0')).join('');
+      from.current = hex; setC(hex);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return c;
+}
+
 export default function Companion({ pal, intro }) {
   const { override } = useCompanion();
   const [stage, setStage] = useState(intro ? 'wake' : 'done');
@@ -52,7 +72,6 @@ export default function Companion({ pal, intro }) {
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
   const box = useRef(null);
-  const layer = useRef(null);
   const flyReq = useRef(false);
   const lastSpot = useRef(null);
   const changeT = useRef(0);
@@ -75,22 +94,32 @@ export default function Companion({ pal, intro }) {
     /* color de 8 según la zona de su sitio: sobre blanco, cobalto; sobre cobalto, blanco. Solo cambia al llegar a otra zona */
     const zoneColor = (a, el) => {
       const r = a.getBoundingClientRect();
-      const c = backgroundAt(clamp(r.left + r.width / 2, 1, window.innerWidth - 1), clamp(r.top + r.height / 2, 1, window.innerHeight - 1), el);
+      const c = backgroundAt(clamp(r.left + r.width / 2, 1, document.documentElement.clientWidth - 1), clamp(r.top + r.height / 2, 1, document.documentElement.clientHeight - 1), el);
       return toHex(c);
     };
     const frame = () => {
       raf = 0;
       const el = box.current; if (!el) return;
-      const vw = window.innerWidth, vh = window.innerHeight;
+      const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
       const heroA = document.getElementById('hero-anchor');
       const now0 = performance.now();
       const snapping = now0 < snapUntil;
+      /* 8 va en la página (absoluto) y se mueve con el scroll de forma nativa, sin saltos. Solo cuando su sitio está en
+         una escena fijada que está quieta en pantalla, 8 pasa a fijo, para quedarse igual de quieto. Con zoom de dos
+         dedos se queda como está. */
+      const sx = window.scrollX, sy = window.scrollY;
+      const vz = window.visualViewport;
+      if (vz && vz.scale > 1.01 && cur) return;
+      const place = (p, fixed) => {
+        el.style.position = fixed ? 'fixed' : 'absolute';
+        el.style.transform = `translate3d(${p.left + (fixed ? 0 : sx)}px, ${p.top + (fixed ? 0 : sy)}px, 0) scale(${p.S / BASE})`;
+      };
       if (phase.current === 'intro') {
         /* bienvenida: 8 grande en el centro, con los ojos abiertos, saluda desde su bocadillo a la izquierda */
         const D = Math.min(vw * 0.4, vh * 0.5 * 46 / 32, 520), S = D * 64 / 46;
         el.style.transition = 'none';
-        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
         cur = { left: vw / 2 - S / 2, top: vh * 0.5 - S / 2, S };
+        place(cur, true);
         lastSpot.current = heroA;
         return;
       }
@@ -107,7 +136,6 @@ export default function Companion({ pal, intro }) {
         if (now0 - candT > 120 || snapping) {
           lastSpot.current = picked; cand = null;
           tween = snapping || !cur ? null : { from: { ...cur }, t0: now0, dur: 620 };
-          if (!tween) setBg(zoneColor(picked, el));
           setSpot({ mode: picked.dataset.mode || 'mirar', say: picked.dataset.say || '', side: picked.dataset.side || '', id: Math.random().toString(36) });
         } else ask();
       } else cand = null;
@@ -116,6 +144,8 @@ export default function Companion({ pal, intro }) {
       const r = anchor.getBoundingClientRect();
       const S0 = r.width * 64 / 46;
       const target = { left: r.left + r.width / 2 - S0 / 2, top: r.top + r.height / 2 - S0 / 2, S: S0 };
+      const stg = anchor.closest('.stage');
+      const pinned = !!stg && Math.abs(stg.getBoundingClientRect().top) < 1;
       if (phase.current === 'live' && (anchor.dataset.mode !== spot.mode || anchor.dataset.say !== spot.say)) {
         setSpot((sp) => (sp.mode === anchor.dataset.mode && sp.say === anchor.dataset.say ? sp : { mode: anchor.dataset.mode || 'mirar', say: anchor.dataset.say || '', side: anchor.dataset.side || '', id: Math.random().toString(36) }));
       }
@@ -131,27 +161,24 @@ export default function Companion({ pal, intro }) {
         const cx = fx + dx * e + (-dy / dist) * bow, cy = fy + dy * e + (dx / dist) * bow;
         const S = (tween.from.S + (target.S - tween.from.S) * e) * (1 - 0.08 * Math.sin(Math.PI * e));
         pos = { left: cx - S / 2, top: cy - S / 2, S };
-        if (k < 1) ask(); else { tween = null; setBg(zoneColor(anchor, el)); }
+        if (k < 1) ask(); else tween = null;
       }
       el.style.transition = 'none';
-      el.style.transform = `translate3d(${pos.left}px, ${pos.top}px, 0) scale(${pos.S / BASE})`;
+      place(pos, pinned || (!!tween && phase.current !== 'live'));
       cur = { left: pos.left, top: pos.top, S: pos.S };
+      /* color según lo que tiene detrás (la transición rápida del color va aparte) */
+      const bgNow = toHex(backgroundAt(clamp(pos.left + pos.S / 2, 1, vw - 1), clamp(pos.top + pos.S / 2, 1, vh - 1), el));
+      setBg((p) => (p === bgNow ? p : bgNow));
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
     const snap = () => { snapUntil = performance.now() + 600; if (box.current) box.current.style.transition = 'none'; ask(); };
-    /* zoom con dos dedos: 8 y su bocadillo van en una capa que deshace el zoom, así se quedan en la pantalla
-       en el mismo sitio y con el mismo tamaño, en vez de ampliarse y moverse con la página */
-    const pin = () => {
-      const v = window.visualViewport, L = layer.current; if (!v || !L) return;
-      L.style.transform = v.scale === 1 && !v.offsetLeft && !v.offsetTop ? '' : `translate(${v.offsetLeft}px, ${v.offsetTop}px) scale(${1 / v.scale})`;
-    };
-    pin();
+
     ask();
     const tick = setInterval(ask, 200);
     window.addEventListener('scroll', ask, { passive: true });
     window.addEventListener('resize', snap);
     /* zoom del navegador: cambia el tamaño visible y la densidad de píxeles */
-    const vv = window.visualViewport; const onVv = () => { pin(); ask(); }; if (vv) { vv.addEventListener('resize', onVv); vv.addEventListener('scroll', onVv); }
+    const vv = window.visualViewport; const onVv = () => { ask(); }; if (vv) { vv.addEventListener('resize', onVv); vv.addEventListener('scroll', onVv); }
     let mq = null; const watchDpr = () => { if (mq) mq.removeEventListener('change', onDpr); mq = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`); mq.addEventListener('change', onDpr); };
     function onDpr() { snap(); watchDpr(); }
     watchDpr();
@@ -186,12 +213,15 @@ export default function Companion({ pal, intro }) {
   const under = bg || band;
   const rgb = [1, 3, 5].map((i) => parseInt(under.slice(i, i + 2), 16));
   const light = lum(rgb) > 0.55;
-  const col = { fg: light ? band : '#FFFFFF', cut: under };
+  /* el color cambia con una transición corta, no de golpe */
+  const fgA = useTweenColor(light ? band : '#FFFFFF');
+  const cutA = useTweenColor(under);
+  const col = { fg: fgA, cut: cutA };
   /* en la bienvenida, ojos bien abiertos todo el rato: nada de párpados entornados */
   const mode = override || (stage === 'wake' || stage === 'fly' ? 'mirar' : spot.mode);
   return (
-    <div className="layer8" ref={layer}>
-      <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => say(spot.say || '¡Hola!', spot.side)} role="img" aria-label="8, el agente de Priv8">
+    <div className="layer8">
+      <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => { if (stage === 'done' && spot.say) say(spot.say, spot.side); }} role="img" aria-label="8, el agente de Priv8">
         <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
       </div>
       <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} />
@@ -234,12 +264,9 @@ function Bubble({ text, show, big, side, eight }) {
     const place = () => {
       raf = requestAnimationFrame(place);
       const el = ref.current, e8 = eight.current; if (!el || !e8) return;
-      /* los rectángulos vienen en coordenadas de la página; la capa deshace el zoom, así que se pasan a las suyas */
-      const v = window.visualViewport, sc = v ? v.scale : 1, ox = v ? v.offsetLeft : 0, oy = v ? v.offsetTop : 0;
-      const q = e8.getBoundingClientRect();
-      const r = { left: (q.left - ox) * sc, top: (q.top - oy) * sc, width: q.width * sc, height: q.height * sc };
+      const r = e8.getBoundingClientRect();
       const D = r.width * 46 / 64, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const vw = window.innerWidth, vh = window.innerHeight, m = 12;
+      const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight, m = 12;
       const gap = Math.max(14, D * 0.08), T = big ? 23 : 14;
       const navB = (document.querySelector('.nav')?.getBoundingClientRect().bottom || 0) + 10;
       const L = cx - D / 2, R = cx + D / 2, top8 = cy - D * 0.36, bot8 = cy + D * 0.36, eye = cy - D * 0.06;
@@ -260,7 +287,9 @@ function Bubble({ text, show, big, side, eight }) {
       if (top < navB) { if (big) { top = bot8 + gap; below = true; } else room = false; }
       /* si 8 se ha ido de la pantalla, su bocadillo se va con él */
       el.style.visibility = !room || bot8 < navB || top8 > vh ? 'hidden' : '';
-      el.style.left = `${left}px`; el.style.top = `${top}px`;
+      const fx = e8.style.position === 'fixed';
+      el.style.position = fx ? 'fixed' : 'absolute';
+      el.style.left = `${left + (fx ? 0 : window.scrollX)}px`; el.style.top = `${top + (fx ? 0 : window.scrollY)}px`;
       setGeo((g) => (g.left === onRight && g.below === below ? g : { left: onRight, below }));
     };
     place();
