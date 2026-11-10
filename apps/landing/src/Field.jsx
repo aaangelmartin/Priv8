@@ -44,8 +44,11 @@ export default function Field() {
       ctx.clearRect(0, 0, W, H);
       const drift = still ? 0 : (now / 1000) * 9;
       const auto = now - lastPtr > 2500;
-      const lx = auto ? W * (0.62 + 0.26 * Math.sin(now / 3100)) : ptr.x;
-      const ly = auto ? H * (0.5 + 0.32 * Math.sin(now / 2300 + 1)) : ptr.y;
+      /* sin cursor, la lente da vueltas alrededor de 8, como si mirase a su alrededor */
+      const an = document.getElementById('hero-anchor'); const ar = an ? an.getBoundingClientRect() : null; const cr = cv.getBoundingClientRect();
+      const ax = ar ? ar.left - cr.left + ar.width / 2 : W / 2, ay = ar ? ar.top - cr.top + ar.height / 2 : H * 0.3;
+      const lx = auto ? ax + Math.cos(now / 2600) * Math.min(W * 0.36, 520) : ptr.x;
+      const ly = auto ? ay + Math.sin(now / 2600) * Math.min(H * 0.22, 180) : ptr.y;
       const R = Math.min(220, Math.max(140, W * 0.13));
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
       ctx.textBaseline = 'middle';
@@ -54,7 +57,8 @@ export default function Field() {
         if (y < -ROW) y += Math.ceil((H + ROW * 2) / ROW) * ROW;
         const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly, near = Math.sqrt(dx * dx + dy * dy) < R;
         it.t += ((near ? 1 : 0) - it.t) * 0.12;
-        const fade = Math.min(1, Math.max(0.08, (it.x / W - 0.18) * 2.2)) * Math.min(1, y / 90);
+        const off = Math.abs(cx - W / 2) / (W / 2);
+        const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90);
         if (it.t > 0.5) {
           const red = it.tok === 'nunca sale';
           ctx.fillStyle = red ? `rgba(255,150,140,${0.95 * fade})` : `rgba(255,255,255,${0.95 * fade})`;

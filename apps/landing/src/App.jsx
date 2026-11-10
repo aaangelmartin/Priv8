@@ -3,7 +3,7 @@ import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
-import Field, { Notches } from './Field.jsx';
+import Field from './Field.jsx';
 import { Empresas, Movil } from './Products.jsx';
 import { mood } from './companion.js';
 import { useTheme, PALETTE } from './useTheme.js';
@@ -50,23 +50,21 @@ function Hero() {
   return (
     <section id="inicio" className="band band-cobalt hero" aria-labelledby="h-hero">
       <Field />
-      <div className="wrap hero-grid">
-        <div className="hero-copy">
-          <p className="kicker in-1">Priv8 · agentes de IA que usan pantallas</p>
-          <h1 id="h-hero" className="in-2">La IA hace el trámite. <span className="soft">Tus datos no salen de casa.</span></h1>
-          <p className="hero-sub in-3">
-            Priv8 deja que un agente trabaje en tu ERP, tu correo o la app del banco cambiando cada dato sensible por un token.
-            El modelo trabaja con <Tok>‹IBAN_1›</Tok>; el valor real solo existe en tu máquina.
-          </p>
-          <div className="cta in-4">
-            <a className="btn btn-white" href="#contacto">Pide una demo</a>
-            <a className="btn btn-ghost" href="#demo">Pruébalo en un minuto</a>
-          </div>
-          <ul className="proof in-5" aria-label="Sobre qué funciona">
-            <li>Construido sobre Claude</li><li>Voz con ElevenLabs</li><li>Web y Android</li><li>Sin integrar tus sistemas</li>
-          </ul>
-        </div>
+      <div className="wrap hero-stage">
         <div id="hero-anchor" className="hero-anchor" aria-hidden="true" />
+        <p className="kicker in-1">Este es 8. Trabaja con tus pantallas.</p>
+        <h1 id="h-hero" className="in-2">Hace tu trabajo. <span className="soft">No ve tus datos.</span></h1>
+        <p className="hero-sub in-3">
+          8 es un agente de IA que usa tu ERP, tu correo o la app del banco como lo harías tú.
+          Antes de que nada llegue al modelo, Priv8 cambia cada dato por un token como <Tok>‹IBAN_1›</Tok>. Tú decides; él ejecuta.
+        </p>
+        <div className="cta in-4">
+          <a className="btn btn-white" href="#contacto">Pide una demo</a>
+          <a className="btn btn-ghost" href="#demo">Pruébalo en un minuto</a>
+        </div>
+        <ul className="proof in-5" aria-label="Sobre qué funciona">
+          <li>Construido sobre Claude</li><li>Voz con ElevenLabs</li><li>Web y Android</li><li>Sin integrar tus sistemas</li>
+        </ul>
       </div>
     </section>
   );
@@ -421,16 +419,56 @@ export default function App() {
     root.classList.add('js');
     if (still || !root.classList.contains('intro')) { root.classList.remove('intro'); setIntro(false); return undefined; }
     const end = () => { root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
-    const t = setTimeout(end, 2300);
+    const t = setTimeout(end, 2900);
     const skip = () => { clearTimeout(t); end(); };
     window.addEventListener('keydown', skip, { once: true });
     window.addEventListener('wheel', skip, { once: true, passive: true });
     window.addEventListener('touchstart', skip, { once: true, passive: true });
     return () => { clearTimeout(t); window.removeEventListener('keydown', skip); window.removeEventListener('wheel', skip); window.removeEventListener('touchstart', skip); };
   }, []);
+  /* Cambio de zona: el fondo de la página pasa de un color al siguiente mientras bajas, sin cortes.
+     Cada sección declara su tono y el color se mezcla cerca de la frontera entre dos secciones. */
+  useEffect(() => {
+    const secs = Array.from(document.querySelectorAll('main > .band, footer.foot'));
+    const css = getComputedStyle(document.documentElement);
+    const toneOf = (el) => (el.classList.contains('band-cobalt') ? '--band' : el.classList.contains('band-night') ? '--night' : el.classList.contains('band-mist') ? '--mist' : el.classList.contains('foot') ? '--ink-band' : '--paper');
+    const hex = (v) => { const h = v.trim().replace('#', ''); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
+    let cols = [];
+    const read = () => { cols = secs.map((el) => hex(css.getPropertyValue(toneOf(el)))); };
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const smooth = (t) => t * t * (3 - 2 * t);
+    let raf = 0;
+    const frame = () => {
+      raf = 0;
+      if (!cols.length) read();
+      const vh = window.innerHeight, mid = vh * 0.55, band = Math.min(vh * 0.2, 170);
+      let c = cols[0];
+      for (let i = 0; i < secs.length; i++) {
+        const r = secs[i].getBoundingClientRect();
+        if (r.top <= mid && r.bottom > mid) {
+          c = cols[i];
+          const next = secs[i + 1];
+          if (next) { const d = r.bottom - mid; if (d < band) c = mix(cols[i], cols[i + 1], smooth(1 - d / band)); }
+          break;
+        }
+      }
+      const rgb = `rgb(${c.join(',')})`;
+      document.body.style.backgroundColor = rgb;
+      document.documentElement.style.setProperty('--morph', rgb);
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
+    const retheme = () => { read(); ask(); };
+    ask();
+    window.addEventListener('scroll', ask, { passive: true });
+    window.addEventListener('resize', ask);
+    const mo = new MutationObserver(retheme);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    let mq; try { mq = window.matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', retheme); } catch (e) { /* sin preferencia */ }
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); mo.disconnect(); if (mq) mq.removeEventListener('change', retheme); };
+  }, [effective]);
   /* aparición al entrar en pantalla */
   useEffect(() => {
-    const els = document.querySelectorAll('.band .head, .stats, .three, .bento, .trust, .lanes, .diagram, .faq, .demos, .swap-in, .lead-form, .notches');
+    const els = document.querySelectorAll('.band .head, .stats, .three, .bento, .trust, .lanes, .diagram, .faq, .demos, .swap-in, .lead-form');
     els.forEach((el) => el.classList.add('rv'));
     const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
     els.forEach((el) => io.observe(el));
@@ -441,20 +479,14 @@ export default function App() {
       <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
       <main>
         <Hero />
-        <Notches from="--band" to="--night" seed={1} />
         <Problem />
-        <Notches from="--night" to="--paper" seed={2} />
         <Coste />
         <Como />
-        <Notches from="--mist" to="--night" seed={3} />
         <Prueba pal={pal} />
-        <Notches from="--night" to="--paper" seed={4} />
         <Producto pal={pal} />
         <Confianza />
         <Faq />
-        <Notches from="--paper" to="--band" seed={5} />
         <Cierre />
-        <Notches from="--band" to="--ink-band" seed={6} />
       </main>
       <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />
