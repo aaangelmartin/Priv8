@@ -1,6 +1,6 @@
 # Banca Alcor simulada (Camino 3). ids provisionales: Ángel los ajusta a la app real (#31).
 version: 1
-app: es.alcor.banca
+app: es.priv8.banks.alcor
 source: android
 screens:
   - id: acceso

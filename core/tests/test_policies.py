@@ -9,12 +9,16 @@ EXAMPLES = Path(__file__).resolve().parents[2] / "docs" / "contracts" / "example
 
 
 def ex(name):
-    return json.loads((EXAMPLES / f"{name}.json").read_text(encoding="utf-8"))
+    data = json.loads((EXAMPLES / f"{name}.json").read_text(encoding="utf-8"))
+    # Paquete real de Banca Alcor (nota de Ángel en #58); el ejemplo v1 aún usa el antiguo.
+    if data.get("app") == "es.alcor.banca":
+        data["app"] = "es.priv8.banks.alcor"
+    return data
 
 
 def test_las_tres_politicas_cargan_y_validan():
     ps = load_policies()
-    assert {"alba-core", "inbox", "es.alcor.banca"} <= set(ps.apps)
+    assert {"alba-core", "inbox", "es.priv8.banks.alcor"} <= set(ps.apps)
 
 
 def test_pantalla_web_por_url():
@@ -46,7 +50,7 @@ def test_pantalla_sin_politica_no_sale():
 def test_extract_saludo():
     import re
 
-    screen = load_policies()["es.alcor.banca"].screen_for(ex("snapshot.android-inicio"))
+    screen = load_policies()["es.priv8.banks.alcor"].screen_for(ex("snapshot.android-inicio"))
     saludo = next(e for e in ex("snapshot.android-inicio")["elements"] if e["id"] == "n2")
     rule = screen.rule_for(saludo)
     assert re.match(rule.extract, saludo["text"]).group(1) == "Lucía Ferrer"

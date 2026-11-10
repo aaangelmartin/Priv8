@@ -1,23 +1,26 @@
 [project]
 name = "priv8"
 version = "0.1.0"
-description = "Priv8 CUA: un agente usa pantallas sin ver los datos"
+description = "Priv8 CUA: privacy protocol for computer-use agents (hackathon monorepo)"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "pydantic>=2.7",
-    "pyyaml>=6",
-    "jsonschema>=4.18",
+    "jsonschema==4.26.0",
+    "referencing==0.37.0",
+    "pydantic==2.14.3",
+    "pyyaml==6.0.3",
 ]
 
-[project.optional-dependencies]
-dev = ["pytest>=8"]
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+]
 
-[build-system]
-requires = ["setuptools>=69"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-include = ["core*"]
+[tool.uv]
+# Monorepo of scripts and services, not an installable package.
+package = false
 
 [tool.pytest.ini_options]
 testpaths = ["core/tests"]
+# The repo root is on the path so `import core` works without installing.
+pythonpath = ["."]
