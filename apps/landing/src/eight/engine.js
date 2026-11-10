@@ -42,9 +42,14 @@ export function createEngine(){
     var bx=32-((M.R-M.L)/2)*s, base=32-(M.waist-M.oy)*s, id='p8c'+(UID++);
     var t='<text x="'+f(bx)+'" y="'+f(base)+'" font-family=\''+FONT+'\' font-weight="700" font-size="'+f(M.S*s)+'" fill="'+fill+'">8</text>';
     var nx=bx+(M.nl-M.ox)*s, nw=(M.nr-M.nl)*s;
-    var body='<clipPath id="'+id+'"><rect x="-40" y="31.4" width="144" height="80.6"/></clipPath>'+
+    /* Las dos mitades se tocan en y=32. Una franja recortada con la forma del propio 8 tapa la costura
+       sin salirse del contorno. */
+    var tc=t.replace('<text ','<text clip-path="url(#'+id+')" ');
+    var body='<clipPath id="'+id+'"><rect x="-40" y="32" width="144" height="80"/></clipPath>'+
+      '<clipPath id="'+id+'u">'+tc+tc.replace('<text ','<text transform="translate(0 64) scale(1 -1)" ')+'</clipPath>'+
       '<g clip-path="url(#'+id+')">'+t+'</g>'+
-      '<g transform="translate(0 64) scale(1 -1)"><g clip-path="url(#'+id+')">'+t+'</g></g>';
+      '<g transform="translate(0 64) scale(1 -1)"><g clip-path="url(#'+id+')">'+t+'</g></g>'+
+      '<rect x="-40" y="31.2" width="144" height="1.6" fill="'+fill+'" clip-path="url(#'+id+'u)"/>';
     var ux=bx+(M.lo.x-M.ox)*s, uy=base+(M.lo.y-M.oy)*s, rx=M.lo.rx*s, ry=M.lo.ry*s;
     var eyes=[{x:ux,y:64-uy,rx:rx,ry:ry},{x:ux,y:uy,rx:rx,ry:ry}];
     if(lying){
