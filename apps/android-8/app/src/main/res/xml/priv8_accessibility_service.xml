@@ -3,6 +3,7 @@
     android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagReportViewIds|flagIncludeNotImportantViews"
+    android:canPerformGestures="true"
     android:canRetrieveWindowContent="true"
     android:description="@string/a11y_description"
     android:notificationTimeout="100" />
