@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /* Campo de datos de la portada. Filas de datos inventados (IBAN, importes, nombres, DNI…) suben despacio.
    Donde pasa el cursor, o la lente que se mueve sola, cada dato se convierte en su token: lo que ve la IA.
@@ -75,26 +75,41 @@ export default function Field() {
   return <canvas ref={ref} className="field" aria-hidden="true" />;
 }
 
-/* Transición entre bandas: una rejilla de bloques que pasa de un color al otro, como una pantalla que se tokeniza. */
-export function Dither({ from, to, rows = 4, seed = 1 }) {
-  /* Semitono: puntos redondos que crecen fila a fila hasta cubrir el color siguiente, con una onda suave. */
-  const cols = 64, cells = [];
-  let s = seed * 9301 + 49297;
-  const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-  for (let r = 0; r < rows; r++) {
+/* Transición entre bandas hecha de notches: pestañas con el radio del notch que cuelgan de la banda de arriba,
+   con alturas distintas, y algunas pastillas sueltas debajo, como una pantalla que se va tokenizando.
+   Se dibuja en píxeles reales para que los radios no se deformen con el ancho. */
+export function Notches({ from, to, seed = 1, height = 96 }) {
+  const ref = useRef(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current; if (!el) return undefined;
+    const ro = new ResizeObserver(() => setW(Math.round(el.getBoundingClientRect().width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const tabs = [], pills = [];
+  if (w > 0) {
+    let s = seed * 9301 + 49297;
+    const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+    const cols = Math.max(8, Math.round(w / 64)), cw = w / cols, gap = Math.min(10, cw * 0.16);
+    const H = height, e = 9;
     for (let c = 0; c < cols; c++) {
-      const wave = 0.18 * Math.sin((c / cols) * Math.PI * 4 + seed);
-      const p = Math.min(1, Math.max(0, (r + 0.5) / rows + wave + (rnd() - 0.5) * 0.18));
-      const rad = p * 0.78;
-      if (rad > 0.06) cells.push(<circle key={r * cols + c} cx={c + 0.5} cy={r + 0.5} r={rad.toFixed(3)} />);
+      const x0 = c * cw + gap / 2, x1 = (c + 1) * cw - gap / 2, tw = x1 - x0;
+      const wave = 0.5 + 0.32 * Math.sin((c / cols) * Math.PI * 3 + seed * 1.7);
+      const k = Math.min(1, Math.max(0.12, wave + (rnd() - 0.5) * 0.42));
+      const h = Math.max(e + 10, H * 0.62 * k);
+      const r = Math.min(tw / 2, 18, h - e);
+      tabs.push(<path key={'t' + c} style={{ '--d': (c % 12) * 40 + 'ms' }} d={`M${x0 - e},0 A${e},${e} 0 0 1 ${x0},${e} L${x0},${h - r} A${r},${r} 0 0 0 ${x0 + r},${h} L${x1 - r},${h} A${r},${r} 0 0 0 ${x1},${h - r} L${x1},${e} A${e},${e} 0 0 1 ${x1 + e},0 Z`} />);
+      if (k < 0.75 && rnd() < 0.7) {
+        const ph = 12 + rnd() * 14, py = h + 10 + rnd() * (H - h - ph - 6);
+        const pw = tw * (0.35 + rnd() * 0.5), px = x0 + (tw - pw) / 2;
+        if (py + ph < H) pills.push(<rect key={'p' + c} style={{ '--d': (c % 12) * 40 + 120 + 'ms' }} x={px} y={py} width={pw} height={ph} rx={Math.min(ph / 2, 10)} />);
+      }
     }
   }
   return (
-    <div className="dither" aria-hidden="true" style={{ background: `var(${from})` }}>
-      <svg viewBox={`0 0 ${cols} ${rows + 1}`} preserveAspectRatio="none" style={{ fill: `var(${to})` }}>
-        {cells}
-        <rect x="0" y={rows - 0.02} width={cols} height="1.04" />
-      </svg>
+    <div ref={ref} className="notches" aria-hidden="true" style={{ background: `var(${to})`, height }}>
+      {w > 0 && <svg width={w} height={height} viewBox={`0 0 ${w} ${height}`} style={{ fill: `var(${from})` }}>{tabs}{pills}</svg>}
     </div>
   );
 }

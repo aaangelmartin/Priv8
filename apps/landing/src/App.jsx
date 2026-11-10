@@ -3,7 +3,7 @@ import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
 import Demos from './Demos.jsx';
-import Field from './Field.jsx';
+import Field, { Notches } from './Field.jsx';
 import { Empresas, Movil } from './Products.jsx';
 import { mood } from './companion.js';
 import { useTheme, PALETTE } from './useTheme.js';
@@ -430,7 +430,7 @@ export default function App() {
   }, []);
   /* aparición al entrar en pantalla */
   useEffect(() => {
-    const els = document.querySelectorAll('.band .head, .stats, .three, .bento, .trust, .lanes, .diagram, .faq, .demos, .swap-in, .lead-form');
+    const els = document.querySelectorAll('.band .head, .stats, .three, .bento, .trust, .lanes, .diagram, .faq, .demos, .swap-in, .lead-form, .notches');
     els.forEach((el) => el.classList.add('rv'));
     const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
     els.forEach((el) => io.observe(el));
@@ -441,14 +441,20 @@ export default function App() {
       <Nav dark={effective === 'dark'} onTheme={cycle} pal={pal} />
       <main>
         <Hero />
+        <Notches from="--band" to="--night" seed={1} />
         <Problem />
+        <Notches from="--night" to="--paper" seed={2} />
         <Coste />
         <Como />
+        <Notches from="--mist" to="--night" seed={3} />
         <Prueba pal={pal} />
+        <Notches from="--night" to="--paper" seed={4} />
         <Producto pal={pal} />
         <Confianza />
         <Faq />
+        <Notches from="--paper" to="--band" seed={5} />
         <Cierre />
+        <Notches from="--band" to="--ink-band" seed={6} />
       </main>
       <Footer pal={pal} />
       <Companion pal={pal} intro={intro} />
