@@ -52,19 +52,16 @@ function Hero() {
       <Field />
       <div className="wrap hero-stage">
         <div id="hero-anchor" className="hero-anchor" aria-hidden="true" />
-        <p className="kicker in-1">Este es 8. Trabaja con tus pantallas.</p>
-        <h1 id="h-hero" className="in-2">Hace tu trabajo. <span className="soft">No ve tus datos.</span></h1>
+        <p className="kicker in-1">Conoce a 8, el agente que no mira</p>
+        <h1 id="h-hero" className="in-2">Hace el trabajo. <span className="soft">Sin ver tus datos.</span></h1>
         <p className="hero-sub in-3">
-          8 es un agente de IA que usa tu ERP, tu correo o la app del banco como lo harías tú.
-          Antes de que nada llegue al modelo, Priv8 cambia cada dato por un token como <Tok>‹IBAN_1›</Tok>. Tú decides; él ejecuta.
+          8 entra en tu ERP, tu correo o la app del banco y hace el trámite como lo harías tú.
+          Cada dato sensible viaja al modelo como un token, <Tok>‹IBAN_1›</Tok>, y el valor real nunca sale de tu máquina.
         </p>
         <div className="cta in-4">
           <a className="btn btn-white" href="#contacto">Pide una demo</a>
           <a className="btn btn-ghost" href="#demo">Pruébalo en un minuto</a>
         </div>
-        <ul className="proof in-5" aria-label="Sobre qué funciona">
-          <li>Construido sobre Claude</li><li>Voz con ElevenLabs</li><li>Web y Android</li><li>Sin integrar tus sistemas</li>
-        </ul>
       </div>
     </section>
   );
@@ -426,46 +423,45 @@ export default function App() {
     window.addEventListener('touchstart', skip, { once: true, passive: true });
     return () => { clearTimeout(t); window.removeEventListener('keydown', skip); window.removeEventListener('wheel', skip); window.removeEventListener('touchstart', skip); };
   }, []);
-  /* Cambio de zona: el fondo de la página pasa de un color al siguiente mientras bajas, sin cortes.
-     Cada sección declara su tono y el color se mezcla cerca de la frontera entre dos secciones. */
+  /* Secciones apiladas: cada sección se queda fija al llegar arriba (o al llegar su final, si es más alta que la pantalla)
+     y la siguiente sube por encima. La de detrás se encoge y se apaga un poco, así nada se corta en seco.
+     La barra toma el tono de la sección que tiene debajo. */
   useEffect(() => {
-    const secs = Array.from(document.querySelectorAll('main > .band, footer.foot'));
-    const css = getComputedStyle(document.documentElement);
-    const toneOf = (el) => (el.classList.contains('band-cobalt') ? '--band' : el.classList.contains('band-night') ? '--night' : el.classList.contains('band-mist') ? '--mist' : el.classList.contains('foot') ? '--ink-band' : '--paper');
-    const hex = (v) => { const h = v.trim().replace('#', ''); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); };
-    let cols = [];
-    const read = () => { cols = secs.map((el) => hex(css.getPropertyValue(toneOf(el)))); };
-    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
-    const smooth = (t) => t * t * (3 - 2 * t);
+    const secs = Array.from(document.querySelectorAll('main > .band'));
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
+    const toneOf = (el) => (el.classList.contains('band-night') || el.classList.contains('band-ink') ? 'dark' : el.classList.contains('band-cobalt') ? 'cobalt' : 'light');
     let raf = 0;
+    const layout = () => {
+      const vh = window.innerHeight;
+      secs.forEach((el, i) => { el.style.top = Math.min(0, vh - el.offsetHeight) + 'px'; el.style.zIndex = String(i + 1); });
+    };
     const frame = () => {
       raf = 0;
-      if (!cols.length) read();
-      const vh = window.innerHeight, mid = vh * 0.55, band = Math.min(vh * 0.2, 170);
-      let c = cols[0];
+      const vh = window.innerHeight;
       for (let i = 0; i < secs.length; i++) {
-        const r = secs[i].getBoundingClientRect();
-        if (r.top <= mid && r.bottom > mid) {
-          c = cols[i];
-          const next = secs[i + 1];
-          if (next) { const d = r.bottom - mid; if (d < band) c = mix(cols[i], cols[i + 1], smooth(1 - d / band)); }
-          break;
+        const next = secs[i + 1] || document.querySelector('footer.foot');
+        const inner = secs[i].querySelector(':scope > .wrap');
+        if (!next || !inner) continue;
+        const t = Math.min(1, Math.max(0, 1 - next.getBoundingClientRect().top / vh));
+        if (!still) {
+          inner.style.transform = t > 0 ? `translateY(${-t * 60}px) scale(${1 - t * 0.06})` : '';
+          inner.style.opacity = t > 0 ? String(1 - t * 0.75) : '';
         }
       }
-      const rgb = `rgb(${c.join(',')})`;
-      document.body.style.backgroundColor = rgb;
-      document.documentElement.style.setProperty('--morph', rgb);
+      /* la de encima es la última que ya ha llegado arriba (las anteriores siguen fijas debajo) */
+      const under = [...secs, document.querySelector('footer.foot')].filter(Boolean).reverse().find((el) => { const r = el.getBoundingClientRect(); return r.top <= 32 && r.bottom > 32; });
+      document.body.dataset.tone = under ? (under.tagName === 'FOOTER' ? 'dark' : toneOf(under)) : 'cobalt';
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(frame); };
-    const retheme = () => { read(); ask(); };
-    ask();
+    const onResize = () => { layout(); ask(); };
+    layout(); ask();
+    const ro = new ResizeObserver(onResize);
+    secs.forEach((el) => ro.observe(el));
     window.addEventListener('scroll', ask, { passive: true });
-    window.addEventListener('resize', ask);
-    const mo = new MutationObserver(retheme);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    let mq; try { mq = window.matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener('change', retheme); } catch (e) { /* sin preferencia */ }
-    return () => { cancelAnimationFrame(raf); window.removeEventListener('scroll', ask); window.removeEventListener('resize', ask); mo.disconnect(); if (mq) mq.removeEventListener('change', retheme); };
-  }, [effective]);
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); window.removeEventListener('scroll', ask); window.removeEventListener('resize', onResize); };
+  }, []);
   /* aparición al entrar en pantalla */
   useEffect(() => {
     const els = document.querySelectorAll('.band .head, .stats, .three, .bento, .trust, .lanes, .diagram, .faq, .demos, .swap-in, .lead-form');

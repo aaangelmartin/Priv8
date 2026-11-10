@@ -22,6 +22,13 @@ function ThemeIcon({ dark }) {
 export default function Nav({ dark, onTheme, pal }) {
   const { section } = useCompanion();
   const [scrolled, setScrolled] = useState(false);
+  const [tone, setTone] = useState('cobalt');
+  useEffect(() => {
+    const mo = new MutationObserver(() => setTone(document.body.dataset.tone || 'cobalt'));
+    mo.observe(document.body, { attributes: true, attributeFilter: ['data-tone'] });
+    return () => mo.disconnect();
+  }, []);
+  const onLight = tone === 'dark';
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
     on(); window.addEventListener('scroll', on, { passive: true });
@@ -30,7 +37,7 @@ export default function Nav({ dark, onTheme, pal }) {
   return (
     <nav className={`nav${scrolled ? ' scrolled' : ''}`} aria-label="Principal">
       <a className="brand" href="#inicio" aria-label="Priv8, inicio">
-        <Eight className="nav-eight" mode="mirar" fg="#FFFFFF" cut={pal.ink} label="8" />
+        <Eight className="nav-eight" mode="mirar" fg={onLight ? '#2D45D6' : '#FFFFFF'} cut={onLight ? '#FFFFFF' : pal.ink} label="8" />
         <span className="word">Priv8</span>
       </a>
       <span className="now" aria-hidden="true">{NAMES[section] || 'Priv8'}</span>
