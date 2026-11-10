@@ -105,8 +105,8 @@ object Renderer {
 /**
  * Token → value table for the sessions the core shares with the device.
  * In memory only: never written to disk, never logged, gone when the process
- * dies. The core sends it over the bridge (render_values, proposed: not in
- * contract v1), which is inside the trust zone.
+ * dies. The core sends it over the bridge (render_values, bridge.schema.json
+ * v1.1), which is inside the trust zone.
  */
 object LocalValues {
     private val bySession = HashMap<String, Map<String, String>>()

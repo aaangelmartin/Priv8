@@ -1,4 +1,5 @@
-"""Segmenter output validates against docs/contracts/voice.schema.json (contracts v1)."""
+"""Segmenter output validates against docs/contracts/voice.schema.json and, wrapped
+for the phone, against the voice messages of bridge.schema.json (contracts v1.1)."""
 
 import json
 from pathlib import Path
@@ -11,9 +12,7 @@ from voice.leak_check import PatternLeakCheck
 from voice.segmenter import VaultRenderer, segment
 
 HERE = Path(__file__).parent
-REPO_CONTRACTS = HERE.parents[1] / "docs" / "contracts"
-# Prefer the contracts on main; fall back to the copy taken from PR #58.
-CONTRACTS = REPO_CONTRACTS if (REPO_CONTRACTS / "voice.schema.json").exists() else HERE / "contracts"
+CONTRACTS = HERE.parents[1] / "docs" / "contracts"
 
 
 def load(name):
@@ -78,3 +77,31 @@ def test_contract_form_has_no_rendered_values():
                      ensure_ascii=False)
     for value in ("200", "doscientos", "Nimbo"):
         assert value not in out
+
+
+@pytest.fixture(scope="module")
+def bridge():
+    registry = Registry()
+    for path in CONTRACTS.glob("*.schema.json"):
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        registry = registry.with_resource(schema["$id"], Resource.from_contents(schema))
+    schema = load("bridge.schema.json")
+    if "voice" not in schema.get("$defs", {}):
+        pytest.skip("bridge.schema.json has no voice message (contracts v1)")
+    return Draft202012Validator(schema, registry=registry)
+
+
+def test_utterance_goes_over_the_bridge(bridge):
+    """The core sends the utterance and the values of its local tokens to the phone."""
+    utt = seg("Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2›. ¿Lo confirmas?").to_contract()
+    toks = [s["token"] for s in utt["segments"] if "token" in s]
+    assert toks
+    messages = [
+        {"type": "render_values", "session": utt["session"], "values": {t: VAULT[t] for t in toks}},
+        {"type": "voice", "utterance": utt},
+        {"type": "voice.audio", "utterance": utt["utterance"], "index": 0, "format": "pcm_24000"},
+        {"type": "voice.audio.end", "utterance": utt["utterance"], "index": 0},
+        {"type": "voice.done", "utterance": utt["utterance"], "ok": True, "gap_ms": {"max": 180, "mean": 95}},
+    ]
+    for msg in messages:
+        assert [e.message for e in bridge.iter_errors(msg)] == [], msg["type"]

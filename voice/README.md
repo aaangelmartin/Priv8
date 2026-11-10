@@ -23,7 +23,7 @@ segmenter        ├─ cloud  "Entre tus tres cuentas tienes"   → final block
 
 ### Segmenter
 
-`segment(template, render, utterance=..., session=..., leak_check=..., audit=...)` returns an `Utterance` whose `to_contract()` validates against `docs/contracts/voice.schema.json` (contracts v1, PR #58):
+`segment(template, render, utterance=..., session=..., leak_check=..., audit=...)` returns an `Utterance` whose `to_contract()` validates against `docs/contracts/voice.schema.json`:
 
 ```json
 {"utterance":"u18","session":"s2","segments":[
@@ -62,7 +62,7 @@ python3.12 -m venv .venv
 .venv/bin/python -m pytest voice
 ```
 
-From the repository root. The contract tests read `docs/contracts/voice.schema.json` when it exists and otherwise the copy in `voice/tests/contracts/`, taken from PR #58.
+From the repository root. The contract tests read `docs/contracts/`. With contracts v1.1 they also check that an utterance, its `render_values`, the PCM framing and `voice.done` validate as bridge messages; with v1 that test is skipped.
 
 To try a real voice once there is a key: copy `voice/.env.example` to `voice/.env`, fill it in, load it into the environment and call `CloudVoice.from_env().stream_text("Entre tus tres cuentas tienes")`.
 
