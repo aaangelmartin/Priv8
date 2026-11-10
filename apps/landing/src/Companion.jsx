@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Eight from './eight/Eight.jsx';
 import { mood, useCompanion } from './companion.js';
 
@@ -87,6 +87,14 @@ export default function Companion({ pal, intro }) {
           const r = anchor.getBoundingClientRect();
           const S = r.width * 64 / 46;
           target = { left: r.left + r.width / 2 - S / 2, top: r.top + r.height / 2 - S / 2, S, D: r.width, gx: r.left, gy: r.top + r.height / 2 - r.width * 0.35 };
+          /* con zoom o pantallas bajas el sitio puede quedar bajo la barra o fuera de la pantalla: entonces 8 espera en la esquina */
+          const navB = (document.querySelector('.nav')?.getBoundingClientRect().bottom || 0) + 6;
+          const top8 = r.top + r.height / 2 - r.width * 0.36, bot8 = r.top + r.height / 2 + r.width * 0.36;
+          if (phase.current === 'live' && anchor.id !== 'hero-anchor' && (top8 < navB || bot8 > vh - 6)) {
+            const Dc = clamp(vh * 0.16, 56, 96), Sc = Dc * 64 / 46;
+            const x = vw - Dc - 12, y = vh - Dc * 0.7 - 12;
+            target = { left: x + Dc / 2 - Sc / 2, top: y + Dc * 0.35 - Sc / 2, S: Sc, D: Dc, gx: x, gy: y };
+          }
         }
       }
       if (!target) return;
@@ -95,7 +103,24 @@ export default function Companion({ pal, intro }) {
         const D = Math.min(vw * 0.5, vh * 0.62 * 46 / 32, 640), S = D * 64 / 46;
         el.style.transition = el.dataset.placed ? 'transform .9s cubic-bezier(.34, 1.4, .64, 1)' : 'none';
         el.dataset.placed = '1';
-        el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${vh * 0.5 - S / 2}px, 0) scale(${S / BASE})`;
+        /* variante B: 8 se coloca a la derecha de «Conoce a», en la misma línea, haciendo de «8» */
+        const root = document.documentElement;
+        if (root.classList.contains('intro-b')) {
+          const w = document.querySelector('.intro-title span:nth-child(2)');
+          const r = w ? w.getBoundingClientRect() : null;
+          const DB = Math.min(vw * 0.17, 230), SB = DB * 64 / 46;
+          const cx = r ? r.right + r.height * 0.3 + DB / 2 : vw * 0.62;
+          el.style.transform = `translate3d(${cx - SB / 2}px, ${vh * 0.5 - SB / 2}px, 0) scale(${SB / BASE})`;
+        } else {
+          const cy = root.classList.contains('intro-d') ? vh * 0.56 : vh * 0.5;
+          el.style.transform = `translate3d(${vw / 2 - S / 2}px, ${cy - S / 2}px, 0) scale(${S / BASE})`;
+        }
+        /* variante C: 8 lo dice en su bocadillo */
+        if (root.classList.contains('intro-c') && !el.dataset.said) {
+          el.dataset.said = '1';
+          pos.current = { x: vw / 2 - D / 2, y: vh * 0.5 - D * 0.35, size: D, left: true };
+          setTimeout(() => setBubble({ text: 'Conoce a 8', show: true, big: true }), 250);
+        }
         return;
       }
       const changed = anchor !== lastSpot.current;
@@ -146,12 +171,12 @@ export default function Companion({ pal, intro }) {
   const say = (text) => {
     clearTimeout(bubbleT.current);
     if (!text) { setBubble((b) => ({ ...b, show: false })); return; }
-    setBubble({ text, show: true });
+    setBubble({ text, show: true, big: false });
     bubbleT.current = setTimeout(() => setBubble((b) => ({ ...b, show: false })), 4200);
   };
   useEffect(() => {
     if (stage !== 'done') return undefined;
-    setBubble((b) => ({ ...b, show: false }));
+    setBubble((b) => ({ ...b, show: false, big: false }));
     const t = setTimeout(() => say(spot.say), 650);
     return () => clearTimeout(t);
   }, [spot.id, stage]);
@@ -170,15 +195,26 @@ export default function Companion({ pal, intro }) {
         aria-label="8, el agente de Priv8. Haz clic: tiene cosquillas.">
         <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
       </button>
-      <Bubble text={bubble.text} show={bubble.show} pos={pos.current} />
+      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} pos={pos.current} />
     </>
   );
 }
 
 /* Bocadillo de 8: al lado de 8 y por encima de sus ojos, con el pico en la esquina de abajo apuntándole.
    Si no cabe arriba, va por debajo con el pico en la esquina de arriba. Siempre con aire entre los dos. */
-function Bubble({ text, show, pos }) {
+/* El bocadillo y su cola son un solo trazado SVG medido con el tamaño real del texto:
+   no hay dos piezas que unir, así que no puede verse ninguna junta. La base sigue recta hasta la punta. */
+function bubblePath(W, H, R, th) {
+  const k = th / 18, T = 14 * k, y0 = H - th;
+  const p = (x, y) => `${(x * k).toFixed(2)} ${(y0 + y * k).toFixed(2)}`;
+  return `M${T + R} 0 H${T + W - R} A${R} ${R} 0 0 1 ${T + W} ${R} V${H - R} A${R} ${R} 0 0 1 ${T + W - R} ${H} H${(3.2 * k).toFixed(2)} `
+    + `C${p(1, 18)} ${p(0.6, 16.4)} ${p(3.4, 15.4)} C${p(11, 12.6)} ${p(14, 7)} ${p(14, 0)} V${R} A${R} ${R} 0 0 1 ${T + R} 0 Z`;
+}
+
+function Bubble({ text, show, big, pos }) {
   const [n, setN] = useState(0);
+  const ref = useRef(null);
+  const [size, setSize] = useState({ w: 0, h: 0 });
   useEffect(() => {
     setN(0);
     if (!show) return undefined;
@@ -186,15 +222,29 @@ function Bubble({ text, show, pos }) {
     const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 20);
     return () => clearInterval(t);
   }, [text, show]);
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el) return;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    setSize((o) => (o.w === w && o.h === h ? o : { w, h }));
+  });
   const gap = Math.max(18, pos.size * 0.08);
   const eye = pos.y + pos.size * 0.3;
-  const below = eye - gap < 150;
+  /* nunca debajo de la barra de navegación */
+  const navB = (typeof document !== 'undefined' && document.querySelector('.nav')?.getBoundingClientRect().bottom) || 0;
+  const below = eye - gap - (big ? 90 : 64) < navB + 10;
   const v = below ? { top: pos.y + pos.size * 0.42 + gap } : { bottom: window.innerHeight - (eye - gap) };
   const h = pos.left ? { left: pos.x + pos.size + gap } : { right: window.innerWidth - pos.x + gap };
-  const cls = 'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '') + (below ? ' below' : '');
+  const cls = 'bubble8' + (show ? ' on' : '') + (pos.left ? ' l' : '') + (below ? ' below' : '') + (big ? ' big' : '');
+  const R = big ? 28 : 20, th = big ? 30 : 18, T = 14 * th / 18;
+  const flip = `scale(${pos.left ? 1 : -1}, ${below ? -1 : 1})`;
   return (
-    <div className={cls} style={{ ...v, ...h }} role="status" aria-live="polite">
-      <svg className="tail" viewBox="0 0 22 18" aria-hidden="true"><path d="M2 0 H22 L7.5 15.5 Q4 19 3 14 Z" /></svg>
+    <div ref={ref} className={cls} style={{ ...v, ...h }} role="status" aria-live="polite">
+      {size.w > 0 && (
+        <svg className="shape" width={size.w + T} height={size.h} viewBox={`0 0 ${size.w + T} ${size.h}`}
+          style={{ [pos.left ? 'left' : 'right']: -T, transform: flip }} aria-hidden="true">
+          <path d={bubblePath(size.w, size.h, Math.min(R, size.h / 2), th)} />
+        </svg>
+      )}
       <span>{text.slice(0, n)}</span><span className="ghost" aria-hidden="true">{text.slice(n)}</span>
     </div>
   );

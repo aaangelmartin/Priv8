@@ -85,18 +85,14 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 .companion { position: fixed; left: 0; top: 0; z-index: 40; padding: 0; border: 0; background: transparent; cursor: pointer; transform-origin: 0 0; }
 .companion-eight { position: absolute; inset: 0; }
 .companion-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 17px; border-radius: 20px; background: #ffffff; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); box-shadow: 0 14px 36px rgba(5, 16, 31, .22); opacity: 0; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
-/* pico: un triángulo de punta redondeada que sale de la esquina y señala a 8 en diagonal */
-.bubble8 .tail { position: absolute; width: 22px; height: 18px; fill: #ffffff; overflow: visible; bottom: -15px; }
-.bubble8.l { transform-origin: 14px 110%; }
-.bubble8.l .tail { left: 12px; transform: scaleX(-1); }
-.bubble8:not(.l) { transform-origin: calc(100% - 14px) 110%; }
-.bubble8:not(.l) .tail { right: 12px; }
-.bubble8.below .tail { bottom: auto; top: -15px; }
-.bubble8.below.l { transform-origin: 14px -10%; }
-.bubble8.below.l .tail { transform: scale(-1, -1); }
-.bubble8.below:not(.l) { transform-origin: calc(100% - 14px) -10%; }
-.bubble8.below:not(.l) .tail { transform: scaleY(-1); }
+.bubble8 { position: fixed; z-index: 41; max-width: 260px; padding: 12px 17px; background: transparent; color: #0b1b33; font: 600 .95rem/1.38 var(--f-body); filter: drop-shadow(0 12px 22px rgba(5, 16, 31, .2)); opacity: 0; transform: scale(.85); transition: opacity .25s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); pointer-events: none; }
+/* cola de chat con la base plana: sale del lado que mira a 8 y su borde de abajo sigue la línea del bocadillo */
+/* forma del bocadillo: un único trazado (ver Bubble en Companion.jsx) */
+.bubble8 .shape { position: absolute; top: 0; max-width: none; height: 100%; fill: #ffffff; overflow: visible; display: block; pointer-events: none; }
+.bubble8.l { transform-origin: 0 100%; }
+.bubble8:not(.l) { transform-origin: 100% 100%; }
+.bubble8.below.l { transform-origin: 0 0; }
+.bubble8.below:not(.l) { transform-origin: 100% 0; }
 .bubble8.on { opacity: 1; transform: none; }
 .bubble8 span { position: relative; }
 .bubble8 .ghost { visibility: hidden; }
@@ -106,24 +102,26 @@ html.landed .nav { animation: navdrop 1s .15s var(--ease) both; }
 /* la transición de salida empieza justo debajo de la primera pantalla: desde la portada no se ve */
 .field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 42% 48% at 50% 60%, var(--band) 46%, transparent 80%); }
-.hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: 136px; padding-bottom: 72px; }
-.hero-anchor { width: clamp(200px, 24vw, 340px); aspect-ratio: 46 / 32; margin: clamp(18px, 2.4vw, 30px) 0 clamp(14px, 2vw, 26px); }
+.hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: clamp(92px, 15vh, 136px); padding-bottom: clamp(32px, 8vh, 72px); }
+/* con zoom la pantalla es baja: 8 se ajusta también al alto para que el titular siga a la vista */
+.hero-anchor { width: clamp(110px, min(24vw, 30vh), 340px); aspect-ratio: 46 / 32; margin: clamp(18px, 2.4vw, 30px) 0 clamp(14px, 2vw, 26px); }
 .meet { font: 700 clamp(1.4rem, 1rem + 1.2vw, 2rem)/1 var(--f-display); letter-spacing: -.03em; color: #c4cdff; }
-.hero h1 { font-size: clamp(2.6rem, 1rem + 5vw, 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
+.hero h1 { font-size: clamp(2rem, min(1rem + 5vw, 10.5vh), 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
 .hero h1 .line { display: block; white-space: nowrap; }
 @media (max-width: 700px) { .hero h1 .line { white-space: normal; } }
 .rotator { position: relative; display: inline-grid; vertical-align: bottom; text-align: left; transition: width .6s var(--ease); }
 .rot-sizer { visibility: hidden; grid-area: 1 / 1; }
 .rot-item { position: relative; grid-area: 1 / 1; justify-self: start; white-space: nowrap; color: #fff; pointer-events: none; }
 /* cada letra entra desde abajo con un pequeño desenfoque, una detrás de otra; la frase anterior se va hacia arriba */
-.rot-item .ch { display: inline-block; opacity: 0; transform: translateY(.14em) scale(.96); filter: blur(8px); transition: opacity .45s ease, transform .6s cubic-bezier(.2, .9, .25, 1), filter .5s ease; transition-delay: calc(var(--j) * 22ms); }
+/* cada letra lleva aire alrededor (con margen negativo que lo compensa) para que su capa no corte la tinta que invade a la vecina ni los rabos de g y p */
+.rot-item .ch { display: inline-block; padding: .14em .14em .24em; margin: -.14em -.14em -.24em; opacity: 0; transform: translateY(.14em) scale(.96); filter: blur(8px); transition: opacity .45s ease, transform .6s cubic-bezier(.2, .9, .25, 1), filter .5s ease; transition-delay: calc(var(--j) * 22ms); }
 .rot-item.on .ch { opacity: 1; transform: none; filter: none; }
 .rot-item.out .ch { opacity: 0; transform: translateY(-.14em) scale(.98); filter: blur(8px); transition-duration: .35s, .45s, .35s; transition-delay: calc(var(--j) * 12ms); }
 .hero h1 .soft { color: #c4cdff; }
 .hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 62ch; text-wrap: balance; }
 .hero-sub .tok { background: #fff; color: #1f33b0; }
 .hero .cta { justify-content: center; }
-@media (max-width: 700px) { .hero-anchor { width: min(62vw, 260px); } }
+@media (max-width: 700px) { .hero-anchor { width: clamp(96px, min(62vw, 30vh), 260px); } }
 
 /* ---------- escenas fijadas ---------- */
 .scene { position: relative; }
@@ -427,7 +425,25 @@ html.js .rv.in { opacity: 1; transform: none; }
 
 html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-delay: .22s; } html.landed .in-3 { transition-delay: .36s; } html.landed .in-4 { transition-delay: .5s; }
 
-/* «Conoce a 8» solo en la bienvenida: aparece debajo de 8 mientras saluda y se va cuando vuela a su sitio */
-.intro-title { position: fixed; z-index: 45; left: 50%; top: calc(50vh + min(50vw, 89.125vh, 640px) * .3478 + 22px); transform: translateX(-50%); margin: 0; font: 700 clamp(2rem, 1.2rem + 3vw, 3.6rem)/1 var(--f-display); letter-spacing: -.04em; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; }
-html.intro .intro-title { visibility: visible; animation: introtitle 1.35s var(--ease) both; }
-@keyframes introtitle { 0% { opacity: 0; transform: translate(-50%, 16px); } 30%, 78% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
+/* «Conoce a 8» solo en la bienvenida. Cuatro variantes para probar con ?intro=a|b|c|d */
+.intro-title { position: fixed; z-index: 45; left: 50%; margin: 0; font: 700 clamp(2rem, 1.2rem + 3vw, 3.6rem)/1.15 var(--f-display); letter-spacing: -.04em; color: #fff; white-space: nowrap; pointer-events: none; opacity: 0; visibility: hidden; transform: translateX(-50%); }
+.intro-title span { display: inline-block; }
+html.intro .intro-title { visibility: visible; }
+/* A: debajo de 8, sube y se desvanece */
+html.intro-a .intro-title { top: calc(50vh + min(50vw, 89.125vh, 640px) * .3478 + 22px); }
+html.intro.intro-a .intro-title { animation: introA 1.35s var(--ease) both; }
+@keyframes introA { 0% { opacity: 0; transform: translate(-50%, 16px); } 30%, 78% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -8px); } }
+/* B: «Conoce a» a la izquierda y 8 haciendo de «8» */
+html.intro-b .intro-title { top: 50vh; left: 50%; transform: translate(-78%, -50%); font-size: clamp(2.6rem, 1.4rem + 4.5vw, 5.4rem); }
+html.intro-b .intro-title .eight-word { visibility: hidden; }
+html.intro.intro-b .intro-title { animation: introB 1.35s var(--ease) both; }
+@keyframes introB { 0% { opacity: 0; } 20%, 80% { opacity: 1; } 100% { opacity: 0; } }
+/* C: lo dice 8 en su bocadillo (sin título) */
+html.intro-c .intro-title { display: none; }
+.bubble8.big { white-space: nowrap; max-width: none; font: 700 clamp(1.6rem, 1rem + 2vw, 2.6rem)/1.15 var(--f-display); letter-spacing: -.03em; padding: .5em .8em .55em; }
+/* D: encima de 8, palabra a palabra */
+html.intro-d .intro-title { top: calc(56vh - min(50vw, 89.125vh, 640px) * .3478 - 1.4em); }
+html.intro.intro-d .intro-title { opacity: 1; }
+html.intro.intro-d .intro-title span { animation: introD 1.35s var(--ease) both; }
+html.intro.intro-d .intro-title span:nth-child(2) { animation-delay: .1s; } html.intro.intro-d .intro-title span:nth-child(3) { animation-delay: .2s; }
+@keyframes introD { 0% { opacity: 0; transform: translateY(18px); filter: blur(8px); } 30%, 78% { opacity: 1; transform: none; filter: none; } 100% { opacity: 0; transform: translateY(-10px); } }

@@ -233,7 +233,7 @@ export default function App() {
   return (
     <>
       <Nav />
-      <p className="intro-title" aria-hidden="true">Conoce a 8</p>
+      <p className="intro-title" aria-hidden="true"><span>Conoce</span> <span>a</span> <span className="eight-word">8</span></p>
       <main>
         <Hero />
         <Blend from="--band" to="--night" seed={1} overlay />

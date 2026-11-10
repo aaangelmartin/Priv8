@@ -21,6 +21,9 @@
           if (location.hash) history.replaceState(null, '', location.pathname + location.search);
           window.scrollTo(0, 0);
           if (!still) document.documentElement.classList.add('intro');
+          /* variante de la bienvenida para probar: ?intro=a|b|c|d */
+          var v = (new URLSearchParams(location.search).get('intro') || 'a').toLowerCase();
+          document.documentElement.classList.add('intro-' + (/^[abcd]$/.test(v) ? v : 'a'));
         }
       } catch (e) {}
     </script>
