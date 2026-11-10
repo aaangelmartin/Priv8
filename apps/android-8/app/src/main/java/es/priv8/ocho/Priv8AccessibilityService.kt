@@ -132,15 +132,15 @@ class Priv8AccessibilityService : AccessibilityService() {
                 Log.i(TAG, "perform $id: op=$op target=${target ?: "-"} -> ${if (outcome is Performer.Outcome.Error) outcome.code else "ok"}$why")
             }
             "confirm_request" -> {
-                // Not in bridge.schema.json v1: confirm.schema.json#/$defs/request
-                // over the bridge (proposed). Values are rendered on the device.
+                // confirm.schema.json#/$defs/request over the bridge (contracts
+                // v1.1). Values are rendered on the device.
                 val request = ConfirmRequest.parse(msg)
                 if (request == null) Log.w(TAG, "confirm_request: does not follow confirm.schema.json, ignored")
                 else ConfirmFlow.submit(request)
             }
             "render_values" -> {
-                // Proposed, not in contract v1: token -> value table for a
-                // session, so the device can render a summary. Never logged.
+                // Token -> value table for a session (bridge.schema.json v1.1),
+                // so the device can render a summary. Never logged.
                 val session = msg.optString("session")
                 val values = msg.optJSONObject("values")
                 if (session.isEmpty() || values == null) {
@@ -249,15 +249,15 @@ class Priv8AccessibilityService : AccessibilityService() {
     /**
      * Reports pause changes with the bridge events of the contract:
      * focus_password (detail clave|otp) when a rojo field takes the focus and
-     * focus_password with detail "fin" when it loses it; system_dialog
-     * (detail biometria|permiso) and system_dialog_closed. The core turns them
+     * focus_left when it loses it; system_dialog (detail
+     * biometria|permiso|oculta) and system_dialog_closed (contracts v1.1). The core turns them
      * into observe paused and the app 8 into «mirar a otro lado».
      */
     private fun updatePause(next: Pause?, app: String?) {
         val prev = pause
         if (next == prev) return
         pause = next
-        if (prev?.reason == Pause.AUTH && next != prev) sendEvent("focus_password", app, Pause.END)
+        if (prev?.reason == Pause.AUTH && next != prev) sendEvent("focus_left", app, null)
         if (prev?.reason == Pause.DIALOG && next != prev) sendEvent("system_dialog_closed", app, null)
         when (next?.reason) {
             Pause.AUTH -> sendEvent("focus_password", app, next.detail)
