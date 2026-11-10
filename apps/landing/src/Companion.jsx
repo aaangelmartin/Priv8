@@ -91,7 +91,10 @@ export default function Companion({ pal, intro }) {
       raf = 0;
       const el = box.current; const anchor = document.getElementById('hero-anchor');
       if (!el || !anchor) return;
-      const vw = window.innerWidth, vh = window.innerHeight, a = anchor.getBoundingClientRect();
+      const vw = window.innerWidth, vh = window.innerHeight, ar = anchor.getBoundingClientRect();
+      /* el 8 ocupa 46 de las 64 unidades del cuadro: el cuadro se centra en el ancla para que el 8 la llene */
+      const AS = ar.width * 64 / 46;
+      const a = { left: ar.left + ar.width / 2 - AS / 2, top: ar.top + ar.height / 2 - AS / 2, width: AS, height: AS };
       if (phase.current === 'intro') {
         /* dormido en el centro, algo más pequeño; al despertar crece hasta su sitio */
         const S = a.width * 0.62;
@@ -106,8 +109,8 @@ export default function Companion({ pal, intro }) {
       }
       /* va en el margen lateral, sin tapar el contenido; si no cabe, abajo a la derecha */
       const gutter = Math.max(0, (vw - 1240) / 2) + Math.min(56, Math.max(20, vw * 0.04));
-      const small = gutter < 140;
-      const D = small ? 104 : Math.min(200, gutter - 12), m = small ? 10 : (gutter - D) / 2;
+      const small = gutter < 150;
+      const D = small ? 104 : Math.min(200, gutter - 36), m = small ? 10 : Math.max(8, (gutter - D) / 2 - 10);
       const side = (SECTIONS[document.body.dataset.section] || SECTIONS.inicio).side;
       const dx = small || side === 'right' ? vw - D - m : m;
       const dy = small ? vh - D * 0.62 - m : vh * 0.56 - D / 2;
@@ -152,6 +155,7 @@ export default function Companion({ pal, intro }) {
   };
   useEffect(() => {
     if (stage !== 'done') return undefined;
+    setBubble((b) => ({ ...b, show: false }));
     const t = setTimeout(() => say(LINES[section] || ''), section === 'inicio' ? 200 : 700);
     return () => clearTimeout(t);
   }, [section, stage]);
