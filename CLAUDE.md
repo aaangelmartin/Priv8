@@ -9,7 +9,8 @@ Proyecto del equipo para la hackathon de finanzas de la Madrid Engineering Week 
 - **Núcleo general:** sirve para cualquier sector.
 - **Perfil Finanzas:** la primera aplicación y el foco de la hackathon.
 - **Modelo:** B2B. Lo adoptan bancos y brokers que quieren ofrecer agentes, empresas que los construyen y departamentos financieros.
-- **Frase clave:** "Visa y Google resolvieron cómo paga un agente. Priv8 CUA resuelve qué ve mientras trabaja."
+- **Nombres:** la marca y el producto son **Priv8**. **Priv8 CUA** es el protocolo sobre el que funciona (se usa al hablar del protocolo, con quien lo integra). El agente es **8**.
+- **Frase clave:** "Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja."
 
 ## Las seis piezas del protocolo
 
@@ -98,8 +99,8 @@ El modelo responde con plantillas con tokens. Un renderizador local sustituye lo
 Las variables están en `brand/tokens.css` y la guía completa en `docs/marca.html`.
 
 - **Colores:**
-  - Noche `#0B1B33`: seriedad.
-  - Cobalto `#2D45D6`: marca y acciones.
+  - Cobalto `#2D45D6`: el color principal de la marca. Fondo de portadas, diapositivas, icono y 8; acción principal en interfaces.
+  - Noche `#0B1B33`: texto principal y fondos oscuros (consola).
   - Cobalto claro `#8FA2FF`: sobre fondo oscuro.
   - Niebla `#EEF2F8`: fondos.
   - Pizarra `#5A6478`: texto secundario.
