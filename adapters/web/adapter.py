@@ -34,6 +34,22 @@ APPS: dict[str, str] = {
     "inbox": "http://127.0.0.1:5174",
 }
 HOME: dict[str, str] = {"alba-core": "/facturas/alta", "inbox": "/bandeja"}
+# Nombres con los que el agente puede pedir cada app en open_app (minúsculas, sin espacios ni guiones).
+ALIASES: dict[str, str] = {
+    "albacore": "alba-core", "alba": "alba-core", "erp": "alba-core",
+    "inbox": "inbox", "correo": "inbox", "bandeja": "inbox", "email": "inbox", "mail": "inbox",
+}
+
+
+def app_key(name: str, apps: dict[str, str]) -> str | None:
+    """Clave de la app para un nombre como 'Alba Core', 'ERP' o 'correo'."""
+    if name in apps:
+        return name
+    import unicodedata
+    n = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+    n = "".join(c for c in n if c.isalnum())
+    key = ALIASES.get(n)
+    return key if key in apps else None
 
 # Recorre el DOM y devuelve los elementos marcados con data-p8. Marca cada uno con
 # data-p8-ref para que perform() lo encuentre sin recalcular selectores.
@@ -159,7 +175,9 @@ class WebAdapter:
             self._ctx.set_default_timeout(self._timeout)
             self._pages: dict[str, Any] = {}
             self.app = start
-            self._page(start)
+            for app in self.apps:  # una pestaña por app desde el principio (la persona entra en el ERP)
+                self._page(app)
+            self._page(start).bring_to_front()
         except BaseException as e:  # noqa: BLE001
             self._ready.set_exception(e)
             return
@@ -230,10 +248,11 @@ class WebAdapter:
         op, target, text = a.get("op"), a.get("target"), a.get("text") or ""
         try:
             if op == "open_app":
-                if text not in self.apps:
+                key = app_key(text, self.apps)
+                if key is None:
                     return {"ok": False, "error": "target_no_encontrado"}
-                self.app = text
-                self._page(text).bring_to_front()
+                self.app = key
+                self._page(key).bring_to_front()
                 return {"ok": True}
             page = self._page(self.app)
             if op == "back":
@@ -281,6 +300,26 @@ class WebAdapter:
             page.wait_for_load_state("networkidle")  # /reset redirige por su cuenta
             page.bring_to_front()
         self._call(job)
+
+    def wait_until_logged_in(self, app: str = "alba-core", timeout_s: float = 300) -> bool:
+        """Espera a que la persona entre en `app` (su URL deja de ser /login). La clave es roja:
+        la escribe la persona en la ventana de Chromium, nunca el agente."""
+        import time
+
+        def on_login() -> bool:
+            page = self._page(app)
+            if "/login" in page.url:
+                page.bring_to_front()
+                return True
+            return False
+
+        end = time.monotonic() + timeout_s
+        while time.monotonic() < end:
+            if not self._call(on_login):
+                self._call(lambda: self._page(self.app).bring_to_front())
+                return True
+            time.sleep(1)
+        return False
 
     def close(self) -> None:
         if self._thread.is_alive():
