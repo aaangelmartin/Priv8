@@ -5,7 +5,7 @@ const TOKEN_RE = /(‹[^›]*›)/g
 const CLS = { verde: 'seguro', ambar: 'aviso', rojo: 'bloqueo' }
 
 function Tokens({ text }) {
-  if (text == null) return <span className="redacted">sin valor</span>
+  if (text == null) return <span className="redacted">nunca sale</span>
   return text.split(TOKEN_RE).map((part, i) =>
     part.startsWith('‹') ? <code key={i} className="tok">{part}</code> : part)
 }
@@ -21,7 +21,7 @@ function Elements({ title, sub, elements, observed }) {
           <li key={el.id} className={observed ? `cls-${CLS[el.cls] ?? el.cls}` : ''}>
             <span className="role">{el.role}</span>
             <span className="id">{el.id}</span>
-            <div className="label">{observed ? <Tokens text={el.label} /> : el.label}</div>
+            {el.label != null && <div className="label">{observed ? <Tokens text={el.label} /> : el.label}</div>}
             <div className="text">{observed ? <Tokens text={el.text} /> : el.text}</div>
           </li>
         ))}

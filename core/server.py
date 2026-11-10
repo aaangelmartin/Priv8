@@ -30,7 +30,17 @@ from core import events
 HOST, PORT = "127.0.0.1", 8700
 
 
+# Navegadores que pueden abrir el canal. Un cliente nativo (app 8, agente) no manda Origin.
+# Sin esto, cualquier web abierta en el mismo ordenador podría leer las pantallas reales
+# y mandar approval_result (cross-site WebSocket hijacking).
+ALLOWED_ORIGINS = {"http://127.0.0.1:5175", "http://localhost:5175"}
+
+
 async def events_ws(ws: WebSocket) -> None:
+    origin = ws.headers.get("origin")
+    if origin is not None and origin not in ALLOWED_ORIGINS:
+        await ws.close(code=1008)
+        return
     await ws.accept()
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue = asyncio.Queue()
@@ -78,7 +88,7 @@ async def verify_route(_: Request) -> JSONResponse:
 
 app = Starlette(
     routes=[WebSocketRoute("/events", events_ws), Route("/verify", verify_route)],
-    middleware=[Middleware(CORSMiddleware, allow_origins=["http://127.0.0.1:5175", "http://localhost:5175"],
+    middleware=[Middleware(CORSMiddleware, allow_origins=sorted(ALLOWED_ORIGINS),
                            allow_methods=["GET"])],
 )
 
