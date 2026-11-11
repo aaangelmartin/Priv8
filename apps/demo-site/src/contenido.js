@@ -11,14 +11,9 @@ export const VIDEOS_B2B = [
   { title: 'Con Priv8 CUA', time: '41 s', what: 'Solo tokens; el cambio de IBAN queda bloqueado.', base: '/docs/entregables/video/con-protocolo' },
 ];
 
-/* Pruébalo tú. B2B: las pantallas de la demo, alojadas aquí sin agente. */
-export const PRUEBA_B2B = [
-  { title: 'Correo', what: 'La bandeja con la factura del proveedor y el cambio de IBAN.', href: '/correo/' },
-  { title: 'Alba Core', what: 'El ERP, con la sesión de la demo ya abierta.', href: '/erp/' },
-  { title: 'Consola con protocolo', what: 'Reproducción de la factura: lo que ve 8, en tokens.', href: '/consola/?feed=con-protocolo' },
-  { title: 'Consola sin protocolo', what: 'La misma factura, con todo en claro.', href: '/consola/?feed=sin-protocolo' },
-  { title: 'Consola, ensayo', what: 'Las confirmaciones las apruebas tú.', href: '/consola/?demo' },
-];
+/* Pruébalo tú. B2B: una sola acción, la consola reproduciendo una sesión real grabada (make grabar-sesion): lo que ves
+   tú y lo que ve el modelo, el chat con 8 y la confirmación, como en el portátil de la demo. */
+export const CONSOLA_B2B = { title: 'Consola de la demo', href: '/consola/?feed=sesion-b2b' };
 
 export const APKS = [
   { title: 'Priv8', what: 'La app de 8.', href: '/apk/priv8-8.apk', file: 'apk/priv8-8.apk' },
@@ -45,10 +40,7 @@ export const ENLACES = [
     { tag: 'Vídeo', title: 'B2B sin protocolo', what: 'El modelo recibe los datos reales. 39 s.', href: '/docs/entregables/video/sin-protocolo.mp4' },
     { tag: 'Vídeo', title: 'B2B con Priv8 CUA', what: 'Solo tokens; el cambio de IBAN, bloqueado. 41 s.', href: '/docs/entregables/video/con-protocolo.mp4' },
     { tag: 'Vídeo', title: 'B2C, 8 en el móvil', what: 'Por voz, en el emulador.', href: VIDEO_B2C && `${VIDEO_B2C}.mp4`, pending: true },
-    { tag: 'App', title: 'Correo', what: 'La bandeja con la factura del proveedor.', href: '/correo/' },
-    { tag: 'App', title: 'Alba Core', what: 'El ERP, con la sesión de la demo abierta.', href: '/erp/' },
-    { tag: 'App', title: 'Consola con protocolo', what: 'Lo que ve 8, en tokens.', href: '/consola/?feed=con-protocolo' },
-    { tag: 'App', title: 'Consola sin protocolo', what: 'La misma factura, en claro.', href: '/consola/?feed=sin-protocolo' },
+    { tag: 'App', title: 'Consola de la demo', what: 'Una sesión real grabada: lo que ves tú y lo que ve el modelo.', href: '/consola/?feed=sesion-b2b' },
   ] },
   { group: 'El proyecto', items: [
     { tag: 'Código', title: 'Repositorio', what: 'GitHub, con el README para ejecutarlo.', href: REPO },

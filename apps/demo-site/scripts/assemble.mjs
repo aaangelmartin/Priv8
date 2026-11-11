@@ -1,7 +1,8 @@
 // Completa dist/ después de `vite build` con todo lo que enlaza demo.priv8.es. Nada de esto se guarda en git
 // dentro de apps/demo-site: se copia en cada build.
 //
-//   /consola/              build estática de apps/console con BASE_PATH=/consola/ (?feed=sin-protocolo, ?feed=con-protocolo, ?demo)
+//   /consola/              build estática de apps/console con BASE_PATH=/consola/ (?feed=sesion-b2b, la sesión real grabada
+//                          con sus fotogramas en /consola/sesion-b2b/; también ?feed=sin-protocolo, ?feed=con-protocolo, ?demo)
 //   /correo/               build estática de apps/inbox-sim (la bandeja), con BASE_PATH=/correo/
 //   /erp/                  build estática de apps/erp-sim (Alba Core) con la sesión de la demo ya abierta
 //   /equipo/<usuario>.png  foto de perfil de GitHub de cada persona del equipo (si no hay red, iniciales)
@@ -37,7 +38,7 @@ for (const [dir, ruta, env] of APPS) {
   run(`pnpm exec vite build --outDir "${join(DIST, ruta)}" --emptyOutDir`, cwd, { BASE_PATH: `/${ruta}/`, ...env });
   log(`${dir} en /${ruta}/`);
 }
-for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json']) {
+for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json', 'sesion-b2b.json']) {
   if (!existsSync(join(DIST, 'consola', f))) throw new Error(`La consola no trae ${f}`);
 }
 // Las rutas profundas (/correo/bandeja, /erp/facturas...) las sirve el middleware con el index.html de su app

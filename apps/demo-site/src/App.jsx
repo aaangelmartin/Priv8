@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import { VIDEO_B2C, VIDEOS_B2B, PRUEBA_B2B, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
+import { VIDEO_B2C, VIDEOS_B2B, CONSOLA_B2B, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
 
 const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['enlaces', 'Enlaces'], ['equipo', 'Equipo']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
@@ -163,8 +163,8 @@ function Prueba({ archivos }) {
           <article className="prod">
             <p className="eyebrow">B2B</p>
             <h3>Priv8 para empresas</h3>
-            <p>Copias sin agente: 8 corre en el portátil, no aquí.</p>
-            <ul className="drows">{PRUEBA_B2B.map((r) => <Row key={r.href} {...r} label="Abrir" />)}</ul>
+            <p>Una sesión real de 8, grabada y reproducida en la consola: lo que ves tú junto a lo que ve el modelo, el razonamiento, el chat y la confirmación.</p>
+            <div className="dcta"><a className="btn btn-cobalt" href={CONSOLA_B2B.href}>Abrir la consola</a></div>
           </article>
           <article className="prod">
             <p className="eyebrow">B2C</p>

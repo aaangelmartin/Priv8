@@ -171,3 +171,8 @@ a.dl-row:hover .dl-arrow { transform: translateX(2px); }
 .dblock-cobalt .dteam span { color: #dbe1ff; }
 .dblock-cobalt .dteam a { color: #fff; }
 .dblock-cobalt .dinit { background: #fff; color: var(--band); }
+
+/* la única acción de la columna B2B: abrir la consola con la sesión grabada */
+.dcta { margin-top: 6px; }
+.btn-cobalt { background: var(--band); color: #fff; box-shadow: 0 10px 30px rgba(45, 69, 214, .25); }
+.btn-cobalt:hover { background: #2238bd; }
