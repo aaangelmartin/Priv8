@@ -1,6 +1,6 @@
-# Adaptador web (`adapters/web/`)
+<img alt="Adaptador web" src="../../brand/banner/cabeceras/adapters-web.png" width="100%">
 
-El adaptador del núcleo para las apps web del B2B: conecta Alba Core (`apps/erp-sim`, :5173) y la bandeja de correo (`apps/inbox-sim`, :5174) con el núcleo usando Playwright. Lee el DOM, no píxeles, y cumple la interfaz de `core/adapter.py`.
+Conecta Alba Core (:5173) y el correo (:5174) con el núcleo usando Playwright. Lee el DOM y cumple `core/adapter.py`.
 
 ## Qué hay
 
@@ -41,7 +41,8 @@ uv run pytest adapters/web/tests       # arranca las apps si no están en marcha
 PRIV8_ALBA_URL=http://127.0.0.1:5190 PRIV8_INBOX_URL=http://127.0.0.1:5191 uv run pytest adapters/web/tests
 ```
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 - **Snapshot.** Devuelve la pantalla con valores reales (`docs/contracts/snapshot.schema.json`). Solo entran los elementos marcados con `data-p8`; el selector es `#id` o `.clase`, que es lo que casan `policies/alba-core.yaml` y `policies/inbox.yaml`.
 - **Acciones.** `perform()` recibe los valores ya rehidratados y ejecuta `tap`, `type`, `key`, `scroll`, `back`, `send`, `open_app` (`alba-core` o `inbox`, una pestaña cada una) y `call`. La llamada queda de momento en `web.calls`; la real es #23.
@@ -51,3 +52,5 @@ PRIV8_ALBA_URL=http://127.0.0.1:5190 PRIV8_INBOX_URL=http://127.0.0.1:5191 uv ru
 - **Vista de 8 (#154).** Mientras una consola mira, `vista.py` mantiene una página espejo en un Chromium aparte y sin ventana que el agente nunca navega. En cada cambio (como mucho cada 100 ms) vuelve a leer la página con el mismo recorrido que `snapshot()`, con sus propios ids (`data-p8-pv`), y el núcleo la clasifica igual que en `observe()` sin mandarla a ningún sitio (`core.preview`). `vista8.js` clona el documento y escribe cada texto como lo recibiría el modelo, en su sitio: la interfaz tal cual, los datos con su token, lo rojo «nunca sale». Lo que no entra en la observación pasa por `core.mask_text` y solo lo sensible se tapa. Antes de escribir la copia pasa el bloqueo final (`guard`); si no pasa, se intenta solo con lo que recibiría el modelo y, si tampoco, la vista no cambia. A la consola solo llega el screencast de ese espejo (`frame` con `vista: "8"`).
 - **Sesión.** Con `profile=<carpeta>` el contexto es persistente; el agente usa `.priv8/chromium/` (`PRIV8_WEB_PROFILE` lo cambia, `off` lo apaga). Si el perfil está en uso, abre uno temporal. El adaptador nunca escribe la clave: `wait_until_logged_in(app)` espera a que entre la persona.
 - **Hilos.** Chromium vive en un hilo propio porque Playwright síncrono no se puede usar desde varios hilos, y el núcleo llama desde el bucle del agente y desde el WebSocket de aprobaciones.
+
+</details>

@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="es">
+<!-- Gráficos de los README, con la misma marca que priv8.es (apps/landing/src/styles.css, Field.jsx).
+     No se abre a mano: scripts/banners.py rellena los ojos de 8 y la firma, y saca cada vista a PNG con Playwright.
+     Vista: ?v=hero | flujo | clases | verticales | pie | cabecera&t=Título&s=Segunda línea -->
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root {
+  --band: #2d45d6; --night: #0b1b33; --paper: #ffffff; --mist: #eef2fb;
+  --ink: #0b1b33; --ink-2: #4e5a72; --line: #dde3f3; --card: #f4f6fd;
+  --soft: #c4cdff; --on-dark-2: #dbe1ff; --dline: rgba(255, 255, 255, .22); --node: #4459dc;
+  --tok-bg: #e4e9fd; --tok-fg: #2236b5;
+  --ok: #1f8a5b; --ok-text: #18734c; --ok-soft: #dff2e7;
+  --warn: #a86400; --warn-text: #8a5200; --warn-soft: #fcefd9;
+  --bad: #c23a2e; --bad-text: #a83228; --bad-soft: #fbe5e3;
+  --f-display: "Sora", sans-serif; --f-body: "IBM Plex Sans", sans-serif; --f-mono: "IBM Plex Mono", monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; -webkit-font-smoothing: antialiased; }
+body { font: 400 16px/1.5 var(--f-body); color: var(--ink); }
+#v { position: relative; width: 1280px; overflow: hidden; }
+.band { background: var(--band); color: #fff; }
+.field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.clear::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 42% 48% at 50% 50%, var(--band) 46%, transparent 80%); }
+.over { position: relative; z-index: 1; }
+h1, h2 { font-family: var(--f-display); font-weight: 700; margin: 0; letter-spacing: -.05em; line-height: 1; }
+.soft { color: var(--soft); }
+.eight { display: block; }
+.mono { font-family: var(--f-mono); }
+.tok { font: 600 15px/1.4 var(--f-mono); background: var(--tok-bg); color: var(--tok-fg); border-radius: 8px; padding: 3px 9px; white-space: nowrap; display: inline-block; }
+.tok.w { background: #fff; color: #1f33b0; }
+.tag { font: 500 13px/1 var(--f-mono); color: var(--soft); }
+.dot { width: 10px; height: 10px; border-radius: 99px; flex: none; display: inline-block; }
+.g { background: var(--ok); } .a { background: var(--warn); } .r { background: var(--bad); }
+.blend { position: absolute; left: 0; width: 100%; display: block; }
+
+/* portada */
+.hero { height: 600px; }
+.hero .stage { height: 548px; display: grid; justify-items: center; align-content: center; text-align: center; }
+.hero h1 { font-size: 104px; display: grid; justify-items: center; }
+.hero .eight { width: 196px; margin-bottom: 30px; }
+
+/* cómo funciona */
+.flujo { height: 870px; }
+.flujo::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 36% 15% at 50% 13%, var(--band) 55%, transparent 100%); }
+.flujo .head { text-align: center; padding-top: 58px; }
+.flujo h2 { font-size: 62px; }
+.panel { position: absolute; border-radius: 28px; }
+.local { left: 40px; top: 236px; width: 780px; height: 560px; background: rgba(255, 255, 255, .07); border: 1px solid var(--dline); }
+.cloud { left: 920px; top: 236px; width: 320px; height: 560px; background: var(--night); }
+.panel > .tag { position: absolute; left: 24px; top: 22px; }
+.border { position: absolute; left: 869px; top: 216px; height: 600px; border-left: 2px dashed rgba(255, 255, 255, .45); }
+.node { position: absolute; border-radius: 22px; background: var(--node); border: 1px solid var(--dline); padding: 20px; }
+.node h3 { margin: 0; font: 600 19px/1.2 var(--f-display); letter-spacing: -.015em; color: #fff; }
+.screen { position: absolute; left: 66px; top: 296px; width: 268px; height: 400px; background: #fff; border-radius: 22px; padding: 18px; color: var(--ink); }
+.chrome { display: flex; gap: 6px; margin-bottom: 18px; } .chrome i { width: 10px; height: 10px; border-radius: 99px; background: var(--line); }
+.srow { display: flex; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 12px; background: var(--mist); margin-bottom: 10px; font: 500 13.5px/1.2 var(--f-mono); white-space: nowrap; }
+.srow.big { font: 700 24px/1 var(--f-display); letter-spacing: -.04em; }
+.sbtn { margin-top: 18px; display: flex; align-items: center; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 11px 20px; font: 600 15px/1 var(--f-body); }
+.pill.c { background: var(--band); color: #fff; } .pill.wt { background: #fff; color: #1f33b0; } .pill.gh { border: 1.5px solid rgba(255,255,255,.45); color: #fff; }
+.det { left: 380px; top: 296px; width: 420px; height: 240px; }
+.map { display: grid; grid-template-columns: 12px 1fr 18px auto; align-items: center; gap: 10px 12px; margin-top: 18px; font: 500 13.5px/1 var(--f-mono); color: var(--on-dark-2); }
+.map .x { color: #fff; opacity: .7; }
+.never { font: 600 13px/1 var(--f-mono); color: #fff; background: var(--bad); border-radius: 8px; padding: 6px 9px; }
+.free { font: 600 13px/1 var(--f-mono); color: var(--ok-text); background: var(--ok-soft); border-radius: 8px; padding: 6px 9px; }
+.ex { left: 380px; top: 576px; width: 240px; height: 190px; }
+.ok { left: 640px; top: 576px; width: 160px; height: 190px; display: grid; justify-items: center; align-content: center; gap: 14px; }
+.model { position: absolute; left: 940px; top: 290px; width: 280px; display: grid; justify-items: center; gap: 14px; }
+.model .stack { display: grid; gap: 10px; justify-items: center; }
+.act { position: absolute; left: 950px; top: 648px; width: 260px; text-align: center; font: 500 14px/1.4 var(--f-mono); color: var(--on-dark-2); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px 14px; }
+.gate { position: absolute; z-index: 3; left: 870px; top: 416px; transform: translate(-50%, -50%); background: var(--band); border: 1px dashed rgba(255,255,255,.6); border-radius: 14px; padding: 9px 9px; font: 600 12px/1.25 var(--f-mono); text-align: center; }
+.wires { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.wires path { fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.wires .d { stroke-dasharray: 2 8; }
+
+/* clases de dato */
+.clases { height: 420px; background: #fff; border-radius: 28px; padding: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.ccard { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 26px; display: grid; align-content: start; gap: 18px; }
+.face { height: 150px; border-radius: 18px; display: grid; place-items: center; }
+.face .eight { width: 150px; }
+.label { justify-self: start; font: 600 15px/1 var(--f-mono); border-radius: 999px; padding: 9px 14px; display: inline-flex; gap: 9px; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 500 13.5px/1 var(--f-mono); border-radius: 8px; padding: 7px 10px; background: #fff; border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+.chip.s { text-decoration: line-through; text-decoration-color: rgba(11,27,51,.35); }
+
+/* verticales */
+.verticales { height: 500px; }
+.vcards { position: absolute; left: 40px; right: 40px; top: 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.vcard { background: #fff; color: var(--ink); border-radius: 28px; padding: 32px 30px 30px; height: 380px; display: grid; align-content: start; gap: 14px; }
+.vcard .eyebrow { font: 500 14px/1 var(--f-mono); color: var(--band); }
+.vcard h2 { font-size: 42px; letter-spacing: -.045em; line-height: 1.02; }
+.vcard h2 .c { color: var(--band); }
+.steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 22px; position: relative; }
+.steps::before { content: ""; position: absolute; left: 10%; right: 10%; top: 35px; border-top: 2px dashed var(--line); }
+.step { display: grid; justify-items: center; gap: 10px; text-align: center; font: 500 13px/1.25 var(--f-mono); color: var(--ink-2); position: relative; }
+.ic { width: 70px; height: 70px; border-radius: 22px; display: grid; place-items: center; background: var(--tok-bg); color: var(--band); }
+.ic.b { background: var(--bad-soft); color: var(--bad); } .ic.o { background: var(--ok-soft); color: var(--ok); } .ic.k { background: var(--band); color: #fff; }
+.ic svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ic .eight { width: 46px; }
+.vfoot { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* pie */
+.pie { height: 400px; }
+.pie .white { position: absolute; left: 0; right: 0; top: 52px; bottom: 0; background: #fff; }
+.pie .sig { position: absolute; left: 0; right: 0; top: 108px; display: flex; justify-content: center; }
+.pie .by { width: 104px; height: 24px; color: var(--ink-2); }
+.pie .word { position: absolute; left: 0; right: 0; top: 168px; display: flex; justify-content: center; align-items: center; gap: 26px; font: 700 196px/.9 var(--f-display); letter-spacing: -.055em; color: var(--band); }
+.pie .word .eight { width: 196px; }
+
+/* cabecera de cada README */
+.cab { height: 300px; }
+.cab .stage { position: absolute; left: 72px; top: 0; height: 248px; display: flex; align-items: center; gap: 34px; }
+.cab .eight { width: 132px; }
+.cab h1 { font-size: 76px; }
+.cab .s { font: 700 34px/1.1 var(--f-display); letter-spacing: -.04em; margin-top: 12px; }
+.cab .clearl::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--band) 0%, var(--band) 30%, transparent 75%); }
+</style>
+</head>
+<body>
+<div id="v"></div>
+<script>
+const LOGO = { reposo: '__REPOSO__', nove: '__NOVE__', nuncasale: '__NUNCASALE__' };
+const BY = '__BY__';
+const eye = (k, fill, w) => `<svg class="eight" viewBox="60 60 184.4 130.8" style="width:${w}px" aria-hidden="true"><path fill="${fill}" d="${LOGO[k]}"/></svg>`;
+const ic = {
+  mail: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></svg>',
+  erp: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M9 9v11"/></svg>',
+  block: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/></svg>',
+  phone: '<svg viewBox="0 0 24 24"><path d="M6 3h3l2 5-2.5 1.5a11 11 0 0 0 6 6L16 13l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 4 5a2 2 0 0 1 2-2z"/></svg>',
+  sign: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  voice: '<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  banks: '<svg viewBox="0 0 24 24"><path d="M3 9l9-5 9 5M5 10v7M10 10v7M14 10v7M19 10v7M3 20h18"/></svg>',
+  speaker: '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+};
+
+/* El campo de datos de la portada (Field.jsx), quieto: filas de datos inventados en Plex Mono, tenues en el centro
+   y más visibles a los lados. Dentro de la lente cada dato se ve como su token, en blanco. */
+const DATA = [
+  ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'], ['3.412,58 €', '‹IMPORTE_1›'], ['Ángel Martín', '‹NOMBRE_1›'],
+  ['12345678Z', '‹DNI_1›'], ['1.180,00 €', '‹IMPORTE_2›'], ['Álvaro Carpintero', '‹NOMBRE_2›'], ['B12345674', '‹CIF_1›'],
+  ['+34 600 000 000', '‹TELEFONO_1›'], ['ES71 9400 0007 0206 0223 3441', '‹IBAN_2›'], ['Pablo Rojo', '‹NOMBRE_3›'], ['200,00 €', '‹IMPORTE_3›'],
+  ['Suministros Lumen', '‹NOMBRE_4›'], ['12.050,00 €', '‹IMPORTE_4›'], ['Marco Barroso', '‹NOMBRE_5›'],
+  ['4111 1111 1111 1111', 'nunca sale'], ['X1234567L', '‹NIE_1›'], ['ES08 9300 0001 0522 0033 4455', '‹IBAN_3›'],
+  ['+34 611 000 000', '‹TELEFONO_2›'], ['48215963M', '‹DNI_2›'], ['980,40 €', '‹IMPORTE_5›'], ['PIN 4821', 'nunca sale'],
+  ['53120874M', '‹DNI_3›'], ['71409352X', '‹DNI_4›'], ['Y2918374R', '‹NIE_2›'], ['29384756W', '‹DNI_5›'],
+];
+const sstep = (v) => { const x = Math.min(1, Math.max(0, v)); return x * x * (3 - 2 * x); };
+function field(host, { lens = null, start = 0, flat = 0 } = {}) {
+  const cv = document.createElement('canvas'); cv.className = 'field'; host.prepend(cv);
+  const W = host.offsetWidth, H = host.offsetHeight, dpr = 2, ROW = 34;
+  cv.width = W * dpr; cv.height = H * dpr; const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+  ctx.font = '500 13px "IBM Plex Mono"'; ctx.textBaseline = 'middle';
+  let k = start;
+  for (let y = 12; y < H + ROW; y += ROW) {
+    let x = -((y / ROW) * 53 + start * 17) % 180;
+    while (x < W) {
+      const [real, tok] = DATA[k++ % DATA.length];
+      const w = ctx.measureText(real).width, cx = x + w / 2;
+      const off = Math.abs(cx - W / 2) / (W / 2);
+      const base = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4));
+      const fade = flat ? flat : base;
+      const t = lens ? sstep((lens.r * 1.08 - Math.hypot((cx - lens.x) / (lens.sx || 1), y - lens.y)) / (lens.r * 0.3)) : 0;
+      if (t < 0.5) { ctx.fillStyle = `rgba(215,223,255,${0.32 * fade})`; ctx.textAlign = 'left'; ctx.fillText(real, x, y); }
+      else { ctx.fillStyle = `rgba(255,255,255,${(0.32 + 0.63 * t) * fade})`; ctx.textAlign = 'center'; ctx.fillText(tok, cx, y); }
+      x += w + 36;
+    }
+  }
+}
+
+/* La transición en píxeles de la web (Blend en Field.jsx): rejilla de 72 x 6, cada fila más llena que la anterior,
+   con las esquinas de fuera redondeadas y los rincones de dentro curvados. Devuelve los caminos de las celdas «llenas». */
+function pixels(w, seed) {
+  const cols = 72, rows = 6, H = Math.round(Math.max(30, Math.min(56, w * 0.04))), paths = [];
+  const cw = w / cols, ch = H / rows, r = Math.min(cw, ch) * 0.5;
+  let sd = seed * 9301 + 49297; const rnd = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
+  const g = []; for (let y = 0; y < rows; y++) { g.push([]); for (let x = 0; x < cols; x++) g[y].push(rnd() < (y + 0.5) / rows); }
+  const on = (x, y) => (y >= rows ? true : y < 0 ? false : g[y][Math.max(0, Math.min(cols - 1, x))]);
+  const f = (n) => n.toFixed(2);
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const X = x * cw, Y = y * ch, X2 = X + cw, Y2 = Y + ch;
+    if (on(x, y)) {
+      const tl = !on(x, y - 1) && !on(x - 1, y) && !on(x - 1, y - 1) ? r : 0, tr = !on(x, y - 1) && !on(x + 1, y) && !on(x + 1, y - 1) ? r : 0;
+      const br = !on(x, y + 1) && !on(x + 1, y) && !on(x + 1, y + 1) ? r : 0, bl = !on(x, y + 1) && !on(x - 1, y) && !on(x - 1, y + 1) ? r : 0;
+      paths.push(`M${f(X + tl)} ${f(Y)} L${f(X2 - tr)} ${f(Y)} ${tr ? `A${f(tr)} ${f(tr)} 0 0 1 ${f(X2)} ${f(Y + tr)}` : ''} L${f(X2)} ${f(Y2 - br)} ${br ? `A${f(br)} ${f(br)} 0 0 1 ${f(X2 - br)} ${f(Y2)}` : ''} L${f(X + bl)} ${f(Y2)} ${bl ? `A${f(bl)} ${f(bl)} 0 0 1 ${f(X)} ${f(Y2 - bl)}` : ''} L${f(X)} ${f(Y + tl)} ${tl ? `A${f(tl)} ${f(tl)} 0 0 1 ${f(X + tl)} ${f(Y)}` : ''} Z`);
+    } else {
+      if (on(x, y - 1) && on(x - 1, y)) paths.push(`M${f(X)} ${f(Y)} L${f(X + r)} ${f(Y)} A${f(r)} ${f(r)} 0 0 0 ${f(X)} ${f(Y + r)} Z`);
+      if (on(x, y - 1) && on(x + 1, y)) paths.push(`M${f(X2)} ${f(Y)} L${f(X2)} ${f(Y + r)} A${f(r)} ${f(r)} 0 0 0 ${f(X2 - r)} ${f(Y)} Z`);
+      if (on(x, y + 1) && on(x + 1, y)) paths.push(`M${f(X2)} ${f(Y2)} L${f(X2 - r)} ${f(Y2)} A${f(r)} ${f(r)} 0 0 0 ${f(X2)} ${f(Y2 - r)} Z`);
+      if (on(x, y + 1) && on(x - 1, y)) paths.push(`M${f(X)} ${f(Y2)} L${f(X)} ${f(Y2 - r)} A${f(r)} ${f(r)} 0 0 0 ${f(X + r)} ${f(Y2)} Z`);
+    }
+  }
+  return { H, d: paths.join(' ') };
+}
+/* Cobalto que se deshace en píxeles hacia abajo: la parte de abajo queda transparente, así sirve en GitHub claro y oscuro. */
+function fadeOut(el, seed) {
+  const w = el.offsetWidth, h = el.offsetHeight, p = pixels(w, seed), y0 = h - p.H;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="#fff"/><g transform="translate(0 ${y0})"><path d="${p.d}" fill="#000" stroke="#000" stroke-width="1" stroke-linejoin="round"/><rect x="0" y="${p.H - 0.5}" width="${w}" height="3" fill="#000"/></g></mask></defs><rect width="${w}" height="${h}" fill="#000" mask="url(#m)"/></svg>`;
+  const url = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
+  el.style.webkitMaskImage = url; el.style.maskImage = url;
+}
+/* Blanco que entra en píxeles desde arriba, sobre transparente. */
+function fadeIn(el, seed) {
+  const w = el.offsetWidth, p = pixels(w, seed);
+  el.insertAdjacentHTML('afterbegin', `<svg class="blend" style="top:0" width="${w}" height="${p.H + 1}" viewBox="0 0 ${w} ${p.H + 1}"><path d="${p.d}" fill="#fff" stroke="#fff" stroke-width=".6" stroke-linejoin="round"/><rect x="0" y="${p.H}" width="${w}" height="1.5" fill="#fff"/></svg>`);
+}
+
+const q = new URLSearchParams(location.search), V = q.get('v') || 'hero', root = document.getElementById('v');
+const views = {
+  hero() {
+    root.className = 'band hero clear';
+    root.innerHTML = `<div class="stage over">${eye('reposo', '#fff', 196)}<h1><span>Priv8</span><span class="soft">Sin ver tus datos.</span></h1></div>`;
+    field(root, { lens: { x: 1010, y: 150, r: 190, sx: 1.6 } });
+    fadeOut(root, 3);
+  },
+  flujo() {
+    root.className = 'band flujo';
+    root.innerHTML = `
+      <div class="head over"><h2>Los datos no cruzan.<br><span class="soft">Los tokens, sí.</span></h2></div>
+      <div class="panel local"><span class="tag">Tu máquina | los datos reales viven aquí</span></div>
+      <div class="panel cloud"><span class="tag">Proveedor del modelo</span></div>
+      <div class="border"></div>
+      <div class="screen">
+        <div class="chrome"><i></i><i></i><i></i></div>
+        <div class="srow big"><span class="dot a"></span>3.412,58 €</div>
+        <div class="srow"><span class="dot a"></span>ES43 9100 0001 5740…</div>
+        <div class="srow"><span class="dot a"></span>Suministros Lumen</div>
+        <div class="srow"><span class="dot r"></span>PIN ● ● ● ●</div>
+        <div class="srow"><span class="dot g"></span>Transferir</div>
+        <div class="sbtn"><span class="pill c">Enviar</span></div>
+      </div>
+      <div class="node det">
+        <div style="display:flex;align-items:center;gap:14px">${eye('nove', '#fff', 64)}<h3>Priv8</h3></div>
+        <div class="map">
+          <span class="dot g"></span><span>Transferir</span><span class="x">→</span><span class="free">Transferir</span>
+          <span class="dot a"></span><span>ES43 9100…</span><span class="x">→</span><span class="tok w">‹IBAN_1-propio›</span>
+          <span class="dot a"></span><span>3.412,58 €</span><span class="x">→</span><span class="tok w">‹IMPORTE_1-positivo›</span>
+          <span class="dot r"></span><span>PIN</span><span class="x">→</span><span class="never">nunca sale</span>
+        </div>
+      </div>
+      <div class="node ex">
+        <div style="display:flex;align-items:center;gap:12px">${eye('reposo', '#fff', 46)}<h3>Ejecutor</h3></div>
+        <div style="display:grid;gap:10px;margin-top:20px;justify-items:start">
+          <span class="tok w">‹IBAN_1-propio›</span>
+          <span class="mono" style="color:#fff;opacity:.7;margin-left:8px">↓</span>
+          <span class="mono" style="font:600 14px/1 var(--f-mono);color:#fff">ES43 9100 0001…</span>
+        </div>
+      </div>
+      <div class="node ok">
+        <span class="pill wt">Tu «sí»</span>
+        <span class="tag">huella u OTP</span>
+      </div>
+      <div class="model">
+        ${eye('reposo', '#fff', 110)}
+        <h3 style="margin:0;font:600 19px/1 var(--f-display);color:#fff">Modelo</h3>
+        <div class="stack"><span class="free">Transferir</span><span class="tok w">‹IBAN_1-propio›</span><span class="tok w">‹IMPORTE_1-positivo›</span></div>
+      </div>
+      <div class="act">act type <span style="color:#fff">‹IBAN_1-propio›</span></div>
+      <div class="gate">Bloqueo<br>final</div>
+      <svg class="wires" viewBox="0 0 1280 870">
+        <defs><marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 1L8 5L0 9z" fill="#fff"/></marker></defs>
+        <path d="M336 416 H372" marker-end="url(#ar)"/>
+        <path d="M802 416 H828" marker-end="url(#ar)"/><path d="M912 416 H940" marker-end="url(#ar)"/>
+        <path d="M948 671 H808" marker-end="url(#ar)"/>
+        <path d="M638 671 H628" marker-end="url(#ar)"/>
+        <path d="M378 671 H342" marker-end="url(#ar)"/>
+      </svg>`;
+    field(root, { flat: 0.4, start: 5 });
+    fadeOut(root, 5);
+  },
+  clases() {
+    root.className = 'clases';
+    const card = (face, cls, soft, txt, label, chips) => `<div class="ccard">
+      <div class="face" style="background:${soft}">${eye(face, '#2d45d6', 150)}</div>
+      <span class="label" style="background:${soft};color:${txt}"><span class="dot ${cls}"></span>${label}</span>
+      <div class="chips">${chips}</div></div>`;
+    root.innerHTML =
+      card('reposo', 'g', 'var(--ok-soft)', 'var(--ok-text)', 'Libre', '<span class="chip">Botones</span><span class="chip">Menús</span><span class="chip">Títulos</span><span class="chip">Etiquetas</span>') +
+      card('nove', 'a', 'var(--warn-soft)', 'var(--warn-text)', 'Se tokeniza', '<span class="chip s">ES43 9100…</span><span class="tok">‹IBAN_1-propio›</span><span class="chip s">Ana Ruiz</span><span class="tok">‹NOMBRE_1›</span><span class="chip s">3.412,58 €</span><span class="tok">‹IMPORTE_1›</span>') +
+      card('nuncasale', 'r', 'var(--bad-soft)', 'var(--bad-text)', 'Nunca sale', '<span class="chip">Contraseña</span><span class="chip">PIN</span><span class="chip">OTP</span><span class="chip">Tarjeta</span><span class="chip">Login</span>');
+  },
+  verticales() {
+    root.className = 'band verticales';
+    const st = (cls, icon, txt) => `<div class="step"><span class="ic ${cls}">${icon}</span><span>${txt}</span></div>`;
+    root.innerHTML = `<div class="vcards over">
+      <div class="vcard">
+        <span class="eyebrow">B2B | Priv8 para empresas</span>
+        <h2>La factura del correo,<br><span class="c">al ERP sin verla.</span></h2>
+        <div class="steps">${st('', ic.mail, 'Correo')}${st('', ic.erp, 'Alba Core')}${st('b', ic.block, 'IBAN nuevo')}${st('', ic.phone, 'Llamada')}${st('o', ic.sign, 'Registro')}</div>
+        <div class="vfoot"><span class="tok">‹IBAN_1-correo›</span><span class="never">denied: destino</span></div>
+      </div>
+      <div class="vcard">
+        <span class="eyebrow">B2C | 8 en tu móvil</span>
+        <h2>«¿Cuánto tengo?»<br><span class="c">Lo oyes tú, no el modelo.</span></h2>
+        <div class="steps">${st('', ic.voice, 'Tu voz')}${st('', ic.banks, '3 bancos')}${st('k', eye('nove', '#fff', 46), 'oracle sum')}${st('', ic.speaker, 'Voz local')}${st('o', eye('nuncasale', '#18734c', 46), 'Tu huella')}</div>
+        <div class="vfoot"><span class="tok">‹SUMA_1›</span><span class="mono" style="color:var(--ink-2)">→</span><span class="free">voz local: la cifra</span></div>
+      </div>
+    </div>`;
+    field(root, { flat: 0.6, start: 9 });
+    fadeOut(root, 7);
+  },
+  pie() {
+    root.className = 'pie';
+    root.innerHTML = `<div class="white"></div><div class="sig"><svg class="by" viewBox="545.6 0 817.4 189"><g fill="#4e5a72">${BY}</g></svg></div>
+      <div class="word">${eye('reposo', '#2d45d6', 196)}<span>Priv8</span></div>`;
+    fadeIn(root, 2);
+  },
+  cabecera() {
+    root.className = 'band cab';
+    root.innerHTML = `<div class="stage over">${eye(q.get('e') || 'reposo', '#fff', 132)}<div><h1>${q.get('t') || ''}</h1><div class="s soft">${q.get('s') || ''}</div></div></div>`;
+    const c = document.createElement('div'); c.className = 'clearl'; c.style.cssText = 'position:absolute;inset:0'; root.prepend(c);
+    field(c, { lens: { x: 1050, y: 120, r: 150, sx: 1.8 }, start: Number(q.get('n') || 0) });
+    c.querySelector('canvas').style.zIndex = 0;
+    fadeOut(root, Number(q.get('n') || 0) + 1);
+  },
+};
+document.fonts.load('500 13px "IBM Plex Mono"').then(() => document.fonts.load('700 40px Sora')).then(() => document.fonts.ready).then(() => {
+  views[V]();
+  window.__listo = true;
+});
+</script>
+</body>
+</html>

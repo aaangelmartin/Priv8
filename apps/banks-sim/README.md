@@ -1,6 +1,6 @@
-# Bancos simulados, Android (`apps/banks-sim/`)
+<img alt="Bancos simulados, Android" src="../../brand/banner/cabeceras/apps-banks-sim.png" width="100%">
 
-Apps de banca inventadas para probar Priv8 CUA en el emulador (B2C): **Banca Alcor** (`alcor`), **Brezo Banco** (`brezo`) y **Nimbo Bróker** (`nimbo`). Una sola base de código en Kotlin con Views, para que el árbol de accesibilidad sea predecible, y un sabor de Gradle por banco; los tres se instalan a la vez. 8 las maneja desde la app 8 (`apps/android-8`) a través del puente.
+Banca Alcor, Brezo Banco y Nimbo Bróker: una base de código Kotlin con Views y un sabor de Gradle por banco. 8 las maneja desde la app 8.
 
 ## Qué hay
 
@@ -37,7 +37,8 @@ cd apps/banks-sim && ./gradlew test        # pruebas JVM de la sesión
 uv run pytest core/tests/test_politicas_bancos.py   # desde la raíz: políticas contra layouts y seeds
 ```
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 **Datos de prueba.** Todo es inventado y los IBAN pasan mod-97. Salen de `src/<banco>/assets/seed-<banco>.json`, que coinciden con `data/seed.json`.
 
@@ -63,3 +64,5 @@ Saldo entre los tres bancos: **17.977,98 €**. Los IBAN de Brezo y Nimbo son lo
 - Sin huella registrada, el botón se desactiva y queda el código SMS. Para probar la huella en el emulador: registrar una en Ajustes y, con el diálogo abierto, `adb -e emu finger touch 1`.
 
 **Añadir un banco.** Crear el sabor en `build.gradle.kts` como `brezo` (con su `applicationId` y `SEED_ASSET`), y en `src/<banco>/` los `strings.xml` (`app_name`, `bank_name`, `bank_tagline`), `colors.xml` (mismos nombres que en `alcor`, paleta propia que no se parezca a Priv8) y `assets/seed-<banco>.json`. Los resource-ids son los mismos en todos los sabores: la política nueva parte de `banca-alcor.yaml` cambiando `app` y se añade a `APPS` en `core/tests/test_politicas_bancos.py`.
+
+</details>

@@ -1,6 +1,6 @@
-# Contratos v1 (`docs/contracts/`)
+<img alt="Contratos v1" src="../../brand/banner/cabeceras/docs-contracts.png" width="100%">
 
-Las interfaces entre el núcleo, el agente, los adaptadores, las apps y la voz: contra ellas construye cada camino. Salen de `docs/arquitectura.html` y lo concretan en JSON Schema (draft 2020-12) con ejemplos que validan. Un cambio lo aprueban Pablo (Camino 1) y quien consume el contrato.
+Las interfaces entre núcleo, agente, adaptadores, apps y voz, en JSON Schema (draft 2020-12) con ejemplos que validan. Un cambio lo aprueban Pablo y quien consume el contrato.
 
 ## Qué hay
 
@@ -31,7 +31,8 @@ También entra en `make test`. Sin `uv`: `python -m pip install "jsonschema>=4.1
 
 Valida cada ejemplo de `examples/` contra su esquema y comprueba que los de `examples/invalid/` se rechazan. El nombre del ejemplo dice contra qué se valida: `audit.blocked.json` contra `audit.schema.json`; `tools.act_input.tap.json` contra `tools.schema.json#/$defs/act_input`.
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 ### Recorrido
 
@@ -95,3 +96,5 @@ Estos puntos no estaban cerrados en `docs/arquitectura.html`. Se proponen así; 
 7. **Puente:** mensaje `hello` al conectar con `version: 1`, `error` en los resultados fallidos y eventos `system_dialog_closed`, `screen_changed` y `app_changed`.
 8. **Auditoría:** `prev` de la primera línea es `sha256:` y 64 ceros; `hash` se calcula sobre el JSON canónico (claves ordenadas, sin espacios, UTF-8) sin `hash` ni `sig`; `counts` en `observe_sent` para las métricas.
 9. **Voz:** un segmento `local` puede llevar `text` en vez de `token`, para leer en local una frase entera que el bloqueo final no dejó salir.
+
+</details>
