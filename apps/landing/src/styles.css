@@ -1367,3 +1367,12 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .foot-by:hover, .foot-by:focus-visible { background: var(--band); }
 @media (max-width: 720px) { .foot-by-row { margin-top: 40px; } }
 .foot-by-row + .foot-word { margin-top: clamp(20px, 3vw, 40px); }
+
+/* «Pruébalo en tu …» con el asistente que cambia (Asistentes.jsx): el hueco mide el nombre que se ve */
+/* a cada lado del icono, un espacio normal */
+.pruebalo { gap: 0; white-space: nowrap; }
+.ia-rot { position: relative; display: inline-block; height: 1.25em; vertical-align: middle; transition: width .5s var(--ease); }
+.ia-rot .ia { position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 0; height: 100%; white-space: nowrap; opacity: 0; transform: translateY(.35em); filter: blur(4px); transition: opacity .35s ease, transform .5s var(--ease), filter .35s ease; }
+.ia-rot .ia.on { opacity: 1; transform: none; filter: none; }
+.ia-rot i { width: 1.05em; height: 1.05em; flex: none; background: currentColor; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
+@media (prefers-reduced-motion: reduce) { .ia-rot, .ia-rot .ia { transition: none; } }
