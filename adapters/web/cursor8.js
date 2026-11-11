@@ -350,8 +350,11 @@
     let ojos = ''
     if (vivo) {
       ojos = vivo.outerHTML
+      // La copia lleva sus propios ids: el cuerpo del 8 y los ojos se recortan con clipPath
+      // (url(#id)), y con los ids repetidos apuntarían a los del original, oculto, y el 8
+      // cobalto desaparecería de la captura (solo quedaban los ojos blancos).
       const t = document.createElement('template')
-      t.innerHTML = ojos
+      t.innerHTML = ojos.replace(/\bid="([^"]+)"/g, 'id="$1-fijo"').replace(/url\(#([^)"']+)\)/g, 'url(#$1-fijo)')
       const fijo = t.content.firstElementChild
       if (fijo) {
         fijo.classList.add('p8-fijo')
