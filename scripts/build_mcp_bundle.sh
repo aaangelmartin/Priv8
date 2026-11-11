@@ -39,7 +39,7 @@ done
 rm -f "$STAGE/apps/console/"{sin-protocolo,con-protocolo,demo}.json
 
 # 2. El código Python: lo que sigue git, sin tests ni grabaciones.
-git ls-files -z -- core agent adapters/web voice policies data pyproject.toml uv.lock \
+git ls-files -z -- core agent adapters/web voice policies data pyproject.toml uv.lock LICENSE apps/console/src/eight/engine.js \
   | tr '\0' '\n' \
   | grep -vE '(^|/)tests/|(^|/)replays/|^voice/android/|^data/test_|\.md$|(^|/)\.env' \
   | while IFS= read -r f; do
