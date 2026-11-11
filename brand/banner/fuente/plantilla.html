@@ -2,7 +2,8 @@
 <html lang="es">
 <!-- Gráficos de los README, con la misma marca que priv8.es (apps/landing/src/styles.css, Field.jsx).
      No se abre a mano: scripts/banners.py rellena los ojos de 8 y la firma, y saca cada vista a PNG con Playwright.
-     Vista: ?v=hero | flujo | clases | verticales | pie | cabecera&t=Título&s=Segunda línea -->
+     Vista: ?v=hero | flujo | clases | verticales | instalar | panel | b2b | b2c | claude | pie | cabecera&t=Título&s=Segunda línea
+     Las imágenes del medio llevan la transición en píxeles arriba y abajo, como las secciones de la web. -->
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -43,8 +44,9 @@ h1, h2 { font-family: var(--f-display); font-weight: 700; margin: 0; letter-spac
 .hero .eight { width: 196px; margin-bottom: 30px; }
 
 /* cómo funciona */
-.flujo { height: 870px; }
-.flujo::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 36% 15% at 50% 13%, var(--band) 55%, transparent 100%); }
+.flujo { height: 910px; }
+.flujo > :not(canvas) { transform: translateY(40px); }
+.flujo::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 36% 15% at 50% 17%, var(--band) 55%, transparent 100%); }
 .flujo .head { text-align: center; padding-top: 58px; }
 .flujo h2 { font-size: 62px; }
 .panel { position: absolute; border-radius: 28px; }
@@ -77,8 +79,8 @@ h1, h2 { font-family: var(--f-display); font-weight: 700; margin: 0; letter-spac
 .wires .d { stroke-dasharray: 2 8; }
 
 /* clases de dato */
-.clases { height: 420px; background: #fff; border-radius: 28px; padding: 44px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.ccard { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 26px; display: grid; align-content: start; gap: 18px; }
+.clases { height: 540px; padding: 92px 40px 0; align-items: start; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.ccard { position: relative; z-index: 1; background: #fff; border: 1px solid #fff; border-radius: 24px; padding: 26px; display: grid; align-content: start; gap: 18px; }
 .face { height: 150px; border-radius: 18px; display: grid; place-items: center; }
 .face .eight { width: 150px; }
 .label { justify-self: start; font: 600 15px/1 var(--f-mono); border-radius: 999px; padding: 9px 14px; display: inline-flex; gap: 9px; align-items: center; }
@@ -87,8 +89,8 @@ h1, h2 { font-family: var(--f-display); font-weight: 700; margin: 0; letter-spac
 .chip.s { text-decoration: line-through; text-decoration-color: rgba(11,27,51,.35); }
 
 /* verticales */
-.verticales { height: 500px; }
-.vcards { position: absolute; left: 40px; right: 40px; top: 56px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.verticales { height: 580px; }
+.vcards { position: absolute; left: 40px; right: 40px; top: 96px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .vcard { background: #fff; color: var(--ink); border-radius: 28px; padding: 32px 30px 30px; height: 380px; display: grid; align-content: start; gap: 14px; }
 .vcard .eyebrow { font: 500 14px/1 var(--f-mono); color: var(--band); }
 .vcard h2 { font-size: 42px; letter-spacing: -.045em; line-height: 1.02; }
@@ -101,6 +103,44 @@ h1, h2 { font-family: var(--f-display); font-weight: 700; margin: 0; letter-spac
 .ic svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .ic .eight { width: 46px; }
 .vfoot { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* cómo se usa: titular arriba y la pieza debajo, entre las dos transiciones */
+.uso { padding: 98px 40px 0; }
+.uso .head { position: relative; z-index: 1; text-align: center; }
+.uso h2 { font-size: 54px; }
+.uso .stage { position: relative; z-index: 1; margin-top: 40px; }
+.frame { background: #fff; border-radius: 22px; overflow: hidden; color: var(--ink); }
+.frame .bar { display: flex; align-items: center; gap: 7px; padding: 12px 16px; background: var(--mist); }
+.frame .bar i { width: 10px; height: 10px; border-radius: 99px; background: var(--line); }
+.frame .bar span { margin-left: 10px; font: 500 13px/1 var(--f-mono); color: var(--ink-2); background: #fff; border-radius: 999px; padding: 6px 12px; }
+.frame img { display: block; width: 100%; }
+.num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 99px; background: #fff; color: #1f33b0; font: 700 17px/1 var(--f-display); flex: none; }
+.cap { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; font: 600 19px/1.2 var(--f-display); letter-spacing: -.015em; color: #fff; }
+.cap.n { margin: 16px 0 0; }
+.term { background: var(--night); color: var(--on-dark-2); border-radius: 22px; padding: 22px 24px; font: 500 15px/1.75 var(--f-mono); white-space: pre; }
+.term .p { color: #8fa2ff; } .term .w { color: #fff; } .term .tg { color: #6fd3a2; } .term .tr { color: #ff9a8f; } .term .s { color: #7d89a6; }
+.term .tok { font-size: 14px; }
+.cols { display: grid; gap: 22px; align-items: start; }
+.file { display: grid; justify-items: center; gap: 12px; background: #fff; border-radius: 22px; padding: 30px 20px 26px; color: var(--ink); }
+.file .doc { width: 92px; height: 112px; border-radius: 16px; background: var(--band); display: grid; place-items: center; position: relative; }
+.file .doc::after { content: ""; position: absolute; right: 0; top: 0; width: 28px; height: 28px; background: #8fa2ff; border-radius: 0 16px 0 12px; }
+.file b { font: 600 16px/1.2 var(--f-mono); }
+.click { font: 500 13px/1 var(--f-mono); color: var(--ink-2); }
+.phone { width: 300px; height: 420px; background: #fff; border-radius: 40px; border: 10px solid var(--night); overflow: hidden; display: flex; flex-direction: column; color: var(--ink); }
+.phone .top { background: var(--band); padding: 26px 0 16px; display: grid; justify-items: center; gap: 8px; color: #dbe1ff; font: 500 12px/1 var(--f-mono); }
+.phone .chat { flex: 1; padding: 18px 16px; display: flex; flex-direction: column; gap: 12px; background: var(--mist); }
+.b { max-width: 85%; padding: 11px 14px; border-radius: 20px; font: 400 15px/1.45 var(--f-body); }
+.b.me { align-self: flex-end; background: var(--band); color: #fff; border-bottom-right-radius: 6px; }
+.b.ocho { align-self: flex-start; background: #fff; border-bottom-left-radius: 6px; }
+.b .v { background: var(--ok-soft); color: var(--ok-text); border-radius: 6px; padding: 1px 5px; font-weight: 600; }
+.vozl { display: flex; align-items: center; gap: 8px; font: 500 12px/1 var(--f-mono); color: var(--ok-text); align-self: flex-start; }
+.vozl svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.conf { background: #fff; border-radius: 20px; padding: 16px; display: grid; gap: 12px; border: 1.5px solid #f0c98a; }
+.conf p { margin: 0; font: 500 16px/1.4 var(--f-body); }
+.conf .row { display: flex; gap: 8px; }
+.saw { font: 500 12px/1.4 var(--f-mono); color: var(--ink-2); align-self: flex-start; }
+.phones { display: flex; justify-content: center; gap: 46px; }
+.phones > div { display: grid; justify-items: center; }
 
 /* pie */
 .pie { height: 400px; }
@@ -209,6 +249,21 @@ function fadeIn(el, seed) {
   el.insertAdjacentHTML('afterbegin', `<svg class="blend" style="top:0" width="${w}" height="${p.H + 1}" viewBox="0 0 ${w} ${p.H + 1}"><path d="${p.d}" fill="#fff" stroke="#fff" stroke-width=".6" stroke-linejoin="round"/><rect x="0" y="${p.H}" width="${w}" height="1.5" fill="#fff"/></svg>`);
 }
 
+/* Cobalto con la transición en píxeles arriba y abajo, como una sección de la web entre dos zonas blancas. */
+function edges(el, seedTop, seedBottom) {
+  const w = el.offsetWidth, h = el.offsetHeight, a = pixels(w, seedTop), b = pixels(w, seedBottom), y0 = h - b.H;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="${w}" height="${h}"><rect width="${w}" height="${h}" fill="#fff"/>`
+    + `<g transform="translate(0 ${a.H}) scale(1 -1)"><path d="${a.d}" fill="#000" stroke="#000" stroke-width="1" stroke-linejoin="round"/><rect x="0" y="${a.H - 0.5}" width="${w}" height="3" fill="#000"/></g>`
+    + `<g transform="translate(0 ${y0})"><path d="${b.d}" fill="#000" stroke="#000" stroke-width="1" stroke-linejoin="round"/><rect x="0" y="${b.H - 0.5}" width="${w}" height="3" fill="#000"/></g>`
+    + `</mask></defs><rect width="${w}" height="${h}" fill="#000" mask="url(#m)"/></svg>`;
+  const url = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
+  el.style.webkitMaskImage = url; el.style.maskImage = url;
+}
+const CAP = '__CAPTURAS__';
+const frame = (img, url) => `<div class="frame"><div class="bar"><i></i><i></i><i></i><span>${url}</span></div><img src="${CAP}/${img}.png" alt=""></div>`;
+const head = (a, b) => `<div class="head"><h2>${a}<br><span class="soft">${b}</span></h2></div>`;
+const ready = (fn) => Promise.all([...root.querySelectorAll('img')].map((i) => i.complete ? 0 : new Promise((r) => { i.onload = r; i.onerror = r; }))).then(fn);
+
 const q = new URLSearchParams(location.search), V = q.get('v') || 'hero', root = document.getElementById('v');
 const views = {
   hero() {
@@ -270,10 +325,10 @@ const views = {
         <path d="M378 671 H342" marker-end="url(#ar)"/>
       </svg>`;
     field(root, { flat: 0.4, start: 5 });
-    fadeOut(root, 5);
+    edges(root, 11, 5);
   },
   clases() {
-    root.className = 'clases';
+    root.className = 'band clases';
     const card = (face, cls, soft, txt, label, chips) => `<div class="ccard">
       <div class="face" style="background:${soft}">${eye(face, '#2d45d6', 150)}</div>
       <span class="label" style="background:${soft};color:${txt}"><span class="dot ${cls}"></span>${label}</span>
@@ -282,6 +337,8 @@ const views = {
       card('reposo', 'g', 'var(--ok-soft)', 'var(--ok-text)', 'Libre', '<span class="chip">Botones</span><span class="chip">Menús</span><span class="chip">Títulos</span><span class="chip">Etiquetas</span>') +
       card('nove', 'a', 'var(--warn-soft)', 'var(--warn-text)', 'Se tokeniza', '<span class="chip s">ES43 9100…</span><span class="tok">‹IBAN_1-propio›</span><span class="chip s">Ana Ruiz</span><span class="tok">‹NOMBRE_1›</span><span class="chip s">3.412,58 €</span><span class="tok">‹IMPORTE_1›</span>') +
       card('nuncasale', 'r', 'var(--bad-soft)', 'var(--bad-text)', 'Nunca sale', '<span class="chip">Contraseña</span><span class="chip">PIN</span><span class="chip">OTP</span><span class="chip">Tarjeta</span><span class="chip">Login</span>');
+    field(root, { flat: 0.45, start: 13 });
+    edges(root, 13, 17);
   },
   verticales() {
     root.className = 'band verticales';
@@ -301,7 +358,69 @@ const views = {
       </div>
     </div>`;
     field(root, { flat: 0.6, start: 9 });
-    fadeOut(root, 7);
+    edges(root, 19, 7);
+  },
+  instalar() {
+    root.className = 'band uso';
+    root.style.height = '640px';
+    root.innerHTML = head('Tres pasos.', 'Y 8 se pone a trabajar.') + `<div class="stage cols" style="grid-template-columns:1.05fr 1.25fr .8fr">
+      <div><div class="cap"><span class="num">1</span>Instala</div><div class="term"><span class="p">$</span> <span class="w">uv sync</span>
+<span class="p">$</span> <span class="w">make web-install</span>
+<span class="s">Python 3.12, Node y Chromium</span></div></div>
+      <div><div class="cap"><span class="num">2</span>Tu clave, en local</div><div class="term"><span class="p">$</span> <span class="w">cp .env.example .env</span>
+<span class="s"># .env</span>
+<span class="w">ANTHROPIC_API_KEY</span>=<span class="tg">sk-ant-●●●●●●●●</span>
+<span class="w">PRIV8_MODEL</span>=<span class="tg">claude-haiku-5-5</span></div></div>
+      <div><div class="cap"><span class="num">3</span>Doble clic</div><div class="file"><div class="doc">${eye('reposo', '#fff', 58)}</div><b>Demo Priv8.command</b><span class="click">o make panel</span></div></div>
+    </div>`;
+    field(root, { flat: 0.45, start: 21 });
+    edges(root, 23, 29);
+  },
+  panel() {
+    root.className = 'band uso';
+    root.style.height = '1010px';
+    root.innerHTML = head('Un botón por demo.', 'Cuando está lista, se ve en verde.') + `<div class="stage" style="padding:0 70px">${frame('panel', '127.0.0.1:5170')}</div>`;
+    return ready(() => { field(root, { flat: 0.45, start: 27 }); edges(root, 31, 37); });
+  },
+  b2b() {
+    root.className = 'band uso';
+    root.style.height = '1040px';
+    root.innerHTML = head('Del correo al ERP.', 'Tú solo apruebas.') + `<div class="stage cols" style="grid-template-columns:420px 1fr">
+      <div style="display:grid;gap:22px">
+        <div><div class="cap"><span class="num">1</span>Llega la factura</div>${frame('correo', '127.0.0.1:5174')}</div>
+        <div><div class="cap"><span class="num">2</span>Alba Core, sin API</div>${frame('alba', '127.0.0.1:5173')}</div>
+      </div>
+      <div><div class="cap"><span class="num">3</span>8 la registra con tokens. Tú dices sí.</div>${frame('consola', '127.0.0.1:5175')}</div>
+    </div>`;
+    return ready(() => { field(root, { flat: 0.45, start: 33 }); edges(root, 41, 43); });
+  },
+  b2c() {
+    root.className = 'band uso';
+    root.style.height = '790px';
+    const top = (t) => `<div class="top">${eye('reposo', '#fff', 64)}<span>${t}</span></div>`;
+    root.innerHTML = head('«¿Cuánto tengo?»', 'La cifra solo suena en tu móvil.') + `<div class="stage phones">
+      <div><div class="phone">${top('Escuchando')}<div class="chat"><div class="b me">¿Cuánto tengo entre mis bancos?</div></div></div><div class="cap n"><span class="num">1</span>Se lo dices</div></div>
+      <div><div class="phone">${top('Hablando')}<div class="chat"><div class="b me">¿Cuánto tengo entre mis bancos?</div><div class="b ocho">Entre tus tres cuentas tienes <span class="v">17.977,98 €</span>.</div><div class="vozl">${ic.speaker.replace('viewBox', 'width="18" height="18" viewBox')}voz local</div><div class="saw">el modelo: ‹SUMA_1›</div></div></div><div class="cap n"><span class="num">2</span>Lo oyes tú</div></div>
+      <div><div class="phone">${top('Esperando tu confirmación')}<div class="chat"><div class="b me">Pasa 200 € al bróker</div><div class="conf"><p>200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?</p><div class="row"><span class="pill c">Confirmar</span><span class="pill" style="color:var(--ink-2);border:1.5px solid var(--line)">Cancelar</span></div></div><div class="saw">Huella u OTP: 8 mira a otro lado.</div></div></div><div class="cap n"><span class="num">3</span>Confirmas tú</div></div>
+    </div>`;
+    field(root, { flat: 0.45, start: 39 });
+    edges(root, 47, 53);
+  },
+  claude() {
+    root.className = 'band uso';
+    root.style.height = '700px';
+    root.innerHTML = head('Priv8 en tu Claude Code.', 'Sin clave: el modelo es el tuyo.') + `<div class="stage cols" style="grid-template-columns:1.25fr .75fr">
+      <div><div class="cap"><span class="num">1</span>Una línea, desde mcp.priv8.es</div><div class="term" style="font-size:14px"><span class="p">$</span> <span class="w">curl -fsSL https://mcp.priv8.es/instalar.sh | bash</span>
+<span class="s">priv8 registrado en Claude Code</span>
+<span class="p">$</span> <span class="w">claude</span>
+<span class="p">&gt;</span> <span class="w">Registra en Alba Core la factura que ha llegado por correo</span>
+
+<span class="s">priv8</span> observe   <span class="tok">‹PROVEEDOR_1-correo›</span> <span class="tok">‹IMPORTE_1-positivo›</span>
+<span class="s">priv8</span> act type  <span class="tok">‹IBAN_1-correo›</span>  <span class="tr">denied: destino</span>
+<span class="s">priv8</span> act click <span class="w">Registrar</span>  <span class="tg">esperando tu «sí» en la consola</span></div></div>
+      <div><div class="cap"><span class="num">2</span>Apruebas en la consola</div>${frame('consola', '127.0.0.1:5175')}</div>
+    </div>`;
+    return ready(() => { field(root, { flat: 0.45, start: 45 }); edges(root, 59, 61); });
   },
   pie() {
     root.className = 'pie';
@@ -319,8 +438,7 @@ const views = {
   },
 };
 document.fonts.load('500 13px "IBM Plex Mono"').then(() => document.fonts.load('700 40px Sora')).then(() => document.fonts.ready).then(() => {
-  views[V]();
-  window.__listo = true;
+  return Promise.resolve(views[V]()).then(() => { window.__listo = true; });
 });
 </script>
 </body>
