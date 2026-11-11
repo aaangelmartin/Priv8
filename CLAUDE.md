@@ -43,8 +43,8 @@ El modelo responde con plantillas con tokens. Un renderizador local sustituye lo
 
 Priv8 CUA es el producto. Sobre el mismo núcleo, dos verticales, y las dos salen en la demo:
 
-- **B2B · Priv8 para empresas:** un arnés para automatizar con IA procesos que hoy no se automatizan por miedo a exponer datos (RGPD, SOC 2), con *computer use* sobre ERP y CRM antiguos. Proceso de la demo: llega un correo con la factura de un proveedor → 8 la registra en el ERP simulado (Alba Core) sin ver los datos → contesta el correo → bloquea el cambio de IBAN que viene en el mismo correo (procedencia) → llama al proveedor al número de la ficha, con una pregunta de comprobación → registro firmado.
-- **B2C · 8 en tu móvil:** una APK para el emulador de Android Studio (no va a Google Play) que maneja el móvil por accesibilidad y habla con voz. Recorre las apps de banca simuladas (Banca Alcor, Brezo Banco, Nimbo Bróker), responde "¿cuánto tengo?", prepara transferencias con confirmación por voz y mira a otro lado mientras la persona pone su huella, clave u OTP. No asesora ni firma.
+- **B2B - Priv8 para empresas:** un arnés para automatizar con IA procesos que hoy no se automatizan por miedo a exponer datos (RGPD, SOC 2), con *computer use* sobre ERP y CRM antiguos. Proceso de la demo: llega un correo con la factura de un proveedor → 8 la registra en el ERP simulado (Alba Core) sin ver los datos → contesta el correo → bloquea el cambio de IBAN que viene en el mismo correo (procedencia) → llama al proveedor al número de la ficha, con una pregunta de comprobación → registro firmado.
+- **B2C - 8 en tu móvil:** una APK para el emulador de Android Studio (no va a Google Play) que maneja el móvil por accesibilidad y habla con voz. Recorre las apps de banca simuladas (Banca Alcor, Brezo Banco, Nimbo Bróker), responde "¿cuánto tengo?", prepara transferencias con confirmación por voz y mira a otro lado mientras la persona pone su huella, clave u OTP. No asesora ni firma.
 
 Se lee el DOM (Playwright) y el árbol de accesibilidad, no píxeles. Las herramientas del agente son solo `observe`, `act` y `oracle`. El núcleo es una librería Python que corre en el mismo proceso que el servidor MCP (`agent/`), los eventos de la consola y el puente Android.
 
@@ -52,10 +52,10 @@ Se lee el DOM (Playwright) y el árbol de accesibilidad, no píxeles. Las herram
 
 | Camino | Responsable | Qué lleva |
 |---|---|---|
-| 1 · Núcleo (B2B) | Pablo (`rrojjo`) | Contratos, detector, tokens y bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo final, auditoría, modo replay, `SPEC.md`, README |
-| 2 · Empresa (B2B) | Álvaro (`alvaarocl`) | `seed.json`, ERP y bandeja simulados, adaptador web, consola de auditoría, telefonía (llamada de verificación y llamada al banco), métricas B2B, vídeo, ZIP |
-| 3 · Android, agente, voz y diseño (B2C) | Ángel (`aaangelmartin`) | Servidor MCP y bucle del agente, servicio de accesibilidad, puente, Banca Alcor, voz mixta, confirmaciones habladas y todo el diseño: branding v2, app 8 y 8, kit visual, landing, PDF y diapositivas |
-| 4 · App 8 y bancos (B2C) | Marco (`marcoobarroso`) | App 8 con los ojos, renderizador local, Brezo Banco y Nimbo Bróker, dictado, emulador, correos de prueba, métricas B2C |
+| 1 - Núcleo (B2B) | Pablo (`rrojjo`) | Contratos, detector, tokens y bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo final, auditoría, modo replay, `SPEC.md`, README |
+| 2 - Empresa (B2B) | Álvaro (`alvaarocl`) | `seed.json`, ERP y bandeja simulados, adaptador web, consola de auditoría, telefonía (llamada de verificación y llamada al banco), métricas B2B, vídeo, ZIP |
+| 3 - Android, agente, voz y diseño (B2C) | Ángel (`aaangelmartin`) | Servidor MCP y bucle del agente, servicio de accesibilidad, puente, Banca Alcor, voz mixta, confirmaciones habladas y todo el diseño: branding v2, app 8 y 8, kit visual, landing, PDF y diapositivas |
+| 4 - App 8 y bancos (B2C) | Marco (`marcoobarroso`) | App 8 con los ojos, renderizador local, Brezo Banco y Nimbo Bróker, dictado, emulador, correos de prueba, métricas B2C |
 
 La arquitectura completa (componentes, contratos, flujos, despliegue y repositorio) está en `docs/arquitectura.html` y resumida en `docs/arquitectura.md`.
 

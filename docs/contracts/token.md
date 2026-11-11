@@ -1,4 +1,4 @@
-# Gramática de tokens · v1
+# Gramática de tokens - v1
 
 Un token sustituye a un dato ámbar en todo lo que sale hacia la nube. Lo producen el tokenizador y el oráculo (Camino 1); lo leen el renderizador local de la app 8 (Camino 4), la consola (Camino 2) y la voz local (Camino 3).
 

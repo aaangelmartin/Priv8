@@ -1,4 +1,4 @@
-# 01 · YC y aceleradoras: qué se financia en fintech y agentes (2025–2026), qué piden los inversores y qué hueco queda en España/UE
+# 01 - YC y aceleradoras: qué se financia en fintech y agentes (2025–2026), qué piden los inversores y qué hueco queda en España/UE
 
 Fecha de referencia: 10 nov 2026. Método: unas 18 búsquedas y lecturas de páginas. Fuentes primarias usadas: ycombinator.com/rfs (W27) y las páginas Launch YC de las empresas. El resto viene de agregadores (Extruct, CB Insights, VC Cafe, explainx, TechStartups, fintech.global, EU-Startups); se marca como **[agregador]**. Lo que dicen las empresas de sí mismas se marca como **[vendor]**. Sifted, Crowdfund Insider y Emprendedores devolvieron 403 (no se pudieron leer).
 
@@ -97,7 +97,7 @@ Hay cinco conceptos derivados de patrones financiados o de RFS explícitos. Los 
 
 ### Inferences
 
-#### Concepto A · Prueba de Origen
+#### Concepto A - Prueba de Origen
 1. **Frase**: cada pago lleva un certificado firmado de qué fuentes influyeron en él (canal, documento, llamada), para que el banco demuestre bajo el artículo 59 de la PSR que el pago no lo indujo un suplantador, o lo detecte antes de ejecutarlo.
 2. **Problema**: la PSR obliga a devolver el importe íntegro del fraude de suplantación del PSP y traslada al PSP el fraude APP cuando su prevención fue inadecuada; los textos son de abril y mayo de 2026 ([Addleshaw](https://www.addleshawgoddard.com/en/insights/insights-briefings/2026/financial-regulation/financial-regulation-in-the-know-payments-september-2026/psd3-new-era-eu-payment-services-regulation/), [Mondaq](https://webiis08.mondaq.com/white-collar-crime-anti-corruption-fraud/1745300/psd3-and-the-psr-rewriting-fraud-liability-in-eu-payments-law)). El RFS F26 "Proving You're Human" pide confianza frente a voces clonadas ([explainx](https://explainx.ai/blog/yc-requests-for-startups-fall-2026)). En el Reino Unido, el reembolso obligatorio de APP ya funciona y está en revisión ([Crowdfund Insider](https://www.crowdfundinsider.com/2026/07/290056-uk-payment-systems-regulator-psr-confirms-app-fraud-reimbursement-policy-delivers-strong-positive-results/), [MEF](https://mobileecosystemforum.com/2026/02/20/uk-payments-regulator-launches-independent-review-of-the-app-reimbursement-regulations/)). **No tengo cifra española de fraude por suplantación con fuente** (hueco).
 3. **Quién paga**: bancos y entidades de pago de la UE, porque cada devolución evitada o recuperada de la plataforma ahorra dinero. Modelo: tarifa por transacción certificada o licencia SaaS. Tamaño de mercado sin fuente (hueco).
@@ -111,7 +111,7 @@ Hay cinco conceptos derivados de patrones financiados o de RFS explícitos. Los 
 11. **Riesgos**: la PSR aún no se aplica (≈2028, sin confirmar); el valor probatorio del certificado no está validado jurídicamente; puede sonar a "otra herramienta antifraude".
 12. **Fuentes**: las citadas en los puntos 2 y 4.
 
-#### Concepto B · 8 al Teléfono
+#### Concepto B - 8 al Teléfono
 1. **Frase**: Maven para Europa. Un agente de voz (ElevenLabs) atiende al cliente y ejecuta un traspaso o un pago sin oír ni ver nunca IBAN, tarjeta ni DNI: los datos se tokenizan, la SCA se resuelve en la app y el expediente queda firmado.
 2. **Problema**: YC financió en W26 a Maven para que los agentes de voz cobren por teléfono, con el cumplimiento incluido ([Extruct](https://www.extruct.ai/research/ycw26/), [altss](https://altss.com/companies/yc/maven)). En la UE, PSD2 exige SCA y la PSR endurece la responsabilidad por suplantación ([Feedzai](https://www.feedzai.com/blog/psd3-psr-regulations/)), así que un agente de voz que dicta datos a un LLM es inaceptable. Volumen de llamadas de banca en España: sin fuente (hueco).
 3. **Quién paga**: bancos y neobancos (MyInvestor), aseguradoras y gestoras con centros de llamadas. Modelo: por minuto o por operación completada. Mercado sin fuente (hueco).
@@ -125,7 +125,7 @@ Hay cinco conceptos derivados de patrones financiados o de RFS explícitos. Los 
 11. **Riesgos**: la latencia; puede parecerse a "asistente de voz" (descartado) si no se vende la capa de control; choca en parte con "Mandato 8" y con "Rumbo" (voz).
 12. **Fuentes**: puntos 2 y 4.
 
-#### Concepto C · Renta Probada
+#### Concepto C - Renta Probada
 1. **Frase**: el "Plaid for Government Benefits" de YC W27 en versión española. Un agente local trae con el consentimiento del usuario sus certificados de AEAT y Seguridad Social; un oráculo responde al prestamista o al bróker "¿ingresos ≥ X?, ¿sin deudas con Hacienda?" sin revelar los documentos.
 2. **Problema**: YC pide explícitamente verificar ingresos, impuestos y residencia una vez y solicitar muchas veces ([YC RFS W27](https://www.ycombinator.com/rfs)). En España se siguen pidiendo PDF de la renta y de la vida laboral por correo para hipotecas, alquileres e idoneidad MiFID (práctica común; no tengo cifra con fuente, hueco).
 3. **Quién paga**: prestamistas, aseguradoras, plataformas de alquiler, brókers (MyInvestor). Modelo: por verificación. Mercado sin fuente (hueco).
@@ -139,7 +139,7 @@ Hay cinco conceptos derivados de patrones financiados o de RFS explícitos. Los 
 11. **Riesgos**: legalidad de automatizar la sede con Cl@ve; validez del oráculo como prueba; el papel de la voz es débil para la rúbrica.
 12. **Fuentes**: punto 2.
 
-#### Concepto D · Póliza Agente
+#### Concepto D - Póliza Agente
 1. **Frase**: Klaimee para la UE. El expediente firmado de Priv8 sirve como prueba actuarial para tarificar y certificar el seguro de responsabilidad de agentes que operan dinero.
 2. **Problema**: YC financió a Klaimee (P26, seed de 5,5 M$) para asegurar agentes ([Launch YC](https://www.ycombinator.com/launches/QCC-klaimee-insures-your-ai-agents), [Coverager](https://coverager.com/klaimee-raises-5-5-million/)); BBVA trabaja en el gobierno de agentes con Nvidia ([Ecosistema Startup](https://ecosistemastartup.com/?p=120392)). No encontré equivalente europeo.
 3. **Quién paga**: aseguradoras (MGA) y empresas que despliegan agentes. Modelo: comisión sobre la prima y certificación SaaS. Mercado sin fuente (hueco).
@@ -153,7 +153,7 @@ Hay cinco conceptos derivados de patrones financiados o de RFS explícitos. Los 
 11. **Riesgos**: el jurado es de finanzas personales y esto es B2B de seguros; no hay voz.
 12. **Fuentes**: punto 2.
 
-#### Concepto E · Tarjeta de Mandato
+#### Concepto E - Tarjeta de Mandato
 1. **Frase**: Allowance/Agentcard para España. Un mandato de un solo uso (importe, comercio, caducidad) emitido desde la app del banco, con la identidad del agente verificada por Open2Agents y la política de procedencia.
 2. **Problema**: YC financió Allowance (P26) y Agentcard (S26) ([altss](https://altss.com/companies/yc/allowance), [Launch YC](https://www.ycombinator.com/launches/Qx6-agentcard-debit-cards-for-ai-agents)); BBVA está en Visa Agentic Ready ([BBVA](https://www.bbva.com/es/innovacion/bbva-participa-en-visa-agentic-ready-el-programa-que-prepara-al-ecosistema-financiero-para-el-comercio-agentico/)).
 3. **Quién paga**: bancos emisores y comercios (interchange y tarifa por mandato). Mercado sin fuente.

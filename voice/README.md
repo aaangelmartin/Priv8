@@ -6,7 +6,7 @@
 model    «Entre tus tres cuentas tienes ‹SUMA_1›.»
                  │
 segmenter        ├─ cloud  "Entre tus tres cuentas tienes"   → final block → ElevenLabs → PCM → phone
-                 └─ local  ‹SUMA_1› · currency               → vault + verbalize → "cuatro mil ochocientos
+                 └─ local  ‹SUMA_1› - currency               → vault + verbalize → "cuatro mil ochocientos
                                                                setenta y tres euros" → TextToSpeech
 ```
 
@@ -96,7 +96,7 @@ PRIV8_IVR_URL=http://127.0.0.1:8711 make llamada-banco          # same call over
 **Rules, enforced in code and tests**
 
 - **Disclosure first.** The first thing 8 sends on the line is `AVISO` ("le llama Ocho, un asistente de inteligencia artificial, en nombre de un cliente…"). No key is pressed before it. When a human answers, 8 introduces itself again and hands over.
-- **Red data and identity are the person's.** 8 only presses a single key that was offered in the menu it just heard (`_pulsa` refuses anything else) and only says its fixed sentences (`FRASES`). If the line asks for PIN, code, password, card digits or an identity document, 8 says that only its client can give that and hands the call over at that moment (`blocked` · `rojo` in the audit).
+- **Red data and identity are the person's.** 8 only presses a single key that was offered in the menu it just heard (`_pulsa` refuses anything else) and only says its fixed sentences (`FRASES`). If the line asks for PIN, code, password, card digits or an identity document, 8 says that only its client can give that and hands the call over at that moment (`blocked` - `rojo` in the audit).
 - **Tokens to the model.** The person's goal and every line prompt go through `core.tokenize_text` before 8 decides; `BankCall.modelo_vio` holds everything the navigator received. The process mounts `core.trust(known())` first, as `main` does, so the person's own name is caught too.
 - **Mixed voice.** 8's sentences on the line are fixed and data-free (no digits: "Ocho"), so they may go to ElevenLabs; `CloudVoice` runs the final block again before each request.
 - **Audit.** `core.record` with kind `call` for start, disclosure, each key, hold and handover; `blocked` with reason `rojo` when the line asks for a red datum. The bank's line number is the only value, as in #23.

@@ -1,4 +1,4 @@
-# agent/ · servidor MCP y bucle del agente
+# agent/ - servidor MCP y bucle del agente
 
 Camino 3, issue #25. El agente (Claude) solo ve tres herramientas: `observe`, `act` y `oracle`. No hay más herramientas, ni recursos, ni prompts.
 

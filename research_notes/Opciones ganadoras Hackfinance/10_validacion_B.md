@@ -1,4 +1,4 @@
-# 10 · Validación adversarial B: Titular 8 / Pago Blindado, Expediente 59, Prueba de Origen, Cobro 8, Mandato A2A
+# 10 - Validación adversarial B: Titular 8 / Pago Blindado, Expediente 59, Prueba de Origen, Cobro 8, Mandato A2A
 
 Fecha: 10 nov 2026. Método: lectura de 01, 03 y 04; unas 30 búsquedas y lecturas nuevas. Fuentes primarias leídas en texto completo: el **texto del PSR adoptado por el Consejo** (doc. ST-8221-2026, extraído a texto y leído en los arts. 50, 57, 59, 59a y en la disposición final de aplicación), la **Ley 3/2004 consolidada en el BOE** (arts. 4, 7 y 8), la **Resolución del Tesoro del 30 jun 2026** (BOE-A-2026-14327) y la **Ley 10/2025 de atención a la clientela** (BOE-A-2025-26698). Lo que viene de proveedores va marcado **[vendor]**.
 
@@ -218,7 +218,7 @@ La **falta de urgencia**: se aplica como pronto a finales de 2028 y el PE no ha 
 4. **Nadie ha validado el valor probatorio de un "certificado de procedencia"**, y la carga de la prueba la pone el art. 59(4) sobre el PSP. El certificado ayudaría al banco, pero solo si el banco controla el agente.
 
 ### Notas (por separado)
-- Innovación 3 · IA 2,5 · UX 3 · Técnica 4 · Presentación 3,5.
+- Innovación 3 - IA 2,5 - UX 3 - Técnica 4 - Presentación 3,5.
 - **Ponderada: 3,28** (antes 4,13).
 
 ### Qué se conserva al fusionarlo

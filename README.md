@@ -6,8 +6,8 @@
 
 Proyecto para Hackfinance (Madrid Engineering Week 2026). Sobre el mismo núcleo hay dos verticales:
 
-- **B2B · Priv8 para empresas.** Llega un correo con la factura de un proveedor. 8, el agente, la registra en un ERP antiguo (Alba Core, simulado) sin ver los datos y bloquea el cambio de IBAN que trae el mismo correo. Después llama al proveedor al teléfono de la ficha y contesta el correo. Todo queda en un registro firmado.
-- **B2C · 8 en tu móvil.** En un Android del emulador, 8 maneja las apps de banca simuladas por accesibilidad y habla con voz. Responde "¿cuánto tengo?", prepara transferencias con confirmación por voz y mira a otro lado mientras la persona pone su huella o su clave.
+- **B2B - Priv8 para empresas.** Llega un correo con la factura de un proveedor. 8, el agente, la registra en un ERP antiguo (Alba Core, simulado) sin ver los datos y bloquea el cambio de IBAN que trae el mismo correo. Después llama al proveedor al teléfono de la ficha y contesta el correo. Todo queda en un registro firmado.
+- **B2C - 8 en tu móvil.** En un Android del emulador, 8 maneja las apps de banca simuladas por accesibilidad y habla con voz. Responde "¿cuánto tengo?", prepara transferencias con confirmación por voz y mira a otro lado mientras la persona pone su huella o su clave.
 
 Todos los datos, bancos y empresas son inventados.
 

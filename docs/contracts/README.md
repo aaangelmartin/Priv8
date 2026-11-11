@@ -33,7 +33,7 @@ observe  adaptador.snapshot() ─ snapshot ─▶ núcleo ─ observation ─▶
 act      Claude ─ act_input ─▶ núcleo ─ (políticas, procedencia, confirmación, ejecutor) ─ RealAction ─▶ adaptador.perform()
                                núcleo ─ act_result {ok | held | denied} ─▶ Claude
 oracle   Claude ─ oracle_input ─▶ núcleo ─ oracle_result ─▶ Claude
-eventos  núcleo ─ audit · screen · voice · confirm_request ─▶ consola, app 8, agente
+eventos  núcleo ─ audit - screen - voice - confirm_request ─▶ consola, app 8, agente
          app 8 o consola ─ approval_result ─▶ núcleo
 tarea    app 8 ─ task_request (texto) ─▶ núcleo ─ next_task() ─▶ agente (tokeniza antes de Claude)
 dictado  app 8 ─ dictation_start ─▶ núcleo ─ micro del portátil + Whisper local ─ dictation ─▶ app 8
@@ -44,7 +44,7 @@ dictado  app 8 ─ dictation_start ─▶ núcleo ─ micro del portátil + Whis
 
 No aditivo: la etiqueta del token se separa con un guion, `‹IBAN_1-propio›`, no con el punto medio (issue #130). Cambian a la vez el núcleo, el agente, la voz, la consola, la app 8, los ejemplos y las repeticiones grabadas. Ver `token.md`.
 
-## v1.2 (11 nov) · cambios aditivos
+## v1.2 (11 nov) - cambios aditivos
 
 Aditivo: un cliente v1.1 sigue validando.
 
@@ -53,7 +53,7 @@ Aditivo: un cliente v1.1 sigue validando.
 - **`dictation`** (núcleo → clientes): el texto entendido, para el subtítulo de la app 8. Lleva valores reales, así que solo viaja por el canal local y no se registra. Con `error` (`no_disponible`, `sin_voz`) el texto va vacío.
 - **Motivo de rechazo `asesoria`** (issue #43), solo en la auditoría: la persona pidió consejo de inversión («¿en qué fondo lo meto?») y 8 no lo da, porque ejecuta y no asesora (MiFID II). El bucle del agente lo detecta antes de llamar al modelo, así que la petición no sale. En el canal de eventos va primero un `voice` con la frase fija, toda en `cloud` porque no lleva datos, y después el `audit` `blocked` con `reason: asesoria`, que la app 8 pinta con la cara «no puedo» (`rechazar` en `docs/ojos.html`). No es un motivo de `act` ni de `oracle`. Ejemplos: `audit.blocked-asesoria.json`, `events.audit-asesoria.json`, `events.voice-no-puedo.json`.
 
-## v1.1 (10 nov) · cambios aditivos
+## v1.1 (10 nov) - cambios aditivos
 
 Un cliente v1 sigue validando. Salen de las notas de Ángel en #58 y #70 (issue #66).
 

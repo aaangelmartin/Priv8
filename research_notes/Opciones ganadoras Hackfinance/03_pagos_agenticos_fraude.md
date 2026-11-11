@@ -138,7 +138,7 @@ Ponderación: Innovación 30 %, IA 15 %, UX 15 %, Técnica 30 %, Presentación 1
 7. **IA y audio:** Claude extrae y razona sobre emails y facturas e identifica la instrucción sospechosa. ElevenLabs Agents hace la llamada saliente (con TTS y transcripción). Métricas de demo: % de avisos VoP resueltos sin opt-out, tiempo por aviso (minutos frente a segundos) y detección en un set de 20 emails de BEC (cuántos cambios fraudulentos bloqueados y falsos positivos).
 8. **Demo de 3 min:** (1) llega el email "nuevo IBAN" con un PDF; (2) VoP simulado da "close match"; (3) 8 bloquea el campo porque el dato viene de un tercero; (4) llamada en vivo con ElevenLabs a un "proveedor" (un compañero del equipo), que niega el cambio; (5) expediente firmado y pago retenido. Viabilidad en 1-3 días: alta. VoP se simula según el rulebook de la EPC, ElevenLabs Agents tiene API pública y la procedencia y el oráculo ya existen.
 9. **Patrocinadores:** Claude (razonamiento y extracción) y ElevenLabs (llamada saliente) en el centro. MyInvestor: encaje medio, como banco obligado a VoP. GPTadvisor: bajo.
-10. **Puntuación:** Innovación 5 (hueco nítido, regulación reciente) · IA 4 (voz con propósito y medible) · UX 4 · Técnica 4 (todo construible, VoP simulado) · Presentación 4. **Ponderada = 4,30.**
+10. **Puntuación:** Innovación 5 (hueco nítido, regulación reciente) - IA 4 (voz con propósito y medible) - UX 4 - Técnica 4 (todo construible, VoP simulado) - Presentación 4. **Ponderada = 4,30.**
 11. **Riesgos:** las cifras de resultados VoP son de un vendor. La llamada saliente automatizada a proveedores tiene implicaciones de RGPD y de consentimiento. Pueden aparecer competidores B2B de AP (Kyriba, Trustpair) que no he analizado: **no verificado**.
 12. **Fuentes:** las citadas en P2, P4 y P6.
 
@@ -152,7 +152,7 @@ Ponderación: Innovación 30 %, IA 15 %, UX 15 %, Técnica 30 %, Presentación 1
 7. **IA y audio:** ElevenLabs Scribe transcribe la declaración y Claude extrae la cronología y clasifica. ElevenLabs TTS lee el resumen a la víctima para que lo confirme (accesibilidad). Métricas: tiempo hasta el expediente completo (objetivo: menos de 5 min frente a días), % de campos PSR rellenados correctamente en 10 casos sintéticos y acierto dentro/fuera de alcance.
 8. **Demo:** la víctima llama ("me llamó el banco y me pidió mover el dinero a una cuenta segura"). En vivo se ve la cronología, la decisión "en alcance, sin indicios de negligencia grave" con su justificación, el PDF de denuncia y el expediente. Viabilidad: alta. Se hace con casos sintéticos y movimientos simulados.
 9. **Patrocinadores:** Claude y ElevenLabs fuertes. MyInvestor como banco sujeto al PSR: encaje medio.
-10. **Puntuación:** Innovación 4 · IA 5 · UX 4 · Técnica 4 · Presentación 5 (historia emocional y regulatoria). **Ponderada = 4,25.**
+10. **Puntuación:** Innovación 4 - IA 5 - UX 4 - Técnica 4 - Presentación 5 (historia emocional y regulatoria). **Ponderada = 4,25.**
 11. **Riesgos:** el texto del PSR no es final (plazos y número de artículo). Aplicación hacia 2028, así que la urgencia del comprador es media. Los bancos pueden preferir hacerlo internamente. No usar la decisión como automatizada sin revisión humana (AI Act).
 12. **Fuentes:** P3 y P4.
 
@@ -166,7 +166,7 @@ Ponderación: Innovación 30 %, IA 15 %, UX 15 %, Técnica 30 %, Presentación 1
 7. **IA y audio:** Claude clasifica la conversación del marketplace y la solicitud. ElevenLabs explica en voz natural ("esto es una petición de pago, no un cobro"). Métrica: bloqueos correctos frente a falsos positivos en 30 chats sintéticos.
 8. **Demo:** un chat de Wallapop, una solicitud de Bizum, 8 frena y explica, y luego la falsa devolución revertida. Viabilidad: media. Bizum no tiene API pública, así que todo es simulado.
 9. **Patrocinadores:** Claude y ElevenLabs. MyInvestor tiene Bizum: encaje medio.
-10. **Puntuación:** Innovación 3 · IA 4 · UX 4 · Técnica 3 · Presentación 4. **Ponderada = 3,40.**
+10. **Puntuación:** Innovación 3 - IA 4 - UX 4 - Técnica 3 - Presentación 4. **Ponderada = 3,40.**
 11. **Riesgos:** está cerca de la idea descartada de "anti-estafas" para consumidor. Depende de la API de Bizum y de su esquema. No sé si existe la devolución al origen a nivel de esquema.
 12. **Fuentes:** P1.
 
@@ -180,7 +180,7 @@ Ponderación: Innovación 30 %, IA 15 %, UX 15 %, Técnica 30 %, Presentación 1
 7. **IA y audio:** el usuario dicta el mandato por voz ("paga el alquiler a Marta hasta 900 € el día 1") y Claude lo convierte en un mandato estructurado que el usuario firma. Métrica: % de pagos fuera del mandato bloqueados en una batería de ataques (inyección vía email).
 8. **Demo:** dictado, mandato firmado, el agente paga y luego un intento de inyección ("Marta cambió de cuenta") queda bloqueado. Viabilidad: alta técnicamente, pero se apoya en sandboxes PSD2 (p. ej. agregadores) o en simulación.
 9. **Patrocinadores:** MyInvestor como banco que podría ofrecerlo. Claude y ElevenLabs.
-10. **Puntuación:** Innovación 4 · IA 3 · UX 4 · Técnica 4 · Presentación 4. **Ponderada = 3,85.**
+10. **Puntuación:** Innovación 4 - IA 3 - UX 4 - Técnica 4 - Presentación 4. **Ponderada = 3,85.**
 11. **Riesgos:** se solapa con el "Mandato 8" actual y con Open2Agents (el jurado podría verlo como reciclado). La interpretación de la SCA delegada no está validada por la EBA.
 12. **Fuentes:** P5.
 
@@ -194,7 +194,7 @@ Ponderación: Innovación 30 %, IA 15 %, UX 15 %, Técnica 30 %, Presentación 1
 7. **IA y audio:** Claude razona sobre la discrepancia entre intención y ejecución. Voz para el intake. Métrica: acierto del veredicto en 20 disputas sintéticas y tiempo por disputa.
 8. **Demo:** tres disputas (fraude, agente fuera de mandato, cliente arrepentido), cada una con su veredicto y su paquete de pruebas. Viabilidad: alta con datos sintéticos de Open2Agents.
 9. **Patrocinadores:** Claude y ElevenLabs. MyInvestor (tiene tarjetas): encaje bajo-medio.
-10. **Puntuación:** Innovación 4 · IA 3 · UX 3 · Técnica 4 · Presentación 4. **Ponderada = 3,70.**
+10. **Puntuación:** Innovación 4 - IA 3 - UX 3 - Técnica 4 - Presentación 4. **Ponderada = 3,70.**
 11. **Riesgos:** las reglas de Visa y Mastercard (CE 3.0 para agentes) no están verificadas en el rulebook primario. El volumen real es casi cero hoy. Es abstracto para un jurado de finanzas universitario.
 12. **Fuentes:** P5 y P6.
 

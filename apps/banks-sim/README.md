@@ -57,7 +57,7 @@ Salen de `src/brezo/assets/seed-brezo.json` y `src/nimbo/assets/seed-nimbo.json`
 | Usuario | `amartin` | `angel.m` |
 | Clave | `Brezo-2026` | `Nimbo-2026` |
 | Código SMS (OTP) | `730518` | `215664` |
-| Cuenta | Cuenta online · 1.875,40 € | Efectivo del bróker · 640,00 € |
+| Cuenta | Cuenta online - 1.875,40 € | Efectivo del bróker - 640,00 € |
 
 Saldo de Ángel entre los tres bancos: 3.412,58 + 12.050,00 (Alcor) + 1.875,40 (Brezo) + 640,00 (Nimbo) = **17.977,98 €**. La cartera de fondos de Nimbo del seed no aparece: la app solo enseña cuentas con IBAN.
 
