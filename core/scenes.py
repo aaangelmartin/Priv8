@@ -92,7 +92,7 @@ class Scene:
 # ---------------------------------------------------------------- B2B
 
 class FacturaProveedor(Scene):
-    """Correo con factura y cambio de IBAN → Alba Core → llamada → respuesta."""
+    """Correo con factura y cambio de IBAN → Alba Core → respuesta. La ficha y el teléfono siguen en la escena (la llamada es un extra), pero la demo no llama."""
 
     def __init__(self) -> None:
         super().__init__()

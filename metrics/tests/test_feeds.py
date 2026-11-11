@@ -47,7 +47,7 @@ def test_feeds_match_metrics(fresh):
         if m["msg"]["type"] == "screen":
             assert m["msg"]["total"] == 0 and not b2b.exposed(m["msg"]["observed"], values)
     blocked = [m for m in con if m["msg"]["type"] == "audit" and m["msg"]["event"]["kind"] == "blocked"]
-    assert con[-1]["msg"]["bloqueos"] == len(blocked) == 2  # el IBAN y el teléfono del correo
+    assert con[-1]["msg"]["bloqueos"] == len(blocked) == 1  # el IBAN del correo
     assert con[-1]["msg"]["valores_al_modelo"] == metrics["with_protocol"]["data_to_model"] == 0
 
 

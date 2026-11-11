@@ -46,7 +46,8 @@ def seed_leaks(payload: object) -> list[str]:
 
 
 @pytest.mark.parametrize("scene, expected", [
-    ("b2b", {"observe_sent": 8, "act": 10, "held": 3, "approval": 3, "oracle": 1, "blocked": 2}),
+    # la demo B2B ya no abre la ficha ni llama al proveedor (11 nov): dos retenidas, un bloqueo
+    ("b2b", {"observe_sent": 6, "act": 8, "held": 2, "approval": 2, "oracle": 1, "blocked": 1}),
     # v1.1: la observación durante la confirmación de 8 se registra como pausa, no como envío
     ("b2c", {"observe_sent": 7, "paused": 1, "act": 8, "held": 1, "approval": 1, "oracle": 1}),
 ])

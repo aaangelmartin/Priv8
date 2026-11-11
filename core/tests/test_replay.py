@@ -20,11 +20,11 @@ def test_b2b_factura(replay):
     import core
     res = anyio.run(replay.run_scene, "b2b")
     assert res["status"] == "done" and res["leaks"] == 0
-    assert res["held"] == 3 and res["approval"] == 3
+    assert res["held"] == 2 and res["approval"] == 2  # registrar y enviar; la demo B2B ya no llama
     blocked = [e for e in core.AUDIT.events if e["session"] == "b2b" and e["kind"] == "blocked"]
     assert {e["reason"] for e in blocked} == {"destino"}
     scene_log = core.SESSIONS.get("b2b").adapter.log
-    assert {"op": "call", "text": "912 345 678"} in scene_log
+    assert not any(a.get("op") == "call" for a in scene_log)
     assert all("ES42" not in str(a) for a in scene_log)  # el IBAN del correo nunca llega a la pantalla
 
 
