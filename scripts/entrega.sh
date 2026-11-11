@@ -12,15 +12,15 @@ OUT="${1:-entrega}"
 mkdir -p "$OUT"
 
 git fetch -q origin main
-git archive --format=zip --prefix=Priv8-main/ -o "$OUT/Priv8-main.zip" origin/main
-echo "entrega: $OUT/Priv8-main.zip ($(git rev-parse --short origin/main))"
+git archive --format=zip --prefix=Priv8-main/ -o "$OUT/Laaabs - Código.zip" origin/main
+echo "entrega: $OUT/Laaabs - Código.zip ($(git rev-parse --short origin/main))"
 
 pres=docs/entregables/priv8-presentacion.pdf
 [ -f "$pres" ] || pres=docs/entregables/priv8-diapositivas.pdf
-cp "$pres" "$OUT/Priv8 - Presentación.pdf"
-cp docs/entregables/priv8-una-cara.pdf "$OUT/Priv8 - Una cara.pdf"
+cp "$pres" "$OUT/Laaabs - Presentación.pdf"
+cp docs/entregables/priv8-una-cara.pdf "$OUT/Laaabs - Una cara.pdf"
 
-uv run python - "$OUT/Priv8 - Léeme.pdf" <<'PY'
+uv run python - "$OUT/Laaabs - Léeme.pdf" <<'PY'
 import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
