@@ -37,7 +37,7 @@ const NODES = {
    en horizontal y el proveedor del modelo abajo. */
 const NODES_M = {
   screen: { x: 27, y: 18 }, detect: { x: 27, y: 33 }, vault: { x: 27, y: 48 },
-  gate: { x: 50, y: 65 }, model: { x: 50, y: 87 },
+  gate: { x: 50, y: 63 }, model: { x: 50, y: 82 },
   exec: { x: 73, y: 48 }, yes: { x: 73, y: 33 }, log: { x: 73, y: 18 },
 };
 function useNarrow(q = '(max-width: 760px)') {
@@ -87,7 +87,7 @@ export function HowArch() {
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {narrow
-              ? <><path d="M27 18 V48 L50 65 V87" /><path d="M50 87 V65 L73 48 V18" /></>
+              ? <><path d="M27 18 V48 L50 63 V82" /><path d="M50 82 V63 L73 48 V18" /></>
               : <><path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" /></>}
           </svg>
           {Object.keys(NODES).map((k) => [k, at(k)]).map(([k, v]) => (

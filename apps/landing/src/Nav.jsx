@@ -34,16 +34,22 @@ export default function Nav() {
       if (window.visualViewport && window.visualViewport.scale > 1.01) return;
       const r = nav.getBoundingClientRect();
       const y = r.top + r.height / 2;
+      /* el color de la barra depende solo de la sección que tiene debajo (blanca o azul), nunca de un botón, una
+         tarjeta o una imagen que pase por detrás */
       let light = false;
+      const LIGHT = ['--paper', '--mist'];
       for (const el of document.elementsFromPoint(document.documentElement.clientWidth / 2, y)) {
-        if (nav.contains(el) || el.closest('.companion, .bubble8')) continue;
-        let n = el, c = null;
-        while (n && n !== document.documentElement) {
-          const m = getComputedStyle(n).backgroundColor.match(/rgba?\(([^)]+)\)/);
-          if (m) { const p = m[1].split(',').map(parseFloat); if (p.length < 4 || p[3] > 0.6) { c = p; break; } }
-          n = n.parentElement;
+        if (nav.contains(el) || el.closest('.companion, .bubble8, .layer8')) continue;
+        const zone = el.closest('main > *, footer');
+        if (!zone) continue;
+        if (zone.classList.contains('blend')) {
+          const zr = zone.getBoundingClientRect();
+          const k = (y - zr.top) / Math.max(1, zr.height);
+          light = LIGHT.includes(k < 0.5 ? zone.dataset.from : zone.dataset.to);
+        } else {
+          light = zone.matches('.block-paper, .scene-paper, footer');
         }
-        if (c) { light = (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255 > 0.6; break; }
+        break;
       }
       setOnWhite(light);
     };

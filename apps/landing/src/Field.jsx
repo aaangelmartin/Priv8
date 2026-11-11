@@ -222,7 +222,7 @@ export function Blend({ from, to, variant = 'pixels', seed = 1, overlay = false 
     return (
       /* el cobalto nunca se pinta aquí: se deja transparente para que se vea el fondo de datos de la página, continuo.
          Hacia cobalto se dibuja el blanco con los píxeles como huecos. */
-      <div ref={ref} className="blend blend-pixels" aria-hidden="true" style={overlay ? { background: 'transparent', height: H, marginTop: -H, zIndex: 2 } : { background: from === '--band' || to === '--band' ? 'transparent' : `var(${from})`, height: H }}>
+      <div ref={ref} className="blend blend-pixels" data-from={from} data-to={to} aria-hidden="true" style={overlay ? { background: 'transparent', height: H, marginTop: -H, zIndex: 2 } : { background: from === '--band' || to === '--band' ? 'transparent' : `var(${from})`, height: H }}>
         {w > 0 && (to === '--band' && !overlay ? (
           /* el blanco con los píxeles recortados por una máscara: los píxeles se dibujan con un poco de trazo,
              así se solapan entre ellos y con el borde de abajo y no queda ni una junta ni una línea fina */

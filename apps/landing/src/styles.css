@@ -1217,7 +1217,7 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .tmap-m .tz-cloud { top: 74%; bottom: 0; display: block; }
   .tmap-m .tz-cloud .models { display: none; }
   .tmap-m .tz span { font-size: .72rem; }
-  .tmap-m .tline { left: 4%; right: 4%; top: 65%; bottom: auto; width: auto; height: 2px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .8) 0 8px, transparent 8px 14px); }
+  .tmap-m .tline { left: 4%; right: 4%; top: 63%; bottom: auto; width: auto; height: 2px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .8) 0 8px, transparent 8px 14px); }
   .tmap-m .tn { min-width: 128px; padding: 10px 12px; }
   .tmap-m .tn b { font-size: .86rem; }
   .tmap-m .tn small { display: block; font-size: .66rem; }
@@ -1263,4 +1263,22 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .nf { background: transparent; }
   .nf .field { display: none; }
   .nf::after { background: radial-gradient(ellipse 72% 74% at 50% 52%, var(--band) 52%, rgba(45, 69, 214, 0) 92%); }
+}
+
+/* "Cómo funciona" en móvil: los logos de los modelos también, abajo del recuadro del proveedor */
+@media (max-width: 760px) {
+  .tmap.tmap-m { height: 610px; }
+  .tmap-m .tz-local { bottom: 44%; }
+  .tmap-m .tz-cloud { top: 71%; display: grid; align-content: space-between; padding-bottom: 12px; }
+  .tmap-m .tz-cloud .models { display: flex; gap: 6px; }
+  .tmap-m .tz-cloud .models i { height: 34px; border-radius: 11px; }
+  .tmap-m .tz-cloud .models svg { width: 18px; height: 18px; }
+}
+/* barra azul: todo el texto en blanco, también el nombre de la sección y el menú del móvil */
+.nav.on-white { color: #fff; }
+.nav.on-white .now, .nav.on-white .word, .nav.on-white .nav-menu a { color: #fff; }
+/* móvil: la sombra de la banca cabe entera dentro de la escena, sin cortarse por abajo */
+@media (max-width: 900px) {
+  .bank, .scene-paper .bank { box-shadow: 0 10px 28px rgba(11, 27, 51, .11), 0 0 0 1px rgba(11, 27, 51, .06); }
+  .scene-paper .stage { padding-bottom: 8px; }
 }

@@ -246,11 +246,19 @@ function bubblePath(W, H, R, th) {
     + `C${p(1, 18)} ${p(0.6, 16.4)} ${p(3.4, 15.4)} C${p(11, 12.6)} ${p(14, 7)} ${p(14, 0)} V${R} A${R} ${R} 0 0 1 ${T + R} 0 Z`;
 }
 
+/* Bocadillo encima de 8: el pico sale de la base, hacia abajo, apuntando a 8. tx es la punta, en px desde la izquierda. */
+function bubblePathDown(W, H, R, tx, th) {
+  const a = Math.max(R + 2, tx - 2), b = Math.min(W - R - 2, tx + 16);
+  return `M${R} 0 H${W - R} A${R} ${R} 0 0 1 ${W} ${R} V${H - R} A${R} ${R} 0 0 1 ${W - R} ${H} H${b} `
+    + `C${b - 6} ${H} ${tx + 2} ${H + th * 0.4} ${tx} ${H + th} C${tx - 0.6} ${H + th * 0.45} ${a + 1} ${H + 1.5} ${a - 4} ${H} `
+    + `H${R} A${R} ${R} 0 0 1 0 ${H - R} V${R} A${R} ${R} 0 0 1 ${R} 0 Z`;
+}
+
 function Bubble({ text, show, big, side, eight }) {
   const [n, setN] = useState(0);
   const ref = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [geo, setGeo] = useState({ left: true, below: false });
+  const [geo, setGeo] = useState({ left: true, below: false, up: false, tip: 0 });
   useEffect(() => {
     /* al ocultarse no se borra el texto: el bocadillo se va con su frase, no vacío */
     if (!show) return undefined;
@@ -280,13 +288,13 @@ function Bubble({ text, show, big, side, eight }) {
       const roomR = vw - m - (R + gap + T), roomL = (L - gap - T) - m;
       el.style.maxWidth = (big ? 'none' : `${Math.max(150, Math.min(260, Math.max(roomR, roomL, vw - 2 * m - T)))}px`);
       const w = el.offsetWidth, h = el.offsetHeight;
-      let left, top, onRight = true, below = false, room = true;
+      let left, top, onRight = true, below = false, room = true, up = false;
       if (side === 'left' && roomL >= w) { left = L - gap - T - w; onRight = false; }
       else if (roomR >= w) { left = R + gap + T; onRight = true; }
       else if (roomL >= w) { left = L - gap - T - w; onRight = false; }
       else {
         /* no cabe al lado: encima de 8, con la cola hacia él */
-        left = clamp(cx + D * 0.12, m + T, vw - m - w); onRight = true;
+        left = clamp(cx - w * 0.3, m, vw - m - w); onRight = true; up = true;
         top = top8 - gap - h;
       }
       if (top === undefined) top = eye - gap - h;
@@ -297,17 +305,24 @@ function Bubble({ text, show, big, side, eight }) {
       const fx = e8.style.position === 'fixed';
       el.style.position = fx ? 'fixed' : 'absolute';
       el.style.left = `${left + (fx ? 0 : window.scrollX)}px`; el.style.top = `${top + (fx ? 0 : window.scrollY)}px`;
-      setGeo((g) => (g.left === onRight && g.below === below ? g : { left: onRight, below }));
+      const tip = Math.round(clamp(cx - left, 26, w - 30));
+      setGeo((g) => (g.left === onRight && g.below === below && g.up === up && g.tip === tip ? g : { left: onRight, below, up, tip }));
     };
     place();
     return () => cancelAnimationFrame(raf);
   }, [show, big, text, side]);
-  const cls = 'bubble8' + (show ? ' on' : '') + (geo.left ? ' l' : '') + (geo.below ? ' below' : '') + (big ? ' big' : '');
+  const cls = 'bubble8' + (show ? ' on' : '') + (geo.up ? ' up' : geo.left ? ' l' : '') + (geo.below ? ' below' : '') + (big ? ' big' : '');
   const R = big ? 28 : 20, th = big ? 30 : 18, T = 14 * th / 18;
   const flip = `scale(${geo.left ? 1 : -1}, ${geo.below ? -1 : 1})`;
   return (
-    <div ref={ref} className={cls} role="status" aria-live="polite">
-      {size.w > 0 && (
+    <div ref={ref} className={cls} role="status" aria-live="polite" style={geo.up ? { transformOrigin: `${geo.tip}px 100%` } : undefined}>
+      {size.w > 0 && geo.up && (
+        <svg className="shape" width={size.w} height={size.h + th} viewBox={`0 0 ${size.w} ${size.h + th}`}
+          style={{ left: 0, height: size.h + th }} aria-hidden="true">
+          <path d={bubblePathDown(size.w, size.h, Math.min(R, size.h / 2), geo.tip, th)} />
+        </svg>
+      )}
+      {size.w > 0 && !geo.up && (
         <svg className="shape" width={size.w + T} height={size.h} viewBox={`0 0 ${size.w + T} ${size.h}`}
           style={{ [geo.left ? 'left' : 'right']: -T, transform: flip }} aria-hidden="true">
           <path d={bubblePath(size.w, size.h, Math.min(R, size.h / 2), th)} />
