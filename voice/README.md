@@ -19,7 +19,7 @@ segmenter        ├─ cloud  "Entre tus tres cuentas tienes"   → final block
 | `leak_check.py` | Final block for cloud sentences. `LeakCheck` port and a default `PatternLeakCheck` |
 | `verbalize.py` | Spanish spelling-out for the local voice: amounts, numbers, IBAN and codes |
 | `elevenlabs_client.py` | Streaming TTS with the official ElevenLabs SDK, final block before every request |
-| `android/MixedVoicePlayer.kt` | Plays the segments on the phone and measures the gap between voices ([README](android/README.md)) |
+| `apps/android-8/.../voz/MixedVoicePlayer.kt` | Plays the segments on the phone and measures the gap between voices ([README](android/README.md)); `VozMixta.kt` feeds it the core's `voice` messages |
 
 ### Segmenter
 

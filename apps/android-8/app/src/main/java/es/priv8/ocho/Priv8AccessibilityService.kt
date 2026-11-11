@@ -14,6 +14,7 @@ import org.json.JSONObject
 import es.priv8.ocho.confirm.ConfirmFlow
 import es.priv8.ocho.confirm.ConfirmRequest
 import es.priv8.ocho.confirm.LocalValues
+import es.priv8.ocho.voz.VozMixta
 
 /**
  * 8's Android adapter: reads the active window as a raw snapshot, runs
@@ -46,6 +47,8 @@ class Priv8AccessibilityService : AccessibilityService() {
     private var reportedScreen: String? = null
     /** Current pause, as last reported to the core with events. */
     private var pause: Pause? = null
+    /** Plays the core's `voice` messages (8's answers) and sends voice.done. */
+    private var voz: VozMixta? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -55,10 +58,13 @@ class Priv8AccessibilityService : AccessibilityService() {
         bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage, ConfirmFlow::onConnected)
         bridge.start()
         ConfirmFlow.init(this) { bridge.send(it) }
+        voz = VozMixta(this) { bridge.send(it) }
         Log.i(TAG, "service connected")
     }
 
     override fun onDestroy() {
+        voz?.close()
+        voz = null
         if (::bridge.isInitialized) bridge.stop()
         if (::workerThread.isInitialized) workerThread.quitSafely()
         super.onDestroy()
@@ -153,6 +159,10 @@ class Priv8AccessibilityService : AccessibilityService() {
                     LocalValues.put(session, values.keys().asSequence().associateWith { values.getString(it) })
                     Log.i(TAG, "render_values: session=$session tokens=${values.length()}")
                 }
+            }
+            "voice" -> {
+                // What 8 says (bridge.schema.json v1.1): the core sent render_values just before.
+                if (voz?.play(msg) != true) Log.w(TAG, "voice: does not follow voice.schema.json, ignored")
             }
             else -> Log.w(TAG, "bridge: unexpected message type '$type', ignored")
         }

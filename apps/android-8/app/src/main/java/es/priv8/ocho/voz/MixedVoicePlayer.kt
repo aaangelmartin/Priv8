@@ -1,8 +1,8 @@
 // Priv8 · voz mixta en Android.
 //
-// Self-contained source, to be moved into apps/android-8/ once that project is
-// on main. It depends only on the Android SDK (minSdk 26) and the Kotlin
-// standard library.
+// Moved here from voice/android/ (its README keeps the design notes). It
+// depends only on the Android SDK (minSdk 26) and the Kotlin standard library;
+// Priv8AccessibilityService plays the core's `voice` messages with it (VozMixta).
 //
 // Plays an ordered list of voice segments:
 //   - cloud: raw PCM from ElevenLabs (pcm_24000, 16-bit LE mono), streamed by
@@ -10,7 +10,7 @@
 //   - local: text with the real figures and names, through TextToSpeech (es-ES).
 // Segments are chained back to back and the gap between voices is measured.
 
-package ai.priv8.voice
+package es.priv8.ocho.voz
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -129,6 +129,12 @@ class MixedVoicePlayer(
          * local segments get theirs from SalidaTts.
          */
         fun onLevel(utteranceId: String, rms: Float) {}
+        /** Extra params for each local speak(): SalidaTts adds its audio session here. */
+        fun ttsParams(params: Bundle) {}
+        /** A word of a local segment starts ([start], [end] characters), from onRangeStart. */
+        fun onLocalWord(utteranceId: String, index: Int, start: Int, end: Int) {}
+        /** Segment [index] finished (or was cut by stop()). */
+        fun onSegmentEnd(utteranceId: String, index: Int, voice: Voice) {}
         fun onUtteranceDone(report: GapReport) {}
         fun onError(utteranceId: String?, index: Int, message: String) {}
     }
@@ -214,7 +220,10 @@ class MixedVoicePlayer(
         override fun onRangeStart(utteranceId: String?, start: Int, end: Int, frame: Int) {
             val now = SystemClock.elapsedRealtimeNanos()
             handler.post {
-                withLocal(utteranceId) { r, i -> if (r.startNs[i] < 0) markStart(r, i, now) }
+                withLocal(utteranceId) { r, i ->
+                    if (r.startNs[i] < 0) markStart(r, i, now)
+                    listener.onLocalWord(r.id, i, start, end)
+                }
             }
         }
 
@@ -224,6 +233,7 @@ class MixedVoicePlayer(
                 withLocal(utteranceId) { r, i ->
                     if (r.startNs[i] < 0) markStart(r, i, r.tentativeStartNs[i].takeIf { it >= 0 } ?: now)
                     r.endNs[i] = now
+                    listener.onSegmentEnd(r.id, i, Voice.LOCAL)
                     advance(r)
                 }
             }
@@ -291,7 +301,7 @@ class MixedVoicePlayer(
                 handler.post { pollCloud(r, i) }
             }
             is VoiceSegment.Local ->
-                tts.speak(seg.text, TextToSpeech.QUEUE_FLUSH, Bundle(), r.key(i))
+                tts.speak(seg.text, TextToSpeech.QUEUE_FLUSH, Bundle().also(listener::ttsParams), r.key(i))
         }
     }
 
@@ -320,6 +330,7 @@ class MixedVoicePlayer(
             r.endNs[i] = now
             track.release() // cuts the silence padding
             r.tracks[i] = null
+            listener.onSegmentEnd(r.id, i, Voice.CLOUD)
             advance(r)
             return
         }
@@ -343,6 +354,9 @@ class MixedVoicePlayer(
         r.cancelled = true
         run = null
         tts.stop()
+        if (r.index in r.segments.indices && r.endNs[r.index] < 0) {
+            listener.onSegmentEnd(r.id, r.index, r.segments[r.index].voice)
+        }
         r.tracks.forEachIndexed { i, t ->
             t?.release()
             r.tracks[i] = null
