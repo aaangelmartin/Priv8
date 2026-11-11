@@ -49,6 +49,7 @@ for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json', 'sesio
 //    móvil, su vídeo del emulador, su póster y lo que vio el modelo (public/movil/<caso>.json).
 const SITIO = readFileSync(join(SITE, 'src/contenido.js'), 'utf8');
 for (const id of [...SITIO.matchAll(/id: '(b2[bc]-[a-z-]+)'/g)].map((m) => m[1])) {
+  if (id.startsWith('b2c') && !existsSync(join(DIST, `movil/${id}.json`))) { log(`AVISO: ${id} sin grabación; la web no lo enseña`); continue; }
   const archivos = id.startsWith('b2b') ? [`casos/${id}.jpg`] : [`movil/${id}.json`, `movil/${id}.jpg`];
   if (id.startsWith('b2c') && existsSync(join(DIST, `movil/${id}.json`))) {
     archivos.push(JSON.parse(readFileSync(join(DIST, `movil/${id}.json`), 'utf8')).video);

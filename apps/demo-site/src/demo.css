@@ -29,6 +29,8 @@
 /* ---------- tarjetas de caso: la captura real, el título, una línea y el botón ---------- */
 .cts { list-style: none; margin: 0 auto; padding: 0; max-width: 1180px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 22px); }
 .cts-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.cts-1 { grid-template-columns: minmax(0, 300px); justify-content: center; }
+.cts-2 { grid-template-columns: repeat(2, minmax(0, 300px)); justify-content: center; }
 @media (max-width: 1000px) { .cts, .cts-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .cts { grid-template-columns: 1fr; } }
 .ct { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 16px; padding: 12px 12px 20px; border-radius: var(--r); background: var(--card); border: 1px solid transparent;

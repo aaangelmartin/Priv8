@@ -163,10 +163,22 @@ function Empresas() {
   );
 }
 
+/* Solo los casos del móvil que tienen grabación real en esta build (public/movil/<caso>.json). */
+function useGrabados() {
+  const [ok, setOk] = useState(null);
+  useEffect(() => {
+    Promise.all(MOVIL.map((c) => fetch(c.datos, { method: 'HEAD' }).then((r) => r.ok && (r.headers.get('content-type') || '').includes('json'), () => false)))
+      .then((v) => setOk(MOVIL.filter((_, i) => v[i])));
+  }, []);
+  return ok;
+}
+
 function Movil() {
-  const [sel, setSel] = useState(MOVIL[0].id);
-  const caso = MOVIL.find((c) => c.id === sel);
+  const grabados = useGrabados();
+  const [sel, setSel] = useState(null);
   const player = useRef(null);
+  if (!grabados || !grabados.length) return null;
+  const caso = grabados.find((c) => c.id === sel) ?? grabados[0];
   const elegir = (id) => {
     setSel(id);
     requestAnimationFrame(() => player.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
@@ -176,7 +188,7 @@ function Movil() {
       <div className="wrap">
         <Head id="h-movil" eyebrow="Priv8 en el móvil" title="Tus bancos, por voz." soft="Sin ver las cuentas."
           lead="Grabado en el emulador. A un lado el móvil; al otro, lo que recibe el modelo en ese momento." />
-        <ul className="cts cts-4">{MOVIL.map((c) => <Tarjeta key={c.id} c={c} retrato activa={c.id === sel} onClick={() => elegir(c.id)} />)}</ul>
+        <ul className={`cts cts-${grabados.length}`}>{grabados.map((c) => <Tarjeta key={c.id} c={c} retrato activa={c.id === caso.id} onClick={() => elegir(c.id)} />)}</ul>
         <div ref={player} className="mv-caja rv-in">
           <div className="mv-cab">
             <p className="mv-pedido">{caso.pedido}</p>
