@@ -4,7 +4,7 @@
         <item name="android:windowBackground">@color/cobalto</item>
         <item name="android:colorBackground">@color/cobalto</item>
         <item name="android:statusBarColor">@color/cobalto</item>
-        <item name="android:navigationBarColor">@color/cobalto</item>
+        <item name="android:navigationBarColor">@android:color/white</item><item name="android:windowLightNavigationBar">true</item><item name="android:windowSoftInputMode">adjustResize</item>
         <!-- System splash (Android 12+): 8 on cobalt, like the screen that follows. -->
         <item name="android:windowSplashScreenBackground">@color/cobalto</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>

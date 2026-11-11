@@ -35,12 +35,16 @@ class Dictador(
     private val alPortatil: () -> Boolean = { false },
     /** Microphone level while listening (SpeechRecognizer rmsdB), for 8's eyes (#42). */
     private val onNivel: (Float) -> Unit = {},
+    /** Listening started or ended, for the microphone button. */
+    private val onEscuchando: (Boolean) -> Unit = {},
 ) {
     private var recognizer: SpeechRecognizer? = null
     /** Stopped by the person: the recognizer's error after cancel() is not a failure. */
     private var parado = false
     var escuchando = false
-        private set
+        private set(v) {
+            if (field != v) { field = v; onEscuchando(v) }
+        }
 
     /** Why 8 cannot listen on this device, or null if it can. */
     fun noDisponible(): String? {
@@ -70,7 +74,6 @@ class Dictador(
         escuchando = true
         parado = false
         Log.i(TAG, "dictado: listening on-device")
-        onParcial("Te escucho…")
         val intent = ConfirmActivity.recognizerIntent()
         if (audio != null && BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             // Debug only: raw PCM 16-bit 16 kHz mono instead of the microphone,
@@ -104,7 +107,6 @@ class Dictador(
         escuchando = false
         parado = true
         recognizer?.cancel()
-        onAviso("Vale, dejo de escuchar.")
     }
 
     fun destroy() {
@@ -132,7 +134,7 @@ class Dictador(
             val tarea = Dictado.tarea(hipotesis(results))
             if (tarea == null) {
                 Log.i(TAG, "dictado: nothing understood")
-                onAviso("No te he entendido. Toca a 8 y repítelo.")
+                onAviso("No te he entendido. Vuelve a probar o escríbelo.")
             } else {
                 Log.i(TAG, "dictado: task ready (${tarea.length} chars)")
                 onTarea(tarea)
@@ -149,7 +151,7 @@ class Dictador(
             onAviso(
                 when {
                     error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
-                        "No te he oído. Toca a 8 y vuelve a probar."
+                        "No te he oído. Vuelve a probar o escríbelo."
                     Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                         (error == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE || error == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED) ->
                         "Falta el reconocimiento de voz en español en el móvil."

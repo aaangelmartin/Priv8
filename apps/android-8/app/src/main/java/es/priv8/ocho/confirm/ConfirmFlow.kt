@@ -126,6 +126,18 @@ object ConfirmFlow {
         finish(a, result)
     }
 
+    /**
+     * From the conversation's card in app 8: answers the request on screen if
+     * it is [session]/[id], the same way as ConfirmActivity's buttons (the
+     * activity then closes). Main thread. False if it is not the active one.
+     */
+    fun answerFromChat(session: String, id: String, ok: Boolean): Boolean {
+        val a = active ?: return false
+        if (a.session != session || a.id != id) return false
+        answer(a, ok, "pantalla")
+        return true
+    }
+
     fun attach(s: Screen) = main.post {
         screen = s
         active?.let(s::show) ?: s.close()

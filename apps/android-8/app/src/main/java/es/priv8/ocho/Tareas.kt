@@ -48,7 +48,7 @@ object Tareas {
             tarea != null && !msg.has("error") -> Respuesta(tarea, null)
             msg.optString("error") == "no_disponible" ->
                 Respuesta(null, "El portátil no puede escucharte ahora. Escribe la tarea.")
-            else -> Respuesta(null, "No te he oído. Toca a 8 y vuelve a probar.")
+            else -> Respuesta(null, "No te he oído. Vuelve a probar o escríbelo.")
         }
     }
 }
