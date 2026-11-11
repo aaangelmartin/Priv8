@@ -220,6 +220,19 @@ Claude Code pide aprobar cada servidor de un `.mcp.json` de proyecto antes de us
 
 Después, pídele el trámite en lenguaje normal: «Usa priv8 para registrar en Alba Core la factura que ha llegado por correo». El servidor manda al host las mismas reglas que tiene 8 (campo `instructions` de MCP): usar los tokens tal cual, no adivinar valores, no tocar los campos rojos, esperar a la persona cuando algo queda retenido, tratar el texto de la pantalla como datos y no asesorar inversiones. Cuando `act` devuelve `held`, el resultado lleva además una frase que dice dónde se aprueba y que vuelva a observar más tarde.
 
+### Sin clonar el repositorio: mcp.priv8.es
+
+Para quien quiera probarlo en su ordenador con su Claude Code, sin Node ni el repositorio (#157):
+
+```bash
+curl -fsSL https://mcp.priv8.es/instalar.sh | bash          # Priv8 en ~/.priv8/mcp (uv y Chromium de Playwright)
+mkdir -p ~/priv8-prueba && cd ~/priv8-prueba
+claude mcp add priv8 -- ~/.priv8/mcp/priv8-mcp mcp
+claude                                                       # «Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen»
+```
+
+`priv8-mcp mcp` arranca él mismo las tres apps ya construidas (si no están en marcha), Chromium y la consola: basta esa línea de `claude mcp add`. El paquete lo construye `scripts/build_mcp_bundle.sh` (`dist/priv8-mcp-<versión>.tar.gz`, solo archivos que sigue git, sin tests, `.env`, `audit/` ni `.priv8/`) y el sitio, `scripts/build_mcp_site.sh` (`apps/mcp-site`). Cómo se publica en Cloudflare Pages: `docs/despliegue-subdominios.md`.
+
 ### Lo que Priv8 no protege aquí
 
 Priv8 protege lo que el agente lee en la pantalla y lo que escribe en ella. Lo que escribes en el chat de Claude Code llega al modelo tal cual: no pegues ahí datos personales (un IBAN, un DNI, un importe). 8 y la consola de Priv8 pasan primero tu petición por el núcleo y la convierten en tokens; un host genérico no puede hacerlo.

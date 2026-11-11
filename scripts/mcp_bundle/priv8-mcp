@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# priv8-mcp: Priv8 CUA como servidor MCP de tu Claude Code, sobre las apps de la demo (#157).
+#
+#   priv8-mcp instalar   dependencias de Python (uv) y Chromium para Playwright, dentro de esta carpeta
+#   priv8-mcp mcp        el servidor MCP por stdio: lo arranca Claude Code (claude mcp add)
+#   priv8-mcp demo       solo las tres apps (Alba Core, el correo y la consola), sin servidor MCP
+#   priv8-mcp comando    la línea de `claude mcp add` para esta copia
+#   priv8-mcp version
+#
+# Puertos (por defecto los de la demo): PRIV8_ALBA_PORT=5173, PRIV8_INBOX_PORT=5174,
+# PRIV8_CONSOLE_PORT=5175 y PRIV8_EVENTS_PORT=8700. PRIV8_ABRIR_CONSOLA=0 no abre la consola.
+# Funciona en macOS y Linux. No lee ningún .env y no necesita ninguna clave de API.
+set -euo pipefail
+
+# Carpeta real del paquete, aunque se llame por un enlace simbólico.
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd -P "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  case "$src" in /*) ;; *) src="$dir/$src" ;; esac
+done
+ROOT="$(cd -P "$(dirname "$src")" && pwd)"
+VERSION="$(cat "$ROOT/VERSION" 2>/dev/null || echo desconocida)"
+
+ALBA_PORT="${PRIV8_ALBA_PORT:-5173}"
+INBOX_PORT="${PRIV8_INBOX_PORT:-5174}"
+CONSOLE_PORT="${PRIV8_CONSOLE_PORT:-5175}"
+EVENTS_PORT="${PRIV8_EVENTS_PORT:-8700}"
+export PRIV8_ALBA_PORT="$ALBA_PORT" PRIV8_INBOX_PORT="$INBOX_PORT" PRIV8_CONSOLE_PORT="$CONSOLE_PORT"
+export PRIV8_EVENTS_PORT="$EVENTS_PORT"
+export PRIV8_ALBA_URL="http://127.0.0.1:$ALBA_PORT" PRIV8_INBOX_URL="http://127.0.0.1:$INBOX_PORT"
+# La consola solo puede abrir el canal de eventos desde su propio origen.
+export PRIV8_EVENTS_ORIGINS="http://127.0.0.1:$CONSOLE_PORT,http://localhost:$CONSOLE_PORT"
+if [ "$EVENTS_PORT" = 8700 ]; then
+  export PRIV8_CONSOLE_URL="http://127.0.0.1:$CONSOLE_PORT/"
+else
+  export PRIV8_CONSOLE_URL="http://127.0.0.1:$CONSOLE_PORT/?ws=ws://127.0.0.1:$EVENTS_PORT/events"
+fi
+# Todo queda dentro de esta carpeta: Chromium, el perfil del navegador (.priv8/) y el registro firmado (audit/).
+export PLAYWRIGHT_BROWSERS_PATH="${PLAYWRIGHT_BROWSERS_PATH:-$ROOT/navegadores}"
+export PRIV8_CORE=real
+# La llamada de verificación al proveedor va siempre simulada en este paquete: nunca marca un teléfono.
+unset ELEVENLABS_API_KEY ELEVENLABS_AGENT_ID ELEVENLABS_PHONE_NUMBER_ID
+
+PY="$ROOT/.venv/bin/python"
+say() { printf 'priv8: %s\n' "$*" >&2; }
+
+comando() {
+  cat >&2 <<EOF
+
+Conecta Priv8 a Claude Code (en la carpeta donde vayas a abrirlo):
+
+  claude mcp add priv8 -- "$ROOT/priv8-mcp" mcp
+
+Después abre Claude Code en esa carpeta (claude) y pídele:
+
+  Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen
+
+Lo que haya que aprobar te espera en la consola: $PRIV8_CONSOLE_URL
+EOF
+}
+
+need_venv() {
+  if [ ! -x "$PY" ]; then
+    say "falta instalar las dependencias: $ROOT/priv8-mcp instalar"
+    exit 1
+  fi
+}
+
+port_busy() { (exec 3<>"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
+
+case "${1:-ayuda}" in
+  instalar)
+    if ! command -v uv >/dev/null 2>&1; then
+      say "hace falta uv (el gestor de Python de Astral). Instálalo y vuelve a ejecutar esto:"
+      say "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+      say "  (o: brew install uv)"
+      exit 1
+    fi
+    cd "$ROOT"
+    say "1/2 dependencias de Python con uv en $ROOT/.venv (Python 3.12; si no lo tienes, uv lo descarga a su caché)"
+    uv sync --frozen --no-dev --quiet
+    say "2/2 Chromium para Playwright en $PLAYWRIGHT_BROWSERS_PATH (unos 130 MB de descarga la primera vez)"
+    "$PY" -m playwright install --no-shell chromium
+    say "listo: Priv8 $VERSION en $ROOT"
+    comando
+    ;;
+  mcp)
+    need_venv
+    cd "$ROOT"
+    if port_busy "$EVENTS_PORT"; then
+      say "el puerto $EVENTS_PORT ya está ocupado (¿otro Priv8 en marcha?). Páralo o usa PRIV8_EVENTS_PORT=<otro>."
+      exit 1
+    fi
+    args=(--web --transport stdio --serve-apps "$ROOT/apps")
+    [ "${PRIV8_ABRIR_CONSOLA:-1}" = 0 ] || args+=(--open-console)
+    exec "$PY" -m agent.server "${args[@]}"
+    ;;
+  demo)
+    need_venv
+    cd "$ROOT"
+    exec "$PY" -m agent.static_apps "$ROOT/apps" --open
+    ;;
+  comando) comando ;;
+  version|--version|-v) echo "priv8-mcp $VERSION" ;;
+  ayuda|help|-h|--help)
+    sed -n '2,12p' "$ROOT/priv8-mcp" | sed 's/^# \{0,1\}//' >&2
+    ;;
+  *)
+    say "orden desconocida: $1 (prueba: priv8-mcp ayuda)"
+    exit 2
+    ;;
+esac

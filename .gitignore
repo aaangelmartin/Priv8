@@ -21,3 +21,6 @@ metrics/out/
 
 # Perfil de Chromium del adaptador web (sesión recordada de Alba Core)
 .priv8/
+
+# Paquete priv8-mcp (scripts/build_mcp_bundle.sh)
+/dist/
