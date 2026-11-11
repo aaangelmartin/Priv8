@@ -116,7 +116,7 @@ La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos d
 | `audit` `held` | esperar |
 | `audit` `paused` | mirar a otro lado (`apartar`), hasta el siguiente evento |
 | `audit` `approval` | confirmado (`asentir`) o cancelado (`negar`) |
-| `audit` `blocked` | `rojo`: nunca sale · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
+| `audit` `blocked` | `rojo`: nunca sale · `asesoria`: no puedo · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
 | `audit` `call` | hablar |
 | `voice` | hablar, con una duración aproximada hasta que la voz mixta avise del final |
 | `confirm_request` | llamar (`atencion`) y luego esperar |

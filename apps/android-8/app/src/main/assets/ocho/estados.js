@@ -35,6 +35,7 @@
   function porBloqueo(reason) {
     switch (reason) {
       case 'rojo': return [paso('nuncasale', BREVE)];            // dato rojo: ni lo mira
+      case 'asesoria': return gesto('rechazar');                 // «no puedo»: 8 ejecuta, no asesora (#43)
       case 'destino':                                            // IBAN de un correo en un pago
       case 'fuga': return gesto('enfado');                       // bloquea una instrucción escondida
       case 'caducado':

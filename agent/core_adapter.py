@@ -102,6 +102,15 @@ class _LeakCheck:
                            matched=tuple(str(f) for f in findings))
 
 
+class _Voice:
+    def __init__(self, fn: Any) -> None:
+        self._say = fn
+
+    def say(self, session: str, text: str) -> JSON | None:
+        out = self._say(session, text)
+        return None if out is None else dict(out)
+
+
 class _Audit:
     def __init__(self, fn: Any) -> None:
         self._record = fn
@@ -142,6 +151,7 @@ def build_real_core(module: str = CORE_MODULE) -> Core:
         oracle=_Oracle(mod.oracle),
         leak=_LeakCheck(mod.check),
         audit=_Audit(mod.record),
+        voice=_Voice(mod.say) if callable(getattr(mod, "say", None)) else None,
     )
 
 
