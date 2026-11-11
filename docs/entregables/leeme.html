@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Laaabs - Léeme</title>
-<!-- PDF índice de la carpeta de entrega (#192). Lo genera scripts/entrega.sh con Playwright. -->
+<!-- PDF índice de la carpeta de entrega (#192), en una página. Lo genera scripts/entrega.sh con Playwright. -->
 <style>
   @font-face { font-family: Sora; font-weight: 700; src: url(fonts/sora-latin-700-normal.woff2) format("woff2"); }
   @font-face { font-family: Sora; font-weight: 600; src: url(fonts/sora-latin-600-normal.woff2) format("woff2"); }
@@ -14,71 +14,78 @@
   @page { size: A4; margin: 0; }
   :root { --cobalto: #2D45D6; --noche: #0B1B33; --pizarra: #5A6478; --linea: #D6DCE8; --niebla: #F4F6FD; --tok-bg: #E4E9FD; --tok-fg: #2236B5; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { color: var(--noche); font: 400 9.6pt/1.5 "IBM Plex Sans", sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .pag { width: 210mm; min-height: 297mm; position: relative; page-break-after: always; }
-  .pag:last-child { page-break-after: auto; }
+  html, body { background: #fff; }
+  body { width: 210mm; height: 297mm; overflow: hidden; position: relative; color: var(--noche); font: 400 9pt/1.45 "IBM Plex Sans", sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   h1, h2 { font-family: Sora, sans-serif; letter-spacing: -.035em; line-height: 1.05; }
-  header { background: var(--cobalto); color: #fff; padding: 11mm 15mm 10mm; }
+  /* el azul se sale 1 mm por arriba y por los lados: sin hilo blanco en el borde del PDF */
+  header { background: var(--cobalto); color: #fff; margin: -1mm -1mm 0; padding: 10mm 16mm 8mm; }
   header .marca { display: flex; justify-content: space-between; align-items: center; }
-  header img { height: 8mm; filter: brightness(0) invert(1); }
-  header .ev { font: 500 8.6pt/1.4 "IBM Plex Mono", monospace; color: #dbe1ff; text-align: right; }
-  header h1 { font-size: 27pt; margin-top: 9mm; }
+  header img { height: 7.5mm; filter: brightness(0) invert(1); }
+  header .ev { font: 500 8pt/1.4 "IBM Plex Mono", monospace; color: #dbe1ff; text-align: right; }
+  header h1 { font-size: 23pt; margin-top: 6mm; }
   header h1 span { color: #c4cdff; display: block; }
-  header p { margin-top: 4mm; color: #dbe1ff; font-size: 10.4pt; max-width: 160mm; }
-  main { padding: 8mm 15mm 0; display: grid; gap: 5.5mm; }
-  h2 { font-size: 13pt; color: var(--cobalto); margin-bottom: 3mm; }
-  .tok { font: 600 .9em/1 "IBM Plex Mono", monospace; background: var(--tok-bg); color: var(--tok-fg); padding: .16em .4em; border-radius: 4px; white-space: nowrap; }
+  header p { margin-top: 3mm; color: #dbe1ff; font-size: 9.6pt; max-width: 165mm; }
+  main { padding: 6mm 15mm 0; display: grid; gap: 5mm; }
+  h2 { font-size: 11.5pt; color: var(--cobalto); margin-bottom: 2.4mm; }
+  .tok { font: 600 .9em/1 "IBM Plex Mono", monospace; background: #fff; color: var(--tok-fg); padding: .16em .4em; border-radius: 4px; white-space: nowrap; }
   a { color: var(--tok-fg); text-decoration: none; font-weight: 600; }
-  .enlaces { display: grid; grid-template-columns: 1fr 1fr; gap: 3.2mm; }
-  .enlace { background: var(--niebla); border-radius: 4mm; padding: 4mm 4.5mm; display: grid; gap: 1mm; }
-  .enlace b { font: 600 10.6pt/1.2 Sora, sans-serif; letter-spacing: -.015em; }
-  .enlace a { font: 500 8.8pt/1.3 "IBM Plex Mono", monospace; overflow-wrap: anywhere; }
-  .enlace span { color: var(--pizarra); font-size: 8.8pt; }
-  .archivos { display: grid; gap: 2.2mm; }
-  .archivo { display: grid; grid-template-columns: 62mm 1fr; gap: 4mm; padding: 2.6mm 0; border-bottom: 1px solid var(--linea); }
+  .enlaces { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4mm; }
+  .enlace { background: var(--niebla); border-radius: 3.5mm; padding: 3mm 3.6mm; display: grid; gap: .6mm; align-content: start; }
+  .enlace b { font: 600 9.6pt/1.2 Sora, sans-serif; letter-spacing: -.015em; }
+  .enlace a { font: 500 8pt/1.3 "IBM Plex Mono", monospace; overflow-wrap: anywhere; }
+  .enlace span { color: var(--pizarra); font-size: 8pt; line-height: 1.35; }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
+  .archivo { display: grid; grid-template-columns: 40mm 1fr; gap: 3mm; padding: 1.5mm 0; border-bottom: 1px solid var(--linea); font-size: 8.2pt; }
   .archivo:last-child { border-bottom: 0; }
-  .archivo b { font: 600 9pt/1.4 "IBM Plex Mono", monospace; }
+  .archivo b { font: 600 7.8pt/1.4 "IBM Plex Mono", monospace; }
   .archivo span { color: var(--pizarra); }
-  ol.pasos { padding-left: 5mm; display: grid; gap: 1.6mm; }
-  code { font: 500 .9em/1 "IBM Plex Mono", monospace; background: var(--tok-bg); color: var(--tok-fg); padding: .14em .36em; border-radius: 4px; }
-  .cita { border-left: 1.2mm solid var(--cobalto); background: var(--niebla); padding: 4mm 5mm; border-radius: 0 3mm 3mm 0; display: grid; gap: 2.6mm; font-size: 9.4pt; }
-  .equipo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; }
-  .equipo div { background: var(--niebla); border-radius: 3mm; padding: 3mm; }
-  .equipo b { display: block; font: 600 9.4pt/1.25 Sora, sans-serif; }
-  .equipo span { color: var(--pizarra); font-size: 8.4pt; }
-  footer { position: absolute; left: 15mm; right: 15mm; bottom: 6mm; display: flex; justify-content: space-between; color: var(--pizarra); font: 500 8pt/1 "IBM Plex Mono", monospace; }
+  ol.pasos { padding-left: 4.5mm; display: grid; gap: 1.2mm; font-size: 8.2pt; }
+  code { font: 500 .92em/1 "IBM Plex Mono", monospace; background: var(--tok-bg); color: var(--tok-fg); padding: .12em .32em; border-radius: 3px; }
+  .equipo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2.4mm; }
+  .equipo div { background: var(--niebla); border-radius: 3mm; padding: 2.4mm 3mm; }
+  .equipo b { display: block; font: 600 8.8pt/1.25 Sora, sans-serif; }
+  .equipo span { color: var(--pizarra); font-size: 7.8pt; }
+  .cita { border-left: 1mm solid var(--cobalto); background: var(--niebla); padding: 2.6mm 4mm; border-radius: 0 2.5mm 2.5mm 0; display: grid; gap: 1.4mm; font-size: 8.2pt; color: var(--pizarra); }
+  footer { position: absolute; left: 15mm; right: 15mm; bottom: 7mm; display: flex; justify-content: space-between; color: var(--pizarra); font: 500 7.6pt/1 "IBM Plex Mono", monospace; }
 </style>
 </head>
 <body>
-
-<section class="pag">
   <header>
     <div class="marca">
       <img src="../../brand/logo/priv8-cua-claro.svg" alt="Priv8">
-      <div class="ev">Hackfinance | Madrid Engineering Week<br>12 de noviembre de 2026</div>
+      <div class="ev">Laaabs | Hackfinance, Madrid Engineering Week<br>12 de noviembre de 2026</div>
     </div>
     <h1>El agente hace el trámite. <span>Los datos se quedan contigo.</span></h1>
-    <p>Priv8 es una capa de privacidad para agentes de IA que usan pantallas. Cada dato sensible llega al modelo como un token, por ejemplo <span class="tok" style="background:#fff">‹IBAN_1-propio›</span>, y el valor real solo se escribe en local. Este documento reúne todo lo entregado.</p>
+    <p>Priv8 es una capa de privacidad para agentes de IA que usan pantallas. Cada dato sensible llega al modelo como un token, por ejemplo <span class="tok">‹IBAN_1-propio›</span>, y el valor real solo se escribe en local.</p>
   </header>
   <main>
     <div>
       <h2>Enlaces</h2>
       <div class="enlaces">
-        <div class="enlace"><b>Demo interactiva</b><a href="https://demo.priv8.es">demo.priv8.es</a><span>Sesiones reales grabadas: lo que ves tú y lo que ve el modelo, lado a lado.</span></div>
-        <div class="enlace"><b>Presentación</b><a href="https://priv8.es/pitch">priv8.es/pitch</a><span>La misma presentación de esta carpeta, en la web.</span></div>
-        <div class="enlace"><b>Web</b><a href="https://priv8.es">priv8.es</a><span>Qué es Priv8, cómo funciona y para quién.</span></div>
-        <div class="enlace"><b>Pruébalo con tu Claude Code</b><a href="https://mcp.priv8.es">mcp.priv8.es</a><span>Un comando instala Priv8 como servidor MCP en tu máquina.</span></div>
-        <div class="enlace"><b>Repositorio</b><a href="https://github.com/aaangelmartin/Priv8">github.com/aaangelmartin/Priv8</a><span>Código, README con instalación, configuración, ejecución y pruebas.</span></div>
-        <div class="enlace"><b>Especificación</b><a href="https://github.com/aaangelmartin/Priv8/blob/main/docs/SPEC.md">docs/SPEC.md</a><span>El protocolo Priv8 CUA: tokens, clases de dato, oráculo, ejecutor, confirmación y auditoría.</span></div>
+        <div class="enlace"><b>Demo</b><a href="https://demo.priv8.es">demo.priv8.es</a><span>Flujos reales grabados: lo que ves tú y lo que ve el modelo.</span></div>
+        <div class="enlace"><b>Presentación</b><a href="https://priv8.es/pitch">priv8.es/pitch</a><span>La de esta carpeta, en la web.</span></div>
+        <div class="enlace"><b>Web</b><a href="https://priv8.es">priv8.es</a><span>Qué es, cómo funciona y para quién.</span></div>
+        <div class="enlace"><b>Pruébalo en tu asistente</b><a href="https://mcp.priv8.es">mcp.priv8.es</a><span>Claude Code, Codex, Gemini CLI y más, con un comando.</span></div>
+        <div class="enlace"><b>Repositorio</b><a href="https://github.com/aaangelmartin/Priv8">github.com/aaangelmartin/Priv8</a><span>Código y README.</span></div>
+        <div class="enlace"><b>Especificación</b><a href="https://github.com/aaangelmartin/Priv8/blob/main/docs/SPEC.md">docs/SPEC.md</a><span>El protocolo Priv8 CUA.</span></div>
       </div>
     </div>
-    <div>
-      <h2>En esta carpeta</h2>
-      <div class="archivos">
+    <div class="dos">
+      <div>
+        <h2>En esta carpeta</h2>
         <div class="archivo"><b>Laaabs - Léeme.pdf</b><span>Este documento.</span></div>
         <div class="archivo"><b>Laaabs - Presentación.pdf</b><span>La presentación del pitch.</span></div>
-        <div class="archivo"><b>Laaabs - Una cara.pdf</b><span>Problema, solución y valor diferencial en una página.</span></div>
-        <div class="archivo"><b>Laaabs - Código.zip</b><span>El código completo del repositorio (rama main), igual que «Download ZIP» de GitHub. Es la versión que se evalúa.</span></div>
+        <div class="archivo"><b>Laaabs - Una cara.pdf</b><span>Problema, solución y valor diferencial.</span></div>
+        <div class="archivo"><b>Laaabs - Código.zip</b><span>El repositorio (main), igual que «Download ZIP». Es lo que se evalúa.</span></div>
+      </div>
+      <div>
+        <h2>Ejecutarlo en tu máquina</h2>
+        <ol class="pasos">
+          <li>Descomprime el ZIP (o clona el repositorio) e instala <a href="https://docs.astral.sh/uv/">uv</a>; para la web, Node 20 y pnpm.</li>
+          <li>Sin claves: <code>uv sync</code> y <code>make demo</code>. Peticiones al modelo con un valor real: 0.</li>
+          <li>En vivo: <code>cp .env.example .env</code> con <code>ANTHROPIC_API_KEY</code>, y doble clic en <code>Demo Priv8.command</code> (en Linux, <code>make panel</code>).</li>
+          <li>Pruebas: <code>make test</code>. Todo, en el README.</li>
+        </ol>
       </div>
     </div>
     <div>
@@ -90,22 +97,6 @@
         <div><b>Marco Barroso</b><span>App 8 y bancos</span></div>
       </div>
     </div>
-  </main>
-  <footer><span>Laaabs - Léeme</span><span>1 / 2</span></footer>
-</section>
-
-<section class="pag">
-  <main style="padding-top: 14mm">
-    <div>
-      <h2>Ejecutarlo en tu máquina</h2>
-      <ol class="pasos">
-        <li>Descomprime <code>Laaabs - Código.zip</code> (o clona el repositorio) e instala <a href="https://docs.astral.sh/uv/">uv</a>. Para la parte web, Node 20 y pnpm; para Android, Android Studio con un emulador de Android 14.</li>
-        <li>Sin claves: <code>uv sync</code> y <code>make demo</code>. Reproduce las dos escenas con el núcleo real y respuestas del modelo grabadas; al final cuenta las peticiones al modelo con un valor real: 0.</li>
-        <li>En vivo: <code>cp .env.example .env</code> y pon <code>ANTHROPIC_API_KEY</code>. En macOS, doble clic en <code>Demo Priv8.command</code>: abre un panel con un botón para B2B y otro para B2C. En Linux, <code>make panel</code>.</li>
-        <li>Pruebas: <code>make test</code>.</li>
-      </ol>
-      <p style="margin-top:3mm;color:var(--pizarra)">Todo está detallado en el README del repositorio: descripción, requisitos, instalación, configuración, ejecución y pruebas. Los datos, bancos y empresas de la demo son inventados.</p>
-    </div>
     <div>
       <h2>Texto de la entrega</h2>
       <div class="cita">
@@ -114,8 +105,6 @@
       </div>
     </div>
   </main>
-  <footer><span>Laaabs - Léeme</span><span>2 / 2</span></footer>
-</section>
-
+  <footer><span>Laaabs - Léeme</span><span>Datos, bancos y empresas de la demo inventados</span></footer>
 </body>
 </html>
