@@ -1,4 +1,4 @@
-# Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
+# Priv8 - entry points. Each path adds its own targets here (core, bridge, ...).
 
 .PHONY: agent agent-web demo-b2b web web-install replay replay-fake demo test metrics events dictado dictado-install llamada-banco linea-alcor sin-protocolo video-sin-protocolo video-con-protocolo videos
 

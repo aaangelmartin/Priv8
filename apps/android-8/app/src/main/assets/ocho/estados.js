@@ -1,4 +1,4 @@
-/* Priv8 · app 8 · de eventos del núcleo a caras de 8 (issue #39).
+/* Priv8 - app 8 - de eventos del núcleo a caras de 8 (issue #39).
  *
  * Entrada: un mensaje del canal de eventos ws://127.0.0.1:8700/events
  * (docs/contracts/events.schema.json) o un cambio de conexión.

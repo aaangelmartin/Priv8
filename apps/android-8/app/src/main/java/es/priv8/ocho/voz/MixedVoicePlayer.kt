@@ -1,4 +1,4 @@
-// Priv8 · voz mixta en Android.
+// Priv8 - voz mixta en Android.
 //
 // Moved here from voice/android/ (its README keeps the design notes). It
 // depends only on the Android SDK (minSdk 26) and the Kotlin standard library;

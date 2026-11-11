@@ -36,7 +36,7 @@ async def test_replay_registers_the_invoice(world):
     steps = [e for e in fake.audit.events if e["kind"] == "task" and e.get("detail", "").startswith("paso ")
              and not e["detail"].endswith("razona")]
     thoughts = [e for e in fake.audit.events if e["kind"] == "task" and e.get("detail", "").endswith("razona")]
-    assert thoughts and all(e["model_saw"] and "·" not in e["detail"] for e in thoughts)
+    assert thoughts and all(e["model_saw"] and "\u00b7" not in e["detail"] for e in thoughts)
     assert [int(e["detail"].split()[1]) for e in steps] == [1, 2, 3, 4, 5, 6]
     assert all("model" in e["ms"] for e in steps)
     assert fake.audit.verify()

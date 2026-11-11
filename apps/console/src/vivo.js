@@ -3,7 +3,7 @@
 // Entra la secuencia ordenada de mensajes que recibe la consola (pantallas y eventos de
 // auditoría) y sale, por cada uno, una línea del razonamiento y el foco del cursor de 8.
 // Solo funciones puras: la animación vive en Vivo.jsx. Los tokens se dejan tal cual
-// (‹IBAN_1-correo› o ‹IBAN_1·correo›): la consola los pinta con el valor local.
+// (‹IBAN_1-correo› o el formato antiguo con U+00B7): la consola los pinta con el valor local.
 
 import { nombreApp, nombrePantalla } from './directo.js'
 import { TOKEN_RE } from './tokens.js'

@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict'
 import { duracion, esMovil, focoDe, leerAccion, lineaDe, objetivoDe, piensaTras, textoPlano } from './vivo.js'
 
-// Funciona con los dos separadores de token: ‹IBAN_1·correo› y ‹IBAN_1-correo›.
-for (const sep of ['·', '-']) {
+// Funciona con los dos separadores de token: el antiguo (U+00B7) y ‹IBAN_1-correo›.
+for (const sep of ['\u00b7', '-']) {
   const T = (s) => `‹${s.replace('|', sep)}›`
   const screen = {
     raw: { source: 'web', app: 'alba-core' },
