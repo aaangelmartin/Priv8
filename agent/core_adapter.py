@@ -194,7 +194,8 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     import sys
     from pathlib import Path
 
-    from adapters.web import WebAdapter, profile_dir
+    from adapters.web import WebAdapter, headless_enabled, profile_dir
+    from adapters.web.adapter import cursor_enabled
 
     mod = _load(module)
     data = Path(__file__).resolve().parent.parent / "data"
@@ -207,10 +208,18 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     # Perfil persistente (.priv8/chromium): la sesión de Alba Core se recuerda entre ejecuciones,
     # y con `make demo-b2b` el ERP ya abre con la sesión de la demo (#137). 8 nunca escribe la clave.
     # known: back, open_app y la recuperación del observe nunca dejan una pantalla sin política.
+    # PRIV8_WEB_HEADLESS=1 (las grabaciones): sin ventana, con el mismo tamaño de página y el
+    # cursor de 8 visible, para que la pestaña real de cada par lleve el cursor y los bocadillos.
+    headless = headless_enabled()
     web = WebAdapter(start=start, on_call=make_on_call(session), profile=profile_dir(),
-                     known=lambda raw: mod.policies().screen_for(raw) is not None)
+                     known=lambda raw: mod.policies().screen_for(raw) is not None,
+                     headless=headless, cursor=cursor_enabled(True) if headless else None)
     if web.logged_in("alba-core"):
         print("priv8: Alba Core ya tiene la sesión abierta", file=sys.stderr)
+    elif headless:  # sin ventana nadie puede entrar: la sesión tiene que venir abierta
+        web.close()
+        raise RuntimeError("Alba Core sin sesión y Chromium sin ventana (PRIV8_WEB_HEADLESS): "
+                           "abre la sesión de la demo (VITE_ALBA_SESION) o quita PRIV8_WEB_HEADLESS")
     else:
         print("priv8: entra en Alba Core en la ventana de Chromium (usuario y clave de prueba en data/seed.json)", file=sys.stderr)
         if not web.wait_until_logged_in("alba-core"):
@@ -219,6 +228,32 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     if events:
         importlib.import_module(f"{module}.server").start()
     return web
+
+
+HELD_WAIT_S = 120  # --web: lo más que el bucle espera a la persona tras una acción retenida
+
+
+def wait_held(session: str, ids: list[str], timeout_s: float = HELD_WAIT_S, *,
+              module: str = CORE_MODULE) -> str:
+    """--web: espera a que la persona responda (en la consola) a las confirmaciones `ids` y
+    devuelve una frase fija para el modelo, solo con ids. Mientras espera no hay peticiones al
+    modelo; la acción la ejecuta el núcleo al aprobarla, nunca el bucle."""
+    import time
+
+    mod = _load(module)
+    fin = time.monotonic() + timeout_s
+    abiertas = lambda: [r["id"] for r in mod.pending(session) if r.get("id") in ids]  # noqa: E731
+    while abiertas() and time.monotonic() < fin:
+        if callable(getattr(mod, "expire_due", None)):
+            mod.expire_due()
+        time.sleep(0.25)
+    quedan = abiertas()
+    if quedan:
+        return (f"La persona aún no ha respondido a {', '.join(quedan)}. No la repitas; termina diciendo "
+                "que queda a la espera de su confirmación.")
+    time.sleep(1.0)  # que la acción aprobada llegue a la pantalla antes de la siguiente lectura
+    return (f"La persona ya ha respondido a {', '.join(ids)}. Vuelve a observar para ver si se ha "
+            "ejecutado antes de terminar.")
 
 
 ANDROID_SESSION = "b2c"

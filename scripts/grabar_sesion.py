@@ -7,7 +7,7 @@ vez el stack real y guarda todo lo que recibe la consola, para que `?feed=sesion
 reproduzca tal cual:
 
 1. Arranca Alba Core y el correo en puertos libres (por defecto 5193 y 5194, con la sesión de
-   la demo abierta) y el agente real (`python -m agent.agent --web`, Chromium con ventana) con
+   la demo abierta) y el agente real (`python -m agent.agent --web`, Chromium sin ventana; --con-ventana para verla) con
    el núcleo de eventos en PRIV8_EVENTS_PORT (8792). Nunca toca 5173-5175, 8700, 5301 ni 5303:
    ahí puede estar la demo en directo.
 2. Se conecta al canal como la consola (`?frames=1`) y pide, como lo haría una persona en el
@@ -62,12 +62,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "apps" / "console" / "public"
 NOMBRE = "sesion-b2b"
-PROTEGIDOS = {5173, 5174, 5175, 8700, 8701, 5301, 5302, 5303}
+PROTEGIDOS = set(range(5170, 5176)) | {8700, 8701, 8765} | set(range(5301, 5308))
 ENCARGOS = ["Registra la factura de Suministros Lumen",
             "Contesta al proveedor que la factura está registrada"]
 SESION = "b2b"
 CASO: dict[str, Any] | None = None  # --caso: un caso del catálogo (data/casos.json, #187)
 APRUEBA_S = 4.0          # lo que tarda «la persona» en leer la confirmación y aprobarla
+PAUSA_REPLAY_S = 3.0     # con respuestas grabadas, lo que «piensa» el modelo antes de cada una
 HUECO_MAX_S = 6.0        # un silencio más largo se acorta a esto en la reproducción
 ANCHO = 1100             # ancho de los JPEG publicados
 CALIDAD = 7              # ffmpeg -q:v (2 mejor, 31 peor); 7 es una calidad JPEG de unos 70
@@ -256,10 +257,17 @@ def seguir_agente(agente: subprocess.Popen, rec: Grabacion, gasto: list[str]) ->
 
 
 def revisar(rec: Grabacion) -> str | None:
-    """¿Es el flujo ensayado? Con un caso del catálogo, lo que pide el caso (casos_comun.falta)."""
+    """¿Es el flujo ensayado? Con un caso del catálogo, lo que pide el caso (casos_comun.falta) y,
+    si el caso espera una confirmación, las mismas comprobaciones de calidad que la sesión entera."""
     if CASO is not None:
         from casos_comun import falta
-        return falta([m for _, m in rec.msgs], CASO.get("comprueba", []))
+        msgs = [m for _, m in rec.msgs]
+        fallo = falta(msgs, CASO.get("comprueba", []))
+        if fallo is None and "confirmacion" in CASO.get("comprueba", []):
+            fallo = revisar_tramo(msgs)
+        elif fallo is None:
+            fallo = revisar_oraculo(msgs)
+        return fallo
     return revisar_b2b(rec)
 
 
@@ -275,27 +283,50 @@ def revisar_b2b(rec: Grabacion) -> str | None:
     if len(tramos) != len(ENCARGOS):
         return f"{len(tramos)} encargos grabados de {len(ENCARGOS)}"
     for n, msgs in enumerate(tramos, 1):
-        if not any(m.get("type") == "confirm_request" for m in msgs):
-            return f"el encargo {n} no pide confirmación"
-        aprobadas = [m["event"] for m in msgs if m.get("type") == "audit" and m["event"].get("kind") == "approval"
-                     and m["event"].get("approved_by")]
-        if not aprobadas:
-            return f"el encargo {n} no tiene la aprobación en el registro"
-        finales = [m["event"].get("model_saw") or "" for m in msgs if m.get("type") == "audit"
-                   and m["event"].get("kind") == "task" and "end_turn" in (m["event"].get("detail") or "")]
-        if any(re.match(r"\s*no (he|puedo|se ha)", f, re.I) or "no coincide" in f for f in finales):
-            return f"en el encargo {n}, 8 dice que no lo ha hecho o que algo no cuadra"
-        auditoria = [m["event"] for m in msgs if m.get("type") == "audit"]
-        if any(e.get("kind") == "blocked" and e.get("reason") == "presupuesto" for e in auditoria):
-            return f"en el encargo {n}, el oráculo se queda sin preguntas"
-        for e in auditoria:
-            if e.get("kind") != "oracle":
-                continue
-            toks = re.findall(r"‹[^›]+›", e.get("model_saw") or "")
-            if len(toks) >= 2 and len(set(toks)) == 1:
-                return f"en el encargo {n}, 8 compara un dato consigo mismo"
-            if re.search(r"no coincide|menor|mayor", e.get("detail") or ""):
-                return f"en el encargo {n}, el importe no cuadra en el oráculo"
+        fallo = revisar_tramo(msgs)
+        if fallo is not None:
+            return f"en el encargo {n}, {fallo}"
+    return None
+
+
+def revisar_tramo(msgs: list[dict[str, Any]]) -> str | None:
+    """Un encargo con una acción retenida: se pide confirmación, se aprueba, 8 termina después de
+    la aprobación sin decir que no lo ha hecho, y el oráculo no se usa mal."""
+    if not any(m.get("type") == "confirm_request" for m in msgs):
+        return "no pide confirmación"
+    auditoria = [m["event"] for m in msgs if m.get("type") == "audit"]
+    aprobadas = [i for i, e in enumerate(auditoria) if e.get("kind") == "approval" and e.get("approved_by")]
+    if not aprobadas:
+        return "no tiene la aprobación en el registro"
+    finales = [(i, e.get("model_saw") or "") for i, e in enumerate(auditoria)
+               if e.get("kind") == "task" and "end_turn" in (e.get("detail") or "")]
+    if not finales:
+        return "8 no termina"
+    if any(e.get("kind") == "act" and (e.get("model_saw") or "").startswith("act back") for e in auditoria):
+        return "8 da un rodeo (vuelve atrás)"
+    if finales[-1][0] < aprobadas[0]:
+        return "8 termina antes de que la persona apruebe"
+    if any(re.match(r"\W*no (he|puedo|se ha|está)", f, re.I) or re.search(r"no (está|ha quedado) registrad|no coincide", f, re.I)
+           for _, f in finales):
+        return "8 dice que no lo ha hecho o que algo no cuadra"
+    return revisar_oraculo(msgs)
+
+
+def revisar_oraculo(msgs: list[dict[str, Any]]) -> str | None:
+    """El oráculo no se queda sin preguntas, no compara un dato consigo mismo ni da un descuadre."""
+    for m in msgs:
+        if m.get("type") != "audit":
+            continue
+        e = m["event"]
+        if e.get("kind") == "blocked" and e.get("reason") == "presupuesto":
+            return "el oráculo se queda sin preguntas"
+        if e.get("kind") != "oracle":
+            continue
+        toks = re.findall(r"‹[^›]+›", e.get("model_saw") or "")
+        if len(toks) >= 2 and len(set(toks)) == 1:
+            return "8 compara un dato consigo mismo"
+        if re.search(r"no coincide|menor|mayor", e.get("detail") or ""):
+            return "el importe no cuadra en el oráculo"
     return None
 
 
@@ -420,6 +451,8 @@ def main() -> int:
     ap.add_argument("--fps", type=float, default=5.0, help="fotogramas por segundo como mucho, en cada pantalla")
     ap.add_argument("--intentos", type=int, default=6,
                     help="el modelo no siempre sigue el flujo ensayado: se repite hasta que lo sigue")
+    ap.add_argument("--con-ventana", action="store_true",
+                    help="Chromium con ventana (por defecto sin ventana, PRIV8_WEB_HEADLESS=1)")
     ap.add_argument("--caso", help="un caso B2B de data/casos.json (por ejemplo b2b-iban)")
     a = ap.parse_args()
 
@@ -476,10 +509,18 @@ def main() -> int:
                    "PRIV8_ALBA_URL": f"http://127.0.0.1:{a.alba_port}",
                    "PRIV8_INBOX_URL": f"http://127.0.0.1:{a.inbox_port}",
                    "PRIV8_REAL_FRAMES": "1", "PYTHONUNBUFFERED": "1"}
+            if not a.con_ventana:  # sin ventanas en el ordenador de quien graba; mismo tamaño y cursor
+                env["PRIV8_WEB_HEADLESS"] = "1"
             log(f"intento {intento} de {a.intentos}")
             cmd = ["uv", "run", "python", "-m", "agent.agent", "--web"]
             if replay is not None:
                 cmd += ["--replay", str(replay), "--task", ENCARGOS[0]]
+                # Empieza cuando el grabador ya mira, y al ritmo de un modelo (no en milisegundos).
+                env.update(PRIV8_REPLAY_ESPERA_CONSOLA="1", PRIV8_REPLAY_PAUSA_S=str(PAUSA_REPLAY_S))
+                # El registro dice quién decidió: el modelo de las respuestas grabadas («escrito a mano»).
+                autor = json.loads(replay.read_text(encoding="utf-8")).get("model")
+                if autor:
+                    env["PRIV8_MODEL"] = autor
             elif record is not None:
                 record.parent.mkdir(parents=True, exist_ok=True)
                 cmd += ["--record", str(record)]
@@ -508,11 +549,15 @@ def main() -> int:
             parar(p)
     assert rec is not None and tmp is not None
 
-    info = {"grabada": time.strftime("%Y-%m-%d"), "modelo": dotenv.get("PRIV8_MODEL") or os.environ.get("PRIV8_MODEL"),
-            "encargos": ENCARGOS}
+    modelo = dotenv.get("PRIV8_MODEL") or os.environ.get("PRIV8_MODEL")
+    if replay is not None:  # el modelo que dio las respuestas grabadas (o «escrito a mano»)
+        modelo = json.loads(replay.read_text(encoding="utf-8")).get("model") or modelo
+    info = {"grabada": time.strftime("%Y-%m-%d"), "modelo": modelo, "encargos": ENCARGOS}
     if CASO is not None:
+        # `fuente` del caso (data/casos.json) si lo dice: p. ej. que las decisiones del modelo van escritas a mano.
         info.update(caso=CASO["id"], vertical="b2b", titulo=CASO["titulo"], provisional=False,
-                    fuente="Alba Core y el correo reales, agente " + ("con respuestas grabadas" if replay else "en vivo"))
+                    fuente=CASO.get("fuente") or ("Alba Core y el correo reales, agente "
+                                                  + ("con respuestas grabadas" if replay else "en vivo")))
     sesion = montar(rec, a.fps, info)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from casos_comun import pares_incoherentes

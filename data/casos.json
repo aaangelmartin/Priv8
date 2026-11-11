@@ -45,19 +45,7 @@
         "bloqueo:destino"
       ],
       "replay": "agent/replays/casos/b2b-iban.json",
-      "provisional": {
-        "escena": "b2b",
-        "replay": "core/replays/casos/b2b-iban.json"
-      }
-    },
-    {
-      "id": "b2b-sin-protocolo",
-      "vertical": "b2b",
-      "titulo": "El mismo trámite sin protocolo",
-      "que": "La factura sin Priv8 CUA: el modelo recibe los datos reales. Para comparar.",
-      "pedido": null,
-      "feed": "sin-protocolo",
-      "fuente": "make sin-protocolo"
+      "fuente": "Alba Core y el correo reales, núcleo real; las decisiones del modelo, escritas a mano"
     },
     {
       "id": "b2c-saldo",

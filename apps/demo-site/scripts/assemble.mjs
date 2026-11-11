@@ -45,7 +45,17 @@ for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json', 'sesio
 // Las rutas profundas (/correo/bandeja, /erp/facturas...) las sirve el middleware con el index.html de su app
 // (functions/_middleware.js): _redirects no vale porque se aplicaría también a los archivos.
 
-// 2. Sin vídeos (#187): la web reproduce los casos en la consola. Los vídeos siguen en docs/entregables/video.
+// 2. Las grabaciones de la web (public/, ya copiadas por vite): la captura de cada caso de empresa y, de cada caso del
+//    móvil, su vídeo del emulador, su póster y lo que vio el modelo (public/movil/<caso>.json).
+const SITIO = readFileSync(join(SITE, 'src/contenido.js'), 'utf8');
+for (const id of [...SITIO.matchAll(/id: '(b2[bc]-[a-z-]+)'/g)].map((m) => m[1])) {
+  if (id.startsWith('b2c') && !existsSync(join(DIST, `movil/${id}.json`))) { log(`AVISO: ${id} sin grabación; la web no lo enseña`); continue; }
+  const archivos = id.startsWith('b2b') ? [`casos/${id}.jpg`] : [`movil/${id}.json`, `movil/${id}.jpg`];
+  if (id.startsWith('b2c') && existsSync(join(DIST, `movil/${id}.json`))) {
+    archivos.push(JSON.parse(readFileSync(join(DIST, `movil/${id}.json`), 'utf8')).video);
+  }
+  for (const f of archivos) if (!existsSync(join(DIST, f))) throw new Error(`La web no trae ${f} (caso ${id})`);
+}
 
 // 3. APK
 const APKS = [

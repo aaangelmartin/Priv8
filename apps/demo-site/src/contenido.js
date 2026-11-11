@@ -1,30 +1,29 @@
 /* Todo lo que enlaza demo.priv8.es. Las rutas que empiezan por / las copia scripts/assemble.mjs en dist/ al compilar;
    `file` es la ruta que se busca en /archivos.json para enseñar el tamaño o avisar si falta en esta build. */
 export const REPO = 'https://github.com/aaangelmartin/Priv8';
+const README = `${REPO}#`;
 
-/* Los casos preparados (#187): uno por grabación, en el catálogo común de data/casos.json (lo leen también el panel
-   local y los grabadores). Cada uno abre la consola real reproduciendo su sesión grabada (?feed=...). */
+/* Los casos salen del catálogo común (data/casos.json, #187), que leen también el panel local y los grabadores. */
 import catalogo from '../../../data/casos.json';
+const delCatalogo = (id) => catalogo.casos.find((c) => c.id === id) ?? {};
 
-/* Cómo se dibuja cada caso en su tarjeta: la cara de 8 (un modo del motor de ojos), el camino que recorre (iconos de
-   apps/console/src/iconos.jsx) y lo que pasa con el dato. `dato`: el valor real y el token que recibe el modelo;
-   `claro`, si el modelo lo recibe tal cual; `nunca`, si no sale nunca. `fin`: cómo acaba, con su tono. */
-const VISUAL = {
-  'b2b-factura': { cara: 'leer', camino: ['correo', 'abre', 'oraculo'], dato: { real: '1.254,30 €', tok: '‹IMPORTE_1›' }, fin: { tono: 'aviso', ico: 'espera', txt: 'Espera tu confirmación' } },
-  'b2b-respuesta': { cara: 'hablar', camino: ['correo', 'escribe', 'envia'], dato: { real: 'F-2026-0412', tok: '‹FACTURA_1›' }, fin: { tono: 'aviso', ico: 'espera', txt: 'Espera tu confirmación' } },
-  'b2b-iban': { cara: 'enfado', camino: ['correo', 'abre', 'bloqueo'], dato: { real: 'ES42 9100 0005…', tok: '‹IBAN_1-correo›' }, fin: { tono: 'bad', ico: 'alarma', txt: 'Bloqueado y alarma' } },
-  'b2b-sin-protocolo': { cara: 'miedo', camino: ['correo', 'abre', 'real'], dato: { real: 'ES91 2100 0418…', claro: true }, fin: { tono: 'bad', ico: 'real', txt: 'Datos reales al modelo' } },
-  'b2c-saldo': { cara: 'pensar', camino: ['banco', 'banco', 'banco', 'oraculo'], dato: { real: '17.977,98 €', tok: '‹SUMA_1›' }, fin: { tono: 'ok', ico: 'dice', txt: 'La cifra, en voz local' } },
-  'b2c-broker': { cara: 'apartar', camino: ['banco', 'escribe', 'espera', 'apartar'], dato: { real: '200 €', tok: '‹IMPORTE_1›' }, fin: { tono: 'aviso', ico: 'dice', txt: 'Confirmas por voz' } },
-  'b2c-asesoria': { cara: 'negar', camino: ['encargo', 'bloqueo'], dato: null, fin: { tono: 'bad', ico: 'rechazado', txt: 'No llega al modelo' } },
-  'b2c-clave': { cara: 'nuncasale', camino: ['banco', 'candado', 'apartar'], dato: { real: 'Alcor-2026', nunca: true }, fin: { tono: 'bad', ico: 'candado', txt: 'Nunca sale' } },
-};
+/* Priv8 para empresas: cada caso abre la consola real reproduciendo su sesión grabada (?feed=...), con las pantallas
+   reales de Alba Core y del correo junto a la vista de 8. `img`: un fotograma real de esa grabación. */
+export const EMPRESAS = [
+  { id: 'b2b-factura', titulo: 'Registrar la factura', linea: 'Lee el correo del proveedor, rellena el alta en Alba Core con tokens y espera tu sí.' },
+  { id: 'b2b-respuesta', titulo: 'Contestar al proveedor', linea: 'Escribe la respuesta sin ver ningún dato y no la envía hasta que la apruebas.' },
+  { id: 'b2b-iban', titulo: 'Cambio de IBAN bloqueado', linea: 'El IBAN que llega por correo no entra en el campo de pago. Salta la alarma de fraude.',
+    nota: 'Simula un modelo engañado por el correo.' },
+].map((c) => ({ ...c, pedido: delCatalogo(c.id).pedido, href: `/consola/?feed=${delCatalogo(c.id).feed}`, img: `/casos/${c.id}.jpg` }));
 
-export const CASOS = catalogo.casos.map((c) => ({ ...c, href: `/consola/?feed=${c.feed}`, visual: VISUAL[c.id] ?? { cara: 'mirar', camino: [], dato: null, fin: null } }));
-export const VERTICALES = [
-  { id: 'b2b', title: 'Priv8 para empresas', what: 'ERP antiguo y correo', ico: 'abre' },
-  { id: 'b2c', title: '8 en tu móvil', what: 'Tres bancos, por voz', ico: 'movil' },
-];
+/* Priv8 en el móvil: cada caso es una grabación del emulador (vídeo) con lo que recibió el modelo en cada paso
+   (public/movil/<id>.json, scripts/grabar_movil_video.py). */
+export const MOVIL = [
+  { id: 'b2c-saldo', titulo: '¿Cuánto tengo?', linea: 'Recorre los tres bancos y suma sin ver los saldos. La cifra la dice la voz del móvil.' },
+  { id: 'b2c-broker', titulo: 'Pasa 200 € al bróker', linea: 'Prepara la transferencia, te pide confirmación y mira a otro lado mientras pones el código.' },
+  { id: 'b2c-asesoria', titulo: '¿En qué invierto?', linea: 'No da consejo de inversión: la petición no llega al modelo.' },
+  { id: 'b2c-clave', titulo: 'La clave nunca sale', linea: 'En la entrada del banco, usuario y clave no llegan al modelo. Entras tú.' },
+].map((c) => ({ ...c, pedido: delCatalogo(c.id).pedido, datos: `/movil/${c.id}.json`, img: `/movil/${c.id}.jpg` }));
 
 /* `acceso`: usuario, clave y código SMS inventados de cada banco simulado. */
 export const APKS = [
@@ -42,47 +41,25 @@ adb shell settings put secure enabled_accessibility_services \\
   es.priv8.ocho/.Priv8AccessibilityService
 adb shell settings put secure accessibility_enabled 1`;
 
-/* La presentación del jurado, en la web (apps/landing/pitch). El PDF está en docs/entregables/priv8-presentacion.pdf. */
-export const PRESENTACION_URL = 'https://priv8.es/pitch/';
-
-/* Enlaces, en dos grupos. Cada uno: etiqueta corta, título, una línea y la dirección. `pending` sale en lugar del
-   enlace mientras no exista. */
-export const ENLACES = [
-  { group: 'La demo', items: [
-    { ico: 'abre', tag: 'Consola', title: 'Registrar la factura', what: 'B2B: una sesión real grabada, lo que ves tú junto a lo que ve el modelo.', href: '/consola/?feed=sesion-b2b-factura' },
-    { ico: 'movil', tag: 'Consola', title: 'Pasa 200 € al bróker', what: 'B2C: confirmación por voz y 8 mirando a otro lado.', href: '/consola/?feed=sesion-b2c-broker' },
-    { ico: 'real', tag: 'Consola', title: 'Sin protocolo', what: 'El mismo trámite sin Priv8 CUA: el modelo recibe los datos reales.', href: '/consola/?feed=sin-protocolo' },
-    { ico: 'presentacion', tag: 'Jurado', title: 'Presentación', what: 'La del jurado.', href: PRESENTACION_URL, pending: true },
-  ] },
-  { group: 'El proyecto', items: [
-    { ico: 'codigo', tag: 'Código', title: 'Repositorio', what: 'GitHub, con el README para ejecutarlo.', href: REPO },
-    { ico: 'web', tag: 'Web', title: 'priv8.es', what: 'Qué ve 8, cómo funciona y para quién es.', href: 'https://priv8.es' },
-    { ico: 'enchufe', tag: 'MCP', title: 'Con tu asistente', what: 'mcp.priv8.es, con tu modelo y tu clave.', href: 'https://mcp.priv8.es' },
-    { ico: 'jurado', tag: 'Jurado', title: 'Presentación', what: 'La del jurado, con 8 en directo. priv8.es/pitch', href: PRESENTACION_URL },
-  ] },
-];
-
-/* Córrelo en tu máquina: los pasos, cada uno con su orden y su enlace al README. */
-const README = `${REPO}#`;
+/* Córrelo en tu máquina: las mismas órdenes del README, cada una con su paso. `mode`: la cara de 8 en ese paso. */
 export const PASOS = [
-  { n: '1', ico: 'descarga', title: 'Clona y prepara', what: 'Python con uv; Node y pnpm para las apps web.', cmd: 'git clone https://github.com/aaangelmartin/Priv8\ncd Priv8 && uv sync && make web-install',
-    link: { label: 'Instalación', href: `${README}instalación` } },
-  { n: '2', ico: 'play', title: 'Sin clave, ya funciona', what: 'El núcleo real con respuestas grabadas del modelo: cero valores reales al modelo.', cmd: 'make demo',
-    link: { label: 'Sin claves', href: `${README}1-sin-claves` } },
-  { n: '3', ico: 'llave', title: 'Tu clave, en .env', what: 'Para 8 en vivo con Claude. Límites de gasto por encargo y por sesión.', cmd: 'cp .env.example .env',
-    link: { label: '.env.example', href: `${REPO}/blob/main/.env.example` } },
-  { n: '4', ico: 'pulsa', title: 'Doble clic y listo', what: 'Demo Priv8.command abre el panel: B2B o B2C con un botón y estos mismos casos en un clic.', cmd: 'make panel',
-    link: { label: 'Demo Priv8.command', href: `${REPO}/blob/main/Demo%20Priv8.command` } },
+  { n: 1, mode: 'leer', title: 'Prepara', text: 'Python con uv; Node y pnpm para las apps web.',
+    cmd: 'git clone https://github.com/aaangelmartin/Priv8\ncd Priv8 && uv sync && make web-install' },
+  { n: 2, mode: 'mirar', title: 'Sin clave', text: 'El núcleo real con respuestas grabadas del modelo. Al final, cero valores reales enviados.',
+    cmd: 'make demo' },
+  { n: 3, mode: 'pensar', title: 'Con tu clave', text: 'Alba Core, el correo y la consola en 127.0.0.1:5175. Pídele a 8 que registre la factura.',
+    cmd: 'cp .env.example .env\nmake demo-b2b' },
+  { n: 4, mode: 'escuchar', title: 'En el emulador', text: 'Un AVD de Android 14 llamado priv8. El script compila, instala y abre los puertos.',
+    cmd: 'scripts/movil.sh\nmake agent-android' },
 ];
-export const MAS = [
-  { ico: 'movil', tag: 'B2C', title: 'El emulador', what: 'scripts/movil.sh prepara el AVD, las APK y los puertos.', href: `${README}3-b2c-en-el-emulador` },
-  { ico: 'enchufe', tag: 'MCP', title: 'En tu asistente', what: 'Priv8 CUA como servidor MCP, con una línea.', href: 'https://mcp.priv8.es' },
-  { ico: 'graba', tag: 'Grabar', title: 'Tus propios casos', what: 'make grabar-casos graba todos los casos de esta página.', href: `${REPO}/tree/main/apps/console#readme` },
-];
+export const README_URL = `${README}ejecución`;
 
-export const EQUIPO = [
-  { name: 'Ángel Martín', user: 'aaangelmartin', role: 'Agente, Android, voz y diseño' },
-  { name: 'Pablo Rojo', user: 'rrojjo', role: 'Núcleo del protocolo' },
-  { name: 'Álvaro Carpintero', user: 'alvaarocl', role: 'ERP, correo, consola y telefonía' },
-  { name: 'Marco Barroso', user: 'marcoobarroso', role: 'App 8 y bancos simulados' },
+/* Enlaces del final, sobre cobalto. */
+export const ENLACES = [
+  { title: 'Presentación', what: 'La del jurado.', href: 'https://priv8.es/pitch' },
+  { title: 'Repositorio', what: 'El código y el README para ejecutarlo.', href: REPO },
+  { title: 'priv8.es', what: 'Qué ve 8, cómo funciona y para quién es.', href: 'https://priv8.es' },
+  { title: 'mcp.priv8.es', what: 'Priv8 en tu asistente, con tu modelo y tu clave.', href: 'https://mcp.priv8.es' },
+  { title: 'Alba Core', what: 'El ERP simulado de la demo, para usarlo a mano.', href: '/erp/' },
+  { title: 'El correo', what: 'La bandeja simulada, con la factura del proveedor.', href: '/correo/' },
 ];

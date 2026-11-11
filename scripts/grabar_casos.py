@@ -5,7 +5,7 @@
     uv run python scripts/grabar_casos.py --solo b2c      # solo B2C (emulador listo)
 
 B2B: cada caso de data/casos.json con scripts/grabar_sesion.py --caso ID (Alba Core y el
-correo reales en 5193 y 5194, Chromium con ventana, eventos en 8792). B2C: scripts/grabar_movil.py
+correo reales en 5193 y 5194, Chromium sin ventana, eventos en 8792). B2C: scripts/grabar_movil.py
 (el emulador, con 8700 y 8765 libres). Los casos con respuestas grabadas no gastan API; los
 demás usan el .env y guardan sus respuestas para la próxima vez. Al acabar, `make casos-provisionales`
 ya no toca los casos grabados de verdad.
