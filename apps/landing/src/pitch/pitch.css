@@ -655,3 +655,9 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .close5 { gap: 4.5cqw; }
 .close5 .e-hero { width: 22cqw; align-self: center; margin: 0 0 -2.2cqw 0; }
 .c5-qr svg { width: 27cqw; height: 27cqw; }
+
+/* 19: tres columnas centradas en vertical: la frase (a media altura del QR con su dirección), 8 en medio, el QR */
+.close5 { grid-template-columns: auto auto auto; gap: 4cqw; align-items: center; }
+.close5 .c5-ocho { width: 17cqw; margin: 0; align-self: center; }
+.c5-izq { justify-content: center; }
+.close5 .c5-ocho { transform: translateX(-.31cqw); }

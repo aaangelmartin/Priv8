@@ -718,9 +718,9 @@ function Cierre() {
       {show && <div className="clean" />}
       <div className="close5">
         <div className="c5-izq">
-          <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
           <R d={1} as="h2"><span className="line">El agente</span><span className="line">hace el trámite.</span><span className="line soft">Los datos se</span><span className="line soft">quedan contigo.</span></R>
         </div>
+        <E id={active ? 'hero-anchor' : undefined} className="e-hero c5-ocho rv" seq={[['alegria', 2200], ['mirar', 0]]} />
         <R d={3} className="c5-qr">
           <Qr rows={QR.web} label="Código QR a priv8.es" azul />
           <span className="cl-url">priv8.es</span>
