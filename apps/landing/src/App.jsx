@@ -13,8 +13,8 @@ const Tok = ({ children }) => <span className="tok">{children}</span>;
 
 /* ---------------------------------------------------------------- portada */
 /* Lo que hace 8, rotando en el titular: una tarea cada vez, entra desde abajo y sale por arriba. */
-/* alternan empresa y persona: lo que 8 hace en un ERP y lo que hace en tu móvil */
-const TASKS = ['registra facturas.', 'suma tus saldos.', 'paga a proveedores.', 'llama a tu banco.', 'frena un IBAN falso.', 'responde correos.', 'mueve tu dinero.'];
+/* alternan empresa y persona: lo que 8 hace en un ERP y lo que hace en tu móvil. Todas caben en una línea a 360 px. */
+const TASKS = ['registra facturas.', 'suma tus cuentas.', 'paga a proveedores.', 'llama a tu banco.', 'frena estafas.', 'contesta correos.', 'prepara tus pagos.'];
 function Rotator() {
   const [i, setI] = useState(0);
   const box = useRef(null);

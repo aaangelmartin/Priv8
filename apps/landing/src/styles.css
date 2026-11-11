@@ -1247,3 +1247,6 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .tcap-r { margin-top: 18px; }
 }
 .tn { cursor: pointer; }
+/* modelos: seis logos que ocupan todo el ancho del recuadro */
+.tz-cloud .models { gap: 8px; }
+.tz-cloud .models i { flex: 1 1 0; width: auto; min-width: 0; }

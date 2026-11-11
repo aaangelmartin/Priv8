@@ -84,11 +84,11 @@ export default function Companion({ pal, intro }) {
   useEffect(() => {
     if (stage !== 'wake') return undefined;
     const h = setTimeout(() => setBubble({ text: '¡Hola, soy 8!', show: true, big: true, side: 'left' }), 350);
-    /* mira a un lado y al otro: lo que mira se censura solo (el campo de datos escucha «p8look») */
-    const glance = (side, look) => () => { setLook(look); window.dispatchEvent(new CustomEvent('p8look', { detail: side })); };
+    /* mira a un lado y al otro: lo que mira se censura solo y vuelve a verse cuando aparta la vista (el campo escucha «p8look») */
+    const glance = (side, to) => () => { setLook(to); window.dispatchEvent(new CustomEvent('p8look', { detail: side })); };
     const g1 = setTimeout(glance(-1, [-0.95, 0.05, -6]), 800);
     const g2 = setTimeout(glance(1, [0.95, 0.05, 6]), 1550);
-    const g3 = setTimeout(() => setLook(null), 2250);
+    const g3 = setTimeout(glance(0, null), 2250);
     const f = setTimeout(() => { setBubble((b) => ({ ...b, show: false })); setStage('fly'); }, 2550);
     const b = setTimeout(() => setStage('done'), 3650);
     return () => { [h, g1, g2, g3, f, b].forEach(clearTimeout); };

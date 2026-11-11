@@ -19,11 +19,11 @@ export default function Field() {
     let still = false;
     try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
     let W = 0, H = 0, dpr = 1, items = [], raf = 0, ptr = null, lastPtr = -1e9, visible = true;
-    /* bienvenida: cuando 8 mira a un lado, ese lado se censura solo, del centro hacia fuera */
+    /* bienvenida: 8 mira a un lado y solo lo que mira se censura, como una mirada que pasa por encima de los datos.
+       Cuando deja de mirar, esos datos vuelven a verse. */
     const root = document.documentElement;
-    const seen = { '-1': 0, 1: 0 };
-    let landedAt = 0;
-    const onLook = (e) => { if (e.detail === -1 || e.detail === 1) seen[e.detail] = performance.now(); };
+    let gaze = 0, gx = null, gy = null;
+    const onLook = (e) => { const d = e.detail; gaze = d === -1 || d === 1 ? d : 0; gx = null; };
     window.addEventListener('p8look', onLook);
     const ROW = 34;
     const build = () => {
@@ -50,32 +50,42 @@ export default function Field() {
       ctx.clearRect(0, 0, W, H);
       const drift = still ? 0 : (now / 1000) * 9;
       const auto = now - lastPtr > 2500;
-      const intro = root.classList.contains('intro');
-      if (!intro && !landedAt && (seen['-1'] || seen[1])) landedAt = now;
-      /* lo censurado en la bienvenida se queda un momento y luego vuelve poco a poco a la lente normal */
-      const holding = intro || (landedAt && now - landedAt < 1400);
       /* sin cursor, la lente da vueltas alrededor de 8, como si mirase a su alrededor */
       const an = document.getElementById('hero-anchor'); const ar = an ? an.getBoundingClientRect() : null; const cr = cv.getBoundingClientRect();
       const ax = ar ? ar.left - cr.left + ar.width / 2 : W / 2, ay = ar ? ar.top - cr.top + ar.height / 2 : H * 0.3;
       const lx = auto ? ax + Math.cos(now / 2600) * Math.min(W * 0.36, 520) : ptr.x;
       const ly = auto ? ay + Math.sin(now / 2600) * Math.min(H * 0.22, 180) : ptr.y;
       const R = Math.min(220, Math.max(140, W * 0.13));
+      const intro = root.classList.contains('intro');
+      /* la mirada de 8 en la bienvenida: un óvalo junto a 8, hacia donde mira, que sale de sus ojos y se mueve un poco */
+      let look = null;
+      if (intro && gaze) {
+        const e8 = document.querySelector('.companion');
+        const r8 = e8 ? e8.getBoundingClientRect() : null;
+        const D = r8 ? r8.width * 46 / 64 : W * 0.3, c8x = r8 ? r8.left - cr.left + r8.width / 2 : W / 2, c8y = r8 ? r8.top - cr.top + r8.height / 2 : H / 2;
+        const GR = W < 700 ? 100 : Math.min(240, Math.max(150, W * 0.13));
+        const tx = c8x + gaze * (D * 0.5 + GR * (W < 700 ? 0.7 : 1.15)), ty = c8y - D * 0.06 + Math.sin(now / 520) * GR * 0.28;
+        if (gx === null) { gx = c8x + gaze * D * 0.3; gy = c8y; }
+        gx += (tx - gx) * 0.1; gy += (ty - gy) * 0.1;
+        look = { x: gx, y: gy, rx: GR * 1.25, ry: GR * (W < 700 ? 1.15 : 0.8) };
+      }
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
       ctx.textBaseline = 'middle';
       for (const it of items) {
         let y = it.y - (drift % (ROW * 2));
         if (y < -ROW) y += Math.ceil((H + ROW * 2) / ROW) * ROW;
-        const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly, near = Math.sqrt(dx * dx + dy * dy) < R;
+        const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly;
         const off = Math.abs(cx - W / 2) / (W / 2);
-        let want = near ? 1 : 0;
-        if (holding) {
-          const side = cx < W / 2 ? '-1' : 1, t0 = seen[side];
-          want = t0 && now > t0 + off * 650 ? 1 : 0;
-        }
-        it.t += (want - it.t) * (holding ? 0.18 : 0.12);
-        /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo */
-        const narrow = W < 700 && !holding ? 0.35 : 1;
-        const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90) * narrow;
+        let want;
+        if (intro) {
+          want = look && ((cx - look.x) / look.rx) ** 2 + ((y - look.y) / look.ry) ** 2 < 1 ? 1 : 0;
+        } else want = Math.sqrt(dx * dx + dy * dy) < R ? 1 : 0;
+        it.t += (want - it.t) * (intro ? 0.2 : 0.12);
+        /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo
+           (en la bienvenida no hay texto: se ve entero) */
+        const narrow = W < 700 && !intro ? 0.35 : 1;
+        /* en la bienvenida no hay texto que proteger: el campo se ve parejo, también junto a 8 */
+        const fade = (intro ? 0.9 : Math.min(1, Math.max(0.1, (off - 0.22) * 2.4))) * Math.min(1, y / 90) * narrow;
         if (it.t > 0.5) {
           ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`;
           /* el token se escribe centrado donde estaba el dato: se tokeniza en su sitio, sin moverse */

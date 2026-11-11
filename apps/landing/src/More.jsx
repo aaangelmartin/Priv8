@@ -19,7 +19,7 @@ const PIECES = [
   { k: 'yes', h: 'Tu «sí»', t: 'Transferir, invertir, firmar o enviar espera a una persona. La autenticación del banco la hace siempre ella.', v: <span className="btns"><i>Cancelar</i><i className="yes">Confirmar</i></span> },
   { k: 'log', h: 'Registro firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, encadenado y firmado para auditoría.', v: <span className="oq">09:12:31 aprobado por una persona · firmado</span> },
 ];
-const MODELS = ['Claude', 'ChatGPT', 'Gemini', 'Mistral', 'Llama'];
+const MODELS = ['Claude', 'ChatGPT', 'Grok', 'Gemini', 'Mistral', 'Llama'];
 
 /* El recorrido de un dato: entra por la pantalla, se tokeniza, cruza la frontera como token, el modelo decide y la
    orden vuelve para que tu máquina la complete. Un paquete viaja de nodo en nodo y abajo se explica cada paso. */
@@ -83,7 +83,7 @@ export function HowArch() {
         </div>
         <div className={'tmap' + (narrow ? ' tmap-m' : '')}>
           <div className="tz tz-local"><span>Tu máquina · los datos reales viven aquí</span></div>
-          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models" role="list" aria-label="Funciona con cualquier modelo">{MODELS.map((m) => <i key={m} role="listitem" title={m} aria-label={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' ? 'evenodd' : undefined} /></svg></i>)}</div></div>
+          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models" role="list" aria-label="Funciona con cualquier modelo">{MODELS.map((m) => <i key={m} role="listitem" title={m} aria-label={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' || m === 'Grok' ? 'evenodd' : undefined} /></svg></i>)}</div></div>
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {narrow
