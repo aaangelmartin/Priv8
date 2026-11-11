@@ -36,7 +36,7 @@ for (const sep of ['\u00b7', '-']) {
   assert.equal(lineaDe({ kind: 'observe_sent', app: 'alba-core', screen: 'factura.alta', counts: { verde: 3, ambar: 6, rojo: 0 } }).titulo, 'Observa Alba Core - alta de factura')
   assert.equal(lineaDe({ kind: 'task', detail: 'inicio - modelo - máx 20 pasos', model_saw: 'registra la factura' }).tipo, 'encargo')
   assert.equal(lineaDe({ kind: 'task', detail: 'tarea recibida - app' }), null)
-  assert.equal(lineaDe({ kind: 'task', detail: 'paso 3 - tool_use', model_saw: 'act {"op":"tap"}', ms: { model: 2100 } }).sub, 'act | 2,1 s')
+  assert.equal(lineaDe({ kind: 'task', detail: 'paso 3 - tool_use', model_saw: 'act {"op":"tap"}', ms: { model: 2100 } }).sub, 'act - 2,1 s')
   assert.equal(lineaDe({ kind: 'task', detail: 'paso 9 - end_turn', model_saw: `He registrado ${T('FACTURA_1|correo')}` }).tipo, 'dice')
   // La respuesta final larga solo va entera en el chat.
   assert.equal(lineaDe({ kind: 'task', detail: 'paso 9 - end_turn', model_saw: 'He registrado la factura.' }).texto, null)

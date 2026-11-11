@@ -114,7 +114,7 @@ export function lineaDe(ev, screen) {
       if (ev.model_saw && ES_LLAMADA.test(ev.model_saw)) {
         const ms = ev.ms?.model
         const herr = [...new Set(ev.model_saw.split(';').map((x) => x.trim().split(' ')[0]).filter(Boolean))]
-        return { tipo: 'paso', tono: 'neutro', titulo: paso ? `Paso ${paso}` : 'Decide', texto: null, sub: `${herr.join(', ')}${typeof ms === 'number' && ms > 0 ? ` | ${(ms / 1000).toFixed(1).replace('.', ',')} s` : ''}` }
+        return { tipo: 'paso', tono: 'neutro', titulo: paso ? `Paso ${paso}` : 'Decide', texto: null, sub: `${herr.join(', ')}${typeof ms === 'number' && ms > 0 ? ` - ${(ms / 1000).toFixed(1).replace('.', ',')} s` : ''}` }
       }
       if (/l[ií]mite/i.test(d)) return { tipo: 'fin', tono: 'aviso', titulo: 'Se ha quedado sin pasos', texto: null }
       if (/error/i.test(d)) return { tipo: 'fin', tono: 'aviso', titulo: 'El modelo no ha respondido', texto: null }
@@ -124,8 +124,8 @@ export function lineaDe(ev, screen) {
     case 'observe_sent': {
       const c = ev.counts
       const sub = ev.claro != null
-        ? `pantalla entera al modelo | ${ev.claro} ${ev.claro === 1 ? 'valor real' : 'valores reales'} en claro`
-        : c ? `${c.verde} visibles | ${c.ambar} tokenizados | ${c.rojo} nunca salen` : null
+        ? `pantalla entera al modelo - ${ev.claro} ${ev.claro === 1 ? 'valor real' : 'valores reales'} en claro`
+        : c ? `${c.verde} visibles - ${c.ambar} tokenizados - ${c.rojo} nunca salen` : null
       return { tipo: 'observa', tono: ev.claro ? 'bloqueo' : 'neutro', titulo: `Observa ${nombreApp(ev.app)}${ev.screen ? ` - ${nombrePantalla(ev.screen)}` : ''}`, texto: null, sub }
     }
     case 'act': {
