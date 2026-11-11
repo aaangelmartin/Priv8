@@ -96,7 +96,7 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 @media (max-width: 700px) { .hero h1 .line { white-space: normal; } }
 /* rotador del titular: el de la landing (.rotator, .rot-item), con el icono del asistente a la izquierda */
 .rotator { position: relative; display: inline-grid; vertical-align: bottom; text-align: left; transition: width .6s var(--ease); }
-.rot-item { position: relative; grid-area: 1 / 1; justify-self: start; white-space: nowrap; color: #fff; pointer-events: none; }
+.rot-item { position: relative; grid-area: 1 / 1; justify-self: start; white-space: nowrap; color: inherit; pointer-events: none; }
 .rot-item .ch { display: inline-block; padding: .14em .14em .24em; margin: -.14em -.14em -.24em; opacity: 0; transform: translateY(.14em) scale(.96); filter: blur(8px); transition: opacity .45s ease, transform .6s cubic-bezier(.2, .9, .25, 1), filter .5s ease; transition-delay: calc(var(--j) * 22ms); }
 .rot-item.on .ch { opacity: 1; transform: none; filter: none; }
 .rot-item.out .ch { opacity: 0; transform: translateY(-.14em) scale(.98); filter: blur(8px); transition-duration: .35s, .45s, .35s; transition-delay: calc(var(--j) * 12ms); }
