@@ -24,6 +24,11 @@ fotogramas repetidos se quitan y se limita el ritmo (--fps). Nada del .env entra
 grabación: al final se comprueba que ningún valor suyo aparece en lo escrito.
 
 Gasta API: dos encargos con PRIV8_MODEL (Haiku en la demo), con los límites de gasto del agente.
+
+Un caso del catálogo (#187, data/casos.json): `--caso b2b-iban` graba solo su pedido en
+apps/console/public/<feed>.json y comprueba lo que pide el caso. Si el caso tiene `replay`
+y el archivo existe, usa esas respuestas grabadas (sin API); si no, va en vivo y las guarda
+ahí para la próxima vez. `make grabar-casos` graba todos (scripts/grabar_casos.py).
 """
 
 from __future__ import annotations
@@ -53,6 +58,7 @@ PROTEGIDOS = {5173, 5174, 5175, 8700, 8701, 5301, 5302, 5303}
 ENCARGOS = ["Registra la factura de Suministros Lumen",
             "Contesta al proveedor que la factura está registrada"]
 SESION = "b2b"
+CASO: dict[str, Any] | None = None  # --caso: un caso del catálogo (data/casos.json, #187)
 APRUEBA_S = 4.0          # lo que tarda «la persona» en leer la confirmación y aprobarla
 HUECO_MAX_S = 6.0        # un silencio más largo se acorta a esto en la reproducción
 ANCHO = 1100             # ancho de los JPEG publicados
@@ -118,8 +124,9 @@ def parar(proc: subprocess.Popen | None) -> None:
 # ------------------------------------------------------------------ grabación en vivo
 
 class Grabacion:
-    def __init__(self, tmp: Path) -> None:
+    def __init__(self, tmp: Path, movil: bool = False) -> None:
         self.tmp = tmp
+        self.movil = movil  # Android: todos los fotogramas son la pantalla real del móvil
         self.msgs: list[tuple[float, dict[str, Any]]] = []   # (hora, mensaje) sin fotogramas
         self.vista: list[tuple[float, Path, dict[str, Any]]] = []  # fotogramas de la vista de 8
         self.reales: list[tuple[float, Path, dict[str, Any]]] = []  # los de la ventana real
@@ -132,7 +139,7 @@ class Grabacion:
             img = m.get("img")
             if not isinstance(img, str):
                 return
-            real = m.get("vista") == "real"
+            real = m.get("vista") == "real" or self.movil
             f = self.tmp / "vista" / f"{'r' if real else 'v'}{int(t * 1000)}.jpg"
             f.write_bytes(base64.b64decode(img))
             if real:
@@ -143,7 +150,8 @@ class Grabacion:
         self.msgs.append((t, m))
 
 
-async def grabar(port: int, rec: Grabacion, agente: subprocess.Popen, fin_s: float) -> None:
+async def grabar(port: int, rec: Grabacion, agente: subprocess.Popen, fin_s: float, *,
+                 con_replay: bool = False) -> None:
     import websockets
 
     url = f"ws://127.0.0.1:{port}/events?frames=1"
@@ -184,6 +192,17 @@ async def grabar(port: int, rec: Grabacion, agente: subprocess.Popen, fin_s: flo
                 asyncio.create_task(aprobar(m["id"]))
 
     lector = asyncio.create_task(recibir())
+    if con_replay:
+        # Con respuestas grabadas el agente empieza solo (--replay --task): el pedido entra en la
+        # grabación como lo habría escrito la persona, y se espera a que el agente acabe.
+        rec.guardar({"type": "task_request", "session": SESION, "text": ENCARGOS[0]})
+        limite = time.monotonic() + 420
+        while agente.poll() is None and time.monotonic() < limite:
+            await asyncio.sleep(0.25)
+        await asyncio.sleep(fin_s)
+        lector.cancel()
+        await ws.close()
+        return
     await asyncio.sleep(2.5)  # la primera pantalla y unos fotogramas antes del primer encargo
     for i, texto in enumerate(ENCARGOS):
         antes = rec.terminados
@@ -217,6 +236,14 @@ def seguir_agente(agente: subprocess.Popen, rec: Grabacion, gasto: list[str]) ->
 
 
 def revisar(rec: Grabacion) -> str | None:
+    """¿Es el flujo ensayado? Con un caso del catálogo, lo que pide el caso (casos_comun.falta)."""
+    if CASO is not None:
+        from casos_comun import falta
+        return falta([m for _, m in rec.msgs], CASO.get("comprueba", []))
+    return revisar_b2b(rec)
+
+
+def revisar_b2b(rec: Grabacion) -> str | None:
     """¿Es el flujo ensayado? Cada encargo deja una acción retenida (registrar, enviar) que se
     aprueba y se ejecuta, y 8 no acaba diciendo que no lo ha hecho. None si lo es; si no, por qué."""
     tramos: list[list[dict[str, Any]]] = []
@@ -304,6 +331,7 @@ def montar(rec: Grabacion, fps: float, info: dict[str, Any]) -> dict[str, Any]:
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
 
+    vista = elegir(rec.vista, fps)
     reales = elegir(rec.reales, fps)
 
     primero = next((t for t, m in rec.msgs if m.get("type") == "task_request"), rec.msgs[0][0] if rec.msgs else 0)
@@ -360,7 +388,22 @@ def main() -> int:
     ap.add_argument("--fps", type=float, default=5.0, help="fotogramas por segundo como mucho, en cada pantalla")
     ap.add_argument("--intentos", type=int, default=6,
                     help="el modelo no siempre sigue el flujo ensayado: se repite hasta que lo sigue")
+    ap.add_argument("--caso", help="un caso B2B de data/casos.json (por ejemplo b2b-iban)")
     a = ap.parse_args()
+
+    global CASO, NOMBRE, ENCARGOS
+    replay: Path | None = None
+    record: Path | None = None
+    if a.caso:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from casos_comun import caso as buscar
+        CASO = buscar(a.caso)
+        if CASO["vertical"] != "b2b":
+            sys.exit(f"{a.caso} es B2C: scripts/grabar_movil.py")
+        NOMBRE, ENCARGOS = CASO["feed"], [CASO["pedido"]]
+        if CASO.get("replay"):
+            ruta = ROOT / CASO["replay"]
+            replay, record = (ruta, None) if ruta.exists() else (None, ruta)
 
     puertos = [a.alba_port, a.inbox_port, a.events_port]
     if PROTEGIDOS & set(puertos):
@@ -372,8 +415,11 @@ def main() -> int:
         sys.exit("Falta ffmpeg (brew install ffmpeg)")
     env_file = a.env_file if a.env_file and a.env_file.exists() else None
     dotenv = leer_env(env_file)
-    if "ANTHROPIC_API_KEY" not in dotenv and "ANTHROPIC_API_KEY" not in os.environ:
+    if replay is None and "ANTHROPIC_API_KEY" not in dotenv and "ANTHROPIC_API_KEY" not in os.environ:
         sys.exit("Falta ANTHROPIC_API_KEY (--env-file)")
+    if replay is not None:
+        log(f"respuestas grabadas de {replay.relative_to(ROOT)}: sin API")
+        dotenv = {}
 
     import threading
 
@@ -399,12 +445,18 @@ def main() -> int:
                    "PRIV8_INBOX_URL": f"http://127.0.0.1:{a.inbox_port}",
                    "PRIV8_REAL_FRAMES": "1", "PYTHONUNBUFFERED": "1"}
             log(f"intento {intento} de {a.intentos}")
-            agente = subprocess.Popen(["uv", "run", "python", "-m", "agent.agent", "--web"], cwd=ROOT, env=env,
+            cmd = ["uv", "run", "python", "-m", "agent.agent", "--web"]
+            if replay is not None:
+                cmd += ["--replay", str(replay), "--task", ENCARGOS[0]]
+            elif record is not None:
+                record.parent.mkdir(parents=True, exist_ok=True)
+                cmd += ["--record", str(record)]
+            agente = subprocess.Popen(cmd, cwd=ROOT, env=env,
                                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True,
                                       start_new_session=True)
             try:
                 threading.Thread(target=seguir_agente, args=(agente, rec, gasto), daemon=True).start()
-                asyncio.run(grabar(a.events_port, rec, agente, fin_s=4.0))
+                asyncio.run(grabar(a.events_port, rec, agente, fin_s=4.0, con_replay=replay is not None))
             finally:
                 parar(agente)
             if gasto:
@@ -426,6 +478,9 @@ def main() -> int:
 
     info = {"grabada": time.strftime("%Y-%m-%d"), "modelo": dotenv.get("PRIV8_MODEL") or os.environ.get("PRIV8_MODEL"),
             "encargos": ENCARGOS}
+    if CASO is not None:
+        info.update(caso=CASO["id"], vertical="b2b", titulo=CASO["titulo"], provisional=False,
+                    fuente="Alba Core y el correo reales, agente " + ("con respuestas grabadas" if replay else "en vivo"))
     sesion = montar(rec, a.fps, info)
     texto = json.dumps(sesion, ensure_ascii=False, separators=(",", ":"))
     # Sin punto medio en lo publicado (norma de la marca): el separador de los textos del núcleo

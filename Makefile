@@ -130,6 +130,19 @@ videos: video-sin-protocolo video-con-protocolo
 grabar-sesion:
 	uv run python scripts/grabar_sesion.py --env-file $${ENV_FILE:-.env}
 
+# Los casos preparados de la demo (#187, data/casos.json), uno por grabación, para demo.priv8.es y la
+# consola (?feed=sesion-<caso>). grabar-casos graba todos de una vez: B2B con grabar_sesion.py --caso
+# (Chromium con ventana, puertos libres) y B2C en el emulador con grabar_movil.py (scripts/movil.sh antes;
+# 8700 y 8765 libres). Usa las respuestas grabadas que haya (sin API) y el .env para las demás.
+# SOLO=b2b o SOLO=b2c graba solo una parte. casos-provisionales hace, sin emulador, API ni ventanas, las
+# grabaciones provisionales de los casos que aún no tienen una real (núcleo real, escenas y móvil falso).
+.PHONY: grabar-casos casos-provisionales
+grabar-casos:
+	uv run python scripts/grabar_casos.py --env-file $${ENV_FILE:-.env} $${SOLO:+--solo $$SOLO}
+
+casos-provisionales:
+	PRIV8_AUDIT=off uv run python scripts/casos_provisionales.py
+
 # 8 calls the simulated Banca Alcor line (#24): AI disclosure first, menu by DTMF, then it
 # hands the call to the person. No keys. OBJETIVO="bloquear la tarjeta", VOZ=texto|local|elevenlabs.
 llamada-banco:

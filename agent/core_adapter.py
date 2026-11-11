@@ -226,7 +226,8 @@ ANDROID_START_APP = "es.priv8.banks.alcor"
 
 def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = ANDROID_START_APP,
                   simulated_persona: bool = False, module: str = CORE_MODULE, events: bool = True,
-                  device_timeout: float = 120, login_timeout: float = 300, bridge: Any = None) -> Any:
+                  device_timeout: float = 120, login_timeout: float = 300, bridge: Any = None,
+                  wait_login: bool = True) -> Any:
     """Serve the Android bridge (:8765) and connect the phone to `session` in the real core.
 
     The emulator's accessibility service (apps/android-8) connects as the client; run
@@ -236,7 +237,9 @@ def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = AND
     `simulated_persona` (replays, tests) a simulated person approves instead of the phone.
 
     Before the agent starts, the harness (not the agent) opens `start_app` and waits until
-    the person is past its login: the login is always the person's.
+    the person is past its login: the login is always the person's. With `wait_login=False` it
+    opens `start_app` and does not wait (the case where 8 meets the login and leaves it to the
+    person, #187).
     """
     import sys
     from pathlib import Path
@@ -277,6 +280,9 @@ def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = AND
             in_front = False
         if not in_front and not bridge.open_app(start_app):  # again in front: back to its login
             say(f"el móvil no dejó abrir {start_app}: ábrela tú")
+        if not wait_login:
+            mod.connect(session, bridge)
+            return bridge
         say("si la app pide entrar, hazlo en el emulador: el login siempre es de la persona")
         past_login = lambda raw: (raw.get("app") == start_app and raw.get("screen") not in (None, "login")  # noqa: E731
                                   and not mod.pause_before_policy(raw))
