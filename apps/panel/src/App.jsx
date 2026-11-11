@@ -71,7 +71,8 @@ const OJOS = { parado: 'mirar', preparando: 'cargando', listo: 'alegria', error:
 
 function Demo({ id, estado, onAccion, busy }) {
   const d = DEMOS[id];
-  const activo = estado && estado.modo === id;
+  // modos: las dos encendidas a la vez, solo para la imagen del README (scripts/banners.py)
+  const activo = estado && (estado.modo === id || (estado.modos || []).includes(id));
   const fase = activo ? estado.fase : 'parado';
   const piezas = (activo && estado.piezas) || {};
   const otro = estado && estado.modo && estado.modo !== id;
