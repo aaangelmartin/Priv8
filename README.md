@@ -74,10 +74,29 @@ cp .env.example .env
 | `PRIV8_AUDIT` | Dónde va el registro firmado (por defecto `audit/priv8.jsonl`); `off` lo deja solo en memoria |
 | `PRIV8_AUDIT_KEY` | Clave ed25519 del registro (por defecto `audit/priv8.key`; se crea si no existe) |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | Voz en la nube (ver `voice/README.md`) |
+| `PRIV8_MODEL` | Modelo del agente. El ejemplo trae `claude-haiku-5-5`, el de la demo |
+| `PRIV8_TASK_BUDGET_USD`, `PRIV8_SESSION_BUDGET_USD` | Topes de gasto por encargo (0,05 $) y por sesión (0,50 $) |
 
 Para pasar el `.env` a un comando: `uv run --env-file .env …`.
 
 ## Ejecución
+
+### La demo en directo, con doble clic
+
+En macOS, doble clic en **`Demo Priv8.command`**, en la raíz del repositorio. Abre el Terminal y, en el navegador, un panel local en http://127.0.0.1:5170 con dos botones:
+
+- **Preparar B2B:** Alba Core con la sesión abierta, el correo con la factura, la consola y 8 esperando el encargo. Cuando está lista, "Abrir la consola" y pídele a 8, por ejemplo, «Registra la factura de Suministros Lumen que ha llegado por correo».
+- **Preparar B2C:** compila e instala la app Priv8 y los tres bancos, arranca el emulador, abre los puertos y deja la app Priv8 delante con 8 escuchando. Se le habla o se le escribe en el móvil: «¿Cuánto tengo entre mis bancos?» o «Pasa 200 € al bróker».
+
+Las dos usan el mismo 8, así que preparar una para la otra. Cada pieza sale en verde cuando está en marcha y "Lo que va pasando" muestra el registro. Para pararlo todo, cierra la ventana del Terminal o pulsa `Ctrl-C`.
+
+Antes, una vez:
+
+1. Lo de [Requisitos](#requisitos): uv, pnpm y, para B2C, Android Studio con el emulador `priv8`.
+2. `cp .env.example .env` y pon tu `ANTHROPIC_API_KEY` (ver [Configuración](#configuración)). El panel avisa si falta.
+3. Si macOS no deja abrir el archivo la primera vez: clic derecho, Abrir. Si perdió el permiso de ejecución (por ejemplo, al descomprimir el ZIP): `chmod +x "Demo Priv8.command"`.
+
+La primera vez instala lo que falte (`make web-install` y el panel). En Linux, o sin doble clic: `make panel`.
 
 ### Las dos escenas de la demo, sin claves
 
