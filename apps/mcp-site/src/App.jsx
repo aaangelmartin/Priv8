@@ -258,7 +258,8 @@ function Footer() {
           <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
         </div>
         <div className="foot-word">
-          <Eight className="spot-foot" mode="mirar" fg="#2D45D6" cut="#FFFFFF" label="8" />
+          {/* el sitio de 8 es el .spot-foot de la landing; 8 va encima como el Companion al aterrizar */}
+          <div className="spot-foot" aria-hidden="true"><Eight className="foot-word-eight" mode="mirar" fg="#2D45D6" cut="#FFFFFF" label="8" /></div>
           <span>Priv8</span>
         </div>
       </div>

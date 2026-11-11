@@ -12,7 +12,7 @@
   --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --margin: clamp(16px, 4vw, 56px);
+  --margin: clamp(20px, 4vw, 56px);
   --ease: cubic-bezier(.2, .8, .2, 1);
   --r: 28px;
   color-scheme: light;
@@ -199,8 +199,10 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .foot-cols a:hover { opacity: 1; transform: translateX(3px); }
 .foot-word { display: flex; align-items: center; justify-content: center; gap: .14em; margin-top: clamp(48px, 7vw, 90px); padding-bottom: clamp(28px, 4vw, 56px); font: 700 clamp(4.5rem, 1rem + 15vw, 16rem)/.9 var(--f-display); letter-spacing: -.055em; color: var(--band); user-select: none; }
 .foot-word > span { color: var(--band); }
-.spot-foot { width: 1.05em; aspect-ratio: 46 / 32; flex: none; transform: scale(1.4); transform-origin: right center; }
-.spot-foot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.spot-foot { width: 1.05em; aspect-ratio: 46 / 32; flex: none; position: relative; }
+/* 8 como lo deja el Companion de la landing al aterrizar: un cuadrado de lado ancho × 64 / 46, centrado en su sitio */
+.foot-word-eight { position: absolute; left: 50%; top: 50%; width: calc(100% * 64 / 46); aspect-ratio: 1; transform: translate(-50%, -50%); }
+.foot-word-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
 /* firma «by laaabs», encima del nombre grande, como en la landing */
 .foot-by-row { display: flex; justify-content: center; margin-top: clamp(40px, 6vw, 72px); }
 .foot-by { display: block; width: 104px; height: 24px; background: var(--ink-2); -webkit-mask: var(--by) center / contain no-repeat; mask: var(--by) center / contain no-repeat; transition: background-color .15s ease; }
