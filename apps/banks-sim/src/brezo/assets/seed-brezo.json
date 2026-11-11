@@ -5,9 +5,9 @@
     "name": "Brezo Banco"
   },
   "user": {
-    "login": "lferrer",
+    "login": "amartin",
     "password": "Brezo-2026",
-    "name": "Lucía Ferrer",
+    "name": "Ángel Martín",
     "otp": "730518"
   },
   "accounts": [
@@ -21,19 +21,19 @@
   "contacts": [
     {
       "id": "alcor",
-      "name": "Lucía Ferrer - Banca Alcor",
+      "name": "Ángel Martín - Banca Alcor",
       "iban": "ES4391000001574012345678",
       "own": true
     },
     {
       "id": "nimbo",
-      "name": "Lucía Ferrer - Nimbo Bróker",
+      "name": "Ángel Martín - Nimbo Bróker",
       "iban": "ES0893000001052200334455",
       "own": true
     },
     {
       "id": "marta",
-      "name": "Marta Ruiz Gil",
+      "name": "Marco Barroso",
       "iban": "ES4891000004963300998877",
       "own": false
     }
@@ -56,8 +56,8 @@
     {
       "account": "online",
       "date": "2026-11-02",
-      "concept": "Bizum de Marta: entradas concierto",
-      "counterparty": "Marta Ruiz Gil",
+      "concept": "Bizum de Marco: entradas concierto",
+      "counterparty": "Marco Barroso",
       "amount_cents": 3800
     },
     {
@@ -71,7 +71,7 @@
       "account": "online",
       "date": "2026-10-15",
       "concept": "Traspaso desde Banca Alcor",
-      "counterparty": "Lucía Ferrer",
+      "counterparty": "Ángel Martín",
       "amount_cents": 50000
     },
     {

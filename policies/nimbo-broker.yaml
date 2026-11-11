@@ -63,7 +63,7 @@ screens:
     rules:
       - {match: {sel: id/origen_iban}, cls: ambar, tipo: IBAN, origen: propio}
       - {match: {sel: id/origen_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true, extract: '(-?\d[\d.,]*\s?€)'}  # "Disponible: 3.412,58 €"
-      - {match: {sel: id/contacto_nombre}, cls: ambar, tipo: PERSONA, origen: maestro, extract: '^(.+?)(?: - .+)?$'}  # "Lucía Ferrer - Nimbo Bróker": solo la persona
+      - {match: {sel: id/contacto_nombre}, cls: ambar, tipo: PERSONA, origen: maestro, extract: '^(.+?)(?: - .+)?$'}  # "Ángel Martín - Nimbo Bróker": solo la persona
       - {match: {sel: id/contacto_iban}, cls: ambar, tipo: IBAN, origen: maestro}
       # Campos de destino: qué orígenes acepta cada uno (procedencia, #10).
       - {match: {sel: id/iban_destino}, cls: ambar, tipo: IBAN, campo: transferencia.iban, acepta: [propio, maestro]}

@@ -124,8 +124,8 @@ class PatternLeakCheck:
 
     known_values are the real values of the session (the vault's right-hand
     column: IBAN, names, amounts as shown on screen). Matching ignores case,
-    accents and punctuation and works on whole words, so "Lucía Ferrer" also
-    catches "lucia ferrer," without "Ana" firing inside "mañana". Values with
+    accents and punctuation and works on whole words, so "Ángel Martín" also
+    catches "angel martin," without "Ana" firing inside "mañana". Values with
     digits are also matched with separators removed, so "ES91 2100..." catches
     "ES912100...".
 

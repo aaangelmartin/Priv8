@@ -77,10 +77,10 @@ def test_no_neighbour_context_is_sent(client):
     "Tienes 4.873,00 €",
     "Tu IBAN es ES91 2100 0418 4502 0005 1332",
     "Tienes ‹SUMA_1›",
-    "Hola Lucía Ferrer",
+    "Hola Ángel Martín",
 ])
 def test_final_block_stops_the_request(client, text):
-    cloud = voice(client, leak_check=PatternLeakCheck(known_values=["Lucía Ferrer"]))
+    cloud = voice(client, leak_check=PatternLeakCheck(known_values=["Ángel Martín"]))
     with pytest.raises(LeakBlocked):
         list(cloud.stream_text(text))
     assert client.text_to_speech.calls == []
