@@ -204,7 +204,7 @@ def sensibles(bank):
         out |= {("IBAN", iban(a["iban"])), ("IMPORTE", eur(a["balance_cents"]))}
     out.add(("IMPORTE", eur(sum(a["balance_cents"] for a in s["accounts"]))))
     for c in s["contacts"]:
-        out |= {("IBAN", iban(c["iban"])), ("PERSONA", c["name"].split(" · ")[0])}
+        out |= {("IBAN", iban(c["iban"])), ("PERSONA", c["name"].split(" - ")[0])}
     for m in s["movements"]:
         out |= {("IMPORTE", eur(m["amount_cents"], signed=True)), ("PERSONA", m["counterparty"]),
                 ("MOVIMIENTO", m["concept"])}

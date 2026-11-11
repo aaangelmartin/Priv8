@@ -35,7 +35,7 @@ OTHER_BANKS = {
     BREZO: ("Brezo Banco", "Cuenta online", "ES89 9200 0003 7855 0066 7788", "1.875,40 €"),
     NIMBO_APP: ("Nimbo Bróker", "Efectivo del bróker", "ES08 9300 0001 0522 0033 4455", "640,00 €"),
 }
-NIMBO = ("Lucía Ferrer · Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
+NIMBO = ("Lucía Ferrer - Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
 
 
 def _el(i: int, role: str, sel: str | None, text: str | None = None, label: str | None = None,
@@ -305,7 +305,7 @@ class FakePhone:
             ("k0n", "text", "id/contacto_nombre", NIMBO[0], None, "k0", None, True, True),
             ("k0i", "text", "id/contacto_iban", NIMBO[1], None, "k0", None, True, True),
             ("k1", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
-            ("k1n", "text", "id/contacto_nombre", "Lucía Ferrer · Brezo Banco", None, "k1", None, True, True),
+            ("k1n", "text", "id/contacto_nombre", "Lucía Ferrer - Brezo Banco", None, "k1", None, True, True),
             ("k1i", "text", "id/contacto_iban", "ES89 9200 0003 7855 0066 7788", None, "k1", None, True, True),
             ("k2", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
             ("k2n", "text", "id/contacto_nombre", "Marta Ruiz Gil", None, "k2", None, True, True),
