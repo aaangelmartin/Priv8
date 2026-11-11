@@ -100,10 +100,11 @@ APPS = {
     "alba": (5283, "apps/erp-sim", {"VITE_ALBA_SESION": "admin.alba"}, "/facturas/alta", (1280, 800)),
     "correo": (5284, "apps/inbox-sim", {}, "/", (1280, 800)),
 }
-# el panel sin servidor: su /api/estado con la demo B2B lista
-ESTADO_PANEL = {"modo": "b2b", "fase": "listo", "motivo": "", "ocupado": "", "clave": True, "log": [],
+# el panel sin servidor: su /api/estado con B2B y B2C listas a la vez, las dos encendidas
+ESTADO_PANEL = {"modo": "b2b", "modos": ["b2b", "b2c"], "fase": "listo", "motivo": "", "ocupado": "",
+                "clave": True, "log": [],
                 "piezas": {"alba": True, "correo": True, "consola": True, "agente": True,
-                           "emulador": False, "puente": False}}
+                           "emulador": True, "puente": True}}
 
 
 def _espera_puerto(puerto: int, segundos: float = 40) -> None:

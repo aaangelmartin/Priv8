@@ -44,6 +44,7 @@ screens:
 | `resumen` | regla crítica | `sel` de los datos que se leen en la petición de confirmación |
 | `solo_persona` | regla | El agente no puede tocarlo (entrar, huella, confirmar OTP): `act` devuelve `denied: rojo` |
 | `sin_regla` | pantalla | Qué pasa con un elemento sin regla: `detector` (por defecto: lo que detecte se tokeniza, el resto es verde) o `ambar` (se tokeniza entero como `CODIGO`, la opción prudente) |
+| `modo` | política | `estricto` o `permisivo` (#177). En estricto, que es el modo por defecto, al modelo solo llega el texto que cubre una regla: un elemento sin regla sale sin su texto (salvo con `sin_regla: ambar`, que lo tokeniza) y los textos sueltos de la página no salen. En permisivo, lo uno y lo otro pasan por el detector. Con `PRIV8_POLITICA_ESTRICTA` gana el más estricto |
 | `paused` | pantalla | Toda la pantalla pausa al agente (`autenticacion`): `observe` la devuelve con `paused` |
 | `pause_on_focus` | pantalla | `sel` que, con el foco, pausan al agente mientras la persona escribe |
 

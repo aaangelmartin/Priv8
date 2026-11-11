@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any, Literal, Protocol, runtime_checkable
+from typing import Any, Callable, Literal, Protocol, runtime_checkable
 
 # docs/contracts/token.md: ‹TIPO_n-etiqueta›
 TOKEN_RE = re.compile(r"‹([A-Z]+)_(\d+)(?:-([a-z]+))?›")
@@ -144,6 +144,7 @@ class Core:
     leak: LeakCheckPort
     audit: AuditPort
     voice: VoicePort | None = None
+    modo: Callable[[str | None], str] | None = None  # modo de la política de una app (#177); solo el real
 
 
 def tokens_in(text: str) -> list[str]:

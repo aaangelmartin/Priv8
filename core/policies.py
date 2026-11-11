@@ -3,10 +3,16 @@
 Una política dice, para una app, qué pantallas conoce, qué clase y tipo tiene
 cada elemento, a qué campo de destino corresponde y qué acciones son críticas.
 Pantalla sin política: no sale (denied: sin_regla).
+
+Modo de la política (modo estricto, #177): en `estricto` al modelo solo le llega lo que cubre
+una regla del sitio; en `permisivo`, también el resto de la página, filtrado por el detector
+(#154). Lo deciden la clave `modo` de la política y PRIV8_POLITICA_ESTRICTA; gana el más
+estricto y, si nadie dice nada, es estricto.
 """
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Any, Literal
@@ -22,6 +28,32 @@ Tipo = Literal[
 Origen = Literal["propio", "maestro", "correo", "tercero", "titular"]
 Critica = Literal["transferir", "invertir", "firmar", "enviar", "llamar"]
 Source = Literal["web", "android"]
+Modo = Literal["estricto", "permisivo"]
+
+ENV_ESTRICTA = "PRIV8_POLITICA_ESTRICTA"
+_SI = {"1", "true", "si", "sí", "on", "estricto", "estricta"}
+_NO = {"0", "false", "no", "off", "permisivo", "permisiva"}
+
+
+def modo_entorno() -> Modo | None:
+    """PRIV8_POLITICA_ESTRICTA: 1 (estricto en todas las apps), 0 (permisivo donde la
+    política no pida estricto) o vacía (lo que diga cada política; estricto si no dice nada)."""
+    v = os.environ.get(ENV_ESTRICTA, "").strip().lower()
+    if v in _SI:
+        return "estricto"
+    if v in _NO:
+        return "permisivo"
+    return None
+
+
+def resolver_modo(de_politica: Modo | None) -> Modo:
+    """Gana el más estricto de la política y del entorno; sin ninguno de los dos, estricto."""
+    entorno = modo_entorno()
+    if "estricto" in (de_politica, entorno):
+        return "estricto"
+    if "permisivo" in (de_politica, entorno):
+        return "permisivo"
+    return "estricto"
 
 DEFAULT_DIR = Path(__file__).resolve().parent.parent / "policies"
 
@@ -141,6 +173,13 @@ class Policy(_Strict):
     app: str  # web: clave del sitio; android: paquete
     source: Source
     screens: tuple[Screen, ...] = Field(min_length=1)
+    # estricto: solo sale lo que cubre una regla; permisivo: también la página filtrada (#154).
+    # Sin clave, el modo por defecto (estricto) o el de PRIV8_POLITICA_ESTRICTA.
+    modo: Modo | None = None
+
+    @property
+    def modo_efectivo(self) -> Modo:
+        return resolver_modo(self.modo)
 
     @model_validator(mode="after")
     def _unique(self) -> Policy:
@@ -183,6 +222,11 @@ class PolicySet:
     @property
     def apps(self) -> list[str]:
         return sorted(self._by_app)
+
+    def modo_for(self, app: str | None) -> Modo:
+        """Modo de la app (estricto si no tiene política: tampoco sale nada)."""
+        policy = self._by_app.get(app or "")
+        return policy.modo_efectivo if policy else resolver_modo(None)
 
     def screen_for(self, snap: dict[str, Any]) -> Screen | None:
         """None significa: no hay política y la pantalla no sale."""

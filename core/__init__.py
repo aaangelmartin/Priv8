@@ -65,6 +65,12 @@ def policies() -> PolicySet:
     return _policies
 
 
+def modo(app: str | None) -> str:
+    """Modo de la política de la app (#177): "estricto" (solo lo que cubre una regla del sitio)
+    o "permisivo" (también el resto de la página, filtrado por el detector)."""
+    return policies().modo_for(app)
+
+
 def _ms(t0: float) -> int:
     return int((time.perf_counter() - t0) * 1000)
 
@@ -89,6 +95,7 @@ def connect(session: str, adapter: Adapter) -> None:
         adapter.p8_check = lambda text: check(text)
         adapter.p8_mask = lambda text, s=session: mask_text(s, text)
         adapter.p8_preview = lambda raw, s=session: preview(s, raw)
+        adapter.p8_modo = modo
         old = getattr(adapter, "_p8_unsubscribe", None)
         if callable(old):
             old()
@@ -152,7 +159,8 @@ def preview(session: str, raw: dict[str, Any]) -> dict[str, Any] | None:
     screen = policies().screen_for(raw)
     if screen is None:
         return None
-    obs, _ = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session), leak=check)
+    obs, _ = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session), leak=check,
+                            estricto=modo(raw.get("app")) == "estricto")
     return obs if check(json.dumps(obs, ensure_ascii=False))["allowed"] else None
 
 
@@ -402,7 +410,11 @@ def observe(session: str) -> dict[str, Any]:
                 "model_saw": None, "detail": "pantalla sin política: no sale",
                 "ms": {"core": _ms(t0), "adapter": adapter_ms, "model": None}})
         return {"denied": "sin_regla", "detail": no_policy_detail(sess.adapter)}
-    obs, counts = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session), leak=check)
+    m = modo(raw.get("app"))
+    obs, counts = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session), leak=check,
+                                 estricto=m == "estricto")
+    vistos = {e["id"] for e in obs["elements"]}
+    fuera = sum(1 for e in raw.get("elements", []) if e.get("id") not in vistos)  # modo estricto
     verdict = check(json.dumps(obs, ensure_ascii=False))
     if not verdict["allowed"]:
         sess.last_raw, sess.last_screen, sess.last_obs = None, None, None
@@ -416,6 +428,7 @@ def observe(session: str) -> dict[str, Any]:
     toks = sorted({t for e in obs["elements"] for t in e.get("tokens", [])})
     record({"session": session, "kind": "observe_sent", "app": raw.get("app"), "screen": screen.id,
             "model_saw": f"observe {screen.id}", "tokens": toks, "counts": counts,
+            "detail": f"modo {m}" + (f" - {fuera} {'texto' if fuera == 1 else 'textos'} sin regla fuera" if fuera else ""),
             "ms": {"core": _ms(t0) - adapter_ms, "adapter": adapter_ms, "model": None}})
     return obs
 

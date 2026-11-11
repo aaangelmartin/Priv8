@@ -62,7 +62,6 @@ function Hero() {
         </p>
         <div className="cta in-4">
           <a className="btn btn-white" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a>
-          <a className="btn btn-ghost" href="#problema">Mira cómo trabaja</a>
         </div>
       </div>
     </section>

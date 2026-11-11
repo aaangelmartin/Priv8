@@ -154,6 +154,10 @@ def secrets_of(raw: dict[str, Any] | None, observed: dict[str, Any] | None,
         o = vistos.get(el.get("id"))
         if o is not None and o.get("cls", "verde") == "verde" and not el.get("password"):
             continue
+        if o is None and observed is not None and el.get("extra"):
+            # Texto suelto que el modo estricto (#177) deja fuera: la vista no lo pinta (marcador),
+            # y sus palabras sueltas («para», «Factura») casarían con lo que sí recibió el modelo.
+            continue
         for k in ("text", "label"):  # sin observación cuenta como ámbar
             v = el.get(k)
             visto = (o or {}).get(k) if (o or {}).get("cls") != "rojo" or k == "label" else None

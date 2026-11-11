@@ -56,7 +56,11 @@ demo-b2b:
 
 # Panel de la demo en directo (#169): una página local en :5170 con un botón para B2B y otro
 # para B2C. Es lo mismo que el doble clic en «Demo Priv8.command».
-.PHONY: panel
+.PHONY: panel entrega
+# Carpeta de entrega para Drive (#192): presentación, una cara, ZIP de main y el PDF índice en ./entrega.
+entrega:
+	scripts/entrega.sh
+
 panel:
 	cd apps/panel && ([ -d node_modules ] || pnpm install) && pnpm -s build
 	uv run python scripts/panel.py

@@ -103,7 +103,7 @@ def test_correo_trampa_en_la_bandeja_sale_tokenizado():
 
     raw = {"source": "web", "app": "inbox", "screen": None, "url": "http://127.0.0.1:5174/correo/3",
            "seq": 1, "focus": None, "system_dialog": None,
-           "elements": [{"id": "b", "role": "text",
+           "elements": [{"id": "b", "role": "text", "sel": "#cuerpo",
                          "text": "Hemos cambiado de banco: pague a ES4291000005316611223344. "
                                  "Un saludo, Marco Barroso. Tel. 612 345 678"}]}
     v = Vault("s1")

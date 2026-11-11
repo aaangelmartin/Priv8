@@ -3,6 +3,11 @@
 Aplica la política de la pantalla, el detector (si lo hay) y la bóveda. Lo
 rojo sale con text = None y nunca entra en la bóveda. El bloqueo final (#9)
 revisa el resultado antes de que salga.
+
+Modo estricto (#177, por defecto): solo sale el texto que cubre una regla del sitio (o la
+regla de la pantalla, sin_regla: ambar). Un texto suelto de la página sin regla no entra en
+la observación, y un elemento marcado sin regla sale con su rol, su etiqueta y sus acciones,
+pero sin su texto. En modo permisivo (#154), lo uno y lo otro pasan por el detector.
 """
 
 from __future__ import annotations
@@ -65,7 +70,7 @@ def _apply_rule(text: str, rule: Rule, vault: Vault, origen: str | None) -> str:
 
 
 def transform_element(el: dict[str, Any], screen: Screen, vault: Vault,
-                      detect: Detector) -> dict[str, Any]:
+                      detect: Detector, estricto: bool = True) -> dict[str, Any]:
     rule = screen.rule_for(el)
     label = T.neutralize(el["label"]) if el.get("label") else el.get("label")
     text = T.neutralize(el["text"]) if el.get("text") else el.get("text")
@@ -89,6 +94,10 @@ def transform_element(el: dict[str, Any], screen: Screen, vault: Vault,
             text, red = _replace_spans(text, detect(text), vault, screen.origen)
             if red:
                 cls = "rojo"
+    elif estricto and (el.get("extra") or screen.sin_regla != "ambar"):
+        # Modo estricto (#177): ninguna regla cubre este texto, así que no sale. El elemento
+        # se queda (se puede tocar o escribir en él) pero el modelo no sabe qué dice.
+        cls, text = "verde", None
     elif el.get("extra"):
         # Texto suelto de la página (#154): sin regla, siempre el detector, sea cual sea la
         # pantalla. Lo que encuentra va con su token (ámbar) o no sale (rojo); lo demás, verde.
@@ -138,19 +147,22 @@ def paused_reason(raw: dict[str, Any], screen: Screen) -> str | None:
 
 def observe_screen(raw: dict[str, Any], screen: Screen, vault: Vault, budget_left: int,
                    detect: Detector | None = None,
-                   leak: Any = None) -> tuple[dict[str, Any], dict[str, int]]:
+                   leak: Any = None, estricto: bool = True) -> tuple[dict[str, Any], dict[str, int]]:
     """Devuelve (observación, recuento por clase).
 
     leak(texto) -> {"allowed": bool}: el bloqueo final por elemento para los textos sueltos
-    (#154). Uno que no lo pasa no sale (rojo, sin texto) en vez de tumbar la pantalla entera."""
+    (#154). Uno que no lo pasa no sale (rojo, sin texto) en vez de tumbar la pantalla entera.
+    estricto: solo lo que cubre una regla (#177); False es el modo permisivo (#154)."""
     detect = detect or no_detector
-    raws = raw.get("elements", [])
+    todos = raw.get("elements", [])
+    # Modo estricto: un texto suelto sin regla del sitio ni siquiera entra en la observación.
+    raws = [el for el in todos if not (estricto and el.get("extra") and screen.rule_for(el) is None)]
     done: dict[int, dict[str, Any]] = {}
     # Primero lo marcado (sus reglas llenan la bóveda: el proveedor del PDF, el IBAN del correo)
     # y después los textos sueltos, para que el detector ya reconozca esos valores en ellos.
     for i, el in enumerate(raws):
         if not el.get("extra"):
-            done[i] = transform_element(el, screen, vault, detect)
+            done[i] = transform_element(el, screen, vault, detect, estricto)
     # Lo que las reglas del sitio tapan en un elemento marcado tampoco sale suelto en otro sitio
     # de la página (el remitente del correo repetido en la cabecera): mismo tipo de token.
     tapados: list[tuple[str, str]] = []
@@ -161,7 +173,7 @@ def observe_screen(raw: dict[str, Any], screen: Screen, vault: Vault, budget_lef
             tapados.append((" ".join(str(el["text"]).split()).casefold(), p.tipo if p else "CODIGO"))
     for i, el in enumerate(raws):
         if el.get("extra"):
-            out = transform_element(el, screen, vault, detect)
+            out = transform_element(el, screen, vault, detect, estricto)
             plano = " ".join((out.get("text") or "").split())
             if out["cls"] == "verde" and len(plano) >= 8:
                 tipo = next((t for real, t in tapados if plano.casefold() in real), None)

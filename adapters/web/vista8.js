@@ -15,7 +15,9 @@
 //                                      que encuentra el núcleo (a.mascaras: su token o un
 //                                      marcador). Un texto que no está en a.mascaras (ha
 //                                      aparecido entre las dos fases) sale como marcador.
-//                                      Con a.estricto, solo lo que el modelo recibió.
+//                                      Con a.estricto (modo estricto de la política, #177,
+//                                      o el segundo intento tras el bloqueo final), solo lo que
+//                                      el modelo recibió: el resto, marcador.
 //   imágenes, lienzos y vídeos         cajas vacías del mismo tamaño
 //   atributos                          solo los de presentación y los placeholder limpios;
 //                                      fuera title, alt, aria-*, href, data-*…
@@ -24,7 +26,8 @@
 // para que el adaptador pase el bloqueo final antes de escribirlo en la página espejo.
 //
 // args: {fase, force, key, obs: {ref: {cls, text, label}}, sel: {ref: '#id'}, over: {ref: texto},
-//        mascaras: {texto: null | [[t|tok|x, valor]]}, estricto}
+//        mascaras: {texto: null | [[t|tok|x, valor]]}, estricto, sueltos}
+//   sueltos: pintar los textos sueltos que recibió el modelo (por defecto, sin a.estricto)
 (a) => {
   const st = window.__p8v || (window.__p8v = { n: 1, sent: 0, key: null, mo: null })
   if (!st.mo) {
@@ -232,7 +235,7 @@
   }
 
   // ---- los textos sueltos (#154): cada uno exactamente como lo recibió el modelo, en su sitio
-  if (!a.estricto) {
+  if (a.sueltos ?? !a.estricto) {
     for (const el of body.querySelectorAll(`[${XA}]`)) {
       const ids = (el.getAttribute(XA) || '').split(',')
       el.removeAttribute(XA)

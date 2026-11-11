@@ -1,4 +1,8 @@
 # ERP Alba Core (Camino 2). Selectores del DOM real de apps/erp-sim (#19).
+#
+# Modo estricto (#177, el de por defecto): al modelo solo llega el texto que cubre una regla.
+# Los títulos, el menú y los botones tienen su regla verde; lo que no la tiene (la fecha de
+# alta o la categoría de la ficha, la cabecera con el usuario) no sale.
 version: 1
 app: alba-core
 source: web
@@ -47,7 +51,7 @@ screens:
         cls: verde
         critica: firmar
         resumen: ["#num-factura", "#importe", "#pago-iban"]
-      - {match: {sel_re: '^#(ver-proveedor|aviso)$'}, cls: verde}
+      - {match: {sel_re: '^#(ver-proveedor|aviso|alta-titulo|menu-alta|menu-facturas|menu-proveedores)$'}, cls: verde}
   - id: proveedor.ficha
     url_re: /proveedores/\d+
     rules:
@@ -76,7 +80,7 @@ screens:
       - match: {sel: "#guardar"}
         cls: verde
         critica: firmar
-      - {match: {sel: "#volver"}, cls: verde}
+      - {match: {sel_re: '^#(volver|ficha-titulo|menu-alta|menu-facturas|menu-proveedores)$'}, cls: verde}
   - id: login
     url_re: /login
     detector: false
@@ -85,6 +89,7 @@ screens:
         cls: rojo
       - match: {sel: "#clave"}
         cls: rojo
+      - {match: {sel_re: '^#(login-titulo|login-error|entrar)$'}, cls: verde}
   - id: facturas.lista
     url_re: /facturas/?$
     rules:
@@ -93,6 +98,7 @@ screens:
         cls: ambar
         tipo: FACTURA
         origen: maestro
+      - {match: {sel_re: '^#(facturas-titulo|menu-alta|menu-facturas|menu-proveedores)$'}, cls: verde}
   - id: proveedores.lista
     url_re: /proveedores/?$
     rules:
@@ -100,3 +106,4 @@ screens:
         cls: ambar
         tipo: PROVEEDOR
         origen: maestro
+      - {match: {sel_re: '^#(proveedores-titulo|menu-alta|menu-facturas|menu-proveedores)$'}, cls: verde}

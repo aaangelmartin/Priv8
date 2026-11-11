@@ -30,7 +30,7 @@ def erp_ficha():
 def correo(*elements):
     return {"source": "web", "app": "inbox", "screen": None, "url": "http://127.0.0.1:5174/correo/9",
             "seq": 1, "focus": None, "system_dialog": None,
-            "elements": [{"id": f"m{i}", "role": "text", "text": t} for i, t in enumerate(elements)]}
+            "elements": [{"id": f"m{i}", "role": "text", "text": t, "sel": "#cuerpo"} for i, t in enumerate(elements)]}
 
 
 class Web:
