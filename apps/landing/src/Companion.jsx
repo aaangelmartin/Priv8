@@ -73,6 +73,8 @@ export default function Companion({ pal, intro }) {
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
   const [look, setLook] = useState(null);
+  /* saluda al principio (abre los ojos y da el saltito) y pasa a mirar antes de mirar a los lados */
+  const [saluda, setSaluda] = useState(true);
   const box = useRef(null);
   const flyReq = useRef(false);
   const lastSpot = useRef(null);
@@ -84,6 +86,7 @@ export default function Companion({ pal, intro }) {
   useEffect(() => {
     if (stage !== 'wake') return undefined;
     const h = setTimeout(() => setBubble({ text: '¡Hola, soy 8!', show: true, big: true, side: 'left' }), 350);
+    const sa = setTimeout(() => setSaluda(false), 760);
     /* mira a un lado y al otro: lo que mira se censura solo y vuelve a verse cuando aparta la vista (el campo escucha «p8look») */
     const glance = (side, to) => () => { setLook(to); window.dispatchEvent(new CustomEvent('p8look', { detail: side })); };
     const g1 = setTimeout(glance(-1, [-0.95, 0.05, -6]), 800);
@@ -91,7 +94,7 @@ export default function Companion({ pal, intro }) {
     const g3 = setTimeout(glance(0, null), 2250);
     const f = setTimeout(() => { setBubble((b) => ({ ...b, show: false })); setStage('fly'); }, 2550);
     const b = setTimeout(() => setStage('done'), 3650);
-    return () => { [h, g1, g2, g3, f, b].forEach(clearTimeout); };
+    return () => { [h, sa, g1, g2, g3, f, b].forEach(clearTimeout); };
   }, []);
 
   useEffect(() => {
@@ -225,7 +228,7 @@ export default function Companion({ pal, intro }) {
   const cutA = useTweenColor(under);
   const col = { fg: fgA, cut: cutA };
   /* en la bienvenida, saluda: abre los ojos desde cerrados del todo, da un saltito y sonríe; luego vuela mirando */
-  const mode = override || (stage === 'wake' ? 'saludar' : stage === 'fly' ? 'mirar' : spot.mode);
+  const mode = override || (stage === 'wake' && saluda ? 'saludar' : stage === 'wake' || stage === 'fly' ? 'mirar' : spot.mode);
   return (
     <div className="layer8">
       <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => { if (stage === 'done' && spot.say) say(spot.say, spot.side); }} role="img" aria-label="8, el agente de Priv8">

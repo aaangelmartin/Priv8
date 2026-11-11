@@ -77,7 +77,7 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 .portada .top { position: absolute; left: 5.2cqw; right: 5.2cqw; top: 3.6cqw; display: flex; justify-content: space-between; align-items: center; z-index: 2; font: 500 1.05cqw/1 var(--f-mono); color: var(--soft-band); }
 .portada .top .brand { color: #fff; font-size: 1.6cqw; }
 .center { position: relative; z-index: 1; height: 100%; display: grid; place-content: center; justify-items: center; text-align: center; }
-.e-hero { width: 17cqw; margin-bottom: 2.4cqw; }
+.e-hero { width: 17cqw; margin-bottom: 1cqw; }
 .portada h1, .cierre h2 { font-size: 6.3cqw; line-height: 1; letter-spacing: -.05em; display: grid; justify-items: center; }
 .cierre h2 { font-size: 5cqw; }
 .line { display: block; white-space: nowrap; }
@@ -277,8 +277,9 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 @keyframes sale-arriba { from { transform: none; } to { transform: translateY(calc(-100% - 60px)); } }
 @keyframes sale-abajo { from { transform: none; } to { transform: translateY(calc(100% + 60px)); } }
 /* el borde de píxeles va pegado por fuera de la que entra, en su color */
-.borde { position: absolute; left: 0; right: 0; bottom: 100%; pointer-events: none; line-height: 0; }
-.borde.abajo { bottom: auto; top: 100%; transform: scaleY(-1); }
+.borde { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -2px; padding-top: 3px; pointer-events: none; line-height: 0; }
+/* se solapa 2-3 px con las dos diapositivas: sin juntas finas por medio píxel */
+.borde.abajo { bottom: auto; top: 100%; margin: -2px 0 0; padding: 0 0 3px; transform: scaleY(-1); }
 .borde .blend { width: 100%; margin: 0 !important; }
 .borde .blend svg { display: block; }
 /* como un scroll: el contenido viaja con su diapositiva, ya colocado; las dos se mueven juntas */

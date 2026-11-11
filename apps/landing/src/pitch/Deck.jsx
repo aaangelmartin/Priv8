@@ -136,7 +136,7 @@ export default function Deck() {
             <SlideCtx.Provider key={S.id} value={{ live: on || printing || !!sale, active: on && !printing, printing, n: label(i), annex: !!S.annex }}>
               <section className={`slide s-${S.tone}${on ? ' on' : ''}${S.annex ? ' annex' : ''}${sale ? ' sale' + paso : ''}${entra ? ' entra' + paso : ''}`} aria-hidden={!on && !printing} aria-roledescription="diapositiva" aria-label={label(i)} id={`d-${S.id}`}>
                 {entra && (
-                  <div className={`borde${move.dir > 0 ? '' : ' abajo'}`} aria-hidden="true">
+                  <div className={`borde${move.dir > 0 ? '' : ' abajo'}`} aria-hidden="true" style={{ background: `var(${TONE_VAR[SLIDES[move.from].tone]})` }}>
                     <Blend from={TONE_VAR[SLIDES[move.from].tone]} to={TONE_VAR[S.tone]} seed={i + 3} overlay />
                   </div>
                 )}
