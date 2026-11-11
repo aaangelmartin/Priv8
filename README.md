@@ -112,14 +112,28 @@ Lee la configuración del `.env` (hace falta `ANTHROPIC_API_KEY`; el núcleo rea
 
 ### B2B en vivo: ERP, correo y consola
 
+Lista para probar con un solo comando:
+
 ```bash
 make web-install          # una vez: dependencias de las tres apps y Chromium
+make demo-b2b             # las tres apps y 8 esperando en la consola; necesita ANTHROPIC_API_KEY en .env
+```
+
+`make demo-b2b` arranca Alba Core (:5173), el correo (:5174) y la consola (:5175) si no están en marcha, abre Chromium con las dos pestañas y deja a 8 esperando encargos. Usa el `.env` si existe (la clave de la API y, para pruebas más baratas, `PRIV8_MODEL`). Al terminar imprime la dirección de la consola: http://127.0.0.1:5175. `Ctrl-C` para el agente y las apps que arrancó.
+
+Alba Core abre con la sesión ya abierta, como el ordenador de una empresa: nadie escribe la clave, ni la persona ni 8. Es una sesión recordada (`VITE_ALBA_SESION=admin.alba`, solo en desarrollo). Si alguien pulsa «Cerrar sesión», Alba Core vuelve a pedir la clave y 8 espera a que la persona entre, como en el producto. El correo no tiene identificación.
+
+Chromium guarda su perfil en `.priv8/chromium/` (fuera de git), así que una sesión abierta a mano también se recuerda en la siguiente ejecución. `PRIV8_WEB_PROFILE=<carpeta>` usa otra carpeta y `PRIV8_WEB_PROFILE=off` un perfil de usar y tirar. Para empezar de cero: borrar `.priv8/` o abrir `/reset` en Alba Core (borra las facturas registradas).
+
+Por partes, en dos terminales:
+
+```bash
 make web                  # Alba Core :5173, correo :5174, consola :5175
 make agent-web            # en otra terminal; necesita ANTHROPIC_API_KEY
 make agent-web TASK="registrar factura"   # o con una primera tarea ya puesta
 ```
 
-Abre la consola en http://127.0.0.1:5175. Entra en Alba Core con `admin.alba` / `Alba-2026!` en la ventana de Chromium que abre el agente (la clave la escribe la persona, nunca 8). El encargo se le pide a 8 desde la consola, por ejemplo «registrar factura». 8 lee el correo, registra la factura y la deja retenida: se aprueba desde la consola. La respuesta de 8 sale también en la consola, con tokens en lugar de datos. Después 8 espera el siguiente encargo; `Ctrl-C` lo para. La llamada a la ficha del proveedor va en modo simulado salvo que estén las variables de `voice/.env.example`.
+Abre la consola en http://127.0.0.1:5175. Con `make web` Alba Core pide identificarse: la primera vez entra con `admin.alba` / `Alba-2026!` en la ventana de Chromium que abre el agente (la clave la escribe la persona, nunca 8); después la sesión queda recordada. El encargo se le pide a 8 desde la consola, por ejemplo «registrar factura». 8 lee el correo, registra la factura y la deja retenida: se aprueba desde la consola. La respuesta de 8 sale también en la consola, con tokens en lugar de datos. Después 8 espera el siguiente encargo; `Ctrl-C` lo para. La llamada a la ficha del proveedor va en modo simulado salvo que estén las variables de `voice/.env.example`.
 
 Métricas con y sin protocolo, sin claves: `make metrics`.
 
