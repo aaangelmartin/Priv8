@@ -36,11 +36,26 @@ adb shell settings put secure enabled_accessibility_services \\
   es.priv8.ocho/.Priv8AccessibilityService
 adb shell settings put secure accessibility_enabled 1`;
 
-export const DOCS = [
-  { kind: 'PDF', time: '2 min', title: 'Una cara', what: 'Problema, solución y valor diferencial.', href: '/docs/entregables/priv8-una-cara.pdf', file: 'docs/entregables/priv8-una-cara.pdf', cta: 'Abrir el PDF' },
-  { kind: 'PDF', time: '5 min', title: 'La presentación', what: 'Las nueve diapositivas del jurado.', href: '/docs/entregables/priv8-diapositivas.pdf', file: 'docs/entregables/priv8-diapositivas.pdf', cta: 'Abrir el PDF' },
-  { kind: 'Web', time: '5 min', title: 'priv8.es', what: 'Qué ve 8, cómo funciona y para quién es.', href: 'https://priv8.es', cta: 'Abrir la web' },
-  { kind: 'Código', time: '10 min', title: 'El repositorio', what: 'Código, pruebas y README. Si no tienes acceso, pídeselo al equipo.', href: REPO, cta: 'Abrir en GitHub' },
+/* La presentación del jurado la preparan Marco y Álvaro. Cuando esté publicada, poner aquí su dirección. */
+export const PRESENTACION_URL = null;
+
+/* Enlaces: todo en una lista, una línea cada uno. `video` apunta al MP4; `pending` sale como «próximamente». */
+export const ENLACES = [
+  { group: 'Demo', items: [
+    { title: 'Vídeo B2B, sin protocolo', note: 'MP4, 39 s', href: '/docs/entregables/video/sin-protocolo.mp4' },
+    { title: 'Vídeo B2B, con Priv8 CUA', note: 'MP4, 41 s', href: '/docs/entregables/video/con-protocolo.mp4' },
+    { title: 'Vídeo B2C', note: 'MP4', href: VIDEO_B2C && `${VIDEO_B2C}.mp4`, pending: 'Pendiente de grabar' },
+    { title: 'Correo', note: '/correo/', href: '/correo/' },
+    { title: 'Alba Core', note: '/erp/', href: '/erp/' },
+    { title: 'Consola con protocolo', note: '/consola/', href: '/consola/?feed=con-protocolo' },
+    { title: 'Consola sin protocolo', note: '/consola/', href: '/consola/?feed=sin-protocolo' },
+  ] },
+  { group: 'Proyecto', items: [
+    { title: 'Repositorio', note: 'GitHub', href: REPO },
+    { title: 'Web', note: 'priv8.es', href: 'https://priv8.es' },
+    { title: 'Con tu Claude Code', note: 'mcp.priv8.es', href: 'https://mcp.priv8.es' },
+    { title: 'Presentación', href: PRESENTACION_URL, pending: 'Próximamente' },
+  ] },
 ];
 
 export const VIVO = [

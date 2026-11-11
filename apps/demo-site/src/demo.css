@@ -111,7 +111,11 @@
 @media (max-width: 600px) { .dteam { grid-template-columns: 1fr; } }
 
 /* pie: el de la web (apps/landing). Aquí 8 va dentro del hueco del nombre, sin el acompañante. */
-.spot-foot > div, .spot-foot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+/* En la web, el acompañante aterriza sobre .spot-foot con una caja cuadrada de ancho 64/46 del hueco, centrada
+   (Companion.jsx: S0 = r.width * 64 / 46). Aquí 8 va dentro del hueco con esas mismas medidas. */
+.spot-foot { position: relative; }
+.spot-foot > div { position: absolute; left: 50%; top: 50%; width: calc(100% * 64 / 46); aspect-ratio: 1; transform: translate(-50%, -50%); }
+.spot-foot svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .foot { padding-bottom: 0; }
 section[id] { scroll-margin-top: 96px; }
 
@@ -145,3 +149,16 @@ a.drow:hover { border-color: var(--band); transform: translateY(-1px); }
 /* que el bloque de órdenes se desplace por dentro y no ensanche la página en el móvil */
 .prod-grid > .prod { min-width: 0; }
 .prod .dcmd { max-width: 100%; }
+
+/* enlaces: dos listas limpias, una línea por enlace */
+.dlinks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(20px, 4vw, 48px); max-width: 1000px; margin: 0 auto; }
+@media (max-width: 760px) { .dlinks { grid-template-columns: 1fr; } }
+.dlinks .eyebrow { color: var(--accent); margin-bottom: 12px; }
+.dlinks ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.dlinks li { border-bottom: 1px solid var(--line); }
+.dlinks a, .dlinks p { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 15px 4px; color: var(--ink); text-decoration: none; }
+.dlinks a:hover b { color: var(--band); }
+.dlinks b { font: 600 1rem/1.35 var(--f-body); transition: color .15s ease; }
+.dlinks span { font: 500 .8rem/1.4 var(--f-mono); color: var(--ink-2); text-align: right; overflow-wrap: anywhere; min-width: 0; }
+.dlinks .is-off b { color: var(--ink-2); }
+.dlinks .is-off span { color: var(--warn-text); }

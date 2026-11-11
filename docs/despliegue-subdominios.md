@@ -21,8 +21,7 @@ El DNS de `priv8.es` está en Cloudflare.
 | `/correo/` | La bandeja de correo de la demo | `apps/inbox-sim` compilada con `BASE_PATH=/correo/` |
 | `/erp/` | Alba Core, con la sesión de la demo ya abierta | `apps/erp-sim` compilada con `BASE_PATH=/erp/`, `VITE_ALBA_DEMO=1` y `VITE_ALBA_SESION=admin.alba` |
 | `/equipo/` | Fotos de perfil de GitHub del equipo (sin red, iniciales) | Se descargan al compilar |
-| `/docs/entregables/` | PDF de una cara, diapositivas (HTML y PDF), fuentes y los dos vídeos | `docs/entregables/` |
-| `/brand/logo/` | Logos que usan las diapositivas en HTML | `brand/logo/` |
+| `/docs/entregables/video/` | Los vídeos de la demo. El PDF y las diapositivas actuales no se publican; la presentación del jurado se enlaza con `PRESENTACION_URL` (`src/contenido.js`) cuando exista | `docs/entregables/video/` |
 | `/apk/` | `priv8-8.apk`, `banca-alcor.apk`, `brezo-banco.apk`, `nimbo-broker.apk` | `./gradlew assembleDebug` en `apps/android-8` y `apps/banks-sim` |
 | `/archivos.json` | Tamaño de cada archivo, para las tarjetas | `scripts/assemble.mjs` |
 
@@ -87,7 +86,7 @@ O en el panel: **Workers & Pages** > `priv8-demo` > **Settings** > **Variables a
 npx wrangler pages deploy dist --project-name priv8-demo --branch main
 ```
 
-Wrangler compila `functions/_middleware.js` junto con `dist/`. Límites que comprueba `assemble.mjs`: 25 MiB por archivo (el más grande es un vídeo de 2,4 MB) y 20.000 archivos.
+Wrangler compila `functions/_middleware.js` junto con `dist/`. `assemble.mjs` comprueba el límite de 25 MiB por archivo (el más grande es una APK de 3,4 MB) y que no haya ningún punto medio en lo publicado.
 
 **5. Dominio propio**
 

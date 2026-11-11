@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import { VIDEO_B2C, VIDEOS_B2B, PRUEBA_B2B, APKS, INSTALAR, DOCS, VIVO, EQUIPO, REPO } from './contenido.js';
+import { VIDEO_B2C, VIDEOS_B2B, PRUEBA_B2B, APKS, INSTALAR, ENLACES, VIVO, EQUIPO, REPO } from './contenido.js';
 
-const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['documentos', 'Documentos'], ['vivo', 'En vivo'], ['equipo', 'Equipo']];
+const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['enlaces', 'Enlaces'], ['vivo', 'En vivo'], ['equipo', 'Equipo']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
 
 /* Tamaños de lo que copió scripts/assemble.mjs. En `pnpm dev` no existe: no se enseñan tamaños ni avisos. */
@@ -134,8 +134,8 @@ function Hero() {
       <Field />
       <div className="wrap hero-stage">
         <div className="hero-anchor dhero-eight"><Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8, el agente de Priv8" /></div>
-        <h1 id="h-hero"><span className="line">Todo lo de la demo,</span><span className="soft line">en un sitio.</span></h1>
-        <p className="hero-sub">Primero los vídeos. Después, las mismas pantallas para que lo pruebes tú.</p>
+        <h1 id="h-hero"><span className="line">Toda la demo.</span></h1>
+        <p className="hero-sub">Los vídeos, las pantallas para probarlo y los enlaces del proyecto.</p>
         <div className="cta">
           <a className="btn btn-white" href="#videos">Ver los vídeos</a>
         </div>
@@ -200,12 +200,27 @@ function Prueba({ archivos }) {
   );
 }
 
-function Documentos({ archivos }) {
+function Enlaces() {
   return (
-    <section id="documentos" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-documentos">
+    <section id="enlaces" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-enlaces">
       <div className="wrap">
-        <Head eyebrow="Documentos" title="Los entregables," soft="en el orden de las bases." />
-        <div className="dgrid g4">{DOCS.map((c) => <Card key={c.title} c={c} archivos={archivos} />)}</div>
+        <Head eyebrow="Enlaces" title="Todo," soft="en una lista." />
+        <div className="dlinks">
+          {ENLACES.map((g) => (
+            <div key={g.group}>
+              <p className="eyebrow">{g.group}</p>
+              <ul>
+                {g.items.map((l) => (
+                  <li key={l.title}>
+                    {l.href
+                      ? <a href={l.href} {...ext(l.href)}><b>{l.title}</b><span>{l.note}</span></a>
+                      : <p className="is-off"><b>{l.title}</b><span>{l.pending}</span></p>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -274,7 +289,7 @@ function Footer() {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Demo</b><a href="#videos">Vídeos</a><a href="#prueba">Pruébalo tú</a><a href="#documentos">Documentos</a></div>
+            <div><b>Demo</b><a href="#videos">Vídeos</a><a href="#prueba">Pruébalo tú</a><a href="#enlaces">Enlaces</a></div>
             <div><b>Más</b><a href="#vivo">En vivo</a><a href="#equipo">Equipo</a></div>
             <div><b>Fuera</b><a href="https://priv8.es">priv8.es</a><a href={REPO} target="_blank" rel="noopener">GitHub</a></div>
           </nav>
@@ -302,7 +317,7 @@ export default function App() {
         <Videos />
         <Prueba archivos={archivos} />
         <Blend from="--paper" to="--mist" seed={2} />
-        <Documentos archivos={archivos} />
+        <Enlaces />
         <Blend from="--mist" to="--band" seed={3} />
         <Vivo />
         <Blend from="--band" to="--paper" seed={5} />

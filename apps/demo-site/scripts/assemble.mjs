@@ -5,14 +5,13 @@
 //   /correo/               build estática de apps/inbox-sim (la bandeja), con BASE_PATH=/correo/
 //   /erp/                  build estática de apps/erp-sim (Alba Core) con la sesión de la demo ya abierta
 //   /equipo/<usuario>.png  foto de perfil de GitHub de cada persona del equipo (si no hay red, iniciales)
-//   /docs/entregables/     PDF de una cara, diapositivas (HTML y PDF), sus fuentes y los vídeos
-//   /brand/logo/           logos que usan las diapositivas y la página en HTML (rutas ../../brand/logo/)
+//   /docs/entregables/video/  los vídeos de la demo (sin y con protocolo; el B2C cuando exista)
 //   /apk/                  APK de depuración: app Priv8 y los tres bancos (./gradlew assembleDebug)
 //   /archivos.json         tamaño de cada archivo copiado, para las tarjetas
 //
 // PRIV8_APK=skip no compila las APK y copia las que ya haya. Gradle necesita JAVA_HOME (JDK 17) y ANDROID_HOME.
 import { execSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -44,10 +43,11 @@ for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json']) {
 // Las rutas profundas (/correo/bandeja, /erp/facturas...) las sirve el middleware con el index.html de su app
 // (functions/_middleware.js): _redirects no vale porque se aplicaría también a los archivos.
 
-// 2. entregables y logos
-cpSync(join(ROOT, 'docs/entregables'), join(DIST, 'docs/entregables'), { recursive: true });
-cpSync(join(ROOT, 'brand/logo'), join(DIST, 'brand/logo'), { recursive: true });
-log('entregables en /docs/entregables/ y logos en /brand/logo/');
+// 2. vídeos
+// Solo los vídeos: el PDF y las diapositivas de docs/entregables no se publican aquí (la presentación del jurado
+// va aparte, PRESENTACION_URL en src/contenido.js).
+cpSync(join(ROOT, 'docs/entregables/video'), join(DIST, 'docs/entregables/video'), { recursive: true });
+log('vídeos en /docs/entregables/video/');
 
 // 3. APK
 const APKS = [
@@ -92,3 +92,14 @@ const walk = (d) => readdirSync(d).forEach((n) => {
 walk(DIST);
 writeFileSync(join(DIST, 'archivos.json'), JSON.stringify(sizes, null, 2));
 log(`archivos.json con ${Object.keys(sizes).length} archivos`);
+
+// 6. ni un punto medio en lo publicado (norma de estilo de la marca)
+const conPunto = [];
+const busca = (d) => readdirSync(d).forEach((n) => {
+  const p = join(d, n);
+  if (statSync(p).isDirectory()) return busca(p);
+  if (/\.(html|js|css|json|svg|txt)$/.test(n) && readFileSync(p, 'utf8').includes('\u00b7')) conPunto.push(relative(DIST, p));
+});
+busca(DIST);
+if (conPunto.length) throw new Error(`Punto medio en: ${conPunto.join(', ')}`);
+log('sin puntos medios');
