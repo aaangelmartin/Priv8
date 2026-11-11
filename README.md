@@ -11,7 +11,7 @@ Proyecto para Hackfinance (Madrid Engineering Week 2026). Sobre el mismo núcleo
 
 Todos los datos, bancos y empresas son inventados.
 
-Web: https://aaangelmartin.github.io/Priv8/ (código en `apps/landing/`).
+Web: https://priv8.es (código en `apps/landing/`).
 
 ## Cómo funciona
 

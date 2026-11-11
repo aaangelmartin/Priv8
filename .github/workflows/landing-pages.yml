@@ -37,11 +37,13 @@ jobs:
           cache: pnpm
           cache-dependency-path: apps/landing/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
-      # La web vive en https://<usuario>.github.io/<repositorio>/, así que las rutas llevan ese prefijo.
+      # configure-pages dice dónde vive la web: con dominio propio (priv8.es) en la raíz,
+      # sin él en /<repositorio>/. Las rutas de la build llevan ese prefijo.
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: pnpm build
         env:
-          BASE_PATH: /${{ github.event.repository.name }}/
-      - uses: actions/configure-pages@v5
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: apps/landing/dist
