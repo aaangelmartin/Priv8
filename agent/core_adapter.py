@@ -232,6 +232,12 @@ def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = AND
     from check_seed import known
 
     mod.trust(known())
+    import time
+
+    # App 8 keeps the answers it gave by request id and repeats them (contracts v1.1), so ids
+    # must not repeat across runs of the core: c1 of this run is not c1 of the last one.
+    if callable(getattr(getattr(mod, "CONFIRM", None), "number_from", None)):
+        mod.CONFIRM.number_from((int(time.time()) % 1_000_000) * 1000 + 1)
     say = lambda m: print(f"priv8: {m}", file=sys.stderr, flush=True)  # noqa: E731
     if bridge is None:
         bridge = AndroidBridge(session, core=mod, push_confirms=not simulated_persona).start()
@@ -248,7 +254,12 @@ def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = AND
         bridge.stop()
         raise TimeoutError(f"ningún móvil se conectó al puente en {device_timeout:.0f} s")
     if start_app:
-        bridge.open_app(start_app)
+        try:
+            in_front = bridge.snapshot().get("app") == start_app
+        except Exception:  # noqa: BLE001 - open it anyway
+            in_front = False
+        if not in_front and not bridge.open_app(start_app):  # again in front: back to its login
+            say(f"el móvil no dejó abrir {start_app}: ábrela tú")
         say("si la app pide entrar, hazlo en el emulador: el login siempre es de la persona")
         past_login = lambda raw: (raw.get("app") == start_app and raw.get("screen") not in (None, "login")  # noqa: E731
                                   and not mod.pause_before_policy(raw))
