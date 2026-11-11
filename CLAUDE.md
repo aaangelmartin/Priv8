@@ -147,7 +147,7 @@ El agente se llama **8** (se lee "Ocho" o "Eight"; en texto siempre la cifra). S
 - `docs/arquitectura.html`: arquitectura completa, contratos, flujos y reparto por persona. Resumen en `docs/arquitectura.md`.
 - `docs/marca.html`: guía de marca.
 - `docs/ojos.html`: 8 en vivo, con todas las emociones, estados y el código de animación.
-- `docs/logo.html`: exploración antigua del logo (sustituida, se conserva como archivo).
+- `docs/archivo/logo.html`: exploración antigua del logo (sustituida, se conserva como archivo).
 - `brand/logo/`: logos trazados, icono de app (16 a 512 px) y favicon.
 - `brand/tokens.css`: variables de marca para la app, la consola y la banca simulada.
 - `bases/bases-hackathon.pdf`: bases y rúbrica oficiales.
