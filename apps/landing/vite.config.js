@@ -12,6 +12,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         notfound: resolve(__dirname, '404.html'),
+        /* la presentación del jurado, en priv8.es/pitch */
+        pitch: resolve(__dirname, 'pitch/index.html'),
       },
     },
   },
