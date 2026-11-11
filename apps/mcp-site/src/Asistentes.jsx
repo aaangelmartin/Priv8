@@ -24,8 +24,14 @@ function suscribe(fn) {
   if (!reloj) { tick = 0; subs.forEach((f) => f(0)); }
   subs.add(fn);
   fn(tick);
-  if (!reloj) reloj = setInterval(() => { tick += 1; subs.forEach((f) => f(tick)); }, PASO_MS);
-  return () => { subs.delete(fn); if (!subs.size) { clearInterval(reloj); reloj = null; } };
+  if (!reloj) {
+    // con la bienvenida de la landing (html.intro, 2,65 s) el reloj espera a que termine: el primer cambio
+    // llega un paso después de que se vea el hero, y se ve Claude Code entero
+    const espera = document.documentElement.classList.contains('intro') ? 2650 : 0;
+    const arranca = () => { reloj = setInterval(() => { tick += 1; subs.forEach((f) => f(tick)); }, PASO_MS); };
+    reloj = setTimeout(arranca, espera);
+  }
+  return () => { subs.delete(fn); if (!subs.size) { clearTimeout(reloj); clearInterval(reloj); reloj = null; } };
 }
 export function useTick() {
   const [t, setT] = useState(0);
