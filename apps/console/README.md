@@ -1,9 +1,10 @@
 # Consola de auditoría (#21)
 
-App React + Vite que escucha `ws://127.0.0.1:8700/events` y muestra, en local. Usa la marca de `brand/` (tokens, logos, caras de 8) y las fuentes van empaquetadas, así que funciona sin red. Tema claro y oscuro (por defecto, oscuro).
+App React + Vite que escucha `ws://127.0.0.1:8700/events` y muestra, en local. Usa la marca de `brand/` (tokens, logos, caras de 8) y las fuentes van empaquetadas, así que funciona sin red. Tiene el diseño de la web (`apps/landing`), solo en claro.
 
+- **En directo**: banda cobalto con 8 animado (`src/eight/`, copia del motor de la web) y, en palabras, lo que hace ahora (leer, comprobar con el oráculo, escribir, esperar tu confirmación, bloqueo, hecho), con el paso y el tiempo del encargo. Sale de los eventos de auditoría (`src/directo.js`).
+- **Pide a 8**: chat para pedir encargos (`task_request` con la sesión de la última pantalla, por defecto `b2b`; el texto no se registra), con sugerencias para la demo B2B. Las frases de 8 (`voice`) se ven con los valores reales en local; las confirmaciones aparecen dentro del chat con la frase, el origen de cada dato, la cuenta atrás y Aprobar/Rechazar (`approval_result`, `via: pantalla`, `by: persona`). En `?demo` y `?feed=` el campo está desactivado.
 - **Pantalla actual**: cada elemento en una fila con lo que ves y lo que ve la IA. En lo que ves se marca en ámbar el trozo exacto que se ha cambiado por un token; cada fila lleva su estado (lo ve, tokenizado, nunca sale).
-- **Confirmaciones pendientes** arriba, con la frase y los valores reales en negrita, el origen de cada dato, la cuenta atrás y Aprobar/Rechazar: envía `approval_result` (`via: pantalla`, `by: persona`).
 - **Alarmas de posible fraude** (cambio de cuenta por correo, órdenes a la IA, bloqueos del núcleo), con Marcar como revisada.
 - **Actividad**: el registro en orden inverso, filtrable por bloqueos y confirmaciones, y la latencia media por paso (`ms.core`, `ms.adapter`, `ms.model`).
 - **Verificar registro**: llama a `GET http://127.0.0.1:8700/verify` (cadena de hashes y firma del registro de auditoría), que devuelve `{ok, lines, error}`.

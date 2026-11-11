@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, useEvents } from './useEvents.js'
 import { comentarioDe8 } from './alertas.js'
 import { TOKEN_RE, alinear, partesDeToken } from './tokens.js'
-import logoClaro from '../../../brand/logo/priv8-cua-claro.svg'
-import logoOscuro from '../../../brand/logo/priv8-cua-oscuro.svg'
-import ochoReposo from '../../../brand/logo/8-reposo-cobalto.svg'
-import ochoNuncaSale from '../../../brand/logo/8-nuncasale-cobalto.svg'
+import { estadoDe8, mmss, nombreApp, nombrePantalla, tareaActual } from './directo.js'
+import Eight from './eight/Eight.jsx'
+import ochoAvatar from '../../../brand/logo/8-reposo-cobalto.svg'
+
+const COBALTO = '#2D45D6'
+const NOCHE = '#0B1B33'
+const BLANCO = '#FFFFFF'
 
 const ESTADO = {
   verde: { cls: 'seguro', texto: 'lo ve' },
@@ -17,8 +20,10 @@ const ORIGEN = {
   maestro: 'dato del ERP', correo: 'llegó por correo', tercero: 'de un tercero',
   titular: 'del titular', propio: 'propio', positivo: 'importe',
 }
-const APP = { 'alba-core': 'Alba Core', inbox: 'Correo' }
-const nombreApp = (a) => APP[a] ?? a
+
+// Los textos del núcleo usan «·» como separador; en la consola se ve « | ». Los tokens
+// (‹IBAN_1·correo›) no llevan espacios alrededor del punto y no se tocan.
+const limpio = (s) => (typeof s === 'string' ? s.replace(/\s·\s/g, ' | ') : s)
 
 // ---------------------------------------------------------------- piezas
 
@@ -27,13 +32,18 @@ function Token({ tok, valores }) {
   return <code className="tok" title={real ? `En local: ${real}` : undefined}>{tok}</code>
 }
 
-// Texto con tokens. mostrar="ambos" pone el valor real delante del token (solo en local).
+// Texto con tokens.
+//   token: el chip del token (lo que ve la IA)
+//   ambos: el valor real delante del token (solo en local)
+//   real:  el valor real, con el token al pasar por encima (lo que lees tú)
 function Tokens({ text, valores, mostrar = 'token' }) {
   if (text == null) return <span className="redacted">nunca sale</span>
   if (text === '') return <span className="vacio">vacío</span>
   return text.split(TOKEN_RE).map((part, i) => {
     if (!(i % 2)) return part
-    if (mostrar === 'ambos' && valores?.[part]) return <Valor key={i} tok={part} valores={valores} />
+    const real = valores?.[part]
+    if (mostrar === 'real' && real) return <span key={i} className="local" title={part}>{real}</span>
+    if (mostrar === 'ambos' && real) return <Valor key={i} tok={part} valores={valores} />
     return <Token key={i} tok={part} valores={valores} />
   })
 }
@@ -64,31 +74,32 @@ function useAhora(ms = 1000) {
   return t
 }
 
-function useTema() {
-  const [tema, setTema] = useState(() => {
-    try { return localStorage.getItem('p8-consola-tema') || 'dark' } catch { return 'dark' }
-  })
+// Cambios de cara sin prisa: cada estado se queda al menos `ms` antes de pasar al siguiente.
+function useCalma(valor, clave, ms = 900) {
+  const [v, setV] = useState(valor)
+  const ultimo = useRef(0)
   useEffect(() => {
-    document.documentElement.dataset.theme = tema
-    try { localStorage.setItem('p8-consola-tema', tema) } catch { /* sin almacenamiento */ }
-  }, [tema])
-  return [tema, setTema]
+    const espera = Math.max(0, ultimo.current + ms - Date.now())
+    const id = setTimeout(() => { setV(valor); ultimo.current = Date.now() }, espera)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clave])
+  return v
 }
 
 const hora = (d) => (d ? new Date(d).toLocaleTimeString('es-ES', { hour12: false }) : '')
-const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
-// ---------------------------------------------------------------- cabecera
+// ---------------------------------------------------------------- barra
 
 const CONEXION = {
   conectado: ['seguro', 'Conectado al núcleo'],
   conectando: ['aviso', 'Conectando…'],
   reconectando: ['aviso', 'Reconectando…'],
-  demo: FEED ? ['cobalto', 'Reproducción · factura del proveedor (B2B)'] : ['cobalto', 'Demo · mensajes grabados'],
+  demo: FEED ? ['cobalto', 'Reproducción: factura del proveedor (B2B)'] : ['cobalto', 'Demo con mensajes grabados'],
   'sin demo': ['bloqueo', 'Falta demo.json'],
 }
 
-function Cabecera({ status, tema, setTema }) {
+function Barra({ status }) {
   const [check, setCheck] = useState(null)
   const [busy, setBusy] = useState(false)
   const [tono, texto] = CONEXION[status] ?? ['aviso', status]
@@ -98,103 +109,128 @@ function Cabecera({ status, tema, setTema }) {
     try {
       const r = await fetch(VERIFY_URL)
       setCheck(await r.json())
-    } catch (e) {
+    } catch {
       setCheck({ ok: false, lines: 0, error: 'no responde el núcleo' })
     }
     setBusy(false)
   }
 
   return (
-    <header className="top">
-      <div className="marca">
-        <img className="logo logo-claro" src={logoClaro} alt="Priv8 CUA" />
-        <img className="logo logo-oscuro" src={logoOscuro} alt="Priv8 CUA" />
-        <span className="producto">Consola de auditoría</span>
-      </div>
-      <span className={`conexion t-${tono}`}><i aria-hidden="true" />{texto}</span>
+    <header className="nav">
+      <span className="brand">
+        <Eight className="nav-eight" mode={status === 'conectado' || status === 'demo' ? 'mirar' : 'sinconexion'} fg={BLANCO} cut={COBALTO} label="8" />
+        <span className="word">Priv8</span>
+        <span className="producto">Consola</span>
+      </span>
+      <span className={`conexion t-${tono}`} role="status"><i aria-hidden="true" />{texto}</span>
       <span className="sp" />
       {check && (
-        <span className={`p8-estado ${check.ok ? 'p8-estado--seguro' : 'p8-estado--bloqueo'}`} role="status">
-          {check.ok ? `Registro íntegro · ${check.lines} líneas` : `Registro no válido: ${check.error}`}
+        <span className={`verificado ${check.ok ? 'ok' : 'mal'}`} role="status">
+          {check.ok ? `Registro íntegro | ${check.lines} líneas` : `Registro no válido: ${limpio(check.error)}`}
         </span>
       )}
-      <button className="btn sec" onClick={verify} disabled={busy || DEMO} title={DEMO ? 'No disponible en la demo' : 'Comprueba la cadena de hashes y la firma'}>
+      <button className="pill" onClick={verify} disabled={busy || DEMO} title={DEMO ? 'No disponible en la reproducción' : 'Comprueba la cadena de hashes y la firma'}>
         {busy ? 'Verificando…' : 'Verificar registro'}
       </button>
-      <div className="tema" role="group" aria-label="Tema">
-        <button aria-pressed={tema === 'light'} onClick={() => setTema('light')}>Claro</button>
-        <button aria-pressed={tema === 'dark'} onClick={() => setTema('dark')}>Oscuro</button>
-      </div>
     </header>
   )
 }
 
-// ---------------------------------------------------------------- modo de los feeds
+// ---------------------------------------------------------------- en directo
 
-function Modo({ enClaro, audit, fin }) {
-  const bloqueos = audit.filter((e) => e.kind === 'blocked').length
-  if (SIN_PROTOCOLO) {
-    return (
-      <section className="modo sin" role="status" aria-live="polite">
-        <div className="texto">
-          <p className="eyebrow">El mismo trámite, sin Priv8 CUA</p>
-          <h1>Sin protocolo: el modelo recibe esto</h1>
-          <p className="sub">
-            {fin
-              ? `Trámite terminado: ${fin.valores_al_modelo} valores reales han llegado al modelo, ${fin.bloqueos} bloqueos, ninguna confirmación.`
-              : 'Cada pantalla va entera a la IA. Lo marcado en rojo son datos reales: cuentas, CIF, nombres, teléfonos y correos.'}
-          </p>
-        </div>
-        <div className="contador" aria-label={`${enClaro} valores reales enviados al modelo`}>
-          <b>{enClaro}</b>
-          <span>valores reales<br />enviados al modelo</span>
-        </div>
-      </section>
-    )
-  }
+// «Leyendo Alba Core - alta de factura»: la segunda parte, en cobalto suave como en la web.
+function Titular({ texto }) {
+  const i = texto.indexOf(' - ')
+  if (i < 0) return texto
+  return <>{texto.slice(0, i)}<span className="soft segunda">{texto.slice(i + 3)}</span></>
+}
+
+function EnDirecto({ audit, pending, status, etiquetas, valores, alerts, enClaro, fin, ahora }) {
+  const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
+  const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}|${crudo.detalle ?? ''}`)
+  const t = useMemo(() => tareaActual(audit), [audit])
+  const bloqueos = audit.filter((x) => x.kind === 'blocked').length
+  const sinRevisar = alerts.filter((a) => !a.revisada).length
+  const segundos = t ? Math.max(0, Math.round(((t.terminada ? t.fin : ahora) - t.inicio) / 1000)) : 0
+  const fondo = SIN_PROTOCOLO ? NOCHE : COBALTO
+
   return (
-    <section className="modo con" role="status" aria-live="polite">
-      <img className="ocho" src={ochoReposo} alt="" />
-      <div className="texto">
-        <p className="eyebrow">El mismo trámite, con Priv8 CUA</p>
-        <h1>Con protocolo: el modelo recibe tokens</h1>
-        <p className="sub">
-          {fin
-            ? `Trámite terminado: ${fin.valores_al_modelo} valores reales han llegado al modelo y se han bloqueado ${fin.bloqueos} acciones con datos del correo.`
-            : 'Los datos se cambian por tokens antes de salir. La cifra real solo está en esta máquina.'}
-        </p>
+    <section className={`directo ${FEED ? `modo ${SIN_PROTOCOLO ? 'sin' : 'con'}` : ''}`} aria-label="8 en directo">
+      <div className="directo-cab">
+        {FEED ? (
+          <div className="modo-texto">
+            <p className="eyebrow">{SIN_PROTOCOLO ? 'El mismo trámite, sin Priv8' : 'El mismo trámite, con Priv8'}</p>
+            <h1>{SIN_PROTOCOLO ? <>Sin protocolo: <span className="soft">el modelo recibe esto.</span></> : <>Con protocolo: <span className="soft">el modelo recibe tokens.</span></>}</h1>
+          </div>
+        ) : (
+          <p className="eyebrow"><i className="vivo" aria-hidden="true" />En directo</p>
+        )}
       </div>
-      <div className="contador" aria-label={`${enClaro} valores reales enviados al modelo`}>
-        <b>{enClaro}</b>
-        <span>valores reales<br />enviados al modelo</span>
+
+      <div className="directo-cuerpo" aria-live="polite">
+        <Eight className="directo-eight" mode={e.modo} fg={BLANCO} cut={fondo} label={`8: ${e.titulo}`} />
+        <div className="directo-texto">
+          <h2><Titular texto={e.titulo} /></h2>
+          {e.detalle && <p className="detalle"><Tokens text={limpio(e.detalle)} valores={valores} mostrar="real" /></p>}
+        </div>
       </div>
-      <div className="contador bloq">
-        <b>{bloqueos}</b>
-        <span>acciones<br />bloqueadas</span>
-      </div>
+
+      <footer className="directo-pie">
+        {FEED ? (
+          <>
+            <span className={`cifra ${SIN_PROTOCOLO ? 'mala' : ''}`}><b>{enClaro}</b> valores reales enviados al modelo</span>
+            {!SIN_PROTOCOLO && <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'acción bloqueada' : 'acciones bloqueadas'}</span>}
+            {fin && SIN_PROTOCOLO && <span className="cifra fin">Ningún bloqueo, ninguna confirmación</span>}
+          </>
+        ) : (
+          <>
+            <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'bloqueo' : 'bloqueos'}</span>
+            <span className={`cifra ${pending.length ? 'atencion' : ''}`}><b>{pending.length}</b> por confirmar</span>
+            <span className={`cifra ${sinRevisar ? 'atencion' : ''}`}><b>{sinRevisar}</b> {sinRevisar === 1 ? 'alarma' : 'alarmas'}</span>
+          </>
+        )}
+        <span className="sp" />
+        {t && (
+          <span className="tarea" aria-label="Encargo actual">
+            <span>{t.terminada ? 'Terminado' : 'En curso'}</span>
+            <span>Paso {t.pasos}</span>
+            <span>{mmss(segundos)}</span>
+          </span>
+        )}
+      </footer>
     </section>
   )
 }
 
-// ---------------------------------------------------------------- confirmaciones y alarmas
+// ---------------------------------------------------------------- chat con 8
 
-function Pendiente({ p, resolve, valores, ahora }) {
-  const total = p.expires_s ?? 300
-  const quedan = Math.max(0, Math.round(total - (ahora - p.recibida) / 1000))
-  const caducada = quedan === 0
-  const tokens = p.summary.filter((s) => s.token).map((s) => s.token)
+const SUGERENCIAS = [
+  'Registra la factura de Suministros Lumen',
+  'Contesta al proveedor que la factura está registrada',
+  'Comprueba que el importe coincide con el pedido',
+  'Llama al proveedor para verificar el cambio de cuenta',
+]
+
+function Confirmacion({ c, resolve, valores, ahora }) {
+  const total = c.expires_s ?? 300
+  const quedan = Math.max(0, Math.round(total - (ahora - c.recibida) / 1000))
+  const caducada = c.estado === 'pendiente' && quedan === 0
+  const abierta = c.estado === 'pendiente' && !caducada
+  const tokens = (c.summary ?? []).filter((s) => s.token).map((s) => s.token)
+  const [error, setError] = useState(false)
+  const decidir = (ok) => setError(!resolve(c.id, ok))
   return (
-    <article className="pendiente" aria-labelledby={`pend-${p.id}`}>
+    <article className={`confirmacion e-${caducada ? 'caducada' : c.estado}`} aria-labelledby={`conf-${c.id}`}>
       <div className="fila-cab">
-        <span className="p8-estado p8-estado--aviso">Necesita tu confirmación</span>
-        <span className="meta">{p.kind} · {p.id}</span>
+        <span className="etiqueta">{abierta ? 'Necesita tu confirmación' : c.estado === 'aprobada' ? 'Aprobada' : c.estado === 'rechazada' ? 'Rechazada' : 'Caducada'}</span>
+        <span className="meta">{c.kind} | {c.id}</span>
         <span className="sp" />
-        <span className={`caduca ${quedan < 60 ? 'pronto' : ''}`}>{caducada ? 'Caducada' : `Caduca en ${mmss(quedan)}`}</span>
+        {abierta && <span className={`caduca ${quedan < 60 ? 'pronto' : ''}`}>Caduca en {mmss(quedan)}</span>}
       </div>
-      <p className="frase" id={`pend-${p.id}`}>
-        {p.summary.map((s, i) => (s.token ? <Valor key={i} tok={s.token} valores={valores} /> : <span key={i}>{s.text} </span>))}
+      <p className="frase" id={`conf-${c.id}`}>
+        {(c.summary ?? []).map((s, i) => (s.token ? <Valor key={i} tok={s.token} valores={valores} /> : <span key={i}>{s.text} </span>))}
       </p>
-      {tokens.length > 0 && (
+      {abierta && tokens.length > 0 && (
         <dl className="origenes">
           {tokens.map((t) => {
             const o = partesDeToken(t)?.origen
@@ -207,15 +243,115 @@ function Pendiente({ p, resolve, valores, ahora }) {
           })}
         </dl>
       )}
-      <div className="barra" aria-hidden="true"><i style={{ width: `${(quedan / total) * 100}%` }} /></div>
-      <div className="acciones">
-        <button className="btn ok" disabled={caducada} onClick={() => resolve(p.id, true)}>Aprobar</button>
-        <button className="btn no" disabled={caducada} onClick={() => resolve(p.id, false)}>Rechazar</button>
-        <span className="nota">Lo que ve 8 son los tokens. Los valores en negrita solo están en esta máquina.</span>
-      </div>
+      {abierta && <div className="barra" aria-hidden="true"><i style={{ width: `${(quedan / total) * 100}%` }} /></div>}
+      {abierta && (
+        <div className="acciones">
+          <button className="btn primario" onClick={() => decidir(true)}>Aprobar</button>
+          <button className="btn no" onClick={() => decidir(false)}>Rechazar</button>
+          {error && <span className="nota mala">No se ha enviado: sin conexión con el núcleo.</span>}
+        </div>
+      )}
     </article>
   )
 }
+
+function Mensaje({ m, confirmaciones, resolve, valores, ahora }) {
+  if (m.k === 'tu') {
+    return (
+      <li className="msg tu">
+        <div className="burbuja">{m.grabado ? <Tokens text={m.texto} valores={valores} mostrar="real" /> : m.texto}</div>
+        <span className="meta">{m.grabado ? 'Encargo grabado' : 'Tú'} | {hora(m.ts)}</span>
+      </li>
+    )
+  }
+  if (m.k === '8') {
+    return (
+      <li className="msg ocho">
+        <img className="avatar" src={ochoAvatar} alt="" />
+        <div>
+          <div className="burbuja">
+            {m.segmentos
+              ? m.segmentos.map((s, i) => (
+                <span key={i}>{i > 0 && !/^[.,;:!?)»]/.test(s.text ?? '') ? ' ' : ''}{s.token ? <Tokens text={s.token} valores={valores} mostrar="real" /> : s.text}</span>
+              ))
+              : <Tokens text={m.texto} valores={valores} mostrar="real" />}
+          </div>
+          <span className="meta">8 | {hora(m.ts)}</span>
+        </div>
+      </li>
+    )
+  }
+  if (m.k === 'confirm') {
+    const c = confirmaciones[m.ref]
+    return c ? <li className="msg conf"><Confirmacion c={c} resolve={resolve} valores={valores} ahora={ahora} /></li> : null
+  }
+  if (m.k === 'alarma') return <li className={`msg linea t-alarma`}><i aria-hidden="true" /><span>Alarma: {m.texto}</span></li>
+  return <li className={`msg linea t-${m.tono ?? 'neutro'}`}><i aria-hidden="true" /><span>{m.texto}</span></li>
+}
+
+function Chat({ chat, confirmaciones, resolve, pedir, status, session, valores, ahora }) {
+  const [texto, setTexto] = useState('')
+  const [aviso, setAviso] = useState(null)
+  const lista = useRef(null)
+  const activo = !DEMO && status === 'conectado'
+  // Lo que espera tu respuesta va siempre al final, a la vista; al resolverse vuelve a su sitio.
+  const abierta = (m) => m.k === 'confirm' && confirmaciones[m.ref]?.estado === 'pendiente'
+  const orden = [...chat.filter((m) => !abierta(m)), ...chat.filter(abierta)]
+  const pendientes = chat.filter(abierta).length
+
+  useEffect(() => {
+    const el = lista.current
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+  }, [chat.length, pendientes])
+
+  const enviar = (t) => {
+    const v = (t ?? texto).trim()
+    if (!v) return
+    if (pedir(v)) { setTexto(''); setAviso(null) } else setAviso('No se ha enviado: sin conexión con el núcleo.')
+  }
+
+  return (
+    <section className="chat" aria-label="Pide a 8">
+      <header className="chat-cab">
+        <div>
+          <p className="eyebrow">Sesión {session}</p>
+          <h2>Pide a 8</h2>
+        </div>
+        <span className="sp" />
+        <span className="privado">Tu texto no sale de aquí sin tokenizar</span>
+      </header>
+      <ol className="mensajes" ref={lista} aria-live="polite">
+        {chat.length === 0 && (
+          <li className="msg ocho">
+            <img className="avatar" src={ochoAvatar} alt="" />
+            <div className="burbuja">Hola. Dime qué hago en Alba Core o en el correo. Antes de enviar, transferir o llamar te pido confirmación.</div>
+          </li>
+        )}
+        {orden.map((m) => <Mensaje key={m.id} m={m} confirmaciones={confirmaciones} resolve={resolve} valores={valores} ahora={ahora} />)}
+      </ol>
+      <div className="sugerencias" aria-label="Sugerencias">
+        {SUGERENCIAS.map((s) => (
+          <button key={s} className="chip-sug" disabled={!activo} onClick={() => enviar(s)}>{s}</button>
+        ))}
+      </div>
+      <form className="entrada" onSubmit={(ev) => { ev.preventDefault(); enviar() }}>
+        <input
+          value={texto}
+          onChange={(ev) => setTexto(ev.target.value)}
+          maxLength={500}
+          disabled={!activo}
+          placeholder={activo ? 'Escribe un encargo para 8' : DEMO ? 'Reproducción grabada' : 'Esperando al núcleo'}
+          aria-label="Encargo para 8"
+        />
+        <button className="btn primario" type="submit" disabled={!activo || !texto.trim()}>Enviar</button>
+      </form>
+      {!activo && <p className="nota-chat">{DEMO ? 'Es una reproducción grabada: aquí no se pueden enviar encargos.' : 'Sin conexión con el núcleo: arranca el agente con make agent-web.'}</p>}
+      {aviso && activo && <p className="nota-chat mala">{aviso}</p>}
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------- alarmas
 
 const ETIQUETA = { cuenta: 'Cambio de cuenta', instruccion: 'Órdenes a la IA', bloqueo: 'Bloqueo del núcleo' }
 
@@ -226,10 +362,9 @@ function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
   return (
     <section className={`alarmas ${activas ? 'activas' : ''} ${compacta ? 'compacta' : ''}`} role="alert" aria-live="assertive">
       <header className="sec-cab">
-        <img className="ocho" src={activas ? ochoNuncaSale : ochoReposo} alt="" />
         <div>
-          <h2>{activas ? `Posible fraude detectado · ${activas} sin revisar` : 'Alarmas revisadas'}</h2>
-          <p className="sub">Se detecta en local a partir de los tokens: no hace falta enseñar los datos a la IA.</p>
+          <p className="eyebrow">Detectado en local, sin enseñar los datos a la IA</p>
+          <h2>{activas ? <>Posible fraude <span className="suave">| {activas} sin revisar</span></> : 'Alarmas revisadas'}</h2>
         </div>
       </header>
       <ul>
@@ -239,7 +374,7 @@ function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
               <span className="chip">{ETIQUETA[a.tipo]}</span>
               <b className="titulo">{a.titulo}</b>
               <span className="sp" />
-              <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` · ${a.pantalla}` : ''} · {hora(a.ts)}</span>
+              <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` | ${nombrePantalla(a.pantalla)}` : ''} | {hora(a.ts)}</span>
             </div>
             {!compacta && <p><Tokens text={a.detalle} valores={valores} mostrar="ambos" /></p>}
             {!compacta && a.evidencia && <blockquote><Tokens text={a.evidencia} valores={valores} /></blockquote>}
@@ -249,10 +384,10 @@ function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
           </li>
         ))}
       </ul>
-      {comentario && (
+      {comentario && !compacta && (
         <div className="dice8">
           <span className="chip c-cobalto">Lo que dice 8</span>
-          <p><Tokens text={comentario} valores={valores} /></p>
+          <p><Tokens text={comentario} valores={valores} mostrar="ambos" /></p>
         </div>
       )}
     </section>
@@ -288,7 +423,7 @@ function Pantalla({ screen, status, valores }) {
     const esperando = status !== 'conectado' && status !== 'demo'
     return (
       <section className="panel vacio-panel">
-        <img className="ocho grande" src={ochoReposo} alt="" />
+        <Eight className="vacio-eight" mode={esperando ? 'sinconexion' : 'mirar'} fg={COBALTO} cut="#F4F6FD" label="8" />
         <h2>{esperando ? 'Esperando al núcleo' : 'Esperando la primera pantalla'}</h2>
         <p>
           {esperando
@@ -300,15 +435,24 @@ function Pantalla({ screen, status, valores }) {
   }
 
   const els = obs.elements ?? []
+  const c = { verde: 0, ambar: 0, rojo: 0, claro: 0 }
+  for (const e of els) c[e.cls] = (c[e.cls] ?? 0) + 1
   return (
     <section className="panel pantalla" aria-label="Pantalla actual">
       <header className="sec-cab">
         <div>
-          <p className="eyebrow">Pantalla actual · {hora(screen.recibida)}</p>
-          <h2>{nombreApp(obs.app)} <span className="ruta">{obs.screen}</span></h2>
+          <p className="eyebrow">Pantalla actual | {hora(screen.recibida)}</p>
+          <h2>{nombreApp(obs.app)} <span className="soft">{nombrePantalla(obs.screen)}</span></h2>
         </div>
         <span className="sp" />
         {obs.paused && <span className="p8-estado p8-estado--aviso">En pausa: {obs.paused}</span>}
+        {!SIN_PROTOCOLO && (
+          <span className="cuentas">
+            <span className="p8-estado p8-estado--seguro">{c.verde} lo ve 8</span>
+            <span className="p8-estado p8-estado--aviso">{c.ambar} tokenizados</span>
+            <span className="p8-estado p8-estado--bloqueo">{c.rojo} nunca salen</span>
+          </span>
+        )}
       </header>
       <div className="tabla" role="table" aria-label="Lo que ves frente a lo que ve la IA">
         <div className="fila cabecera" role="row">
@@ -326,7 +470,7 @@ function Pantalla({ screen, status, valores }) {
             <div key={el.id} className={`fila e-${e.cls}`} role="row">
               <span className="elemento" role="cell">
                 <span className="nombre">{el.label ? <Tokens text={el.label} /> : <span className="rol-solo">{el.role}</span>}</span>
-                <span className="tecnico">{el.label ? `${el.role} · ${el.id}` : el.id}</span>
+                <span className="tecnico">{el.label ? `${el.role} | ${el.id}` : el.id}</span>
               </span>
               <span role="cell"><Celda largo={largo}><Real real={r.text} observado={el.text} /></Celda></span>
               <span role="cell"><Celda largo={largo}>{SIN_PROTOCOLO ? <EnClaro text={el.text} valores={el.claro} /> : <Tokens text={el.text} valores={valores} />}</Celda></span>
@@ -342,14 +486,16 @@ function Pantalla({ screen, status, valores }) {
 // ---------------------------------------------------------------- actividad
 
 const OP = { tap: 'Pulsa', type: 'Escribe', open_app: 'Abre', send: 'Envía', scroll: 'Desplaza', back: 'Vuelve', key: 'Tecla', call: 'Llama' }
+const ES_LLAMADA = /^(observe|act|oracle)\b|\{"/
 
 function describir(e, etiquetas) {
   const lugar = (id) => etiquetas[`${e.app}|${e.screen}|${id}`]
+  const d = limpio(e.detail)
   switch (e.kind) {
     case 'observe_sent': {
-      const titulo = `Lee ${nombreApp(e.app)} · ${e.screen}`
-      if (e.claro != null) return { tono: e.claro ? 'bloqueo' : 'neutro', titulo, detalle: `Pantalla entera al modelo · ${e.claro} ${e.claro === 1 ? 'valor real' : 'valores reales'} en claro` }
-      return { tono: 'neutro', titulo, detalle: e.counts ? `${e.counts.verde} visibles · ${e.counts.ambar} tokenizados · ${e.counts.rojo} nunca salen` : null }
+      const titulo = `Lee ${nombreApp(e.app)} - ${nombrePantalla(e.screen)}`
+      if (e.claro != null) return { tono: e.claro ? 'bloqueo' : 'neutro', titulo, detalle: `Pantalla entera al modelo | ${e.claro} ${e.claro === 1 ? 'valor real' : 'valores reales'} en claro` }
+      return { tono: 'neutro', titulo, detalle: e.counts ? `${e.counts.verde} visibles | ${e.counts.ambar} tokenizados | ${e.counts.rojo} nunca salen` : null }
     }
     case 'act': {
       const [, op, target, ...resto] = (e.model_saw ?? '').split(' ')
@@ -359,17 +505,25 @@ function describir(e, etiquetas) {
       const donde = lugar(target)
       return { tono: 'neutro', titulo: `${OP[op] ?? op}${donde ? ` «${donde}»` : target ? ` ${target}` : ''}`, detalle: texto || null }
     }
-    case 'blocked': return { tono: 'bloqueo', titulo: `Bloqueado · ${e.reason ?? 'sin motivo'}`, detalle: e.detail ?? e.model_saw, extra: e.model_saw && e.detail ? e.model_saw : null }
-    case 'held': return { tono: 'aviso', titulo: 'Retenido hasta que confirmes', detalle: `${e.model_saw ?? ''} · ${e.confirm}` }
+    case 'blocked': return { tono: 'bloqueo', titulo: `Bloqueado: ${e.reason ?? 'sin motivo'}`, detalle: d ?? e.model_saw, extra: e.model_saw && d ? e.model_saw : null }
+    case 'held': return { tono: 'aviso', titulo: 'Retenido hasta que confirmes', detalle: `${e.model_saw ?? ''} | ${e.confirm}` }
     case 'approval': return e.approved_by ? { tono: 'seguro', titulo: `Aprobado por ${e.approved_by}`, detalle: e.confirm } : { tono: 'bloqueo', titulo: 'Rechazado', detalle: e.confirm }
     case 'task': {
-      // Desde #117 el evento final solo marca el fin («fin · paso N»), sin model_saw.
-      const detalle = e.model_saw || e.detail
-      return detalle ? { tono: 'cobalto', titulo: '8 informa', detalle } : null
+      const detalle = e.model_saw || d
+      if (!detalle) return null
+      if (/recib/i.test(e.detail ?? '')) return { tono: 'cobalto', titulo: 'Encargo recibido', detalle: d }
+      if (/inicio/i.test(e.detail ?? '') && e.model_saw) return { tono: 'cobalto', titulo: 'Empieza el encargo', detalle: e.model_saw, extra: d }
+      if (!e.model_saw && /^fin\b/i.test(e.detail ?? '')) return { tono: 'seguro', titulo: 'Encargo terminado', detalle: d }
+      if (!e.model_saw && /l[ií]mite|error/i.test(e.detail ?? '')) return { tono: 'aviso', titulo: 'Encargo detenido', detalle: d }
+      if (e.model_saw && ES_LLAMADA.test(e.model_saw)) {
+        const herramientas = [...new Set(e.model_saw.split(';').map((x) => x.trim().split(' ')[0]))].join(', ')
+        return { tono: 'neutro', titulo: `Decide: ${herramientas}`, detalle: d }
+      }
+      return { tono: 'cobalto', titulo: '8 informa', detalle }
     }
-    case 'paused': return { tono: 'aviso', titulo: 'En pausa', detalle: e.detail }
+    case 'paused': return { tono: 'aviso', titulo: 'En pausa', detalle: d }
     case 'oracle': return { tono: 'neutro', titulo: 'Pregunta al oráculo', detalle: e.model_saw }
-    default: return { tono: 'neutro', titulo: e.kind, detalle: e.model_saw ?? e.detail }
+    default: return { tono: 'neutro', titulo: e.kind, detalle: e.model_saw ?? d }
   }
 }
 
@@ -416,7 +570,7 @@ function Actividad({ audit, etiquetas, valores }) {
                 <div className="linea1">
                   <b>{d.titulo}</b>
                   <span className="sp" />
-                  <span className="meta">#{e.seq} · {hora(e.ts)}</span>
+                  <span className="meta">#{e.seq} | {hora(e.ts)}</span>
                 </div>
                 {d.detalle && <div className="detalle"><Tokens text={d.detalle} valores={valores} /></div>}
                 {d.extra && <div className="detalle mono"><Tokens text={d.extra} valores={valores} /></div>}
@@ -428,62 +582,32 @@ function Actividad({ audit, etiquetas, valores }) {
       </ol>
       <footer className="latencia">
         <span>Media por paso</span>
-        {lat.map(([k, v]) => <span key={k}><em>{k}</em> {v == null ? '—' : `${v} ms`}</span>)}
+        {lat.map(([k, v]) => <span key={k}><em>{k}</em> {v == null ? 'sin datos' : `${v} ms`}</span>)}
       </footer>
     </section>
-  )
-}
-
-// ---------------------------------------------------------------- resumen
-
-function Resumen({ screen, audit, pending, alerts }) {
-  const els = screen?.observed?.elements ?? []
-  const c = { verde: 0, ambar: 0, rojo: 0 }
-  for (const e of els) c[e.cls] = (c[e.cls] ?? 0) + 1
-  const bloqueos = audit.filter((e) => e.kind === 'blocked').length
-  const sinRevisar = alerts.filter((a) => !a.revisada).length
-  return (
-    <div className="resumen" aria-label="Resumen">
-      <span className="grupo">
-        <span className="p8-estado p8-estado--seguro">{c.verde} lo ve 8</span>
-        <span className="p8-estado p8-estado--aviso">{c.ambar} tokenizados</span>
-        <span className="p8-estado p8-estado--bloqueo">{c.rojo} nunca salen</span>
-        <span className="nota">en la pantalla actual</span>
-      </span>
-      <span className="sp" />
-      <span className="grupo">
-        <span className={`cifra ${bloqueos ? 'roja' : ''}`}><b>{bloqueos}</b> bloqueos</span>
-        <span className={`cifra ${pending.length ? 'ambar' : ''}`}><b>{pending.length}</b> por confirmar</span>
-        <span className={`cifra ${sinRevisar ? 'roja' : ''}`}><b>{sinRevisar}</b> alarmas</span>
-      </span>
-    </div>
   )
 }
 
 // ---------------------------------------------------------------- app
 
 export default function App() {
-  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin } = useEvents()
-  const [tema, setTema] = useTema()
+  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir } = useEvents()
   const ahora = useAhora()
   const atencion = pending.length + alerts.filter((a) => !a.revisada).length
 
   useEffect(() => {
-    document.title = `${atencion ? `(${atencion}) ` : ''}Priv8 · Consola`
+    document.title = `${atencion ? `(${atencion}) ` : ''}Priv8 - Consola`
   }, [atencion])
 
   return (
-    <div className={`app ${SIN_PROTOCOLO ? 'sin-protocolo' : ''}`}>
-      <Cabecera status={status} tema={tema} setTema={setTema} />
-      {FEED && <Modo enClaro={enClaro} audit={audit} fin={fin} />}
-      {!SIN_PROTOCOLO && (screen || audit.length > 0) && <Resumen screen={screen} audit={audit} pending={pending} alerts={alerts} />}
+    <div className={`app ${SIN_PROTOCOLO ? 'sin-protocolo' : ''} ${FEED ? 'en-feed' : ''}`}>
+      <Barra status={status} />
+      <div className="arriba">
+        <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} valores={valores} alerts={alerts} enClaro={enClaro} fin={fin} ahora={ahora} />
+        <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
+      </div>
       <div className="layout">
         <main className="principal">
-          {pending.length > 0 && (
-            <section className="pendientes" aria-label="Confirmaciones pendientes">
-              {pending.map((p) => <Pendiente key={p.id} p={p} resolve={resolve} valores={valores} ahora={ahora} />)}
-            </section>
-          )}
           <Alarmas alerts={alerts} review={review} comentario={comentarioDe8(audit)} valores={valores} compacta={!!FEED} />
           <Pantalla screen={screen} status={status} valores={valores} />
         </main>

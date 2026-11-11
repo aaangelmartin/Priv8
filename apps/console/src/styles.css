@@ -1,312 +1,381 @@
-/* Consola de auditoría · sobre brand/tokens.css (colores, fuentes, espacio, forma y movimiento).
-   Distribución: cabecera de una línea, resumen de estados, columna principal (lo que pide
-   atención arriba y la pantalla actual) y, a la derecha, la actividad del registro. */
+/* Consola de Priv8 · el sistema de la web (apps/landing), solo en claro.
+   Barra suelta en píldora cobalto, bandas cobalto con el fondo de datos quieto y el velo en el centro,
+   tarjetas en niebla sin bordes y con radios grandes, botones en píldora, titulares en Sora con la segunda
+   parte en cobalto suave, etiquetas en Plex Mono en cobalto (sin mayúsculas).
+   Distribución: barra; 8 en directo y el chat lado a lado; debajo, alarmas y pantalla actual a la izquierda
+   y la actividad firmada a la derecha. */
 :root {
-  --c-sutil: #F1F4F9;          /* filas alternas, celdas, campos */
-  --c-sombra: 0 1px 2px rgba(11, 27, 51, .05), 0 6px 20px rgba(11, 27, 51, .05);
-  --c-cobalto-texto: var(--p8-cobalto);
-  --c-cobalto-suave: #E4E9FD;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --c-sutil: #13243F;
-    --c-sombra: 0 0 0 1px rgba(143, 162, 255, .04);
-    --c-cobalto-texto: var(--p8-cobalto-claro);
-    --c-cobalto-suave: #1C2A55;
-  }
-}
-:root[data-theme="dark"] {
-  --c-sutil: #13243F;
-  --c-sombra: 0 0 0 1px rgba(143, 162, 255, .04);
-  --c-cobalto-texto: var(--p8-cobalto-claro);
-  --c-cobalto-suave: #1C2A55;
+  --band: #2d45d6; --night: #0b1b33; --paper: #ffffff; --mist: #eef2fb;
+  --ink: #0b1b33; --ink-2: #4e5a72; --line: #dde3f3; --card: #f4f6fd;
+  --accent: #2d45d6; --accent-soft: #e6eafd; --on-band: #dbe1ff; --on-band-soft: #c4cdff;
+  --tok-bg: #e4e9fd; --tok-fg: #2236b5;
+  --ok: #1f8a5b; --ok-text: #18734c; --ok-soft: #dff2e7;
+  --warn: #a86400; --warn-text: #8a5200; --warn-soft: #fcefd9;
+  --bad: #c23a2e; --bad-text: #a83228; --bad-soft: #fbe5e3;
+  --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --r: 28px;
+  /* brand/tokens.css, fijado en claro */
+  --p8-fondo: #ffffff; --p8-superficie: #f4f6fd; --p8-texto: #0b1b33; --p8-texto-2: #4e5a72; --p8-borde: #dde3f3;
+  --p8-foco: #2d45d6; --p8-token-bg: #e4e9fd; --p8-token-fg: #2236b5;
+  color-scheme: light;
 }
 
-* { box-sizing: border-box }
+*, *::before, *::after { box-sizing: border-box }
+html { -webkit-text-size-adjust: 100% }
 body {
-  margin: 0;
-  background: var(--p8-fondo);
-  color: var(--p8-texto);
-  font: 400 var(--p8-text-small)/1.5 var(--p8-font-body);
-  -webkit-font-smoothing: antialiased;
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 400 14px/1.55 var(--f-body); -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-h1, h2, h3 { font-family: var(--p8-font-display); font-weight: 600; margin: 0; text-wrap: balance }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: -.035em; line-height: 1.05; margin: 0; text-wrap: balance }
 p { margin: 0 }
-code, .mono { font-family: var(--p8-font-mono) }
-a { color: var(--c-cobalto-texto) }
-button { font: inherit; color: inherit }
-:focus-visible { outline: 2px solid var(--p8-foco); outline-offset: 2px; border-radius: 4px }
+code, .mono { font-family: var(--f-mono) }
+a { color: var(--accent); text-underline-offset: 3px }
+button, input { font: inherit; color: inherit }
+:focus-visible { outline: 3px solid #8fa2ff; outline-offset: 3px; border-radius: 8px }
 .sp { flex: 1 }
-.meta { font: 400 12px/1.4 var(--p8-font-mono); color: var(--p8-texto-2); font-variant-numeric: tabular-nums; white-space: nowrap }
-.vacio { color: var(--p8-texto-2); font-style: italic }
-.redacted { color: var(--p8-bloqueo-texto); font: 600 12px var(--p8-font-mono) }
+.soft { color: var(--accent) }
+.meta { font: 400 12px/1.4 var(--f-mono); color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap }
+.vacio { color: var(--ink-2); font-style: italic }
+.redacted { color: var(--bad-text); font: 600 12px var(--f-mono) }
+.eyebrow { font: 500 .82rem/1.2 var(--f-mono); letter-spacing: .01em; color: var(--accent); margin-bottom: 8px }
 
 .app {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding-block: var(--p8-space-4) var(--p8-space-6);
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: grid;
-  gap: var(--p8-space-4);
+  max-width: 1520px; margin: 0 auto;
+  padding: max(14px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) 40px max(20px, env(safe-area-inset-left, 0px));
+  display: grid; gap: 20px;
 }
 
-/* ------------------------------------------------------------ cabecera */
-.top { display: flex; align-items: center; gap: var(--p8-space-3); flex-wrap: wrap }
-.marca { display: flex; align-items: center; gap: var(--p8-space-3) }
-.logo { height: 26px; width: auto; display: block }
-.logo-oscuro { display: none }
-[data-theme="dark"] .logo-claro { display: none }
-[data-theme="dark"] .logo-oscuro { display: block }
-.producto {
-  font: 600 var(--p8-text-label)/1 var(--p8-font-mono);
-  text-transform: uppercase; letter-spacing: .12em; color: var(--p8-texto-2);
-  padding-left: var(--p8-space-3); border-left: 1px solid var(--p8-borde);
+/* ------------------------------------------------------------ barra: la píldora cobalto de la web */
+.nav {
+  position: sticky; top: max(14px, env(safe-area-inset-top, 0px)); z-index: 20;
+  display: flex; align-items: center; gap: 14px; min-width: 0;
+  padding: 8px 8px 8px 14px; border-radius: var(--r);
+  background: rgba(45, 69, 214, .97); color: #fff;
+  box-shadow: 0 12px 40px rgba(45, 69, 214, .28);
+  backdrop-filter: saturate(1.6) blur(12px); -webkit-backdrop-filter: saturate(1.6) blur(12px);
 }
-.conexion { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--p8-texto-2) }
-.conexion i { width: 8px; height: 8px; border-radius: 50% }
-.conexion.t-seguro i { background: var(--p8-seguro); box-shadow: 0 0 0 3px var(--p8-seguro-suave) }
-.conexion.t-aviso i { background: var(--p8-aviso); animation: latido 1.2s var(--p8-ease-in-out) infinite }
-.conexion.t-bloqueo i { background: var(--p8-bloqueo) }
-.conexion.t-cobalto i { background: var(--c-cobalto-texto); box-shadow: 0 0 0 3px var(--c-cobalto-suave) }
+.nav .brand { display: flex; align-items: center; gap: 9px; font: 700 1.05rem/1 var(--f-display); letter-spacing: -.02em; flex: none }
+.nav-eight { width: 40px; height: 40px; flex: none }
+.nav-eight svg, .directo-eight svg, .vacio-eight svg { width: 100%; height: 100%; display: block; overflow: visible }
+.nav .producto { font: 500 .82rem/1 var(--f-mono); color: var(--on-band-soft); padding-left: 12px; margin-left: 4px; border-left: 1px solid rgba(255, 255, 255, .25) }
+.conexion { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; background: rgba(255, 255, 255, .12); font-size: .86rem; color: #fff; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.conexion i { width: 8px; height: 8px; border-radius: 50%; flex: none; background: #fff }
+.conexion.t-seguro i { background: #7fe0a8; box-shadow: 0 0 0 3px rgba(127, 224, 168, .25) }
+.conexion.t-aviso i { background: #ffcf7a; animation: latido 1.2s ease-in-out infinite }
+.conexion.t-bloqueo i { background: #ff9a8f }
+.conexion.t-cobalto i { background: #fff; box-shadow: 0 0 0 3px rgba(255, 255, 255, .25) }
 @keyframes latido { 50% { opacity: .35 } }
+.verificado { font: 500 .8rem/1.2 var(--f-mono); padding: 9px 14px; border-radius: 999px; background: rgba(255, 255, 255, .14); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0 }
+.verificado.mal { background: #fbe5e3; color: var(--bad-text) }
+.nav .pill {
+  flex: none; padding: 12px 18px; border: 0; border-radius: 999px; background: #fff; color: #1f33b0;
+  font-weight: 600; font-size: .9rem; cursor: pointer; transition: transform .2s var(--ease), opacity .2s ease;
+}
+.nav .pill:hover:not(:disabled) { transform: translateY(-1px) }
+.nav .pill:disabled { opacity: .6; cursor: not-allowed }
 
+/* ------------------------------------------------------------ botones */
 .btn {
-  border: 1px solid transparent; border-radius: var(--p8-radius); padding: 8px 16px;
-  font: 600 13px/1.2 var(--p8-font-body); cursor: pointer;
-  background: var(--p8-accion); color: var(--p8-accion-texto);
-  transition: background-color var(--p8-dur-rapida) var(--p8-ease-out), border-color var(--p8-dur-rapida), transform var(--p8-dur-rapida);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px solid transparent; border-radius: 999px; padding: 11px 20px;
+  font: 600 .9rem/1 var(--f-body); cursor: pointer;
+  transition: transform .25s var(--ease), background-color .2s ease, opacity .2s ease;
 }
-.btn:active:not(:disabled) { transform: scale(.97) }
+.btn:hover:not(:disabled) { transform: translateY(-1px) }
 .btn:disabled { opacity: .45; cursor: not-allowed }
-.btn.sec { background: transparent; color: var(--p8-texto); border-color: var(--p8-borde) }
-.btn.sec:hover:not(:disabled) { border-color: var(--p8-texto-2) }
-.btn.ok { background: var(--p8-seguro); color: #fff; padding-inline: 22px }
-.btn.ok:hover:not(:disabled) { background: var(--p8-seguro-texto) }
-.btn.no { background: transparent; color: var(--p8-bloqueo-texto); border-color: currentColor }
-.btn.no:hover:not(:disabled) { background: var(--p8-bloqueo-suave) }
-
-.tema { display: inline-flex; padding: 2px; border: 1px solid var(--p8-borde); border-radius: var(--p8-radius) }
-.tema button { border: 0; background: none; padding: 5px 10px; border-radius: 7px; font-size: 12px; color: var(--p8-texto-2); cursor: pointer }
-.tema button[aria-pressed="true"] { background: var(--c-sutil); color: var(--p8-texto); font-weight: 600 }
-
-/* ------------------------------------------------------------ resumen */
-.resumen {
-  display: flex; align-items: center; gap: var(--p8-space-3) var(--p8-space-5); flex-wrap: wrap;
-  padding: var(--p8-space-3) var(--p8-space-4);
-  background: var(--p8-superficie); border: 1px solid var(--p8-borde); border-radius: var(--p8-radius-lg);
-}
-.resumen .grupo { display: flex; align-items: center; gap: var(--p8-space-2); flex-wrap: wrap }
-.resumen .nota { color: var(--p8-texto-2); font-size: 12px; margin-left: 4px }
-.cifra { color: var(--p8-texto-2); font-size: 13px; padding-inline: var(--p8-space-2) }
-.cifra b { font: 600 18px/1 var(--p8-font-display); color: var(--p8-texto); margin-right: 4px; font-variant-numeric: tabular-nums }
-.cifra.roja b { color: var(--p8-bloqueo-texto) }
-.cifra.ambar b { color: var(--p8-aviso-texto) }
-
-/* ------------------------------------------------------------ distribución */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); gap: var(--p8-space-4); align-items: start }
-.principal { display: grid; gap: var(--p8-space-4); min-width: 0 }
-.lateral { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--p8-space-4)); min-width: 0 }
-
-.panel {
-  background: var(--p8-superficie); border: 1px solid var(--p8-borde); border-radius: var(--p8-radius-lg);
-  padding: var(--p8-space-4) var(--p8-space-5); box-shadow: var(--c-sombra);
-}
-.sec-cab { display: flex; align-items: center; gap: var(--p8-space-3); margin-bottom: var(--p8-space-3) }
-.sec-cab h2 { font-size: var(--p8-text-h3) }
-.sec-cab .sub { color: var(--p8-texto-2); font-size: 13px; margin-top: 2px }
-.eyebrow { font: 600 11px/1 var(--p8-font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--p8-texto-2); margin-bottom: 6px }
-.ruta { font: 400 14px var(--p8-font-mono); color: var(--p8-texto-2); margin-left: 6px }
-.fila-cab { display: flex; align-items: center; gap: var(--p8-space-2); flex-wrap: wrap }
-.ocho { width: 40px; height: auto; aspect-ratio: 304 / 251; border-radius: 22.5%; flex: none }
-.ocho.grande { width: 72px }
+.btn.primario { background: var(--band); color: #fff }
+.btn.primario:hover:not(:disabled) { background: #2236b5 }
+.btn.sec { background: #fff; color: var(--ink); padding: 9px 16px; font-size: .84rem }
+.btn.no { background: transparent; color: var(--bad-text); border-color: rgba(194, 58, 46, .45) }
+.btn.no:hover:not(:disabled) { background: var(--bad-soft) }
 
 /* ------------------------------------------------------------ tokens y valores */
-.tok {
-  font: 600 .92em/1.3 var(--p8-font-mono);
-  background: var(--p8-token-bg); color: var(--p8-token-fg);
-  padding: .1em .45em; border-radius: var(--p8-radius-sm); white-space: nowrap;
-}
+.tok { font: 600 .86em/1.4 var(--f-mono); background: var(--tok-bg); color: var(--tok-fg); border-radius: 8px; padding: .12em .5em; white-space: nowrap }
 .valor { display: inline-flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-right: 4px }
 .valor b { font-weight: 600 }
 .valor .tok { font-size: 11px }
-mark.dato {
-  background: var(--p8-aviso-suave); color: var(--p8-aviso-texto); font-weight: 500;
-  padding: 0 3px; border-radius: 4px; box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--p8-aviso) 45%, transparent);
-}
+.local { font-weight: 600; background: var(--accent-soft); color: var(--ink); border-radius: 7px; padding: .05em .4em; box-decoration-break: clone; -webkit-box-decoration-break: clone }
+mark.dato { background: var(--warn-soft); color: var(--warn-text); font-weight: 500; padding: 0 4px; border-radius: 6px }
+mark.fuga { background: var(--bad-soft); color: var(--bad-text); font-weight: 600; padding: 0 4px; border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(194, 58, 46, .5) }
+.p8-estado { border-radius: 999px }
 
-mark.fuga {
-  background: var(--p8-bloqueo-suave); color: var(--p8-bloqueo-texto); font-weight: 600;
-  padding: 0 3px; border-radius: 4px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--p8-bloqueo) 55%, transparent);
-}
+/* ------------------------------------------------------------ arriba: 8 en directo y el chat */
+.arriba { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(360px, 1fr); gap: 20px; height: clamp(400px, 52vh, 500px) }
+.en-feed .arriba { height: clamp(300px, 37vh, 340px) }
 
-/* ------------------------------------------------------------ feeds: con y sin protocolo */
-.modo {
-  display: flex; align-items: center; gap: var(--p8-space-5); padding: var(--p8-space-4) var(--p8-space-5);
-  border-radius: var(--p8-radius-lg); border: 1px solid var(--p8-borde); background: var(--p8-superficie);
+/* la banda cobalto de la web, con el fondo de datos quieto y el velo en el centro */
+.directo {
+  position: relative; overflow: hidden; min-width: 0;
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 26px 30px 22px; border-radius: var(--r); color: #fff;
+  background: var(--band) var(--c-textura) repeat 0 0 / 2200px auto;
 }
-.modo .texto { flex: 1; min-width: 0; display: grid; gap: 4px }
-.modo h1 { font-size: 26px; line-height: 1.2 }
-.modo .sub { color: var(--p8-texto-2); font-size: 14px; max-width: 80ch }
-.modo .eyebrow { margin-bottom: 2px }
-.modo .ocho { width: 56px }
-.modo .contador { display: flex; align-items: center; gap: var(--p8-space-3); padding-left: var(--p8-space-5); border-left: 1px solid var(--p8-borde) }
-.modo .contador b { font: 700 48px/1 var(--p8-font-display); font-variant-numeric: tabular-nums; min-width: 1ch; text-align: right }
-.modo .contador span { font-size: 13px; line-height: 1.35; color: var(--p8-texto-2) }
-.modo.sin { background: var(--p8-bloqueo-suave); border-color: var(--p8-bloqueo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--p8-bloqueo) 18%, transparent) }
-.modo.sin h1, .modo.sin .contador b { color: var(--p8-bloqueo-texto) }
-.modo.sin .eyebrow, .modo.sin .sub, .modo.sin .contador span { color: var(--p8-texto) }
-.modo.sin .contador { border-left-color: color-mix(in srgb, var(--p8-bloqueo) 40%, transparent) }
-.modo.con { border-color: var(--c-cobalto-texto); box-shadow: 0 0 0 4px var(--c-cobalto-suave) }
-.modo.con h1 { color: var(--c-cobalto-texto) }
-.modo.con .contador b { color: var(--p8-seguro-texto) }
-.modo.con .contador.bloq b { color: var(--p8-bloqueo-texto) }
-.sin-protocolo .fila.e-bloqueo { background: color-mix(in srgb, var(--p8-bloqueo-suave) 45%, transparent) }
-
-/* ------------------------------------------------------------ confirmaciones */
-.pendientes { display: grid; gap: var(--p8-space-3) }
-.pendiente {
-  background: var(--p8-superficie); border: 1px solid var(--p8-aviso); border-radius: var(--p8-radius-lg);
-  padding: var(--p8-space-4) var(--p8-space-5); display: grid; gap: var(--p8-space-3);
-  box-shadow: 0 0 0 4px var(--p8-aviso-suave); animation: entra var(--p8-dur-base) var(--p8-ease-out);
+.directo::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 80% 90% at 42% 52%, var(--band) 52%, rgba(45, 69, 214, 0) 100%);
 }
-.pendiente .frase { font: 500 17px/1.6 var(--p8-font-body); max-width: 70ch }
-.caduca { font: 600 12px var(--p8-font-mono); color: var(--p8-texto-2); font-variant-numeric: tabular-nums }
-.caduca.pronto { color: var(--p8-bloqueo-texto) }
-.origenes { display: flex; flex-wrap: wrap; gap: var(--p8-space-2) var(--p8-space-5); margin: 0; font-size: 12px }
-.origenes div { display: flex; gap: 6px; align-items: baseline }
-.origenes dt { font-family: var(--p8-font-mono); color: var(--p8-texto) }
-.origenes dd { margin: 0; color: var(--p8-texto-2) }
-.origenes dd.ojo { color: var(--p8-aviso-texto); font-weight: 600 }
-.barra { height: 3px; background: var(--c-sutil); border-radius: 99px; overflow: hidden }
-.barra i { display: block; height: 100%; background: var(--p8-aviso); transition: width 1s linear }
-.acciones { display: flex; align-items: center; gap: var(--p8-space-2); flex-wrap: wrap }
-.acciones .nota { color: var(--p8-texto-2); font-size: 12px; margin-left: var(--p8-space-2) }
-
-/* ------------------------------------------------------------ alarmas */
-.alarmas { background: var(--p8-superficie); border: 1px solid var(--p8-borde); border-radius: var(--p8-radius-lg); padding: var(--p8-space-4) var(--p8-space-5) }
-.alarmas.activas { border-color: var(--p8-bloqueo); box-shadow: 0 0 0 4px var(--p8-bloqueo-suave); animation: entra var(--p8-dur-base) var(--p8-ease-out) }
-.alarmas.activas h2 { color: var(--p8-bloqueo-texto) }
-.alarmas ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--p8-space-2) }
-.alarma {
-  display: grid; gap: var(--p8-space-2); justify-items: start;
-  padding: var(--p8-space-3) var(--p8-space-4); border-radius: var(--p8-radius);
-  background: var(--p8-bloqueo-suave);
-}
-.alarma > * { max-width: 100% }
-.alarma.t-instruccion { background: var(--p8-aviso-suave) }
-.alarma.revisada { background: var(--c-sutil); opacity: .7 }
-.alarma .fila-cab { width: 100% }
-.alarma .titulo { font-weight: 600 }
-.alarma p { max-width: 75ch }
-.alarma blockquote {
-  margin: 0; padding: var(--p8-space-2) var(--p8-space-3); border-left: 2px solid var(--p8-borde);
-  color: var(--p8-texto-2); font-size: 13px; background: var(--p8-superficie); border-radius: 0 var(--p8-radius-sm) var(--p8-radius-sm) 0;
+.directo > * { position: relative }
+.directo .eyebrow { color: var(--on-band-soft); margin: 0; display: inline-flex; align-items: center; gap: 9px }
+.directo .soft { color: var(--on-band-soft) }
+.vivo { width: 8px; height: 8px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 0 rgba(255, 255, 255, .6); animation: vivo 2.4s ease-out infinite }
+@keyframes vivo { 0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, .55) } 70%, 100% { box-shadow: 0 0 0 9px rgba(255, 255, 255, 0) } }
+.directo-cab { display: flex; align-items: flex-start; gap: 16px }
+.tarea { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end }
+.tarea span { font: 500 .8rem/1 var(--f-mono); padding: 8px 12px; border-radius: 999px; background: rgba(255, 255, 255, .12); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap }
+.tarea span:first-child { background: #fff; color: #1f33b0; font-weight: 600 }
+.directo-cuerpo { flex: 1; min-height: 0; display: flex; align-items: center; gap: clamp(20px, 2.6vw, 38px) }
+.directo-eight { width: clamp(120px, 12vw, 196px); aspect-ratio: 46 / 32; flex: none }
+.directo-texto { min-width: 0; display: grid; gap: 12px }
+.directo h2 { font-size: clamp(1.6rem, .9rem + 1.5vw, 2.6rem); letter-spacing: -.045em; line-height: 1.04; color: #fff }
+.directo .detalle {
+  color: var(--on-band); font-size: 1.02rem; line-height: 1.55; max-width: 62ch;
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
-.alarmas.compacta { padding: var(--p8-space-3) var(--p8-space-4) }
-.alarmas.compacta .sec-cab { margin-bottom: var(--p8-space-2) }
-.alarmas.compacta .alarma { padding-block: 8px }
-.alarma .btn.sec { background: var(--p8-superficie); padding: 6px 12px; font-size: 12px }
-.hecho { font: 600 12px var(--p8-font-mono); color: var(--p8-seguro-texto) }
-.chip {
-  font: 600 11px/1 var(--p8-font-mono); text-transform: uppercase; letter-spacing: .08em;
-  padding: 5px 9px; border-radius: var(--p8-radius-pill); white-space: nowrap;
-  background: var(--p8-superficie); color: var(--p8-bloqueo-texto);
+.directo .local { background: rgba(255, 255, 255, .16); color: #fff }
+.directo .tok { background: #fff; color: #1f33b0 }
+.directo-pie { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.cifra { display: inline-flex; align-items: baseline; gap: 7px; padding: 8px 14px; border-radius: 999px; background: rgba(255, 255, 255, .12); color: var(--on-band); font-size: .86rem; white-space: nowrap }
+.cifra b { font: 700 1.1rem/1 var(--f-display); color: #fff; font-variant-numeric: tabular-nums }
+.cifra.atencion { background: #fff; color: #1f33b0 }
+.cifra.atencion b { color: #1f33b0 }
+.cifra.fin { background: rgba(255, 255, 255, .2); color: #fff }
+.directo-pie .nota { color: var(--on-band-soft); font-size: .8rem; margin-left: auto }
+
+/* reproducciones: el mismo trámite con y sin Priv8 (vídeos) */
+.modo-texto { display: grid; gap: 6px; min-width: 0 }
+.modo h1 { font-size: clamp(1.5rem, .9rem + 1.3vw, 2.3rem); letter-spacing: -.045em; line-height: 1.04 }
+.modo .directo-eight { width: clamp(96px, 8vw, 130px) }
+.modo .directo h2, .modo.directo h2 { font-size: clamp(1.2rem, .8rem + .9vw, 1.7rem) }
+.modo .directo-cuerpo { gap: 22px }
+.modo.sin { background-color: var(--night) }
+.modo.sin::before { background: radial-gradient(ellipse 80% 90% at 42% 52%, var(--night) 52%, rgba(11, 27, 51, 0) 100%) }
+.modo.sin .soft { color: #ff9a8f }
+.cifra.mala b { color: #ff9a8f }
+.modo.sin .cifra.mala { background: rgba(255, 154, 143, .14) }
+
+/* el chat: tarjeta niebla, mensajes y un campo en píldora */
+.chat { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 22px 22px 18px; border-radius: var(--r); background: var(--card) }
+.chat-cab { display: flex; align-items: flex-end; gap: 12px }
+.chat-cab .eyebrow { margin-bottom: 6px }
+.chat h2, .sec-cab h2 { font-size: 1.5rem; letter-spacing: -.035em }
+.privado { font: 500 .74rem/1.3 var(--f-mono); color: var(--ink-2); text-align: right; max-width: 22ch }
+.mensajes { list-style: none; margin: 0; padding: 4px 2px; flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin }
+.msg { display: flex; gap: 10px; max-width: 100%; animation: entra .3s var(--ease) }
+.msg .burbuja { padding: 11px 15px; border-radius: 20px; line-height: 1.5; overflow-wrap: anywhere }
+.msg .meta { display: block; margin-top: 4px; font-size: 11px }
+.msg.tu { flex-direction: column; align-items: flex-end; align-self: flex-end; max-width: 86% }
+.msg.tu .burbuja { background: var(--band); color: #fff; border-bottom-right-radius: 6px }
+.msg.tu .local { background: rgba(255, 255, 255, .18); color: #fff }
+.msg.ocho { align-self: flex-start; max-width: 92%; align-items: flex-start }
+.msg.ocho > div { min-width: 0 }
+.msg.ocho .burbuja { background: #fff; color: var(--ink); border-bottom-left-radius: 6px }
+.avatar { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; margin-top: 2px }
+.msg.linea { align-self: center; align-items: center; gap: 8px; font: 500 .76rem/1.4 var(--f-mono); color: var(--ink-2); text-align: center; padding: 2px 8px }
+.msg.linea i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex: none }
+.msg.linea.t-cobalto i { background: var(--band) }
+.msg.linea.t-seguro { color: var(--ok-text) } .msg.linea.t-seguro i { background: var(--ok) }
+.msg.linea.t-aviso { color: var(--warn-text) } .msg.linea.t-aviso i { background: var(--warn) }
+.msg.linea.t-bloqueo, .msg.linea.t-alarma { color: var(--bad-text) }
+.msg.linea.t-bloqueo i, .msg.linea.t-alarma i { background: var(--bad) }
+.msg.linea.t-alarma { background: var(--bad-soft); border-radius: 999px; padding: 6px 12px }
+.msg.conf { display: block; width: 100% }
+
+.confirmacion { background: #fff; border-radius: 20px; padding: 16px 18px; display: grid; gap: 10px; box-shadow: inset 0 0 0 2px var(--warn-soft) }
+.confirmacion.e-pendiente { box-shadow: inset 0 0 0 2px #f1cf96 }
+.confirmacion .etiqueta { font: 600 .74rem/1 var(--f-mono); padding: 6px 10px; border-radius: 999px; background: var(--warn-soft); color: var(--warn-text) }
+.confirmacion.e-aprobada { box-shadow: none; opacity: .85 }
+.confirmacion.e-aprobada .etiqueta { background: var(--ok-soft); color: var(--ok-text) }
+.confirmacion.e-rechazada, .confirmacion.e-caducada { box-shadow: none; opacity: .75 }
+.confirmacion.e-rechazada .etiqueta, .confirmacion.e-caducada .etiqueta { background: var(--mist); color: var(--ink-2) }
+.confirmacion .frase { font: 500 1rem/1.55 var(--f-body) }
+.caduca { font: 600 12px var(--f-mono); color: var(--ink-2); font-variant-numeric: tabular-nums }
+.caduca.pronto { color: var(--bad-text) }
+.origenes { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 0; font-size: 12px }
+.origenes div { display: flex; gap: 6px; align-items: baseline }
+.origenes dt { font-family: var(--f-mono) }
+.origenes dd { margin: 0; color: var(--ink-2) }
+.origenes dd.ojo { color: var(--warn-text); font-weight: 600 }
+.barra { height: 3px; background: var(--mist); border-radius: 99px; overflow: hidden }
+.barra i { display: block; height: 100%; background: var(--warn); transition: width 1s linear }
+.acciones { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.nota.mala, .nota-chat.mala { color: var(--bad-text) }
+
+.sugerencias { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; flex: none }
+.sugerencias::-webkit-scrollbar { display: none }
+.chip-sug { flex: none; border: 0; border-radius: 999px; padding: 8px 13px; background: #fff; color: #1f33b0; font-size: .8rem; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background .2s ease }
+.chip-sug:hover:not(:disabled) { background: var(--accent-soft) }
+.chip-sug:disabled { cursor: not-allowed; opacity: .55 }
+.entrada { display: flex; gap: 6px; padding: 5px; border-radius: 999px; background: #fff; flex: none }
+.entrada input { flex: 1; min-width: 0; border: 0; background: transparent; padding: 0 14px; font-size: .95rem; outline: none }
+.entrada:focus-within { box-shadow: 0 0 0 3px #c4cdff }
+.entrada input:disabled { cursor: not-allowed }
+.entrada .btn { padding: 11px 20px }
+.nota-chat { font-size: .78rem; color: var(--ink-2); margin-top: -4px; padding-left: 14px }
+
+/* ------------------------------------------------------------ debajo: alarmas, pantalla y actividad */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 420px); gap: 20px; align-items: start }
+.principal { display: grid; gap: 20px; min-width: 0 }
+.lateral { position: sticky; top: 96px; min-width: 0 }
+.panel { background: var(--card); border-radius: var(--r); padding: 24px 26px }
+.sec-cab { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px }
+.sec-cab .eyebrow { margin-bottom: 6px }
+.fila-cab { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.cuentas { display: inline-flex; gap: 6px; flex-wrap: wrap }
+
+/* alarmas */
+.alarmas { background: var(--bad-soft); border-radius: var(--r); padding: 22px 24px; animation: entra .3s var(--ease) }
+.alarmas:not(.activas) { background: var(--card) }
+.alarmas .eyebrow { color: var(--bad-text) }
+.alarmas:not(.activas) .eyebrow { color: var(--accent) }
+.alarmas h2 { color: var(--bad-text) }
+.alarmas:not(.activas) h2 { color: var(--ink) }
+.alarmas h2 .suave { color: #d8776c }
+.alarmas ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px }
+.alarma { display: grid; gap: 8px; justify-items: start; padding: 14px 18px; border-radius: 18px; background: #fff }
+.alarma > * { max-width: 100% }
+.alarma.revisada { opacity: .65 }
+.alarma .fila-cab { width: 100% }
+.alarma .titulo { font-weight: 600 }
+.alarma p { max-width: 78ch }
+.alarma blockquote {
+  margin: 0; padding: 8px 12px; border-radius: 12px; background: var(--mist); color: var(--ink-2); font-size: 13px;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
-.alarma.t-instruccion .chip { color: var(--p8-aviso-texto) }
-.alarma.revisada .chip { color: var(--p8-texto-2) }
-.chip.c-cobalto { background: var(--c-cobalto-suave); color: var(--c-cobalto-texto) }
-.dice8 { margin-top: var(--p8-space-3); padding-top: var(--p8-space-3); border-top: 1px solid var(--p8-borde); display: grid; gap: var(--p8-space-2); justify-items: start }
+.alarma .btn.sec { background: var(--mist) }
+.alarmas.compacta { padding: 16px 20px }
+.alarmas.compacta .sec-cab { margin-bottom: 10px }
+.alarmas.compacta .eyebrow { display: none }
+.alarmas.compacta h2 { font-size: 1.2rem }
+.alarmas.compacta .alarma { padding-block: 9px }
+.hecho { font: 600 12px var(--f-mono); color: var(--ok-text) }
+.chip { font: 600 .72rem/1 var(--f-mono); padding: 6px 10px; border-radius: 999px; white-space: nowrap; background: var(--bad-soft); color: var(--bad-text) }
+.alarma.t-instruccion .chip { background: var(--warn-soft); color: var(--warn-text) }
+.alarma.revisada .chip { background: var(--mist); color: var(--ink-2) }
+.chip.c-cobalto { background: var(--tok-bg); color: var(--tok-fg) }
+.dice8 { margin-top: 12px; padding: 14px 18px; border-radius: 18px; background: #fff; display: grid; gap: 8px; justify-items: start }
 .dice8 p { max-width: 80ch; line-height: 1.7 }
 
-/* ------------------------------------------------------------ pantalla actual */
-.tabla { display: grid; font-size: 13px }
+/* pantalla actual: lo que ves frente a lo que ve la IA */
+.pantalla h2 .soft { font-weight: 600 }
+.tabla { display: grid; font-size: 13px; background: #fff; border-radius: 20px; padding: 8px 10px }
 .fila {
-  display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 2fr) minmax(0, 2fr) 104px;
-  gap: var(--p8-space-4); align-items: start;
-  padding: 10px var(--p8-space-3); border-top: 1px solid var(--p8-borde);
-  border-left: 3px solid transparent;
+  display: grid; grid-template-columns: minmax(130px, 1fr) minmax(0, 2fr) minmax(0, 2fr) 108px;
+  gap: 16px; align-items: start; padding: 11px 12px; border-top: 1px solid var(--mist); border-radius: 12px;
+  box-shadow: inset 3px 0 0 transparent;
 }
-.fila:hover { background: var(--c-sutil) }
-.fila.e-aviso { border-left-color: var(--p8-aviso) }
-.fila.e-bloqueo { border-left-color: var(--p8-bloqueo) }
-.fila.cabecera {
-  border-top: 0; padding-block: 0 8px;
-  font: 600 11px/1.3 var(--p8-font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--p8-texto-2);
-}
+.fila:hover { background: #fafbff }
+.fila.e-aviso { box-shadow: inset 3px 0 0 var(--warn) }
+.fila.e-bloqueo { box-shadow: inset 3px 0 0 var(--bad) }
+.fila.cabecera { border-top: 0; padding-block: 8px; font: 600 .74rem/1.3 var(--f-mono); color: var(--accent) }
 .fila.cabecera:hover { background: none }
-.fila.cabecera em { font-style: normal; text-transform: none; letter-spacing: 0; font-weight: 400; display: block }
-.fila-vacia { padding: var(--p8-space-3) }
+.fila.cabecera em { font-style: normal; font-weight: 400; color: var(--ink-2); display: block }
+.fila-vacia { padding: 12px }
 .elemento { display: grid; gap: 2px; min-width: 0 }
 .elemento .nombre { font-weight: 500; overflow-wrap: anywhere }
-.elemento .rol-solo { color: var(--p8-texto-2); font-weight: 400 }
-.elemento .tecnico { font: 400 11px var(--p8-font-mono); color: var(--p8-texto-2) }
+.elemento .rol-solo { color: var(--ink-2); font-weight: 400 }
+.elemento .tecnico { font: 400 11px var(--f-mono); color: var(--ink-2) }
 .valor-celda { overflow-wrap: anywhere; line-height: 1.6 }
 .valor-celda.largo .recorte { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden }
 .valor-celda.largo.abierta .recorte { display: block }
-.mas { border: 0; background: none; padding: 2px 0; color: var(--c-cobalto-texto); font-size: 12px; font-weight: 600; cursor: pointer }
+.mas { border: 0; background: none; padding: 2px 0; color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer }
+.sin-protocolo .fila.e-bloqueo { background: #fff6f5 }
 
-.vacio-panel { display: grid; justify-items: center; text-align: center; gap: var(--p8-space-3); padding-block: var(--p8-space-7) }
-.vacio-panel p { color: var(--p8-texto-2); max-width: 52ch }
-.vacio-panel code { white-space: nowrap; font-size: 12px; background: var(--c-sutil); padding: 1px 5px; border-radius: 4px; color: var(--p8-texto) }
+.vacio-panel { display: grid; justify-items: center; text-align: center; gap: 12px; padding-block: 48px }
+.vacio-eight { width: 110px; aspect-ratio: 46 / 32 }
+.vacio-panel p { color: var(--ink-2); max-width: 52ch }
+.vacio-panel code { white-space: nowrap; font-size: 12px; background: var(--tok-bg); color: var(--tok-fg); padding: 1px 6px; border-radius: 6px }
 
-/* ------------------------------------------------------------ actividad */
-.actividad { padding: var(--p8-space-4) }
-.filtros { display: flex; gap: 4px; margin-bottom: var(--p8-space-3); padding: 3px; background: var(--c-sutil); border-radius: var(--p8-radius) }
+/* actividad */
+.actividad { padding: 22px }
+.filtros { display: flex; gap: 4px; margin-bottom: 12px; padding: 5px; background: #fff; border-radius: 999px }
 .filtros button {
-  flex: 1; border: 0; background: none; border-radius: 7px; padding: 6px 8px; font-size: 12px; cursor: pointer;
-  color: var(--p8-texto-2); display: inline-flex; gap: 6px; justify-content: center; align-items: center;
+  flex: 1; border: 0; background: none; border-radius: 999px; padding: 9px 10px; font-size: .84rem; font-weight: 600; cursor: pointer;
+  color: var(--ink-2); display: inline-flex; gap: 6px; justify-content: center; align-items: center;
+  transition: background .25s var(--ease), color .2s ease;
 }
-.filtros button[aria-selected="true"] { background: var(--p8-superficie); color: var(--p8-texto); font-weight: 600; box-shadow: var(--c-sombra) }
-.filtros .cuenta { font: 600 11px var(--p8-font-mono); color: var(--p8-texto-2) }
-.filtros .cuenta.roja { color: var(--p8-bloqueo-texto) }
-.eventos { list-style: none; margin: 0; padding: 0; max-height: min(62vh, 640px); overflow: auto; overscroll-behavior: contain }
-.evento { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: var(--p8-space-3); padding: 10px 2px; position: relative }
-.evento + .evento { border-top: 1px solid var(--p8-borde) }
-.evento .punto { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; background: var(--p8-borde) }
-.evento.t-bloqueo .punto { background: var(--p8-bloqueo); box-shadow: 0 0 0 3px var(--p8-bloqueo-suave) }
-.evento.t-aviso .punto { background: var(--p8-aviso); box-shadow: 0 0 0 3px var(--p8-aviso-suave) }
-.evento.t-seguro .punto { background: var(--p8-seguro); box-shadow: 0 0 0 3px var(--p8-seguro-suave) }
-.evento.t-cobalto .punto { background: var(--c-cobalto-texto); box-shadow: 0 0 0 3px var(--c-cobalto-suave) }
+.filtros button[aria-selected="true"] { background: var(--band); color: #fff }
+.filtros .cuenta { font: 600 11px var(--f-mono); color: var(--ink-2) }
+.filtros .cuenta.roja { color: var(--bad-text) }
+.filtros button[aria-selected="true"] .cuenta { color: #dbe1ff }
+.eventos { list-style: none; margin: 0; padding: 0 2px; max-height: min(64vh, 680px); overflow: auto; overscroll-behavior: contain; scrollbar-width: thin }
+.evento { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 12px; padding: 11px 2px }
+.evento + .evento { border-top: 1px solid var(--line) }
+.evento .punto { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; background: var(--line) }
+.evento.t-bloqueo .punto { background: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft) }
+.evento.t-aviso .punto { background: var(--warn); box-shadow: 0 0 0 3px var(--warn-soft) }
+.evento.t-seguro .punto { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft) }
+.evento.t-cobalto .punto { background: var(--band); box-shadow: 0 0 0 3px var(--tok-bg) }
 .evento .cuerpo { display: grid; gap: 3px; min-width: 0 }
-.evento .linea1 { display: flex; gap: var(--p8-space-2); align-items: baseline }
+.evento .linea1 { display: flex; gap: 8px; align-items: baseline }
 .evento .linea1 b { font-weight: 600; font-size: 13px }
-.evento.t-bloqueo .linea1 b { color: var(--p8-bloqueo-texto) }
-.evento .detalle { color: var(--p8-texto-2); font-size: 12.5px; overflow-wrap: anywhere; line-height: 1.6 }
-.evento.t-cobalto .detalle { color: var(--p8-texto) }
-.evento .detalle.mono { font-family: var(--p8-font-mono); font-size: 12px }
+.evento.t-bloqueo .linea1 b { color: var(--bad-text) }
+.evento .detalle { color: var(--ink-2); font-size: 12.5px; overflow-wrap: anywhere; line-height: 1.6 }
+.evento.t-cobalto .detalle { color: var(--ink) }
+.evento .detalle.mono { font-family: var(--f-mono); font-size: 12px }
 .latencia {
-  display: flex; flex-wrap: wrap; gap: 4px var(--p8-space-3); margin-top: var(--p8-space-3); padding-top: var(--p8-space-3);
-  border-top: 1px solid var(--p8-borde); font: 400 12px var(--p8-font-mono); color: var(--p8-texto); font-variant-numeric: tabular-nums;
+  display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--line); font: 400 12px var(--f-mono); font-variant-numeric: tabular-nums;
 }
-.latencia > span:first-child { color: var(--p8-texto-2); font-family: var(--p8-font-body); flex-basis: 100% }
-.latencia em { font-style: normal; color: var(--p8-texto-2) }
+.latencia > span:first-child { color: var(--ink-2); font-family: var(--f-body); flex-basis: 100% }
+.latencia em { font-style: normal; color: var(--ink-2) }
 
-@keyframes entra { from { transform: translateY(-4px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes entra { from { transform: translateY(6px); opacity: 0 } to { transform: none; opacity: 1 } }
 @media (prefers-reduced-motion: reduce) {
-  .pendiente, .alarmas.activas, .conexion.t-aviso i { animation: none }
+  .msg, .alarmas, .conexion.t-aviso i, .vivo { animation: none }
   .barra i { transition: none }
 }
 
-/* ------------------------------------------------------------ pantallas estrechas */
-@media (max-width: 1100px) {
+/* ------------------------------------------------------------ pantallas más estrechas */
+@media (max-width: 1180px) {
+  .arriba { grid-template-columns: minmax(0, 1fr); height: auto }
+  .en-feed .arriba { height: auto }
+  .directo { min-height: 320px }
+  .chat { height: 520px }
   .layout { grid-template-columns: minmax(0, 1fr) }
   .lateral { position: static }
 }
 @media (max-width: 760px) {
-  .producto { display: none }
-  .modo { flex-wrap: wrap; gap: var(--p8-space-3) }
-  .modo .contador { padding-left: 0; border-left: 0 }
-  .modo h1 { font-size: 21px }
-  .fila { grid-template-columns: minmax(0, 1fr) auto; gap: 6px var(--p8-space-3) }
+  .app { gap: 14px; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)) }
+  .nav { gap: 8px; padding-left: 10px }
+  .nav .producto { display: none }
+  .conexion { padding: 9px 10px; font-size: 0; gap: 0 }
+  .conexion i { margin: 0 }
+  .verificado { display: none }
+  .nav .pill { padding: 11px 14px; font-size: .84rem }
+  .directo { padding: 20px 18px 18px; min-height: 0 }
+  .directo-cab { flex-wrap: wrap }
+  .directo-cuerpo { flex-direction: column; align-items: flex-start; gap: 14px }
+  .directo-eight { width: 112px }
+  .directo-pie .nota { display: none }
+  .chat { padding: 18px 14px 14px; height: 540px }
+  .privado { display: none }
+  .panel, .alarmas { padding: 18px 16px }
+  .actividad { padding: 18px 14px }
+  .tabla { padding: 4px 6px }
+  .fila { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding-inline: 10px }
   .fila.cabecera { display: none }
   .fila > :nth-child(2), .fila > :nth-child(3) { grid-column: 1 / -1 }
   .fila > :nth-child(4) { grid-row: 1; grid-column: 2 }
-  .fila > :nth-child(2)::before { content: "Lo que ves"; }
-  .fila > :nth-child(3)::before { content: "Lo que ve la IA"; }
-  .fila > :nth-child(2)::before, .fila > :nth-child(3)::before {
-    display: block; font: 600 10px var(--p8-font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--p8-texto-2); margin-bottom: 2px;
-  }
-  .panel, .alarmas, .pendiente { padding: var(--p8-space-4) }
+  .fila > :nth-child(2)::before { content: "Lo que ves" }
+  .fila > :nth-child(3)::before { content: "Lo que ve la IA" }
+  .fila > :nth-child(2)::before, .fila > :nth-child(3)::before { display: block; font: 600 10px var(--f-mono); color: var(--accent); margin-bottom: 2px }
+  .alarma .meta { white-space: normal }
 }
+
+/* ------------------------------------------------------------ ajustes de la banda y del chat */
+.directo h2 .segunda { display: block }
+.directo-cuerpo { overflow: hidden }
+.modo .detalle { -webkit-line-clamp: 2 }
+.modo.directo { padding: 22px 28px 18px; gap: 10px }
+.en-feed .arriba { height: clamp(320px, 40vh, 350px) }
+.directo-eight { width: clamp(150px, 15vw, 230px) }
+.modo .directo-eight { width: clamp(110px, 9vw, 150px) }
+.modo h1 { font-size: clamp(1.3rem, .7rem + 1.1vw, 2rem) }
+.tarea span:first-child { background: rgba(255, 255, 255, .22); color: #fff }
+/* las líneas de sistema, alineadas con los mensajes de 8 y sin fondo: que no hagan ruido */
+.msg.linea { align-self: stretch; justify-content: flex-start; text-align: left; padding: 0 0 0 40px; background: none }
+.msg.linea.t-alarma { background: none; padding: 0 0 0 40px; border-radius: 0 }
+@media (max-width: 760px) { .directo-eight { width: 112px } }

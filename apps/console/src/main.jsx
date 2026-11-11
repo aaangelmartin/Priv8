@@ -9,6 +9,9 @@ import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/600.css'
 import '../../../brand/tokens.css'
 import App from './App.jsx'
+import { textureUrl } from './texture.js'
+
+document.documentElement.style.setProperty('--c-textura', textureUrl())
 import './styles.css'
 
 createRoot(document.getElementById('root')).render(<App />)
