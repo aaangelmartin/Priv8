@@ -301,6 +301,8 @@ def revisar_tramo(msgs: list[dict[str, Any]]) -> str | None:
                if e.get("kind") == "task" and "end_turn" in (e.get("detail") or "")]
     if not finales:
         return "8 no termina"
+    if any(e.get("kind") == "act" and (e.get("model_saw") or "").startswith("act back") for e in auditoria):
+        return "8 da un rodeo (vuelve atrás)"
     if finales[-1][0] < aprobadas[0]:
         return "8 termina antes de que la persona apruebe"
     if any(re.match(r"\W*no (he|puedo|se ha|está)", f, re.I) or re.search(r"no (está|ha quedado) registrad|no coincide", f, re.I)
