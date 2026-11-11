@@ -8,6 +8,7 @@ import { WhyNow, Products } from './Sections.jsx';
 import { HowArch, Guarantees, Developers, Compare, Compliance } from './More.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
+import byLaaabs from './by-laaabs.svg';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
@@ -151,6 +152,10 @@ function Footer({ pal }) {
             <div><b>Confianza</b><a href="#garantias">Garantías</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
             <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#comparar">Por qué Priv8</a></div>
           </nav>
+        </div>
+        {/* firma de quien lo hace, como en open2agents.com: el vector de laaabs, centrado y discreto */}
+        <div className="foot-by-row">
+          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
         </div>
         {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
         <div className="foot-word">
