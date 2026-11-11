@@ -155,14 +155,18 @@ Tests: `./gradlew testDebugUnitTest` (`FraseTest`, con los ejemplos de `docs/con
 
 Toca a 8 y dile la tarea: «¿Cuánto tengo entre mis bancos?». El texto sale en el subtítulo. Vuelve a tocar para dejar de escuchar.
 
-- **El audio no sale del móvil.** Solo `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. Si el móvil no reconoce la voz sin red, 8 lo dice y no hay dictado: nunca se cae a un reconocedor en la nube.
-- **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra que hay una tarea lista y su longitud.
-- **Todavía no se envía.** Ningún mensaje lleva una tarea del móvil al núcleo (el contrato de eventos solo admite `approval_result`). La propuesta está en la #47: un `task_request` al núcleo, que tokeniza el texto antes de que llegue al modelo.
+Dos caminos, decididos por Ángel en la #47. En los dos el audio no sale del móvil o del portátil: nunca hay un reconocedor en la nube.
 
-Probar en el emulador, sin tocar la pantalla:
+- **Móvil real (A).** `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. El texto va al núcleo en un `task_request` por el canal de eventos (`events.schema.json` v1.2); el núcleo lo tokeniza antes de que llegue al modelo. Sin conexión, la tarea espera y sale al reconectar.
+- **Emulador (B).** Su reconocedor no funciona, así que la app manda `dictation_start` y el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`, `make dictado-install`). El núcleo devuelve `dictation` con el texto, que sale en el subtítulo, y encola la tarea él mismo.
+- **Cuál se usa:** `auto` elige B en el emulador (`Build.FINGERPRINT`, `Build.HARDWARE`...) y A en un móvil. Un móvil sin reconocedor en el dispositivo, sin es-ES o con un error del reconocedor pasa también a B. Para forzarlo: `./gradlew assembleDebug -Ppriv8.dictado=portatil` (o `movil`), o `--es dictado portatil` en el `am start`. La sesión es `b2c` (`-Ppriv8.session=...`).
+- **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra la longitud de la tarea. El texto de `dictation` no llega al WebView de los ojos.
+
+Probar en el emulador, sin tocar la pantalla (con el núcleo corriendo y `adb reverse tcp:8700 tcp:8700`):
 
 ```bash
-adb emu avd hostmicon   # el micrófono del portátil entra al emulador
 adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true
-adb logcat -s Priv8Dictado
+adb logcat -s Priv8Dictado   # «dictado: listening on the laptop», luego «laptop task (N chars)»
 ```
+
+Para probar el reconocedor del emulador (A) en vez de Whisper: `adb emu avd hostmicon` y `--es dictado movil`.

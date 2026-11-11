@@ -5,8 +5,8 @@ package es.priv8.ocho
  * hypotheses. Pure logic, so it can be tested off the device.
  *
  * The text is the task, in the person's words. It may carry data («pasa
- * 200 € a Marta»), so it is never logged and, when the task message exists,
- * it goes to the core (which tokenizes it), never straight to the model.
+ * 200 € a Marta»), so it is never logged and it goes to the core in a
+ * `task_request` (the core tokenizes it), never straight to the model.
  */
 object Dictado {
 
