@@ -1250,3 +1250,17 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 /* modelos: seis logos que ocupan todo el ancho del recuadro */
 .tz-cloud .models { gap: 8px; }
 .tz-cloud .models i { flex: 1 1 0; width: auto; min-width: 0; }
+
+/* ================= 404 con el campo de datos ================= */
+.nf { position: relative; overflow: hidden; }
+.nf::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 46% 52% at 50% 52%, var(--band) 46%, rgba(45, 69, 214, 0) 84%); }
+.nf-in { position: relative; z-index: 1; display: grid; justify-items: center; gap: 16px; }
+.nf-brand { z-index: 2; }
+.nf-pair { margin: 4px 0 2px; }
+@media (max-width: 700px) { .nf::after { background: radial-gradient(ellipse 110% 60% at 50% 52%, var(--band) 56%, rgba(45, 69, 214, 0) 100%); } }
+/* 404 en el móvil: el mismo fondo quieto que las zonas azules */
+@media (max-width: 700px) {
+  .nf { background: transparent; }
+  .nf .field { display: none; }
+  .nf::after { background: radial-gradient(ellipse 72% 74% at 50% 52%, var(--band) 52%, rgba(45, 69, 214, 0) 92%); }
+}
