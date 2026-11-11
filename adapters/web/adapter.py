@@ -55,7 +55,7 @@ APPS: dict[str, str] = {
     "inbox": os.environ.get("PRIV8_INBOX_URL", "http://127.0.0.1:5174").rstrip("/"),
 }
 
-from .vista import CALL_JS, CENSOR_JS, INIT_SCRIPT, INSTALL_JS, Vista8, obs_map, secrets_of
+from .vista import CALL_JS, CENSOR_JS, INIT_SCRIPT, INSTALL_JS, Vista8, obs_map, secrets_of, tapar
 
 # Cursor de 8 (#135): capa visible en la ventana de Chromium. PRIV8_CURSOR=0 la apaga.
 # Tecleo visible: hasta TYPE_VISIBLE caracteres a ritmo humano y el resto de golpe, para que
@@ -164,7 +164,11 @@ def on_login_screen(url: str) -> bool:
 # Recorre el DOM y devuelve los elementos marcados con data-p8. Marca cada uno con
 # data-p8-ref para que perform() lo encuentre sin recalcular selectores.
 _SNAPSHOT_JS = r"""
-() => {
+(o) => {
+  // o.ref: atributo con el id de cada elemento (data-p8-ref para el modelo; data-p8-pv para la
+  // vista previa de la vista de 8, que no toca los ids del agente). o.xattr: el de los textos sueltos.
+  const REF = (o && o.ref) || 'data-p8-ref';
+  const XA = (o && o.xattr) || 'data-p8-x';
   const DEFAULT_ACTIONS = {textbox: ['type'], button: ['tap'], link: ['tap'], menuitem: ['tap'],
                            checkbox: ['tap'], radio: ['tap'], switch: ['tap'], tab: ['tap'], option: ['tap']};
   const clean = (s) => (s ?? '').replace(/\s+/g, ' ').trim();
@@ -182,13 +186,14 @@ _SNAPSHOT_JS = r"""
     const st = getComputedStyle(el);
     return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none';
   };
-  document.querySelectorAll('[data-p8-ref]').forEach((el) => el.removeAttribute('data-p8-ref'));
+  document.querySelectorAll(`[${REF}]`).forEach((el) => el.removeAttribute(REF));
+  document.querySelectorAll(`[${XA}]`).forEach((el) => el.removeAttribute(XA));
   const out = [];
   let n = 0;
   for (const el of document.querySelectorAll('[data-p8]')) {
     if (!visible(el) || el.closest('[data-p8-ignore]')) continue;  // la capa del cursor de 8 no entra
     const ref = 'e' + (++n);
-    el.setAttribute('data-p8-ref', ref);
+    el.setAttribute(REF, ref);
     const role = el.dataset.p8;
     const field = el.tagName === 'INPUT' || el.tagName === 'TEXTAREA';
     const r = el.getBoundingClientRect();
@@ -198,7 +203,7 @@ _SNAPSHOT_JS = r"""
       : (DEFAULT_ACTIONS[role] || []);
     const disabled = el.disabled === true || el.getAttribute('aria-disabled') === 'true';
     if (disabled) actions = [];
-    const parent = el.parentElement && el.parentElement.closest('[data-p8-ref]');
+    const parent = el.parentElement && el.parentElement.closest(`[${REF}]`);
     const item = {id: ref, role, label: labelOf(el),
                   text: el.dataset.p8Text !== undefined ? (el.dataset.p8Text || null)
                         : field ? el.value : (clean(el.innerText) || null),
@@ -207,10 +212,67 @@ _SNAPSHOT_JS = r"""
                   actions};
     if (sel) item.sel = sel;
     if (el.type === 'password') item.password = true;
-    if (parent) item.parent = parent.getAttribute('data-p8-ref');
+    if (parent) item.parent = parent.getAttribute(REF);
     out.push(item);
   }
-  const f = document.activeElement && document.activeElement.getAttribute('data-p8-ref');
+  // Toda la página (#154): cada texto visible fuera de lo marcado, de solo lectura (sin acciones),
+  // con ids t1, t2… aparte de los e1, e2… de lo marcado. Mismo texto, mismo id. Con tope.
+  const MAX_TEXTOS = 160, MAX_LARGO = 280;
+  const FUERA = 'script, style, noscript, template, svg, [data-p8-ignore], #pdf-proveedor, #pdf-cif, #pdf-numero, #pdf-importe';
+  const dentroDeMarcado = (n) => { const e = n.parentElement && n.parentElement.closest(`[${REF}]`); return !!e; };
+  const ROLES = [['h1,h2,h3,h4,h5,h6,[role=heading]', 'heading'], ['button,[role=button]', 'button'],
+                 ['a[href],[role=link]', 'link'], ['[role=tab]', 'tab'], ['[role=menuitem]', 'menuitem'],
+                 ['option', 'option'], ['li,[role=listitem]', 'listitem'], ['td,th,[role=cell]', 'cell']];
+  const rolDe = (el) => { for (const [s, r] of ROLES) if (el.closest(s)) return r; return 'text'; };
+  const vistos = new Map();
+  let nx = 0;
+  const visibleEl = new Map();
+  const seVe = (el) => {
+    if (visibleEl.has(el)) return visibleEl.get(el);
+    const r = el.getBoundingClientRect();
+    const st = getComputedStyle(el);
+    const v = r.width > 1 && r.height > 1 && st.visibility !== 'hidden' && st.display !== 'none' && st.opacity !== '0'
+      && r.bottom > -40 && r.top < innerHeight + 40 && r.right > 0 && r.left < innerWidth;
+    visibleEl.set(el, v);
+    return v;
+  };
+  const extra = (texto, el, role, label) => {
+    let t = texto.replace(/\s+/g, ' ').trim();
+    if (!t && !label) return null;
+    if (t.length > MAX_LARGO) t = t.slice(0, MAX_LARGO - 1) + '…';
+    // El mismo selector que lo marcado (#id o .clase): las reglas del sitio también los alcanzan.
+    const sel = el.id ? '#' + el.id : (el.classList.length ? '.' + el.classList[0] : null);
+    const clave = role + '|' + t + '|' + (label || '') + '|' + (sel || '');
+    if (vistos.has(clave)) return vistos.get(clave);
+    if (nx >= MAX_TEXTOS) return null;
+    const id = 't' + (++nx);
+    const r = el.getBoundingClientRect();
+    const item = {id, role, label: label || null, text: t || null, enabled: true, extra: true,
+                  bounds: [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)], actions: []};
+    if (sel) item.sel = sel;
+    out.push(item);
+    vistos.set(clave, id);
+    return id;
+  };
+  const porPadre = new Map();
+  const w = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT);
+  while (w.nextNode()) {
+    const n = w.currentNode;
+    const el = n.parentElement;
+    if (!el || !n.nodeValue.trim() || el.closest(FUERA) || dentroDeMarcado(n) || !seVe(el)) continue;
+    const id = extra(n.nodeValue, el, rolDe(el), null);
+    if (!id) continue;
+    if (!porPadre.has(el)) porPadre.set(el, []);
+    porPadre.get(el).push(id);
+  }
+  // Campos sin marcar (un buscador): su valor y su placeholder.
+  for (const el of document.querySelectorAll('input:not([data-p8]), textarea:not([data-p8])')) {
+    if (el.closest('[data-p8-ignore]') || /^(hidden|password|checkbox|radio|submit|button|file)$/i.test(el.type) || !seVe(el)) continue;
+    const id = extra(el.value || '', el, 'textbox', el.getAttribute('placeholder') || el.getAttribute('aria-label'));
+    if (id) porPadre.set(el, [id]);
+  }
+  for (const [el, ids] of porPadre) el.setAttribute(XA, ids.join(','));
+  const f = document.activeElement && document.activeElement.getAttribute(REF);
   const adj = document.querySelector('#adjunto');
   const pdf = {};
   if (adj && adj.getAttribute('href')) {
@@ -288,6 +350,15 @@ class WebAdapter:
         self.p8_render_text: Callable[[str], str] | None = None    # texto con tokens -> texto real
         self.p8_secrets: Callable[[], list[str]] = lambda: []     # valores de la bóveda y de confianza
         self.p8_check: Callable[[str], dict[str, Any]] | None = None  # el bloqueo final del núcleo
+        self.p8_mask: Callable[[str], list[list[Any]] | None] | None = None  # lo sensible de un texto
+        self.p8_preview: Callable[[dict[str, Any]], dict[str, Any] | None] | None = None  # lo que vería el modelo
+        self.preview_obs: dict[str, Any] | None = None
+        self._leidas: set[str] = set()      # urls que 8 ya ha leído (curiosidad la primera vez)
+        self._sorpresas: set[str] = set()   # urls donde ya se ha sorprendido por el cambio de cuenta
+        self._sorpresa_at = 0.0
+        self._pdf_cache: dict[str, dict[str, str]] = {}
+        self._mask_cache: dict[str, list[list[Any]] | None] = {}
+        self._mask_clave: frozenset[str] = frozenset()
         self.frames = frames_enabled()
         self.frames_sent = 0
         self._vista: Vista8 | None = None
@@ -395,7 +466,9 @@ class WebAdapter:
         def job() -> dict[str, Any]:
             page = self._page(self.app)
             page.wait_for_load_state("domcontentloaded")
-            self._ocho_todos("modo", "leer")
+            # Curiosidad ante una pantalla nueva; leer, si ya la conoce.
+            self._ocho_todos("modo", "leer" if page.url in self._leidas else "curiosidad")
+            self._leidas.add(page.url)
             dom = page.evaluate(_SNAPSHOT_JS)
             elements = dom["elements"] + self._pdf_elements(page.url, dom)
             self._extra_sel[self.app] = {e["id"]: e["sel"] for e in elements[len(dom["elements"]):]}
@@ -421,12 +494,15 @@ class WebAdapter:
         pdf_url = urljoin(url, dom["pdfHref"])
         if urlparse(pdf_url).netloc != urlparse(url).netloc:  # solo el adjunto de la propia app
             return []
-        try:
-            with urllib.request.urlopen(pdf_url, timeout=5) as r:
-                campos = pdf_campos(pdf_texto(r.read()))
-        except OSError:  # sin adjunto legible: la pantalla sale sin los campos del PDF
-            return []
-        n = len(dom["elements"])
+        campos = self._pdf_cache.get(pdf_url)
+        if campos is None:
+            try:
+                with urllib.request.urlopen(pdf_url, timeout=5) as r:
+                    campos = pdf_campos(pdf_texto(r.read()))
+            except OSError:  # sin adjunto legible: la pantalla sale sin los campos del PDF
+                return []
+            self._pdf_cache[pdf_url] = campos
+        n = sum(1 for e in dom["elements"] if not e.get("extra"))  # los ids del PDF siguen a los marcados
         out = []
         for clave, _, sel in _PDF_CAMPOS:
             if clave not in campos or sel not in dom["pdfBounds"]:
@@ -532,37 +608,79 @@ class WebAdapter:
 
     def _sync(self, page: Any, force: bool = False) -> None:
         """Copia la pestaña de 8 en la vista de 8, censurada en el DOM (vista8.js) y tras el
-        bloqueo final (vista.guard). Sin cambios en la página ni en la observación, no hace nada."""
+        bloqueo final (vista.guard). Sin cambios en la página ni en lo que escribe 8, no hace nada.
+
+        La vista de 8 es exactamente lo que vería el modelo de la página tal como está: se lee
+        con el mismo recorrido que snapshot() (con sus propios ids, data-p8-pv, para no tocar los
+        del agente), el núcleo la clasifica igual que en observe() sin mandarla a ningún sitio
+        (core.preview) y cada texto se escribe en la copia como lo recibiría el modelo. Lo poco
+        que no entra en la observación (fuera de pantalla, por encima del tope) pasa por el
+        detector del núcleo (core.mask_text)."""
         if self._vista is None:
             return
         force = force or self._sync_force
         self._sync_force = False
         self._sync_at = time.monotonic()
-        obs = self._observed if (self._refs_ok and self._observed
-                                 and (self._raw or {}).get("app") == self.app) else None
-        args = {"force": force,
-                "key": f"{self.app}|{(obs or {}).get('seq')}|{sorted(self._over.items())}",
-                "obs": obs_map(obs), "sel": self._extra_sel.get(self.app, {}) if obs else {},
-                "over": dict(self._over) if obs else {}}
-        doc = page.evaluate(CENSOR_JS, args)
-        if doc is None:
+        key = f"{self.app}|{sorted(self._over.items())}"
+        if not page.evaluate(CENSOR_JS, {"fase": "sucio", "force": force, "key": key}):
             return
+        dom = page.evaluate(_SNAPSHOT_JS, {"ref": "data-p8-pv", "xattr": "data-p8-pvx"})
+        elements = dom["elements"] + self._pdf_elements(page.url, dom)
+        sel = {e["id"]: e["sel"] for e in elements[len(dom["elements"]):]}
+        raw = {"source": "web", "app": self.app, "screen": None, "url": page.url, "seq": self.seq,
+               "focus": dom["focus"], "system_dialog": None, "elements": elements}
+        obs = None
+        if self.p8_preview is not None:
+            try:
+                obs = self.p8_preview(raw)
+            except Exception:  # noqa: BLE001 - sin vista previa, el detector tapa lo sensible
+                obs = None
         try:
             extra = list(self.p8_secrets() or [])
         except Exception:  # noqa: BLE001
             extra = []
-        secrets = secrets_of(self._raw, obs, self._valor, extra)
-        if not self._vista.write(doc, secrets, self.p8_check) and obs:
-            # Algo no ha pasado el bloqueo final: otra vez solo con marcadores. Si tampoco pasa,
-            # la vista se queda como estaba.
-            doc = page.evaluate(CENSOR_JS, {**args, "force": True, "obs": {}, "sel": {}, "over": {}})
+        secrets = secrets_of(raw, obs, self._valor, extra)
+        textos = page.evaluate(CENSOR_JS, {"fase": "textos"}) or {}
+        mascaras = {t: self._mascara(t, secrets) for t in textos.get("textos", [])}
+        args = {"fase": "copia", "ref": "data-p8-pv", "xattr": "data-p8-pvx", "obs": obs_map(obs),
+                "sel": sel if obs else {}, "over": dict(self._over), "mascaras": mascaras}
+        doc = page.evaluate(CENSOR_JS, args)
+        if doc is None or not self._vista.write(doc, secrets, self.p8_check):
+            # Algo no ha pasado el bloqueo final: otra vez, solo con lo que recibiría el modelo.
+            # Si tampoco pasa, la vista se queda como estaba.
+            doc = page.evaluate(CENSOR_JS, {**args, "estricto": True})
             if doc is not None:
                 self._vista.write(doc, secrets, self.p8_check)
+        self.preview_obs = obs
         paused = (obs or {}).get("paused")
         self._vista.call("velo", {"titulo": "8 mira a otro lado", "modo": "apartar",
                                   "texto": "Aquí escribes tú: la clave o el código no llegan al modelo."}
                          if paused else None)
-        self._vista.call("aviso", None if obs else "8 aún no ha leído esta pantalla")
+        self._vista.call("aviso", None if obs or self.p8_preview is None else "Pantalla sin regla: 8 no la lee")
+
+    def _mascara(self, texto: str, secrets: set[str]) -> list[list[Any]] | None:
+        """Lo sensible de un texto de interfaz: None si sale tal cual, o sus partes con tokens y
+        marcadores. Guarda el resultado mientras no cambien los valores que hay que tapar."""
+        clave = frozenset(secrets)
+        if clave != self._mask_clave:
+            self._mask_cache, self._mask_clave = {}, clave
+        if texto in self._mask_cache:
+            return self._mask_cache[texto]
+        partes: list[list[Any]] | None
+        if self.p8_mask is not None:
+            try:
+                partes = self.p8_mask(texto)
+            except Exception:  # noqa: BLE001 - en duda, tapado
+                partes = [["x", len(texto.strip())]]
+        else:
+            partes = None
+        partes = tapar(partes or [["t", texto]], secrets)
+        if partes == [["t", texto]]:
+            partes = None
+        if len(self._mask_cache) > 5000:
+            self._mask_cache = {}
+        self._mask_cache[texto] = partes
+        return partes
 
     def _valor(self, token: str) -> str | None:
         if self.p8_render is None:
@@ -641,12 +759,24 @@ class WebAdapter:
             pass
 
     def _on_core_event(self, msg: dict[str, Any]) -> None:
+        """La cara de 8 y lo que dice, paso a paso, según lo que hace (#154):
+        curiosidad o leer al leer una pantalla, pensar mientras espera al modelo, hablar al
+        escribir, sorpresa al ver que el correo pide cambiar la cuenta, enfado o negar en un
+        bloqueo, esperar en una acción retenida, duda si algo falla, apartar mientras la persona
+        escribe un secreto, listo y alegría al terminar."""
         kind = msg.get("type")
         if kind == "screen" and msg.get("session") == self.session:
             obs, raw = msg.get("observed") or {}, msg.get("raw") or {}
             if raw.get("source") == "web" and raw.get("seq") == self.seq:
                 self._observed = obs
                 self._sync_force = True
+                toks = {t for e in obs.get("elements", []) for t in e.get("tokens") or []}
+                url = raw.get("url") or ""
+                if any(re.match(r"‹IBAN_\d+[-·]correo›", t) for t in toks) and url not in self._sorpresas:
+                    self._sorpresas.add(url)
+                    self._sorpresa_at = time.monotonic()
+                    self._decir("Este correo pide cambiar la cuenta de pago. Eso no lo aplico sin verificar.",
+                                None, "aviso", "sorpresa", 6000)
             return
         if kind != "audit":
             return
@@ -656,26 +786,33 @@ class WebAdapter:
         k, d, saw = ev.get("kind"), ev.get("detail") or "", ev.get("model_saw")
         paso = re.search(r"paso\s+\d+", d)
         if k == "observe_sent":
-            self._later(lambda: self._ocho_todos("modo", "pensar"))
+            if time.monotonic() - self._sorpresa_at > 2.5:  # que se vea la sorpresa
+                self._later(lambda: self._ocho_todos("modo", "pensar"))
         elif k == "task":
             if saw and "razona" in d:
-                self._decir(corto(saw), "8 piensa", "neutro", "hablar", 5200)
+                self._decir(corto(saw), None, "neutro", "hablar", 5200)
             elif saw and paso and not _ES_LLAMADA.match(saw):
-                self._decir(corto(saw, 170), "8 responde", "seguro", "listo", 7000)
+                self._decir(corto(saw, 170), None, "seguro", "listo", 7000)
+                threading.Timer(2.2, lambda: self._later(lambda: self._ocho_todos("modo", "alegria"))).start()
+            elif re.search(r"l[ií]mite|error|refusal|max_tokens", d):
+                self._decir("No he podido terminar. Puedes pedírmelo otra vez.", None, "aviso", "duda", 6000)
             elif re.match(r"^fin\b", d):
-                self._later(lambda: self._ocho_todos("modo", "listo"))
+                self._later(lambda: self._ocho_todos("modo", "alegria"))
             elif "inicio" in d and not paso:
-                self._later(lambda: self._ocho_todos("modo", "saludar"))
+                self._decir("Voy con ello.", None, "neutro", "saludar", 2400)
         elif k == "blocked":
-            self._decir(BLOQUEO.get(ev.get("reason") or "", "No puedo hacer eso."), "Bloqueado", "bloqueo", "enfado", 5200)
+            r = ev.get("reason") or ""
+            modo = {"asesoria": "rechazar", "adaptador": "duda", "sin_regla": "duda",
+                    "cancelado": "negar", "caducado": "negar"}.get(r, "enfado")
+            self._decir(BLOQUEO.get(r, "No puedo hacer eso."), None, "bloqueo", modo, 5200)
         elif k == "held":
-            self._decir("Espero tu confirmación en la consola.", "Antes de seguir", "aviso", "esperar", 9000)
+            self._decir("Antes de seguir, espero tu confirmación en la consola.", None, "aviso", "esperar", 9000)
         elif k == "approval":
             ok = bool(ev.get("approved_by"))
             self._decir("Aprobado. Sigo." if ok else "Rechazado. No lo hago.", None,
                         "seguro" if ok else "bloqueo", "asentir" if ok else "negar", 2600)
         elif k == "paused":
-            self._later(lambda: self._ocho_todos("modo", "apartar"))
+            self._decir("Aquí escribes tú. No miro.", None, "neutro", "apartar", 4000)
 
     def _decir(self, texto: str, eyebrow: str | None, tono: str, modo: str, ms: int) -> None:
         """Un bocadillo: en la ventana real con los valores (es la pantalla de la persona),
