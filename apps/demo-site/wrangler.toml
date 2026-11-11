@@ -1,0 +1,7 @@
+# Proyecto de Cloudflare Pages de demo.priv8.es (subida directa con Wrangler desde esta carpeta).
+# https://developers.cloudflare.com/pages/functions/wrangler-configuration/
+# functions/_middleware.js va aparte de dist/ y Wrangler lo compila al desplegar.
+# DEMO_PASSWORD no va aquí: es un secreto del proyecto (wrangler pages secret put DEMO_PASSWORD).
+name = "priv8-demo"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-11-11"

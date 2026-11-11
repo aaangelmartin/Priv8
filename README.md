@@ -275,6 +275,7 @@ scripts/emu.sh   Arranca el emulador e instala los APK
 | `docs/plan.html` | Estrategia: Priv8 CUA y sus dos verticales, demo, métricas, rúbrica y plan |
 | `docs/marca.html` | Guía de marca |
 | `docs/ojos.html` | 8 en vivo, con sus estados y el código de animación |
+| `apps/demo-site/` | demo.priv8.es: la consola con y sin protocolo, vídeos, entregables y APK en un sitio (`pnpm build`, despliegue en `docs/despliegue-subdominios.md`) |
 | `brand/` | Logos, icono, tokens de marca y esquema de expresiones de 8 |
 | `CLAUDE.md` | Contexto del proyecto y reparto |
 | `bases/bases-hackathon.pdf` | Bases y rúbrica oficiales |
