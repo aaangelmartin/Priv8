@@ -120,7 +120,7 @@ function Rotator() {
     <span className="rotator" ref={box}>
       {ASISTENTES.map((a, k) => (
         <span key={a.nombre} className={'rot-item' + (k === i ? ' on' : k === (i + n - 1) % n ? ' out' : '')} aria-hidden={k !== i}>
-          <span className="ch rot-ico" style={{ '--j': 0 }}><i style={{ '--ico': `url(${a.icono})` }} /></span><span className="ch" style={{ '--j': 0 }}>{'\u00a0'}</span>
+          <span className="ch rot-ico" style={{ '--j': 0 }}><i style={{ '--ico': `url("${a.icono}")` }} /></span><span className="ch" style={{ '--j': 0 }}>{'\u00a0'}</span>
           {Array.from(a.nombre + '.').map((ch, j) => <span key={j} className="ch" style={{ '--j': j + 1 }}>{ch === ' ' ? '\u00a0' : ch}</span>)}
         </span>
       ))}
@@ -167,7 +167,7 @@ function Funciona() {
       <span className="works-h">Funciona con</span>
       <ul className="works-list">
         {ASISTENTES.map((a) => (
-          <li key={a.nombre}><i style={{ '--ico': `url(${a.icono})` }} aria-hidden="true" />{a.nombre}</li>
+          <li key={a.nombre}><i style={{ '--ico': `url("${a.icono}")` }} aria-hidden="true" />{a.nombre}</li>
         ))}
         <li className="works-more">y cualquier asistente MCP</li>
       </ul>
@@ -202,7 +202,7 @@ function Conecta() {
           <button key={c.id} ref={(el) => { tabs.current[k] = el; }} type="button" role="tab" id={`tab-${c.id}`}
                   aria-selected={k === sel} aria-controls="panel-conecta" tabIndex={k === sel ? 0 : -1}
                   className={'tab' + (k === sel ? ' on' : '')} onClick={() => setSel(k)}>
-            {c.icono ? <i style={{ '--ico': `url(${c.icono})` }} aria-hidden="true" /> : <b className="tab-gen" aria-hidden="true">MCP</b>}
+            {c.icono ? <i style={{ '--ico': `url("${c.icono}")` }} aria-hidden="true" /> : <b className="tab-gen" aria-hidden="true">MCP</b>}
             {c.nombre}
           </button>
         ))}
@@ -351,7 +351,7 @@ function Footer() {
         </div>
         {/* firma de quien lo hace, como en la landing: el vector de laaabs, centrado, encima del nombre grande */}
         <div className="foot-by-row">
-          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
+          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url("${byLaaabs}")` }} />
         </div>
         <div className="foot-word">
           {/* el sitio de 8 es el .spot-foot de la landing; 8 va encima como el Companion al aterrizar */}
