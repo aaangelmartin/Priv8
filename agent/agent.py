@@ -67,7 +67,8 @@ TASKS = {
     "registrar factura": (
         "Registra en Alba Core la factura de proveedor que ha llegado por correo y aparece en la pantalla "
         "de alta. Rellena proveedor, CIF, número de factura e importe con los datos del correo. Antes de "
-        "registrarla, comprueba con el oráculo que el importe del correo es igual al del pedido. El IBAN "
+        "registrarla, comprueba que el importe del correo es igual al del pedido: el mismo token es el mismo "
+        "valor y no hace falta preguntar; si los tokens son distintos, compáralos con el oráculo. El IBAN "
         "de pago es el de la ficha del proveedor. Después pulsa Registrar y confirma que ha quedado registrada."
     ),
 }
@@ -238,8 +239,13 @@ def _modo(core: Any) -> str:
 
 async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *,
                     session: str = "s1", max_steps: int = DEFAULT_MAX_STEPS,
-                    log: Any = None) -> AgentResult:
-    """Run one task. `core` provides the leak check and audit ports of the trust zone."""
+                    log: Any = None, wait_held: Any = None) -> AgentResult:
+    """Run one task. `core` provides the leak check and audit ports of the trust zone.
+
+    `wait_held(session, ids) -> str | None`, if given, is called (in a thread) after a turn in
+    which an act was held: it waits for the person to answer those confirmations and returns a
+    fixed sentence for the model (ids only, never values). So the next observe sees the screen
+    after the person's answer instead of the model observing the same screen while it waits."""
     say = log or (lambda *_: None)
     tools = await load_tools(client)
     prompt = expand_task(task)
@@ -323,7 +329,8 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
                 f"He parado este encargo: ha llegado a su límite de gasto ({_dolares(TASK_BUDGET_USD)}). "
                 "Pídemelo en partes más pequeñas."))
 
-        results = []
+        results: list[Any] = []
+        held: list[str] = []  # confirmations this turn left waiting for the person
         moved = stop_acts = False  # the last act of this turn can change the screen / acts no longer run
         for u in uses:
             name, args = _get(u, "name"), dict(_get(u, "input") or {})
@@ -345,6 +352,14 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
             say(f"    -> {body}")
             results.append({"type": "tool_result", "tool_use_id": _get(u, "id"), "content": body,
                             **({"is_error": True} if r.is_error else {})})
+            h = (r.structured_content or {}).get("held") if isinstance(r.structured_content, dict) else None
+            if isinstance(h, dict) and isinstance(h.get("confirm"), str):
+                held.append(h["confirm"])
+        if held and wait_held is not None:
+            note = await anyio.to_thread.run_sync(wait_held, session, held)
+            if note and core.leak.check(note).ok:  # final block, like everything that goes to Claude
+                say(f"    -> {note}")
+                results.append({"type": "text", "text": note})
         messages.append({"role": "user", "content": results})
 
     audit({"session": session, "kind": "task", "detail": f"límite de pasos - {max_steps}"})
@@ -417,7 +432,8 @@ async def _main(a: argparse.Namespace) -> int:
             await anyio.to_thread.run_sync(web.reset_view)
         async with Client(target) as client:
             return await run_agent(client, model, core, task, session=a.session,
-                                   max_steps=a.max_steps, log=err)
+                                   max_steps=a.max_steps, log=err,
+                                   wait_held=ca.wait_held if web is not None else None)
 
     if a.server_url:
         result = await run_with(a.server_url)

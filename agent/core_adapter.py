@@ -230,6 +230,32 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     return web
 
 
+HELD_WAIT_S = 120  # --web: lo más que el bucle espera a la persona tras una acción retenida
+
+
+def wait_held(session: str, ids: list[str], timeout_s: float = HELD_WAIT_S, *,
+              module: str = CORE_MODULE) -> str:
+    """--web: espera a que la persona responda (en la consola) a las confirmaciones `ids` y
+    devuelve una frase fija para el modelo, solo con ids. Mientras espera no hay peticiones al
+    modelo; la acción la ejecuta el núcleo al aprobarla, nunca el bucle."""
+    import time
+
+    mod = _load(module)
+    fin = time.monotonic() + timeout_s
+    abiertas = lambda: [r["id"] for r in mod.pending(session) if r.get("id") in ids]  # noqa: E731
+    while abiertas() and time.monotonic() < fin:
+        if callable(getattr(mod, "expire_due", None)):
+            mod.expire_due()
+        time.sleep(0.25)
+    quedan = abiertas()
+    if quedan:
+        return (f"La persona aún no ha respondido a {', '.join(quedan)}. No la repitas; termina diciendo "
+                "que queda a la espera de su confirmación.")
+    time.sleep(1.0)  # que la acción aprobada llegue a la pantalla antes de la siguiente lectura
+    return (f"La persona ya ha respondido a {', '.join(ids)}. Vuelve a observar para ver si se ha "
+            "ejecutado antes de terminar.")
+
+
 ANDROID_SESSION = "b2c"
 ANDROID_START_APP = "es.priv8.banks.alcor"
 
