@@ -15,13 +15,21 @@ reproduzca tal cual:
    los pocos segundos (approval_result, via pantalla). Al terminar, pide «Contesta al proveedor
    que la factura está registrada» y espera a que acabe.
 3. Guarda cada mensaje con su segundo (`at`): screen, audit, voice, confirm_request,
-   approval_result, el eco de task_request y los fotogramas de la vista de 8; y aparte los de
-   la ventana real de Chromium (con los valores ficticios del seed, el cursor de 8 y sus
-   bocadillos), que llegan por el mismo canal como fotogramas con vista "real".
+   approval_result y el eco de task_request. Los fotogramas llegan en pares (#187): cada uno
+   de la vista de 8 lleva la ventana real de Chromium del mismo instante (con los valores
+   ficticios del seed, el cursor de 8 y sus bocadillos), y se guardan juntos en `pares`.
 
-Sale en apps/console/public/sesion-b2b.json y apps/console/public/sesion-b2b/ (JPEG). Los
-fotogramas repetidos se quitan y se limita el ritmo (--fps). Nada del .env entra en la
-grabación: al final se comprueba que ningún valor suyo aparece en lo escrito.
+Sale en apps/console/public/sesion-b2b.json y apps/console/public/sesion-b2b/ (JPEG):
+
+    {formato: 'priv8-sesion/1', duracion, eventos: [{at, msg}],
+     pares: [{at, par, real: {src, w, h, app, par}, ocho: {src, w, h, app, screen, fresh, paused, par}}],
+     real: []}
+
+`real` solo lleva capturas sueltas en Android (grabar_movil.py), donde no hay vista de 8. Los
+pares repetidos se quitan y se limita el ritmo (--fps) sin separar nunca los dos de un par, y
+antes de escribir se comprueba que cada par es del mismo paso (casos_comun.pares_incoherentes).
+Nada del .env entra en la grabación: al final se comprueba que ningún valor suyo aparece en lo
+escrito.
 
 Gasta API: dos encargos con PRIV8_MODEL (Haiku en la demo), con los límites de gasto del agente.
 
@@ -128,8 +136,9 @@ class Grabacion:
         self.tmp = tmp
         self.movil = movil  # Android: todos los fotogramas son la pantalla real del móvil
         self.msgs: list[tuple[float, dict[str, Any]]] = []   # (hora, mensaje) sin fotogramas
-        self.vista: list[tuple[float, Path, dict[str, Any]]] = []  # fotogramas de la vista de 8
-        self.reales: list[tuple[float, Path, dict[str, Any]]] = []  # los de la ventana real
+        # Pares (#187): (hora, vista de 8, ventana real o None, datos de la vista de 8, de la real)
+        self.pares: list[tuple[float, Path, Path | None, dict[str, Any], dict[str, Any] | None]] = []
+        self.reales: list[tuple[float, Path, dict[str, Any]]] = []  # Android: capturas del móvil
         self.terminados = 0
         self.aprobadas: set[str] = set()
 
@@ -139,13 +148,24 @@ class Grabacion:
             img = m.get("img")
             if not isinstance(img, str):
                 return
-            real = m.get("vista") == "real" or self.movil
-            f = self.tmp / "vista" / f"{'r' if real else 'v'}{int(t * 1000)}.jpg"
-            f.write_bytes(base64.b64decode(img))
-            if real:
+            n = len(self.pares) + len(self.reales) + 1
+            if self.movil:  # Android: la pantalla del móvil; lo que ve el modelo sale de los screen
+                f = self.tmp / "vista" / f"r{n:06d}.jpg"
+                f.write_bytes(base64.b64decode(img))
                 self.reales.append((t, f, {"app": m.get("app"), "w": m.get("w"), "h": m.get("h")}))
-            else:
-                self.vista.append((t, f, {k: v for k, v in m.items() if k != "img"}))
+                return
+            if m.get("vista") == "real":  # adaptadores sin pares: no se graba una pantalla sin la otra
+                return
+            fv = self.tmp / "vista" / f"v{n:06d}.jpg"
+            fv.write_bytes(base64.b64decode(img))
+            r = m.get("real") if isinstance(m.get("real"), dict) else None
+            fr = None
+            meta_r = None
+            if r is not None and isinstance(r.get("img"), str):
+                fr = self.tmp / "vista" / f"r{n:06d}.jpg"
+                fr.write_bytes(base64.b64decode(r["img"]))
+                meta_r = {"app": r.get("app"), "w": r.get("w"), "h": r.get("h")}
+            self.pares.append((t, fv, fr, {k: v for k, v in m.items() if k not in ("img", "real")}, meta_r))
             return
         self.msgs.append((t, m))
 
@@ -286,19 +306,22 @@ def jpeg(src: Path, dst: Path) -> None:
                     "-q:v", str(CALIDAD), str(dst)], check=True)
 
 
-def elegir(frames: list[tuple[float, Path, Any]], fps: float) -> list[tuple[float, Path, Any]]:
-    """Sin repetidos y como mucho `fps` por segundo; el último de cada ráfaga se queda (es lo que se ve)."""
-    out: list[tuple[float, Path, Any]] = []
+def elegir(frames: list[tuple[Any, ...]], fps: float) -> list[tuple[Any, ...]]:
+    """Sin repetidos y como mucho `fps` por segundo; el último de cada ráfaga se queda (es lo que se ve).
+    Cada entrada es (hora, archivo, ...): una captura suelta (hora, archivo, datos) o un par entero
+    (hora, vista de 8, ventana real o None, ...). Un par se quita o se sustituye entero, nunca una mitad."""
+    out: list[tuple[Any, ...]] = []
     ultimo = None
-    for t, f, meta in frames:
-        h = hashlib.sha1(f.read_bytes()).hexdigest()
+    for x in frames:
+        h = "|".join(hashlib.sha1(f.read_bytes()).hexdigest() if f is not None else "-"
+                     for f in x[1:] if f is None or isinstance(f, Path))
         if h == ultimo:
             continue
         ultimo = h
-        if out and t - out[-1][0] < 1 / fps:
-            out[-1] = (out[-1][0], f, meta)  # gana el más nuevo, a la hora del hueco
+        if out and x[0] - out[-1][0] < 1 / fps:
+            out[-1] = (out[-1][0], *x[1:])  # gana el más nuevo, a la hora del hueco
             continue
-        out.append((t, f, meta))
+        out.append(x)
     return out
 
 
@@ -331,36 +354,45 @@ def montar(rec: Grabacion, fps: float, info: dict[str, Any]) -> dict[str, Any]:
         shutil.rmtree(out_dir)
     out_dir.mkdir(parents=True)
 
-    vista = elegir(rec.vista, fps)
+    pares = elegir(rec.pares, fps)
     reales = elegir(rec.reales, fps)
 
     primero = next((t for t, m in rec.msgs if m.get("type") == "task_request"), rec.msgs[0][0] if rec.msgs else 0)
     t0 = primero - 2.0
-    horas = [t for t, _ in rec.msgs] + [t for t, _, _ in vista] + [t for t, _, _ in reales]
+    horas = [t for t, _ in rec.msgs] + [x[0] for x in pares] + [x[0] for x in reales]
     at = reloj(horas, t0)
 
-    def desde_t0(frames: list) -> list:  # de antes de empezar, solo el último fotograma
+    def desde_t0(frames: list) -> list:  # de antes de empezar, solo el último fotograma (o par)
         antes = [x for x in frames if x[0] < t0]
         return antes[-1:] + [x for x in frames if x[0] >= t0]
-    vista, reales = desde_t0(vista), desde_t0(reales)
+    pares, reales = desde_t0(pares), desde_t0(reales)
 
     eventos: list[dict[str, Any]] = []
-    # Lo que ya estaba antes de empezar (la pantalla inicial, un fotograma) entra en el segundo 0.
+    # Lo que ya estaba antes de empezar (la pantalla inicial, un par) entra en el segundo 0.
     for t, m in rec.msgs:
         eventos.append({"at": at(t), "msg": m})
-    for n, (t, f, meta) in enumerate(vista, 1):
-        name = f"v{n:04d}.jpg"
-        jpeg(f, out_dir / name)
-        eventos.append({"at": at(t), "msg": {**meta, "src": f"{NOMBRE}/{name}"}})
+    lista_pares = []
+    for n, (t, fv, fr, meta_v, meta_r) in enumerate(pares, 1):
+        jpeg(fv, out_dir / f"v{n:04d}.jpg")
+        ocho = {**meta_v, "src": f"{NOMBRE}/v{n:04d}.jpg", "par": n}
+        real = None
+        if fr is not None:
+            jpeg(fr, out_dir / f"r{n:04d}.jpg")
+            real = {"src": f"{NOMBRE}/r{n:04d}.jpg", **(meta_r or {}), "par": n}
+        lista_pares.append({"at": at(t), "par": n, "real": real, "ocho": ocho})
     pantalla_real = []
     for n, (t, f, meta) in enumerate(reales, 1):
         name = f"r{n:04d}.jpg"
         jpeg(f, out_dir / name)
         pantalla_real.append({"at": at(t), "src": f"{NOMBRE}/{name}", **meta})
     eventos.sort(key=lambda e: e["at"])
-    duracion = max([e["at"] for e in eventos] + [r["at"] for r in pantalla_real] + [0]) + 3.0
-    return {"formato": "priv8-sesion/1", "nombre": NOMBRE, **info, "duracion": round(duracion, 2),
-            "eventos": eventos, "real": pantalla_real}
+    duracion = max([e["at"] for e in eventos] + [r["at"] for r in pantalla_real] + [p["at"] for p in lista_pares]
+                   + [0]) + 3.0
+    sesion: dict[str, Any] = {"formato": "priv8-sesion/1", "nombre": NOMBRE, **info, "duracion": round(duracion, 2),
+                              "eventos": eventos, "real": pantalla_real}
+    if not rec.movil:
+        sesion["pares"] = lista_pares
+    return sesion
 
 
 def sin_secretos(env: dict[str, str]) -> None:
@@ -482,6 +514,11 @@ def main() -> int:
         info.update(caso=CASO["id"], vertical="b2b", titulo=CASO["titulo"], provisional=False,
                     fuente="Alba Core y el correo reales, agente " + ("con respuestas grabadas" if replay else "en vivo"))
     sesion = montar(rec, a.fps, info)
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from casos_comun import pares_incoherentes
+    fallo_pares = pares_incoherentes(sesion)
+    if fallo_pares is not None:  # nunca una grabación con las dos pantallas de pasos distintos
+        sys.exit(f"Los pares de fotogramas no casan ({fallo_pares}): no se escribe nada")
     texto = json.dumps(sesion, ensure_ascii=False, separators=(",", ":"))
     # Sin punto medio en lo publicado (norma de la marca): el separador de los textos del núcleo
     # se ve « | » en la consola, y en los tokens antiguos va el guion.
@@ -490,9 +527,8 @@ def main() -> int:
     shutil.rmtree(tmp, ignore_errors=True)
     sin_secretos(dotenv)
     total = sum(f.stat().st_size for f in (PUBLIC / NOMBRE).iterdir()) + (PUBLIC / f"{NOMBRE}.json").stat().st_size
-    nv = sum(1 for e in sesion["eventos"] if e["msg"].get("type") == "frame")
-    log(f"{sesion['duracion']:.0f} s, {len(sesion['eventos']) - nv} mensajes, {nv} fotogramas de la vista de 8, "
-        f"{len(sesion['real'])} de la ventana real, {total / 1e6:.1f} MB, gasto del agente {sum(gastos):.4f} $")
+    log(f"{sesion['duracion']:.0f} s, {len(sesion['eventos'])} mensajes, {len(sesion.get('pares', []))} pares de "
+        f"fotogramas, {total / 1e6:.1f} MB, gasto del agente {sum(gastos):.4f} $")
     return 0
 
 

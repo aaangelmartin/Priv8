@@ -56,3 +56,105 @@ def falta(msgs: list[dict[str, Any]], comprueba: list[str]) -> str | None:
     if any(e.get("kind") == "blocked" and e.get("reason") == "presupuesto" for e in ev):
         return "el oráculo se queda sin preguntas"
     return None
+
+
+# ------------------------------------------------------------------ pares de fotogramas (#187)
+#
+# En una sesión web grabada, «Lo que ves tú» (la pestaña real) y «Lo que ve el modelo» (la vista
+# de 8) son la misma pantalla en el mismo instante: el adaptador las captura juntas y las emite en
+# un solo mensaje (frame con vista "8", `par` y la real en `real`). En priv8-sesion/1 van juntas:
+#
+#   pares: [{at, par, real: {src, w, h, app, par}, ocho: {src, w, h, app, screen, fresh, paused, par, ...}}]
+#
+# Las grabaciones anteriores tenían dos listas sueltas (los fotogramas de la vista de 8 dentro de
+# `eventos` y la pestaña real en `real`). migrar() las empareja: cada fotograma real con el de la
+# vista de 8 más cercano en el tiempo, sin volver nunca atrás; el par lleva `dt` (segundos entre
+# los dos originales) y la sesión `migrado: true`. Android no tiene vista de 8 (el modelo se
+# dibuja con los mensajes screen): sus capturas siguen en `real` y no se tocan.
+# apps/console/src/reproductor.js hace lo mismo al reproducir una grabación antigua.
+
+PAR_DT_MAX = 0.6  # en una grabación migrada, lo más separados que pueden estar los dos de un par (s)
+
+
+def _es_vista8(m: dict[str, Any]) -> bool:
+    return m.get("type") == "frame" and m.get("vista") != "real"
+
+
+def emparejar(vistas: list[dict[str, Any]], reales: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Pares de dos listas sueltas: vistas [{at, msg}] (frames de la vista de 8) y reales
+    [{at, src, w, h, app}]. Cada real con la vista más cercana en el tiempo (el índice nunca
+    retrocede); el par sale cuando ya existen los dos (at = el mayor). Sin reales, cada vista sola."""
+    vs = sorted(vistas, key=lambda e: e["at"])
+    rs = sorted(reales, key=lambda r: r["at"])
+    out: list[dict[str, Any]] = []
+    if not rs:
+        for n, v in enumerate(vs, 1):
+            out.append({"at": v["at"], "par": n, "real": None, "ocho": {**v["msg"], "par": n}})
+        return out
+    if not vs:
+        return []
+    k = 0
+    for r in rs:
+        while k + 1 < len(vs) and abs(vs[k + 1]["at"] - r["at"]) <= abs(vs[k]["at"] - r["at"]):
+            k += 1
+        v = vs[k]
+        n = len(out) + 1
+        at = max(r["at"], v["at"], out[-1]["at"] if out else 0.0)
+        real = {kk: vv for kk, vv in r.items() if kk != "at"}
+        out.append({"at": round(at, 3), "par": n, "dt": round(v["at"] - r["at"], 3),
+                    "real": {**real, "par": n}, "ocho": {**v["msg"], "par": n}})
+    return out
+
+
+def migrar(d: dict[str, Any]) -> dict[str, Any]:
+    """Una sesión del formato anterior (dos listas sueltas) con sus fotogramas en pares. Las que
+    ya tienen `pares`, y las que no tienen vista de 8 (Android, provisionales), tal cual."""
+    if isinstance(d.get("pares"), list):
+        return d
+    ev = d.get("eventos") or []
+    vistas = [e for e in ev if _es_vista8(e.get("msg") or {})]
+    if not vistas:
+        return d
+    pares = emparejar(vistas, d.get("real") or [])
+    return {**d, "eventos": [e for e in ev if not _es_vista8(e.get("msg") or {})], "real": [],
+            "pares": pares, "migrado": True}
+
+
+def pares_incoherentes(d: dict[str, Any]) -> str | None:
+    """None si cada momento de la sesión enseña las dos pantallas del mismo paso; si no, por qué.
+
+    - Ningún fotograma de la vista de 8 suelto en `eventos` ni pestaña real suelta junto a pares.
+    - Cada par: la vista de 8 y, si hay pestaña real, la del mismo id de par, del mismo tamaño.
+    - Los pares en orden (at y par crecientes).
+    - En una grabación migrada, los dos originales a menos de PAR_DT_MAX segundos."""
+    ev = d.get("eventos") or []
+    sueltos = [e for e in ev if (e.get("msg") or {}).get("type") == "frame"]
+    pares = d.get("pares")
+    if pares is None:
+        if any(_es_vista8(e["msg"]) for e in sueltos):
+            return "fotogramas de la vista de 8 sueltos en eventos (sin pares)"
+        return None  # Android o sin fotogramas: el modelo se dibuja con los mensajes screen
+    if sueltos:
+        return f"{len(sueltos)} fotogramas sueltos en eventos además de los pares"
+    if d.get("real"):
+        return "pestaña real suelta además de los pares"
+    prev_at, prev_par = -1.0, 0
+    for i, p in enumerate(pares):
+        o, r = p.get("ocho"), p.get("real")
+        if not isinstance(o, dict) or not o.get("src"):
+            return f"el par {i} no tiene la vista de 8"
+        if r is not None and not (isinstance(r, dict) and r.get("src")):
+            return f"el par {i} tiene la pestaña real vacía"
+        n = p.get("par")
+        if not isinstance(n, int) or n <= prev_par:
+            return f"el par {i} no tiene un id creciente"
+        if o.get("par") != n or (r is not None and r.get("par") != n):
+            return f"el par {i} junta fotogramas de pasos distintos ({o.get('par')} y {(r or {}).get('par')})"
+        if r is not None and not d.get("migrado") and (r.get("w"), r.get("h")) != (o.get("w"), o.get("h")):
+            return f"el par {i} junta pantallas de distinto tamaño"
+        if not isinstance(p.get("at"), (int, float)) or p["at"] < prev_at:
+            return f"el par {i} va antes que el anterior"
+        if d.get("migrado") and abs(p.get("dt") or 0) > PAR_DT_MAX:
+            return f"el par {i} junta fotogramas a {abs(p['dt']):.2f} s"
+        prev_at, prev_par = p["at"], n
+    return None

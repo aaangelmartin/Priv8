@@ -196,14 +196,17 @@ def uno_escena(caso: dict[str, Any]) -> list[dict[str, Any]]:
 
 def recorte(caso: dict[str, Any]) -> dict[str, Any] | None:
     """El tramo n de una sesión real grabada: desde su task_request hasta el siguiente. Lo que ya
-    se veía antes (el último fotograma de cada vista y las pantallas leídas, que dan los valores
-    locales de los tokens) entra en el segundo 0."""
+    se veía antes (el último par de fotogramas y las pantallas leídas, que dan los valores
+    locales de los tokens) entra en el segundo 0. Los fotogramas van en pares (#187): una
+    grabación del formato anterior se empareja antes (casos_comun.migrar)."""
     p = caso["provisional"]
     src = PUBLIC / f"{p['desde']}.json"
     if not src.exists():
         log(f"{caso['id']}: falta {src.name}; no se recorta")
         return None
-    d = json.loads(src.read_text(encoding="utf-8"))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from casos_comun import migrar, pares_incoherentes
+    d = migrar(json.loads(src.read_text(encoding="utf-8")))
     ev = d["eventos"]
     cortes = [e["at"] for e in ev if e["msg"].get("type") == "task_request"]
     n = p["tramo"]
@@ -215,18 +218,30 @@ def recorte(caso: dict[str, Any]) -> dict[str, Any] | None:
     antes = [e for e in ev if e["at"] < t0]
     previo: list[dict[str, Any]] = []
     if n > 1:
-        ultimo_v = [e for e in antes if e["msg"].get("type") == "frame"][-1:]
         pantallas = [e for e in antes if e["msg"].get("type") == "screen"]
-        previo = [{"at": 0.0, "msg": e["msg"]} for e in pantallas + ultimo_v]
+        previo = [{"at": 0.0, "msg": e["msg"]} for e in pantallas]
     dentro = [{"at": round(e["at"] - t0, 3), "msg": e["msg"]} for e in ev if t0 <= e["at"] < t1]
-    reales = d.get("real", [])
-    r_antes = [r for r in reales if r["at"] < t0][-1:]
-    real = [{**r, "at": 0.0} for r in r_antes] + [{**r, "at": round(r["at"] - t0, 3)} for r in reales if t0 <= r["at"] < t1]
-    dur = max([e["at"] for e in dentro] + [r["at"] for r in real] + [0]) + 3.0
-    return {"formato": "priv8-sesion/1", "nombre": caso["feed"], "caso": caso["id"], "vertical": caso["vertical"],
-            "titulo": caso["titulo"], "provisional": False, "fuente": f"recorte del tramo {n} de {p['desde']}",
-            "grabada": d.get("grabada"), "modelo": d.get("modelo"), "encargos": [caso["pedido"]],
-            "duracion": round(dur, 2), "eventos": previo + dentro, "real": real}
+
+    def tramo(lista: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        antes_ = [x for x in lista if x["at"] < t0][-1:]  # lo que ya se veía: el último, en el segundo 0
+        return [{**x, "at": 0.0} for x in antes_] + [{**x, "at": round(x["at"] - t0, 3)} for x in lista
+                                                     if t0 <= x["at"] < t1]
+    real = tramo(d.get("real", []))
+    sesion: dict[str, Any] = {
+        "formato": "priv8-sesion/1", "nombre": caso["feed"], "caso": caso["id"], "vertical": caso["vertical"],
+        "titulo": caso["titulo"], "provisional": False, "fuente": f"recorte del tramo {n} de {p['desde']}",
+        "grabada": d.get("grabada"), "modelo": d.get("modelo"), "encargos": [caso["pedido"]],
+        "duracion": 0.0, "eventos": previo + dentro, "real": real}
+    if "pares" in d:
+        sesion["pares"] = tramo(d["pares"])
+        if d.get("migrado"):
+            sesion["migrado"] = True
+    sesion["duracion"] = round(max([e["at"] for e in dentro] + [r["at"] for r in real]
+                                   + [x["at"] for x in sesion.get("pares", [])] + [0]) + 3.0, 2)
+    fallo = pares_incoherentes(sesion)
+    if fallo is not None:
+        sys.exit(f"{caso['id']}: los pares de fotogramas no casan ({fallo})")
+    return sesion
 
 
 def escribir(caso: dict[str, Any], sesion: dict[str, Any]) -> None:

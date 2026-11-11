@@ -161,6 +161,10 @@ def uno(c: dict, a: argparse.Namespace, dotenv: dict[str, str]) -> None:
                     "provisional": False,
                     "fuente": "emulador Android, agente " + ("con respuestas grabadas" if replay else "en vivo")}
             sesion = gs.montar(rec, a.fps, info)
+            from casos_comun import pares_incoherentes
+            fallo_pares = pares_incoherentes(sesion)
+            if fallo_pares is not None:  # Android no tiene pares; nunca una vista de 8 suelta
+                sys.exit(f"{c['id']}: los fotogramas no casan ({fallo_pares}); no se escribe nada")
             texto = __import__("json").dumps(sesion, ensure_ascii=False, separators=(",", ":"))
             texto = texto.replace(" · ", " | ").replace("·", "-")
             (gs.PUBLIC / f"{c['feed']}.json").write_text(texto + "\n", encoding="utf-8")

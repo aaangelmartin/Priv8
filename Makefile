@@ -88,7 +88,7 @@ demo:
 
 # Every test suite and the contract examples.
 test:
-	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics data/test_bateria.py
+	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics data/test_bateria.py scripts/tests
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
 	node apps/console/src/alertas.test.mjs
@@ -99,6 +99,7 @@ test:
 	node apps/console/src/vivo.test.mjs
 	node apps/android-8/dev/test_estados.mjs
 	node apps/console/src/reproductor.test.mjs
+	node apps/console/src/sesiones.test.mjs
 	node apps/erp-sim/src/sesion.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
