@@ -203,7 +203,6 @@ export function DosPantallas({ frame, real, nota, rep, valores }) {
       : esperaOcho
   return (
     <div className="dos-miradas">
-      <h3 className="miradas-titulo">La misma pantalla, <span>dos miradas</span></h3>
       <div className={`dos-pantallas ${fila ? 'en-fila' : 'en-columna'} ${movil ? 'de-movil' : ''}`} ref={caja}>
         <section className="mirada m-tu" aria-label="Lo que ves tú: datos reales">
           <Mirada tipo="tu" nota={nota} />
