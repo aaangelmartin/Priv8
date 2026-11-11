@@ -129,16 +129,16 @@ function Rotator() {
 }
 
 function Hero() {
-  /* 8 lee, tapa lo que no debe ver y vuelve a mirarte */
-  const [mode, setMode] = useState('mirar');
+  /* 8 saluda al abrir (la intro de todo Priv8), y luego lee, tapa lo que no debe ver y vuelve a mirarte */
+  const [mode, setMode] = useState('saludar');
   useEffect(() => {
     let still = false;
     try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
-    if (still) return undefined;
+    if (still) { setMode('mirar'); return undefined; }
     const seq = [['mirar', 3600], ['leer', 2600], ['nove', 2200]];
     let i = 0, t = 0;
     const next = () => { const [m, d] = seq[i % seq.length]; i += 1; setMode(m); t = setTimeout(next, d); };
-    next();
+    t = setTimeout(next, 2400);
     return () => clearTimeout(t);
   }, []);
   return (
