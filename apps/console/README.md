@@ -24,7 +24,7 @@ cd apps/console
 pnpm install
 pnpm dev                     # http://127.0.0.1:5175
 pnpm build
-for t in alertas tokens directo vivo frame; do node src/$t.test.mjs; done   # pruebas sin dependencias
+for t in alertas tokens directo vivo frame md reproductor; do node src/$t.test.mjs; done   # pruebas sin dependencias
 ```
 
 **Demo sin núcleo ni IA:** abre `http://127.0.0.1:5175/?demo`. Reproduce `public/demo.json`, los mensajes reales del núcleo en el flujo de la factura con la trampa del IBAN (datos ficticios del seed), capturados sin llamar a la API.
@@ -35,5 +35,11 @@ El mensaje `screen` lleva valores reales: la consola solo debe abrirse en la má
 
 - `?feed=sin-protocolo`: banda noche «Sin protocolo: el modelo recibe los datos reales». En la pantalla de 8, lo que recibe el modelo lleva los valores del seed marcados en rojo y la cuenta de valores reales enviados al modelo (acaba en la misma cifra que `make metrics`: 6). No hay oráculo, bloqueos ni confirmaciones.
 - `?feed=con-protocolo`: la misma ejecución con Priv8 CUA (tokens, alarmas, dos bloqueos y tres confirmaciones), con 0 valores reales al modelo.
+
+**Una sesión real grabada (#170):** `?feed=sesion-b2b` reproduce una sesión real del agente en directo, para la web de la demo, que no tiene agente, núcleo ni API. `make grabar-sesion` (`scripts/grabar_sesion.py`) la graba una vez: arranca Alba Core y el correo en puertos libres (5193 y 5194) y el agente real (`--web`, Chromium con ventana, el `.env`, eventos en :8792), pide en el chat «Registra la factura de Suministros Lumen», aprueba la confirmación a los pocos segundos y después pide «Contesta al proveedor que la factura está registrada». Nunca toca 5173-5175, 8700, 5301 ni 5303. Guarda en `public/sesion-b2b.json` cada mensaje que recibe la consola con su segundo, y en `public/sesion-b2b/` los JPEG de la vista de 8 y de la ventana real de Chromium (con los datos ficticios del seed, el cursor de 8 y sus bocadillos), sin repetidos y a 5 por segundo como mucho. Como el modelo no siempre sigue el flujo ensayado, repite el intento (hasta 6) si algún encargo no pide confirmación, el oráculo no cuadra o 8 dice que no lo ha hecho. Al final comprueba que ningún valor del `.env` ha entrado en la grabación.
+
+En la reproducción (`src/reproductor.js`) todo va como en directo: las pantallas, el razonamiento, el chat (los encargos de la persona, las frases de 8 y la confirmación, que pasa a «Aprobada» cuando llega la aprobación grabada) y las pestañas. Abajo, reproducir y pausar, reiniciar, velocidad 1x o 2x y el tiempo. Arranca sola y el campo del chat está desactivado.
+
+**Lo que ves tú y lo que ve el modelo (#170):** en web, el adaptador manda también la pestaña real que maneja 8 (`frame` con `vista: "real"`, solo por el canal local). La consola enseña las dos a la vez, en En directo y arriba de la pestaña Pantalla: **Lo que ves tú** (la ventana real, con los valores) y **Lo que ve el modelo** (la vista de 8). Lado a lado si hay sitio a lo ancho, una encima de otra en pantallas estrechas (`DosPantallas` en `src/Vista8.jsx`). En Android y en los feeds sin pantalla real sigue solo lo que ve 8.
 
 `make videos` (o `make video-sin-protocolo` y `make video-con-protocolo`) graba los dos con Playwright a 1440×900 en `docs/entregables/video/` (`.webm` y, con ffmpeg, `.mp4`). `scripts/grabar_consola.py --frames DIR` guarda además capturas para revisar la grabación.
