@@ -82,7 +82,7 @@ export function createEngine(){
 
 
   /* ======================================================================
-     8 · ESTADOS
+     8 - ESTADOS
      Emociones: lo que siente. Flujo: lo que hace en cada paso del trámite.
      Todo sale de los mismos ojos: pupilas, párpados (con ángulo para el ceño
      y la tristeza), párpado inferior (sonrisa), tamaño e inclinación.
