@@ -17,6 +17,8 @@ import { PantallaDe8 } from './Vivo.jsx'
 
 const COBALTO = '#2D45D6'
 const CABECERA = 40
+// La cabecera de una mirada (60 px) y el mismo hueco que hay entre las dos pantallas (12 px).
+const ENCIMA = 72
 
 // Tamaño disponible de un elemento, al día.
 function useTamano(ref) {
@@ -96,14 +98,19 @@ function chipDe(frame) {
   return { tono: 'cobalto', texto: 'Censurado en el DOM' }
 }
 
-export function VistaWeb({ frame, imagen = null, cabecera = true, real = false, rotulo = null, nota = 'Pantalla real', chip: conChip = true }) {
+export function VistaWeb({ frame, imagen = null, cabecera = true, real = false, rotulo = null, nota = 'Pantalla real', chip: conChip = true, encima = null }) {
   const stage = useRef(null)
   const t = useTamano(stage)
-  const { width, height } = encaja(frame.w, frame.h, t.w, t.h - (cabecera ? CABECERA : 0))
+  const { width, height } = encaja(frame.w, frame.h, t.w, t.h - (cabecera ? CABECERA : 0) - (encima ? ENCIMA : 0))
   const chip = real ? { tono: 'aviso', texto: nota } : chipDe(frame)
   return (
     <div className="escenario vista-escenario" ref={stage}>
-      {width > 0 && (
+      {width > 0 && encima && <div className="vista-pila" style={{ width }}>{encima}{ventana()}</div>}
+      {width > 0 && !encima && ventana()}
+    </div>
+  )
+  function ventana() {
+    return (
         <div className="ventana vista-ventana" style={{ width }} aria-label={`Lo que ve 8: ${nombreApp(frame.app)} ${nombrePantalla(frame.screen)}`}>
           {cabecera && (
             <div className="ventana-cab">
@@ -119,9 +126,8 @@ export function VistaWeb({ frame, imagen = null, cabecera = true, real = false, 
           <Lienzo frame={frame} imagen={imagen} width={width} height={height}
             etiqueta={real ? 'La ventana real que maneja 8, con los datos ficticios de la demo' : undefined} />
         </div>
-      )}
-    </div>
-  )
+    )
+  }
 }
 
 // Android: cada elemento observado, en su sitio, con lo que leyó el modelo.
@@ -187,17 +193,22 @@ export function DosPantallas({ frame, real, nota, rep, valores }) {
   const esperaOcho = <div className="escenario real-espera"><p>Lo que ve el modelo aparece con la primera pantalla.</p></div>
   // Sin fotogramas (Android sin captura, una reproducción provisional): las dos pantallas en
   // esquema, la de la persona con los valores y la del modelo con los tokens (#187).
+  // En la web, la cabecera va pegada encima de su ventana y el conjunto se centra en su hueco.
+  const cabTu = <Mirada tipo="tu" nota={nota} />
+  const cabOcho = <Mirada tipo="ocho" />
+  const izqWeb = enPar ? !!par : !!real
+  const derWeb = enPar ? !!par : esVista8(frame)
   const izquierda = enPar
-    ? (par ? <VistaWeb frame={{ ...par.real, vista: 'real' }} imagen={par.imReal} real nota={nota} chip={false} /> : esperaTu)
+    ? (par ? <VistaWeb frame={{ ...par.real, vista: 'real' }} imagen={par.imReal} real nota={nota} chip={false} encima={cabTu} /> : esperaTu)
     : real
-    ? <VistaWeb frame={{ ...real, vista: 'real' }} real nota={nota} chip={false} />
+    ? <VistaWeb frame={{ ...real, vista: 'real' }} real nota={nota} chip={false} encima={cabTu} />
     : pantalla
       ? <PantallaDe8 rep={rep} modo="tu" valores={valores} />
       : esperaTu
   const derecha = enPar
-    ? (par ? <VistaWeb frame={par.frame} imagen={par.imOcho} chip={false} /> : esperaOcho)
+    ? (par ? <VistaWeb frame={par.frame} imagen={par.imOcho} chip={false} encima={cabOcho} /> : esperaOcho)
     : esVista8(frame)
-    ? <VistaWeb frame={frame} chip={false} />
+    ? <VistaWeb frame={frame} chip={false} encima={cabOcho} />
     : pantalla
       ? (movil && real && cajasMovil(pantalla) ? <MovilDe8 screen={pantalla} /> : <PantallaDe8 rep={rep} modo="ocho" valores={valores} />)
       : esperaOcho
@@ -205,11 +216,11 @@ export function DosPantallas({ frame, real, nota, rep, valores }) {
     <div className="dos-miradas">
       <div className={`dos-pantallas ${fila ? 'en-fila' : 'en-columna'} ${movil ? 'de-movil' : ''}`} ref={caja}>
         <section className="mirada m-tu" aria-label="Lo que ves tú: datos reales">
-          <Mirada tipo="tu" nota={nota} />
+          {!izqWeb && cabTu}
           <div className="mirada-pantalla">{izquierda}</div>
         </section>
         <section className="mirada m-ocho" aria-label="Lo que ve el modelo: solo tokens">
-          <Mirada tipo="ocho" />
+          {!derWeb && cabOcho}
           <div className="mirada-pantalla">
             {derecha}
             {pausa && !esVista8(frame) && (
