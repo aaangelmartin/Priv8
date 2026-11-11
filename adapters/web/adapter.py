@@ -21,12 +21,18 @@ Vista de 8 en la consola (#147, #154): mientras una consola mira (core.connect
 pone `watching` y `on_frame`), el adaptador mantiene una página espejo en un
 Chromium sin ventana (vista.py) con la pestaña de 8 censurada en el DOM: cada valor
 ámbar lleva su token y cada rojo «nunca sale» antes de escribirse en el espejo, y
-lo que no ha leído el modelo sale como marcador neutro. Lo que se emite (CDP
-Page.startScreencast, hasta FRAME_FPS por segundo) es ese espejo: los píxeles de la
-pestaña real ya no salen del adaptador. Se sincroniza en el hilo del navegador entre
-una llamada y la siguiente (cambios del DOM, desplazamiento, foco), así que
-snapshot() y perform() no esperan a ningún fotograma. Sin nadie mirando, no se copia
+lo que no ha leído el modelo sale como marcador neutro. Sin nadie mirando, no se copia
 ni se captura nada. PRIV8_FRAMES=0 lo apaga.
+
+Pares de fotogramas (#187): la consola enseña la pestaña real («lo que ves tú») y la vista
+de 8 («lo que ve el modelo») lado a lado, y las dos tienen que ser la misma pantalla en el
+mismo instante. Por eso no hay dos capturas independientes: en cada tick (PAR_FPS como
+mucho), en el hilo del navegador, el adaptador copia la pestaña en el espejo si ha
+cambiado, congela la capa de 8 de la pestaña real y copia su estado (posición del cursor,
+ojos, anillo, bocadillo y cuánto lleva escrito) en el espejo, y fotografía las dos. Las dos
+imágenes salen en un solo mensaje (`par`, con la real en `real`). El bocadillo del espejo
+lleva el mismo texto con tokens; lo que 8 teclea en un campo, el token en la misma
+proporción. Mientras el cursor se desliza o 8 teclea, el hilo sigue capturando pares.
 
 8 en la ventana (#135, #154): el cursor son los ojos de 8 (el motor de la web) con
 su cara según lo que hace (lee, piensa, escribe, espera, se enfada, termina) y
@@ -37,6 +43,7 @@ mismo proceso (on_core_event); en la ventana real el bocadillo puede llevar valo
 
 from __future__ import annotations
 
+import base64
 import os
 import queue
 import re
@@ -72,20 +79,16 @@ def cursor_enabled(default: bool) -> bool:
     return v.strip().lower() not in ("0", "off", "false", "no")
 
 
-# Vista de 8 (#147, #154): fotogramas por segundo como mucho, tamaño máximo y calidad JPEG.
-FRAME_FPS = 10
-FRAME_MAX_W, FRAME_MAX_H = 1650, 1140
+# Vista de 8 (#147, #154, #187): pares por segundo como mucho y calidad JPEG.
+PAR_FPS = 6
 FRAME_QUALITY = 70
 FRAME_TICK_MS = 15      # sin trabajos, cada cuánto atiende el navegador los fotogramas
-SYNC_EVERY_S = 0.1      # cada cuánto se mira si la pestaña ha cambiado (debounce de los cambios)
 VIEWPORT = {"width": 1100, "height": 760}
 
 # Lo que ves tú (#170): mientras una consola mira, la pestaña real que maneja 8 (con sus valores,
-# el cursor y los bocadillos) también va a la consola, junto a la vista de 8, como fotograma con
-# vista "real". Es la pantalla de la persona: va solo por el canal local de fotogramas (127.0.0.1,
-# como screen.raw), nunca al modelo ni al registro. PRIV8_REAL_FRAMES=0 lo apaga.
-REAL_FPS = 7
-REAL_MAX_W = 1100
+# el cursor y los bocadillos) va a la consola en el mismo par que la vista de 8 (campo `real`).
+# Es la pantalla de la persona: va solo por el canal local de fotogramas (127.0.0.1, como
+# screen.raw), nunca al modelo ni al registro. PRIV8_REAL_FRAMES=0 lo apaga.
 REAL_QUALITY = 70
 
 
@@ -375,17 +378,15 @@ class WebAdapter:
         self.frames = frames_enabled()
         self.frames_sent = 0
         self._vista: Vista8 | None = None
-        # Lo que ves tú: la pestaña real a la consola (core.connect pone on_real_frame).
-        self.on_real_frame: Callable[[dict[str, Any]], Any] | None = None
-        self.real_frames = real_frames_enabled()
-        self._rec_cdp: Any = None
-        self._rec_page: Any = None
-        self._rec_at = 0.0
-        self._rec_pend: tuple[float, str, int, int, str] | None = None
-        self._frame: tuple[str, int, int] | None = None  # último fotograma del espejo sin enviar
-        self._last_img: tuple[str, int, int] | None = None
-        self._frame_at = 0.0
-        self._sync_at = 0.0
+        self._mirando = False                 # la vista de 8 está en marcha (alguien mira)
+        self.real_frames = real_frames_enabled()  # la pestaña real va en cada par
+        self.par = 0                          # id del último par emitido
+        self._par_at = 0.0
+        self._par_hash: tuple[int, int] | None = None
+        self._dichos: dict[int, str] = {}     # id de bocadillo -> su texto con tokens (el del espejo)
+        self._n_dicho = 0
+        self._nota: dict[str, str] = {}       # lo que va a escribir 8 (con tokens), antes de perform()
+        self._tecleo: tuple[str, float] | None = None  # campo que 8 teclea ahora y cuánto lleva (0..1)
         self._sync_force = True
         self._raw: dict[str, Any] | None = None        # último snapshot (valores reales, solo aquí)
         self._observed: dict[str, Any] | None = None   # lo que vio el modelo de él (tokens)
@@ -427,7 +428,6 @@ class WebAdapter:
                     continue
             else:
                 self._stop_cast()
-                self._rec_stop()
                 try:
                     job = self._jobs.get(timeout=0.4)
                 except queue.Empty:
@@ -441,7 +441,6 @@ class WebAdapter:
                 fut.set_exception(e)
             self._sync_force = True  # tras una acción o una lectura, la vista de 8 se vuelve a copiar
         self._stop_cast()
-        self._rec_stop()
         if self._vista is not None:
             self._vista.close()
         self._ctx.close()
@@ -586,9 +585,16 @@ class WebAdapter:
             if op == "type":
                 if not el.is_editable():
                     return {"ok": False, "error": "no_permitido"}
+                nota = self._nota.pop(str(target), None)
                 if self._cursor(page, "type", target, "Escribo en"):
-                    self._type_visible(el, text)
+                    if nota is not None:  # desde ahora la vista de 8 enseña el token en el campo
+                        self._over[str(target)] = nota
+                        self._tecleo = (str(target), 0.0)
+                    self._type_visible(el, text, str(target) if nota is not None else None)
                 el.fill(text)  # el valor final es siempre el mismo, con cursor o sin él
+                if nota is not None:
+                    self._over[str(target)] = nota
+                self._tecleo = None
                 self._cursor(page, "done")
                 return {"ok": True}
             if op == "call":
@@ -613,79 +619,115 @@ class WebAdapter:
             return False
 
     def _stream_tick(self) -> None:
-        """Sin trabajos pendientes y con alguien mirando: copia la pestaña activa, censurada, en
-        la vista de 8 si ha cambiado, emite el espejo y deja al navegador atender un momento."""
+        """Sin trabajos pendientes y con alguien mirando: un par si toca, y el navegador atiende
+        un momento."""
         from playwright.sync_api import Error as PwError
 
         try:
             page = self._page(self.app)
-            if self._vista is None:
-                self._vista = Vista8(self._pw, VIEWPORT)
-            if not self._vista.casting:
-                self._frame = self._last_img = None
-                self._vista.start_cast(self._on_cast, FRAME_QUALITY, FRAME_MAX_W, FRAME_MAX_H)
-                self._sync_force = True
-            if self._sync_force or time.monotonic() - self._sync_at > SYNC_EVERY_S:
-                self._sync(page)
-            self._flush()
-            self._rec_tick(page)
+            self._par_tick(page)
             page.wait_for_timeout(FRAME_TICK_MS)
         except PwError:
             time.sleep(FRAME_TICK_MS / 1000)
 
-    # ---- lo que ves tú: la pestaña real a la consola (#170), en el hilo del navegador ----
+    def _vista_activa(self) -> bool:
+        return self._vista is not None and self._mirando
 
-    def _rec_tick(self, page: Any) -> None:
-        """La pestaña real a la consola mientras mira: sigue a la pestaña activa."""
-        if not self.real_frames or self.on_real_frame is None:
-            return
-        if page is not self._rec_page:
-            self._rec_stop()
-            cdp = self._ctx.new_cdp_session(page)
-            app = self.app
+    # ---- pares de fotogramas (#187), siempre en el hilo del navegador ----
 
-            def on(p: dict[str, Any]) -> None:
-                try:
-                    cdp.send("Page.screencastFrameAck", {"sessionId": p["sessionId"]})
-                except Exception:  # noqa: BLE001
-                    return
-                meta = p.get("metadata") or {}
-                self._rec_pend = (time.time(), p["data"], int(meta.get("deviceWidth") or 0),
-                                  int(meta.get("deviceHeight") or 0), app)
-                self._rec_write()
+    def _par_tick(self, page: Any, force: bool = False) -> bool:
+        """Un par si toca (PAR_FPS como mucho): la pestaña real y la vista de 8 en el mismo
+        instante. Copia la pestaña en el espejo si ha cambiado, congela la capa de 8 de la
+        pestaña real, copia su estado en el espejo, fotografía las dos y la suelta. Las dos
+        imágenes salen en un solo mensaje con el mismo id (`par`). True si ha emitido uno."""
+        from playwright.sync_api import Error as PwError
 
-            cdp.on("Page.screencastFrame", on)
-            cdp.send("Page.startScreencast", {"format": "jpeg", "quality": REAL_QUALITY,
-                                              "maxWidth": REAL_MAX_W, "maxHeight": REAL_MAX_W})
-            self._rec_cdp, self._rec_page = cdp, page
-        self._rec_write()
-
-    def _rec_write(self) -> None:
-        """Envía el último fotograma real pendiente si toca (REAL_FPS como mucho): gana el último."""
-        pend = self._rec_pend
-        if pend is None or self.on_real_frame is None or time.time() - self._rec_at < 1 / REAL_FPS:
-            return
-        _, data, w, h, app = pend
-        if not w or not h:
-            return
-        self._rec_pend, self._rec_at = None, time.time()
+        if not self._streaming():
+            return False
+        now = time.monotonic()
+        if not force and now - self._par_at < 1 / PAR_FPS:
+            return False
+        self._par_at = now
+        if self._vista is None:
+            self._vista = Vista8(self._pw, VIEWPORT)
+        if not self._mirando:
+            self._mirando, self._par_hash = True, None
+            self._sync_force = True
         try:
-            self.on_real_frame({"app": app, "w": w, "h": h, "img": data, "mime": "image/jpeg"})
+            self._sync(page)
+            estado = None
+            if self.cursor:
+                try:
+                    estado = self._ocho(page, "congelar", None)
+                except PwError:
+                    estado = None
+            try:
+                self._vista.call("fijar", self._estado_espejo(estado))
+                real = (page.screenshot(type="jpeg", quality=REAL_QUALITY, scale="css", timeout=3000)
+                        if self.real_frames and self.on_frame is not None else None)
+            finally:
+                if estado is not None:
+                    try:
+                        self._ocho(page, "soltar", None)
+                    except PwError:
+                        pass
+            ocho = self._vista.captura(FRAME_QUALITY)
+        except PwError:
+            return False
+        huella = (hash(ocho), hash(real))
+        if huella == self._par_hash:  # nada ha cambiado en ninguna de las dos
+            return False
+        self._par_hash = huella
+        size = self._vista.page.viewport_size or VIEWPORT
+        w, h = int(size["width"]), int(size["height"])
+        self.par += 1
+        f: dict[str, Any] = {"app": self.app, "w": w, "h": h, "img": base64.b64encode(ocho).decode(),
+                             "mime": "image/jpeg", "vista": "8", "par": self.par, "where": {"url": page.url}}
+        if real is not None:
+            f["real"] = {"app": self.app, "w": w, "h": h, "img": base64.b64encode(real).decode(),
+                         "mime": "image/jpeg"}
+        try:
+            self.on_frame(f)  # type: ignore[misc]
+            self.frames_sent += 1
         except Exception:  # noqa: BLE001 - la consola nunca para al agente
             pass
+        return True
 
-    def _rec_stop(self) -> None:
-        cdp, self._rec_cdp, self._rec_page = self._rec_cdp, None, None
-        if cdp is None:
-            return
-        try:
-            cdp.send("Page.stopScreencast")
-            cdp.detach()
-        except Exception:  # noqa: BLE001
-            pass
+    def _estado_espejo(self, estado: dict[str, Any] | None) -> dict[str, Any] | None:
+        """El estado de la capa de 8 de la pestaña real, para el espejo: el bocadillo con su
+        texto con tokens (el que dio el núcleo), nunca el de la pestaña."""
+        if not isinstance(estado, dict):
+            return None
+        fuente = (estado.get("bub") or {}).get("fuente") or {}
+        texto = self._dichos.get(fuente["id"]) if isinstance(fuente.get("id"), int) else None
+        return {**estado, "texto": texto}
 
-    def _vista_activa(self) -> bool:
-        return self._vista is not None and self._vista.casting
+    def _esperar(self, s: float) -> None:
+        """Espera s segundos en el hilo del navegador sin dejar de capturar pares (el cursor se
+        desliza, 8 teclea): la consola ve el movimiento en las dos pantallas a la vez."""
+        fin = time.monotonic() + max(0.0, s)
+        while True:
+            queda = fin - time.monotonic()
+            if queda <= 0:
+                return
+            page = self._page(self.app)
+            if not self._par_tick(page):
+                page.wait_for_timeout(max(1, min(FRAME_TICK_MS, int(queda * 1000))))
+
+    def _over_espejo(self) -> dict[str, str]:
+        """Lo que escribe 8 en cada campo, con tokens, para el espejo. Mientras teclea, el token
+        en la misma proporción que el valor real que ya está en el campo."""
+        over = dict(self._over)
+        if self._tecleo is not None:
+            ref, k = self._tecleo
+            t = over.get(ref)
+            if t is not None:
+                n = round(len(t) * max(0.0, min(1.0, k)))
+                abre = t.rfind("‹", 0, n)
+                if abre >= 0 and t.find("›", abre) >= n:  # sin partir un token
+                    n = abre
+                over[ref] = t[:n]
+        return over
 
     def _sync(self, page: Any, force: bool = False) -> None:
         """Copia la pestaña de 8 en la vista de 8, censurada en el DOM (vista8.js) y tras el
@@ -701,8 +743,8 @@ class WebAdapter:
             return
         force = force or self._sync_force
         self._sync_force = False
-        self._sync_at = time.monotonic()
-        key = f"{self.app}|{sorted(self._over.items())}"
+        over = self._over_espejo()
+        key = f"{self.app}|{sorted(over.items())}"
         if not page.evaluate(CENSOR_JS, {"fase": "sucio", "force": force, "key": key}):
             return
         dom = page.evaluate(_SNAPSHOT_JS, {"ref": "data-p8-pv", "xattr": "data-p8-pvx"})
@@ -724,7 +766,7 @@ class WebAdapter:
         textos = page.evaluate(CENSOR_JS, {"fase": "textos"}) or {}
         mascaras = {t: self._mascara(t, secrets) for t in textos.get("textos", [])}
         args = {"fase": "copia", "ref": "data-p8-pv", "xattr": "data-p8-pvx", "obs": obs_map(obs),
-                "sel": sel if obs else {}, "over": dict(self._over), "mascaras": mascaras}
+                "sel": sel if obs else {}, "over": over, "mascaras": mascaras}
         doc = page.evaluate(CENSOR_JS, args)
         if doc is None or not self._vista.write(doc, secrets, self.p8_check):
             # Algo no ha pasado el bloqueo final: otra vez, solo con lo que recibiría el modelo.
@@ -772,31 +814,8 @@ class WebAdapter:
             return None
 
     def _stop_cast(self) -> None:
-        if self._vista is not None:
-            self._vista.stop_cast()
+        self._mirando = False
 
-    def _on_cast(self, img: str, w: int, h: int) -> None:
-        self._frame = self._last_img = (img, w, h)
-        self._flush()
-
-    def _flush(self) -> None:
-        """Envía el último fotograma del espejo si toca (FRAME_FPS como mucho): gana el último."""
-        if self._frame is None or not self._vista_activa() or self.on_frame is None:
-            return
-        now = time.monotonic()
-        if now - self._frame_at < 1 / FRAME_FPS:
-            return
-        img, w, h = self._frame
-        if not w or not h:
-            return
-        self._frame, self._frame_at = None, now
-        page = self._pages.get(self.app)
-        try:
-            self.on_frame({"app": self.app, "w": w, "h": h, "img": img, "mime": "image/jpeg", "vista": "8",
-                           "where": {"url": page.url if page is not None else None}})
-            self.frames_sent += 1
-        except Exception:  # noqa: BLE001 - la consola nunca para al agente
-            pass
 
     # ---- 8 en la ventana y en la vista de 8 (#135, #154) ----
 
@@ -808,28 +827,26 @@ class WebAdapter:
             r = page.evaluate(CALL_JS, [method, args])
         return r
 
-    def _ocho_todos(self, method: str, real: Any, vista: Any = None) -> None:
-        """Lo mismo en la ventana real (con `real`) y en la vista de 8 (con `vista`, o `real`).
-        Solo es pantalla: si falla, sigue todo igual."""
+    def _ocho_todos(self, method: str, real: Any) -> Any:
+        """8 en la ventana real. La vista de 8 no se toca aquí: copia la capa de la ventana real
+        en cada par (_par_tick), así las dos enseñan siempre lo mismo. Solo es pantalla: si
+        falla, sigue todo igual."""
         from playwright.sync_api import Error as PwError
 
         if self.cursor:
             try:
-                self._ocho(self._page(self.app), method, real)
+                return self._ocho(self._page(self.app), method, real)
             except PwError:
                 pass
-        if self._vista_activa():
-            try:
-                self._vista.call(method, real if vista is None else vista)
-            except PwError:
-                pass
+        return None
 
     def note_action(self, a: dict[str, Any]) -> None:
         """Lo que escribió el modelo para la acción que viene (con tokens), antes de perform():
         la vista de 8 enseña eso en el campo, nunca el valor rehidratado."""
         if a.get("op") == "type" and a.get("target") and a.get("text") is not None:
-            self._over[str(a["target"])] = str(a["text"])
-            self._sync_force = True
+            # Entra en la vista de 8 cuando 8 empieza a escribir (perform), no antes: las dos
+            # pantallas enseñan el campo en el mismo punto.
+            self._nota[str(a["target"])] = str(a["text"])
 
     def on_core_event(self, msg: dict[str, Any]) -> None:
         """Canal de eventos del núcleo (en el mismo proceso): la observación de cada snapshot
@@ -908,9 +925,13 @@ class WebAdapter:
                 real = texto
 
         def job() -> None:
+            # El id dice a la vista de 8 qué texto con tokens va en el bocadillo (_estado_espejo).
+            self._n_dicho += 1
+            self._dichos[self._n_dicho] = texto
+            for viejo in [k for k in self._dichos if k < self._n_dicho - 50]:
+                del self._dichos[viejo]
             self._ocho_todos("modo", modo)
-            self._ocho_todos("di", {"texto": real, "eyebrow": eyebrow, "tono": tono, "ms": ms},
-                             {"texto": texto, "eyebrow": eyebrow, "tono": tono, "ms": ms})
+            self._ocho_todos("di", {"texto": real, "eyebrow": eyebrow, "tono": tono, "ms": ms, "id": self._n_dicho})
         self._later(job)
 
     def _later(self, fn: Callable[[], Any]) -> None:
@@ -921,12 +942,12 @@ class WebAdapter:
             self._jobs.put((fn, Future()))
 
     def _cursor(self, page: Any, op: str, target: str | None = None, verb: str | None = None) -> bool:
-        """Lleva el cursor de 8 hasta `target` (o lo recoge con op='done'), en la ventana y en la
-        vista de 8. Solo es pantalla: si algo falla, la acción sigue igual que sin cursor."""
+        """Lleva el cursor de 8 hasta `target` (o lo recoge con op='done') en la ventana real y
+        espera a que llegue capturando pares: la vista de 8 copia la capa en cada uno. Solo es
+        pantalla: si algo falla, la acción sigue igual que sin cursor."""
         from playwright.sync_api import Error as PwError
 
-        vista = self._vista_activa()
-        if not self.cursor and not vista:
+        if not self.cursor:
             return False
         try:
             if target:
@@ -934,31 +955,32 @@ class WebAdapter:
             if op == "done":
                 self._ocho_todos("done", None)
                 return True
-            if vista:  # el espejo al día antes de que su cursor vaya a un elemento suyo
-                self._sync(page, force=True)
-                try:
-                    self._vista.call("go", {"op": op, "ref": target, "verb": verb, "nowait": True,
-                                            "escribe": self._over.get(target or "") if op == "type" else None})
-                except PwError:
-                    pass
-            if not self.cursor:
+            r = self._ocho(page, "go", {"op": op, "ref": target, "verb": verb, "nowait": True})
+            if not r:
                 return False
-            return bool(self._ocho(page, "go", {"op": op, "ref": target, "verb": verb}))
+            dur = (r[2] if isinstance(r, list) and len(r) > 2 else 500) / 1000
+            self._esperar(dur + 0.06)
+            return True
         except PwError:
             return False
 
-    @staticmethod
-    def _type_visible(el: Any, text: str) -> None:
+    def _type_visible(self, el: Any, text: str, target: str | None = None) -> None:
         """Teclea el principio de `text` letra a letra para que se vea escribir. Para en el primer
-        salto de línea (un Enter podría enviar el formulario); fill() pone luego el valor entero."""
+        salto de línea (un Enter podría enviar el formulario); fill() pone luego el valor entero.
+        Entre letra y letra sigue capturando pares; la vista de 8 lleva el token en proporción."""
         from playwright.sync_api import Error as PwError
 
         visible = text.split("\n", 1)[0][:TYPE_VISIBLE]
         if not visible:
             return
+        delay = max(8, min(45, TYPE_BUDGET_MS // len(visible))) / 1000
         try:
             el.fill("")
-            el.press_sequentially(visible, delay=max(8, min(45, TYPE_BUDGET_MS // len(visible))))
+            for i, ch in enumerate(visible, 1):
+                el.press_sequentially(ch)
+                if target is not None:
+                    self._tecleo = (target, i / max(1, len(text)))
+                self._esperar(delay)
         except PwError:
             pass
 

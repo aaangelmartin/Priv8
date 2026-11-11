@@ -200,7 +200,7 @@
     }
     if (tag === 'TEXTAREA') {
       el.textContent = cls === 'rojo' ? 'nunca sale' : (texto ?? '')
-      seguros.add(el.firstChild)
+      if (el.firstChild) seguros.add(el.firstChild)
       el.setAttribute('data-p8-set', '')
       continue
     }
@@ -209,7 +209,7 @@
       op.textContent = cls === 'rojo' ? 'nunca sale' : (texto ?? '')
       op.setAttribute('selected', '')
       el.replaceChildren(op)
-      seguros.add(op.firstChild)
+      if (op.firstChild) seguros.add(op.firstChild)
       continue
     }
     if (texto != null) observado.set(el, norm(texto))
