@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Eight from './eight/Eight.jsx';
 import { useCompanion } from './companion.js';
 
@@ -231,33 +231,18 @@ export default function Companion({ pal, intro }) {
       <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => { if (stage === 'done' && spot.say) say(spot.say, spot.side); }} role="img" aria-label="8, el agente de Priv8">
         <Eight className="companion-eight" mode={mode} look={look} fg={col.fg} cut={col.cut} label="8" />
       </div>
-      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} />
+      <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} light={light} />
     </div>
   );
 }
 
 /* Bocadillo de 8. Se coloca en cada fotograma a partir de dónde está 8 de verdad en pantalla, así que se mueve con él
    y nunca lo toca: a su lado y por encima de los ojos; si no cabe a ningún lado, encima de 8; si arriba está la barra,
-   por debajo. El bocadillo y su cola son un solo trazado SVG, sin juntas, con la base recta hasta la punta. */
-function bubblePath(W, H, R, th) {
-  const k = th / 18, T = 14 * k, y0 = H - th;
-  const p = (x, y) => `${(x * k).toFixed(2)} ${(y0 + y * k).toFixed(2)}`;
-  return `M${T + R} 0 H${T + W - R} A${R} ${R} 0 0 1 ${T + W} ${R} V${H - R} A${R} ${R} 0 0 1 ${T + W - R} ${H} H${(3.2 * k).toFixed(2)} `
-    + `C${p(1, 18)} ${p(0.6, 16.4)} ${p(3.4, 15.4)} C${p(11, 12.6)} ${p(14, 7)} ${p(14, 0)} V${R} A${R} ${R} 0 0 1 ${T + R} 0 Z`;
-}
-
-/* Bocadillo encima de 8: el pico sale de la base, hacia abajo, apuntando a 8. tx es la punta, en px desde la izquierda. */
-function bubblePathDown(W, H, R, tx, th) {
-  const a = Math.max(R + 2, tx - 2), b = Math.min(W - R - 2, tx + 16);
-  return `M${R} 0 H${W - R} A${R} ${R} 0 0 1 ${W} ${R} V${H - R} A${R} ${R} 0 0 1 ${W - R} ${H} H${b} `
-    + `C${b - 6} ${H} ${tx + 2} ${H + th * 0.4} ${tx} ${H + th} C${tx - 0.6} ${H + th * 0.45} ${a + 1} ${H + 1.5} ${a - 4} ${H} `
-    + `H${R} A${R} ${R} 0 0 1 0 ${H - R} V${R} A${R} ${R} 0 0 1 ${R} 0 Z`;
-}
-
-function Bubble({ text, show, big, side, eight }) {
+   por debajo. Es el mismo bocadillo que el de 8 en el chat de la consola: esquinas redondas y la esquina que da a 8
+   más cerrada, sin cola dibujada. */
+function Bubble({ text, show, big, side, eight, light }) {
   const [n, setN] = useState(0);
   const ref = useRef(null);
-  const [size, setSize] = useState({ w: 0, h: 0 });
   const [geo, setGeo] = useState({ left: true, below: false, up: false, tip: 0 });
   useEffect(() => {
     /* al ocultarse no se borra el texto: el bocadillo se va con su frase, no vacío */
@@ -267,13 +252,6 @@ function Bubble({ text, show, big, side, eight }) {
     const t = setInterval(() => { i += 1; setN(i); if (i >= text.length) clearInterval(t); }, 20);
     return () => clearInterval(t);
   }, [text, show]);
-  useLayoutEffect(() => {
-    const el = ref.current; if (!el) return undefined;
-    const measure = () => { const w = el.offsetWidth, h = el.offsetHeight; setSize((o) => (o.w === w && o.h === h ? o : { w, h })); };
-    measure();
-    const ro = new ResizeObserver(measure); ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
   useEffect(() => {
     let raf = 0;
     const place = () => {
@@ -282,19 +260,19 @@ function Bubble({ text, show, big, side, eight }) {
       const r = e8.getBoundingClientRect();
       const D = r.width * 46 / 64, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight, m = 12;
-      const gap = Math.max(14, D * 0.08), T = big ? 23 : 14;
+      const gap = Math.max(14, D * 0.08), T = big ? 10 : 6;
       const navB = (document.querySelector('.nav')?.getBoundingClientRect().bottom || 0) + 10;
       const L = cx - D / 2, R = cx + D / 2, top8 = cy - D * 0.36, bot8 = cy + D * 0.36, eye = cy - D * 0.06;
       const roomR = vw - m - (R + gap + T), roomL = (L - gap - T) - m;
-      el.style.maxWidth = (big ? 'none' : `${Math.max(150, Math.min(260, Math.max(roomR, roomL, vw - 2 * m - T)))}px`);
+      el.style.maxWidth = (big ? 'none' : `${Math.max(150, Math.min(280, Math.max(roomR, roomL, vw - 2 * m - T)))}px`);
       const w = el.offsetWidth, h = el.offsetHeight;
       let left, top, onRight = true, below = false, room = true, up = false;
       if (side === 'left' && roomL >= w) { left = L - gap - T - w; onRight = false; }
       else if (roomR >= w) { left = R + gap + T; onRight = true; }
       else if (roomL >= w) { left = L - gap - T - w; onRight = false; }
       else {
-        /* no cabe al lado: encima de 8, con la cola hacia él */
-        left = clamp(cx - w * 0.3, m, vw - m - w); onRight = true; up = true;
+        /* no cabe al lado: encima de 8, con la esquina cerrada justo sobre él */
+        left = clamp(cx - 14, m, vw - m - w); onRight = true; up = true;
         top = top8 - gap - h;
       }
       if (top === undefined) top = eye - gap - h;
@@ -305,29 +283,18 @@ function Bubble({ text, show, big, side, eight }) {
       const fx = e8.style.position === 'fixed';
       el.style.position = fx ? 'fixed' : 'absolute';
       el.style.left = `${left + (fx ? 0 : window.scrollX)}px`; el.style.top = `${top + (fx ? 0 : window.scrollY)}px`;
-      const tip = Math.round(clamp(cx - left, 26, w - 30));
+      const tip = Math.round(clamp(cx - left, 0, w));
       setGeo((g) => (g.left === onRight && g.below === below && g.up === up && g.tip === tip ? g : { left: onRight, below, up, tip }));
     };
     place();
     return () => cancelAnimationFrame(raf);
   }, [show, big, text, side]);
-  const cls = 'bubble8' + (show ? ' on' : '') + (geo.up ? ' up' : geo.left ? ' l' : '') + (geo.below ? ' below' : '') + (big ? ' big' : '');
-  const R = big ? 28 : 20, th = big ? 30 : 18, T = 14 * th / 18;
-  const flip = `scale(${geo.left ? 1 : -1}, ${geo.below ? -1 : 1})`;
+  /* la esquina cerrada es la que da a 8: abajo a su lado; si va encima, la de abajo más cercana; si va debajo, arriba */
+  const near = geo.up ? (geo.tip <= (ref.current?.offsetWidth || 0) / 2 ? 'l' : 'r') : geo.left ? 'l' : 'r';
+  const corner = (geo.below ? 't' : 'b') + near;
+  const cls = 'bubble8 c-' + corner + (show ? ' on' : '') + (geo.below ? ' below' : '') + (big ? ' big' : '') + (light ? ' light' : '');
   return (
-    <div ref={ref} className={cls} role="status" aria-live="polite" style={geo.up ? { transformOrigin: `${geo.tip}px 100%` } : undefined}>
-      {size.w > 0 && geo.up && (
-        <svg className="shape" width={size.w} height={size.h + th} viewBox={`0 0 ${size.w} ${size.h + th}`}
-          style={{ left: 0, height: size.h + th }} aria-hidden="true">
-          <path d={bubblePathDown(size.w, size.h, Math.min(R, size.h / 2), geo.tip, th)} />
-        </svg>
-      )}
-      {size.w > 0 && !geo.up && (
-        <svg className="shape" width={size.w + T} height={size.h} viewBox={`0 0 ${size.w + T} ${size.h}`}
-          style={{ [geo.left ? 'left' : 'right']: -T, transform: flip }} aria-hidden="true">
-          <path d={bubblePath(size.w, size.h, Math.min(R, size.h / 2), th)} />
-        </svg>
-      )}
+    <div ref={ref} className={cls} role="status" aria-live="polite">
       <span>{text.slice(0, n)}</span><span className="ghost" aria-hidden="true">{text.slice(n)}</span>
     </div>
   );

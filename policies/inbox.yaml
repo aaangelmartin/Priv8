@@ -4,7 +4,8 @@ app: inbox
 source: web
 screens:
   - id: bandeja
-    url_re: /bandeja/?$
+    # "/" también pinta la bandeja de entrada.
+    url_re: '/bandeja/?$|^https?://[^/]+/?$'
     origen: correo
     rules:
       - match: {sel: ".remitente"}

@@ -216,15 +216,23 @@ def pdf_campos(texto: str) -> dict[str, str]:
 
 
 class WebAdapter:
-    """Una pestaña de Chromium por app; open_app cambia la pestaña activa."""
+    """Una pestaña de Chromium por app; open_app cambia la pestaña activa.
+
+    `known(snapshot) -> bool` dice si una pantalla tiene política (mount_web pasa la del
+    núcleo). Con él, back, open_app y recover() nunca dejan al agente en una página que
+    no sale: lo llevan a la pantalla de inicio de la app. Sin él basta con que la página
+    sea del origen de la app y tenga elementos data-p8.
+    """
 
     source = "web"
 
     def __init__(self, apps: dict[str, str] | None = None, start: str = "inbox", *,
                  headless: bool = False, on_call: Callable[[str], bool] | None = None,
                  timeout_ms: int = 5000, slow_mo_ms: int = 0, profile: str | Path | None = None,
-                 cursor: bool | None = None) -> None:
+                 cursor: bool | None = None, known: Callable[[dict[str, Any]], bool] | None = None) -> None:
         self.apps = dict(apps or APPS)
+        self.start = start
+        self.known = known
         # Con ventana, la persona ve a 8 mover el cursor; sin ventana (tests) no hace falta.
         self.cursor = cursor_enabled(not headless) if cursor is None else cursor
         self._cursor_pos: dict[str, tuple[int, int]] = {}
@@ -384,11 +392,17 @@ class WebAdapter:
                 if key is None:
                     return {"ok": False, "error": "target_no_encontrado"}
                 self.app = key
+                if not self._usable(key):  # funciona desde cualquier página, también una muerta
+                    self._go_home(key)
                 self._page(key).bring_to_front()
                 return {"ok": True}
             page = self._page(self.app)
             if op == "back":
+                # Nunca fuera de la app: si atrás sale de su origen o cae en una página que no
+                # sale (p. ej. la pestaña en blanco del principio), a su pantalla de inicio.
                 page.go_back()
+                if not self._usable(self.app):
+                    self._go_home(self.app)
                 return {"ok": True}
             if op == "key":
                 page.keyboard.press(text)
@@ -544,6 +558,57 @@ class WebAdapter:
             el.press_sequentially(visible, delay=max(8, min(45, TYPE_BUDGET_MS // len(visible))))
         except PwError:
             pass
+
+    # ---- pantallas conocidas ----
+
+    def _usable(self, app: str) -> bool:
+        """La pestaña de `app` está en una pantalla de la app que sale al agente: su origen,
+        con elementos data-p8 y, si hay `known`, con política."""
+        page = self._page(app)
+        if urlparse(page.url).netloc != urlparse(self.apps[app]).netloc:
+            return False
+        try:
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_selector("[data-p8]", timeout=min(self._timeout, 2000))
+        except Exception:  # noqa: BLE001  sin elementos marcados
+            return False
+        if self.known is None:
+            return True
+        # Mismo recorrido que snapshot(), sin contar seq: los ids del DOM no cambian.
+        elements = page.evaluate(_SNAPSHOT_JS)["elements"]
+        return bool(elements) and bool(self.known({"source": "web", "app": app, "screen": None,
+                                                   "url": page.url, "elements": elements}))
+
+    def _go_home(self, app: str) -> None:
+        """Pantalla de inicio de `app`. La sesión de Alba Core vive en el almacenamiento de la
+        app, así que navegar no la cierra."""
+        page = self._page(app)
+        page.goto(self.apps[app] + HOME.get(app, "/"))
+        try:
+            page.wait_for_selector("[data-p8]", timeout=self._timeout)
+        except Exception:  # noqa: BLE001  la pantalla saldrá como esté
+            pass
+        self._cursor_pos.pop(app, None)
+
+    def recover(self) -> bool:
+        """El núcleo no tiene política para la pantalla: si la pestaña activa no está en una
+        pantalla conocida, a la de inicio de su app. True si la ha movido."""
+        def job() -> bool:
+            if self._usable(self.app):
+                return False
+            self._go_home(self.app)
+            return True
+        return self._call(job)
+
+    def reset_view(self) -> None:
+        """Estado de partida de cada encargo (lo llama el bucle, no es una herramienta del
+        modelo): cada app en su pantalla de inicio y la pestaña de `start` delante."""
+        def job() -> None:
+            for app in self.apps:
+                self._go_home(app)
+            self.app = self.start
+            self._page(self.start).bring_to_front()
+        self._call(job)
 
     # ---- utilidades ----
 

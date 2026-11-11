@@ -375,3 +375,98 @@ def test_pantalla_real_solo_mientras_alguien_mira(web, core, monkeypatch):
     time.sleep(0.6)
     assert len(seen) == n  # sin nadie mirando no hay fotogramas
     assert recorded and all("img" not in json.dumps(ev) for ev in recorded)
+
+
+# ---------------------------------------------------------------- pantallas conocidas (#148)
+
+@pytest.fixture(scope="module")
+def web_known(servers):
+    """Como en mount_web: el adaptador sabe qué pantallas tienen política."""
+    import core as c
+    from adapters.web import WebAdapter
+
+    w = WebAdapter(start="inbox", headless=True,
+                   known=lambda raw: c.policies().screen_for(raw) is not None)
+    w.goto("inbox", "/reset")
+    w.goto("alba-core", "/reset")
+    _login(w)
+    yield w
+    w.close()
+
+
+def _dead(w, app):
+    """La pestaña de `app` en una página sin nada de la app, como tras un back de más."""
+    w.app = app
+    w._call(lambda: w._page(app).goto("about:blank"))
+
+
+def _path(w, app):
+    return urlparse(w._call(lambda: w._page(app).url)).path
+
+
+def test_back_nunca_sale_de_la_app(web_known):
+    _dead(web_known, "inbox")
+    web_known.goto("inbox", "/bandeja")  # el historial empieza en about:blank, como en la demo
+    for _ in range(3):  # back de más: dos en el mismo turno, o más
+        assert web_known.perform({"op": "back"}) == {"ok": True}
+        snap = web_known.snapshot()
+        assert urlparse(snap["url"]).netloc == urlparse(_URLS["inbox"]).netloc, snap["url"]
+        assert ".remitente" in by_sel(snap)
+
+
+def test_back_sin_politica_va_al_inicio(web_known):
+    web_known.goto("inbox", "/enviados")  # pantalla de la app sin política
+    web_known.goto("inbox", "/correo/9")
+    assert web_known.perform({"op": "back"}) == {"ok": True}
+    assert _path(web_known, "inbox") == "/bandeja"
+    web_known.goto("inbox", "/bandeja")
+    web_known.goto("inbox", "/correo/9")
+    assert web_known.perform({"op": "back"}) == {"ok": True}  # atrás normal: se queda donde toca
+    assert _path(web_known, "inbox") == "/bandeja"
+
+
+def test_back_sin_known_tampoco_sale(web):
+    _dead(web, "inbox")
+    web.goto("inbox", "/bandeja")
+    assert web.perform({"op": "back"}) == {"ok": True}
+    assert urlparse(web.snapshot()["url"]).netloc == urlparse(_URLS["inbox"]).netloc
+
+
+def test_open_app_desde_una_pagina_muerta(web_known):
+    _dead(web_known, "alba-core")
+    _dead(web_known, "inbox")
+    assert web_known.perform({"op": "open_app", "text": "alba-core"}) == {"ok": True}
+    assert _path(web_known, "alba-core") == "/facturas/alta"  # con la sesión: no pide la clave
+    # Cambiar de app no pierde el estado de una pantalla viva.
+    web_known.goto("inbox", "/correo/9")
+    assert web_known.perform({"op": "open_app", "text": "alba-core"}) == {"ok": True}
+    assert web_known.perform({"op": "open_app", "text": "correo"}) == {"ok": True}
+    assert _path(web_known, "inbox") == "/correo/9"
+
+
+def test_recover_y_reset_view(web_known):
+    web_known.goto("inbox", "/enviados")
+    assert web_known.recover() is True
+    assert _path(web_known, "inbox") == "/bandeja"
+    assert web_known.recover() is False  # ya en una pantalla conocida: no se mueve
+
+    web_known.goto("alba-core", "/proveedores/7")
+    _dead(web_known, "inbox")
+    web_known.reset_view()
+    assert web_known.app == "inbox"
+    assert _path(web_known, "inbox") == "/bandeja"
+    assert _path(web_known, "alba-core") == "/facturas/alta"
+    assert web_known.logged_in("alba-core")  # la sesión de Alba Core sigue abierta
+
+
+def test_observe_con_el_nucleo_se_recupera(web_known):
+    import core as c
+
+    c = importlib.reload(c)
+    c.connect("b2b", web_known)
+    _dead(web_known, "inbox")
+    obs = c.observe("b2b")
+    assert obs.get("screen") == "bandeja", obs
+    # Tras un sin_regla sin salida, open_app sigue funcionando.
+    assert c.act("b2b", "open_app", text="alba-core") == {"ok": True}
+    assert c.observe("b2b")["screen"] == "factura.alta"
