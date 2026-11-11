@@ -13,9 +13,9 @@ def lc():
     store = VaultStore()
     v = store.get("s1")
     v.tokenize("IBAN", "ES43 9100 0001 5740 1234 5678", "propio")
-    v.tokenize("PERSONA", "Lucía Ferrer", "titular")
+    v.tokenize("PERSONA", "Ángel Martín", "titular")
     v.tokenize("IMPORTE", "3.412,58 €", rasgo_signo=True)
-    return LeakCheck(store, known=[("PERSONA", "Marta Ruiz Gil")])
+    return LeakCheck(store, known=[("PERSONA", "Marco Barroso")])
 
 
 def claude_request(text):
@@ -30,9 +30,9 @@ def test_solo_tokens_sale(lc):
 @pytest.mark.parametrize("leak, finding", [
     ("Tu cuenta ES43 9100 0001 5740 1234 5678", "IBAN"),
     (f"iban {IBAN.lower()}", "boveda:IBAN"),
-    ("Hola Lucía Ferrer", "boveda:PERSONA"),
-    ("hola lucía ferrer", "boveda:PERSONA"),
-    ("paga a Marta Ruiz Gil", "boveda:PERSONA"),
+    ("Hola Ángel Martín", "boveda:PERSONA"),
+    ("hola ángel martín", "boveda:PERSONA"),
+    ("paga a Marco Barroso", "boveda:PERSONA"),
     ("tienes 3.412,58 €", "IMPORTE"),
     ("código 482913", "rojo"),
     ("4111 1111 1111 1111", "rojo"),
@@ -46,7 +46,7 @@ def test_valor_de_seed_inyectado_no_sale(lc, leak, finding):
 
 
 def test_escapes_json_no_esconden_el_dato(lc):
-    payload = json.dumps({"content": "Hola Lucía Ferrer"}, ensure_ascii=True)
+    payload = json.dumps({"content": "Hola Ángel Martín"}, ensure_ascii=True)
     assert "\\u00ed" in payload
     assert lc.check(payload)["allowed"] is False
 
@@ -57,7 +57,7 @@ def test_token_falso_no_tapa_un_dato(lc):
 
 
 def test_payload_no_texto_y_errores_fallan_cerrado(lc):
-    assert lc.check({"content": "Lucía Ferrer"})["allowed"] is False
+    assert lc.check({"content": "Ángel Martín"})["allowed"] is False
 
     class Rara:
         def __str__(self):

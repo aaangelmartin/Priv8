@@ -10,7 +10,7 @@ manda dictation_start por el canal de eventos y el núcleo:
 
 El audio no sale nunca del portátil: no hay reconocedor en la nube. Lo único que
 baja de internet es el modelo, una vez, a la caché local de Hugging Face. Lo oído
-no se escribe en los logs: puede llevar datos («pasa 200 € a Marta»).
+no se escribe en los logs: puede llevar datos («pasa 200 € a Marco»).
 
 Dependencias opcionales (make dictado-install): faster-whisper y sounddevice.
 Sin ellas el resto del repositorio funciona y dictate() responde no_disponible.

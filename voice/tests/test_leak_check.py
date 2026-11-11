@@ -55,7 +55,7 @@ def test_sensitive_patterns_are_found(text, kind):
     "Nos vemos mañana",
 ])
 def test_data_free_sentences_pass(text):
-    assert PatternLeakCheck(known_values=["Ana", "Lucía Ferrer"]).check(text) == []
+    assert PatternLeakCheck(known_values=["Ana", "Ángel Martín"]).check(text) == []
 
 
 def test_invalid_checksums_are_not_reported_as_ids():
@@ -64,8 +64,8 @@ def test_invalid_checksums_are_not_reported_as_ids():
 
 
 def test_known_vault_values_ignore_case_accents_and_separators():
-    check = PatternLeakCheck(known_values=["Lucía Ferrer", "Nimbo Bróker", IBAN])
-    assert {f.kind for f in check.check("Hola, lucia FERRER.")} == {"vault"}
+    check = PatternLeakCheck(known_values=["Ángel Martín", "Nimbo Bróker", IBAN])
+    assert {f.kind for f in check.check("Hola, angel MARTÍN.")} == {"vault"}
     assert {f.kind for f in check.check("a tu cuenta de Nimbo Broker")} == {"vault"}
     assert "vault" in {f.kind for f in check.check("cuenta es912100041845020005 1332")}
 

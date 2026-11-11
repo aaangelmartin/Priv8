@@ -295,7 +295,7 @@ def test_enviar_queda_retenido(core, bank):
     assert phone.performed == []
     req = [m for m in seen if m.get("type") == "confirm_request"][-1]
     assert req["kind"] == "transferir"
-    assert "Lucía" not in json.dumps(obs, ensure_ascii=False)
+    assert "Ángel" not in json.dumps(obs, ensure_ascii=False)
     # Cancelar no es crítico: pasa.
     cancelar = next(e["id"] for e in phone.raw["elements"] if e["sel"] == "id/btn_cancelar")
     assert core.act("b", "tap", cancelar) == {"ok": True}

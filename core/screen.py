@@ -68,7 +68,7 @@ def transform_element(el: dict[str, Any], screen: Screen, vault: Vault,
     text = T.neutralize(el["text"]) if el.get("text") else el.get("text")
     out: dict[str, Any] = {"id": el["id"], "role": el["role"]}
 
-    # La etiqueta es interfaz, pero también puede llevar datos ("Ver movimientos de Lucía").
+    # La etiqueta es interfaz, pero también puede llevar datos ("Ver movimientos de Ángel").
     if label:
         label, red = _replace_spans(label, detect(label), vault, screen.origen)
         if red:

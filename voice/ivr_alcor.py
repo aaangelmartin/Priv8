@@ -74,7 +74,7 @@ MENUS: dict[str, dict[str, Any]] = {
         "teclas": {}, "espera": 2, "siguiente": "gestor",
     },
     "gestor": {
-        "texto": "Hola, Javier Sanz al habla, gestor de Banca Alcor. ¿En qué puedo ayudarle?",
+        "texto": "Hola, Álvaro Carpintero al habla, gestor de Banca Alcor. ¿En qué puedo ayudarle?",
         "teclas": {}, "humano": True,
     },
 }
