@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Instalador de Priv8 para Claude Code (#157).
+# Instalador de Priv8 para tu asistente con MCP (#157, #195).
 #
 #   curl -fsSL https://mcp.priv8.es/instalar.sh | bash
 #
@@ -9,11 +9,17 @@
 #   3. Ejecuta `priv8-mcp instalar`: las dependencias de Python con uv en ~/.priv8/mcp/.venv y
 #      Chromium para Playwright en ~/.priv8/mcp/navegadores. Si uv no tiene Python 3.12, lo
 #      descarga a su propia caché.
-#   4. Si `claude` está en el PATH y priv8 no está ya registrado, lo registra en Claude Code para
-#      tu usuario: claude mcp add --scope user priv8 -- ~/.priv8/mcp/priv8-mcp mcp
-#      (PRIV8_NO_REGISTRAR=1 se lo salta). Sin `claude`, imprime esa línea para que la ejecutes tú.
+#   4. Lo registra como servidor MCP local (stdio) para tu usuario en cada asistente con línea de
+#      comandos que encuentre en el PATH, solo si no tiene ya un servidor llamado priv8 (nunca
+#      cambia uno que exista; `codex mcp add` y `gemini mcp add` lo sobrescribirían):
+#        Claude Code  claude mcp add --scope user priv8 -- ~/.priv8/mcp/priv8-mcp mcp
+#        Codex        codex mcp add priv8 -- ~/.priv8/mcp/priv8-mcp mcp
+#        Gemini CLI   gemini mcp add --scope user priv8 ~/.priv8/mcp/priv8-mcp mcp
+#      Para el resto (Grok CLI, Cursor, opencode...) imprime cómo añadirlo y no toca su configuración.
+#      PRIV8_NO_REGISTRAR=1 se salta el registro y solo imprime las líneas.
 # No usa sudo, no toca tu PATH y no pide ninguna clave. Se puede lanzar otra vez: actualiza.
-# Para quitarlo: claude mcp remove priv8 --scope user && rm -rf ~/.priv8/mcp
+# Para quitarlo: quita priv8 de tu asistente (claude mcp remove priv8 --scope user,
+# codex mcp remove priv8, gemini mcp remove --scope user priv8) y rm -rf ~/.priv8/mcp
 #
 # PRIV8_MCP_URL cambia el origen (por ejemplo http://127.0.0.1:5301 para probar en local).
 set -euo pipefail
@@ -26,7 +32,7 @@ fail() { say "$*"; exit 1; }
 
 case "$(uname -s)" in
   Darwin|Linux) ;;
-  *) fail "Priv8 para Claude Code funciona en macOS y Linux." ;;
+  *) fail "Priv8 MCP funciona en macOS y Linux." ;;
 esac
 command -v curl >/dev/null 2>&1 || fail "hace falta curl"
 command -v tar >/dev/null 2>&1 || fail "hace falta tar"
@@ -66,52 +72,86 @@ say "Priv8 $(cat "$DEST/VERSION") en $DEST"
 
 PRIV8_SIN_COMANDO=1 "$DEST/priv8-mcp" instalar
 
-# Registro en Claude Code, para tu usuario (vale en cualquier carpeta).
+# Registro en los asistentes que haya, para tu usuario (vale en cualquier carpeta).
 LAUNCHER="$DEST/priv8-mcp"
-ADD=(claude mcp add --scope user priv8 -- "$LAUNCHER" mcp)
 line() { printf '%q ' "$@"; }
-# `claude mcp get` comprueba el servidor arrancándolo (y con él Chromium): se lee la configuración.
+# Se lee la configuración de cada asistente en lugar de preguntarle: `claude mcp get` arranca el
+# servidor (y con él Chromium), y `codex mcp add` y `gemini mcp add` sobrescriben sin avisar.
+# Imprime no (no hay priv8), ours (es este), other (hay otro priv8) o unknown (no se pudo leer).
 registered() {
-  "$DEST/.venv/bin/python" -I - "$LAUNCHER" <<'PY'
+  "$DEST/.venv/bin/python" -I - "$1" "$LAUNCHER" <<'PY'
 import json, os, sys
-d = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~")
+kind, launcher = sys.argv[1], sys.argv[2]
+home = os.path.expanduser("~")
+paths = {
+    "claude": os.path.join(os.environ.get("CLAUDE_CONFIG_DIR") or home, ".claude.json"),
+    "codex": os.path.join(os.environ.get("CODEX_HOME") or os.path.join(home, ".codex"), "config.toml"),
+    "gemini": os.path.join(home, ".gemini", "settings.json"),
+}
 try:
-    cfg = json.load(open(os.path.join(d, ".claude.json"), encoding="utf-8"))
+    p = paths[kind]
+    if not os.path.exists(p):
+        print("no"); sys.exit()
+    if kind == "codex":
+        import tomllib
+        with open(p, "rb") as f:
+            servers = tomllib.load(f).get("mcp_servers") or {}
+    else:
+        with open(p, encoding="utf-8") as f:
+            servers = json.load(f).get("mcpServers") or {}
+    s = servers.get("priv8")
+    print("no" if not s else "ours" if isinstance(s, dict) and s.get("command") == launcher else "other")
 except Exception:
-    print("no"); sys.exit()
-s = (cfg.get("mcpServers") or {}).get("priv8")
-print("no" if not s else "ours" if s.get("command") == sys.argv[1] else "other")
+    print("unknown")
 PY
 }
-if [ "${PRIV8_NO_REGISTRAR:-0}" = 1 ]; then
-  reg=omitido
-elif ! command -v claude >/dev/null 2>&1; then
-  reg=sin_claude
-else
-  case "$(registered)" in
-    ours) reg=ya ;;
-    other) reg=otro ;;
-    *) if "${ADD[@]}" >/dev/null 2>&1; then reg=hecho; else reg=fallo; fi ;;
+
+ASIS=(claude codex gemini)
+nombre() { case "$1" in claude) echo "Claude Code" ;; codex) echo "Codex" ;; gemini) echo "Gemini CLI" ;; esac; }
+add_cmd() {
+  case "$1" in
+    claude) ADD=(claude mcp add --scope user priv8 -- "$LAUNCHER" mcp); RM="claude mcp remove priv8 --scope user" ;;
+    codex) ADD=(codex mcp add priv8 -- "$LAUNCHER" mcp); RM="codex mcp remove priv8" ;;
+    gemini) ADD=(gemini mcp add --scope user priv8 "$LAUNCHER" mcp); RM="gemini mcp remove --scope user priv8" ;;
   esac
-fi
+}
 
 echo >&2
-case "$reg" in
-  hecho) say "registrado en Claude Code para tu usuario: $(line "${ADD[@]}")"
-         say "para deshacerlo: claude mcp remove priv8 --scope user" ;;
-  ya) say "Priv8 ya estaba registrado en Claude Code: no se ha tocado" ;;
-  otro) say "ya tienes otro servidor MCP llamado priv8 y no se ha cambiado. Para usar este:"
-        say "  claude mcp remove priv8 --scope user && $(line "${ADD[@]}")" ;;
-  fallo) say "no se pudo registrar en Claude Code. Ejecuta tú: $(line "${ADD[@]}")" ;;
-  sin_claude) say "no encuentro Claude Code (claude). Cuando lo tengas, ejecuta: $(line "${ADD[@]}")" ;;
-  omitido) say "sin registrar (PRIV8_NO_REGISTRAR=1). Para hacerlo: $(line "${ADD[@]}")" ;;
-esac
+hechos=0
+for a in "${ASIS[@]}"; do
+  add_cmd "$a"
+  n="$(nombre "$a")"
+  if [ "${PRIV8_NO_REGISTRAR:-0}" = 1 ]; then
+    say "$n: sin registrar (PRIV8_NO_REGISTRAR=1). Para hacerlo: $(line "${ADD[@]}")"
+    continue
+  fi
+  command -v "$a" >/dev/null 2>&1 || continue
+  case "$(registered "$a")" in
+    ours) say "$n: Priv8 ya estaba registrado, no se ha tocado"; hechos=$((hechos + 1)) ;;
+    other) say "$n: ya tienes otro servidor MCP llamado priv8 y no se ha cambiado. Para usar este:"
+           say "  $RM && $(line "${ADD[@]}")" ;;
+    unknown) say "$n: no he podido leer su configuración y no la toco. Para registrarlo: $(line "${ADD[@]}")" ;;
+    *) if "${ADD[@]}" </dev/null >/dev/null 2>&1; then
+         say "$n: registrado para tu usuario: $(line "${ADD[@]}")"
+         say "  para deshacerlo: $RM"
+         hechos=$((hechos + 1))
+       else
+         say "$n: no se pudo registrar. Ejecuta tú: $(line "${ADD[@]}")"
+       fi ;;
+  esac
+done
+if [ "$hechos" = 0 ] && [ "${PRIV8_NO_REGISTRAR:-0}" != 1 ]; then
+  say "no he registrado Priv8 en ningún asistente con línea de comandos. Para hacerlo a mano:"
+  for a in "${ASIS[@]}"; do add_cmd "$a"; say "  $(nombre "$a"): $(line "${ADD[@]}")"; done
+fi
+say "En Grok CLI, Cursor, opencode o cualquier otro asistente MCP, añade un servidor local (stdio)"
+say "llamado priv8 con el comando $LAUNCHER y el argumento mcp. Cómo, en cada uno: https://mcp.priv8.es/#pasos"
 cat >&2 <<EOF
 
-Listo. Abre Claude Code en cualquier carpeta (claude) y pídele:
+Listo. Abre tu asistente en cualquier carpeta y pídele:
 
   Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen
 
 Se abren Chromium con el cursor de 8 y la consola de Priv8 en tu navegador: lo que haya
-que aprobar te espera ahí. Para quitarlo todo: claude mcp remove priv8 --scope user && rm -rf $DEST
+que aprobar te espera ahí. Para quitarlo todo: quita priv8 de tu asistente y rm -rf $DEST
 EOF
