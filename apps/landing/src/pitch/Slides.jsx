@@ -69,10 +69,13 @@ function useIntro(active, printing) {
     return !introHecha && active && !printing && !still ? 'hola' : 'fin';
   });
   const [look, setLook] = useState(null);
+  const [saluda, setSaluda] = useState(true);
   useEffect(() => {
     if (fase !== 'hola') return undefined;
     introHecha = true;
     const t = [
+      /* saluda (abre los ojos y da el saltito) y pasa a mirar para poder mirar a los lados */
+      setTimeout(() => setSaluda(false), 760),
       setTimeout(() => setLook([-0.95, 0.05, -6]), 800),
       setTimeout(() => setLook([0.95, 0.05, 6]), 1550),
       setTimeout(() => setLook(null), 2250),
@@ -81,12 +84,12 @@ function useIntro(active, printing) {
     ];
     return () => t.forEach(clearTimeout);
   }, []);
-  return [fase, look];
+  return [fase, look, saluda];
 }
 
 function Portada() {
   const { active, printing } = useContext(SlideCtx);
-  const [fase, look] = useIntro(active, printing);
+  const [fase, look, saluda] = useIntro(active, printing);
   const [conIntro] = useState(fase !== 'fin');
   const caja = useRef(null);
   /* cuánto hay que mover y agrandar a 8 para que salga del centro de la diapositiva */
@@ -110,7 +113,7 @@ function Portada() {
       <div className="top"><span className="brand">Priv8</span><span>priv8.es</span></div>
       {fase === 'hola' && <p className="hola" aria-hidden="true">¡Hola, soy 8!</p>}
       <div className="center">
-        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" look={look} mode={fase === 'hola' ? 'saludar' : 'mirar'} />
+        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" look={look} mode={fase === 'hola' && saluda ? 'saludar' : 'mirar'} />
         <R d={1} as="h1"><span className="line">8 hace el trámite.</span><span className="line soft">Sin ver tus datos.</span></R>
         <R d={3} as="p" className="who">Ángel Martín, Álvaro Carpintero, Marco Barroso y Pablo Rojo</R>
         <R d={4} as="p" className="event">Hackfinance | Madrid Engineering Week | 12 nov 2026</R>
