@@ -1,7 +1,7 @@
 import { LOGOS } from './logos.js';
 import { useEffect, useRef, useState } from 'react';
 import { Spot } from './Story.jsx';
-import { useSeen } from './Sections.jsx';
+import { useSeen, V } from './Sections.jsx';
 
 const Tok = ({ children, never }) => <span className={'tok' + (never ? ' tok-never' : '')}>{children}</span>;
 
@@ -9,16 +9,41 @@ const Tok = ({ children, never }) => <span className={'tok' + (never ? ' tok-nev
 /* Un mapa con dos zonas y una frontera: tu máquina, donde viven los datos, y el proveedor del modelo, que solo ve
    tokens. Las ocho piezas del protocolo están en su sitio del mapa; se iluminan una a una (solas o al pulsarlas)
    y al lado se explica cada una con su ejemplo. */
+/* Cada pieza enseña lo que hace con una escena corta propia, cuando su tarjeta entra en pantalla. */
+function useLater(on, ms) {
+  const [v, setV] = useState(false);
+  useEffect(() => { if (!on) return undefined; const t = setTimeout(() => setV(true), ms); return () => clearTimeout(t); }, [on, ms]);
+  return v;
+}
 const PIECES = [
-  { k: 'detector', h: 'Tres clases de dato', t: 'Al leer la pantalla, cada dato se clasifica. Claves, PIN y códigos nunca salen. IBAN, nombres e importes se tokenizan. La interfaz va libre.', v: <><Tok never>nunca sale</Tok><Tok>se tokeniza</Tok><span className="free">libre</span></> },
-  { k: 'vault', h: 'Tokens con tipo', t: 'Cada dato se cambia por un token estable en toda la sesión, con su tipo y una pista útil. La tabla token → valor vive solo en tu máquina.', v: <><Tok>‹IBAN_1·propio›</Tok><Tok>‹IMPORTE_3·positivo›</Tok></> },
-  { k: 'gate', h: 'Bloqueo final', t: 'Antes de salir, cada petición se revisa. Si un IBAN, un DNI o una tarjeta se escapa sin tokenizar, la petición no sale.', v: <span className="oq">petición retenida: IBAN válido detectado</span> },
-  { k: 'oracle', h: 'Oráculo con límite', t: 'El modelo puede preguntar «¿cubre 200 €?» y recibir «sí» o «no», sin la cifra. Con un máximo de preguntas para que no la adivine.', v: <span className="oq">¿cubre 200 €? <b>sí</b> · quedan 4</span> },
-  { k: 'exec', h: 'Ejecutor local', t: 'El modelo escribe tokens. El ejecutor, en tu máquina, pone el valor real en la pantalla justo antes de pulsar.', v: <span className="oq"><Tok>‹IBAN_2›</Tok> → ES08 9300 …</span> },
-  { k: 'prov', h: 'Procedencia', t: 'Cada dato recuerda de dónde viene. Uno que llega por correo o por chat no puede entrar en un campo de pago.', v: <span className="oq">dato del correo → campo de pago: <b>no</b></span> },
-  { k: 'yes', h: 'Tu «sí»', t: 'Transferir, invertir, firmar o enviar espera a una persona. La autenticación del banco la hace siempre ella.', v: <span className="btns"><i>Cancelar</i><i className="yes">Confirmar</i></span> },
-  { k: 'log', h: 'Registro firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, encadenado y firmado para auditoría.', v: <span className="oq">09:12:31 aprobado por una persona · firmado</span> },
+  { k: 'detector', h: 'Tres clases de dato', t: 'Al leer la pantalla, cada dato se clasifica. Claves, PIN y códigos nunca salen. IBAN, nombres e importes se tokenizan. La interfaz va libre.',
+    v: (go) => <><Tok never><V real="PIN 4821" tok="nunca sale" on={go} /></Tok><Tok><V real="ES43 9100 …" tok="se tokeniza" on={go} i={6} /></Tok><span className="free"><V real="Transferir" tok="libre" on={go} i={12} /></span></> },
+  { k: 'vault', h: 'Tokens con tipo', t: 'Cada dato se cambia por un token estable en toda la sesión, con su tipo y una pista útil. La tabla token → valor vive solo en tu máquina.',
+    v: (go) => <><Tok><V real="ES43 9100 0001 57…" tok="‹IBAN_1·propio›" on={go} /></Tok><Tok><V real="3.412,58 €" tok="‹IMPORTE_3·positivo›" on={go} i={8} /></Tok></> },
+  { k: 'gate', h: 'Bloqueo final', t: 'Antes de salir, cada petición se revisa. Si un IBAN, un DNI o una tarjeta se escapa sin tokenizar, la petición no sale.',
+    v: (go) => <span className={'oq gate-v' + (go ? ' hit' : '')}><span className="gate-req">petición → ES71 9400 0007 …</span><b className="gate-stamp">retenida</b></span> },
+  { k: 'oracle', h: 'Oráculo con límite', t: 'El modelo puede preguntar «¿cubre 200 €?» y recibir «sí» o «no», sin la cifra. Con un máximo de preguntas para que no la adivine.',
+    v: (go) => <span className={'oq oracle-v' + (go ? ' hit' : '')}>¿cubre 200 €? <b className="ans">sí</b> · quedan <V real="5" tok="4" on={go} /></span> },
+  { k: 'exec', h: 'Ejecutor local', t: 'El modelo escribe tokens. El ejecutor, en tu máquina, pone el valor real en la pantalla justo antes de pulsar.',
+    v: (go) => <span className="oq">campo destino: <b><V real="‹IBAN_2›" tok="ES08 9300 …" on={go} /></b></span> },
+  { k: 'prov', h: 'Procedencia', t: 'Cada dato recuerda de dónde viene. Uno que llega por correo o por chat no puede entrar en un campo de pago.',
+    v: (go) => <span className={'oq prov-v' + (go ? ' hit' : '')}>dato del correo → campo de pago: <b className="prov-no">no</b></span> },
+  { k: 'yes', h: 'Tu «sí»', t: 'Transferir, invertir, firmar o enviar espera a una persona. La autenticación del banco la hace siempre ella.',
+    v: (go) => <span className={'btns yes-v' + (go ? ' hit' : '')}><i>Cancelar</i><i className="yes"><span className="y0">Confirmar</span><span className="y1">Confirmado</span></i></span> },
+  { k: 'log', h: 'Registro firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, encadenado y firmado para auditoría.',
+    v: (go) => <span className={'oq log-v' + (go ? ' hit' : '')}>09:12:31 aprobado · <V real="········" tok="3f9a·c2e1" on={go} /> <b className="signed">firmado</b></span> },
 ];
+function Piece({ p, k }) {
+  const [ref, seen] = useSeen(0.6);
+  const go = useLater(seen, 350 + (k % 4) * 140);
+  return (
+    <article className={'gp' + (seen ? ' in' : '')} ref={ref} style={{ '--d': k }}>
+      <div className="gp-v">{p.v(go)}</div>
+      <h3>{p.h}</h3>
+      <p>{p.t}</p>
+    </article>
+  );
+}
 const MODELS = ['Claude', 'ChatGPT', 'Grok', 'Gemini', 'Mistral', 'Llama'];
 
 /* El recorrido de un dato: entra por la pantalla, se tokeniza, cruza la frontera como token, el modelo decide y la
@@ -37,7 +62,7 @@ const NODES = {
    en horizontal y el proveedor del modelo abajo. */
 const NODES_M = {
   screen: { x: 27, y: 18 }, detect: { x: 27, y: 33 }, vault: { x: 27, y: 48 },
-  gate: { x: 50, y: 65 }, model: { x: 50, y: 87 },
+  gate: { x: 50, y: 63 }, model: { x: 50, y: 82 },
   exec: { x: 73, y: 48 }, yes: { x: 73, y: 33 }, log: { x: 73, y: 18 },
 };
 function useNarrow(q = '(max-width: 760px)') {
@@ -87,7 +112,7 @@ export function HowArch() {
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {narrow
-              ? <><path d="M27 18 V48 L50 65 V87" /><path d="M50 87 V65 L73 48 V18" /></>
+              ? <><path d="M27 18 V48 L50 63 V82" /><path d="M50 82 V63 L73 48 V18" /></>
               : <><path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" /></>}
           </svg>
           {Object.keys(NODES).map((k) => [k, at(k)]).map(([k, v]) => (
@@ -120,13 +145,7 @@ export function Guarantees() {
           <h2 id="h-guar">Ocho piezas. <span className="soft">Ninguna depende de que el modelo obedezca.</span></h2>
         </div>
         <div className="guar-grid">
-          {PIECES.map((p, k) => (
-            <article className="gp" key={p.h} style={{ '--d': k }}>
-              <div className="gp-v">{p.v}</div>
-              <h3>{p.h}</h3>
-              <p>{p.t}</p>
-            </article>
-          ))}
+          {PIECES.map((p, k) => <Piece key={p.k} p={p} k={k} />)}
         </div>
         <p className="more-row"><a className="more" href="garantias/">Las ocho piezas en detalle</a></p>
       </div>
@@ -152,9 +171,15 @@ export function Developers() {
           </ul>
           <a className="more" href="integracion/">Guía de integración</a>
         </div>
-        <div className="code" aria-label="Ejemplo de llamada">
-          <div className="code-bar"><i /><i /><i /><span>observe → act</span></div>
-          <pre>{`> observe()
+        <Terminal />
+      </div>
+    </section>
+  );
+}
+
+/* La sesión con el agente se escribe sola al entrar en pantalla: las órdenes letra a letra, las respuestas de golpe.
+   Todas las líneas ocupan su sitio desde el principio, así nada salta. */
+const SESSION = `> observe()
 {
   "pantalla": "Banca Alcor · transferir",
   "campos": [
@@ -168,10 +193,40 @@ export function Developers() {
 { "respuesta": "sí", "quedan": 4 }
 
 > act("transferir", { "destino": "‹IBAN_2›" })
-{ "estado": "espera confirmación humana" }`}</pre>
-        </div>
-      </div>
-    </section>
+{ "estado": "espera confirmación humana" }`.split('\n');
+function Terminal() {
+  const [ref, seen] = useSeen(0.4);
+  const [pos, setPos] = useState({ line: 0, ch: 0 });
+  useEffect(() => {
+    if (!seen) return undefined;
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* nada */ }
+    if (still) { setPos({ line: SESSION.length, ch: 0 }); return undefined; }
+    let line = 0, ch = 0, t = 0;
+    const tick = () => {
+      const l = SESSION[line];
+      if (l === undefined) return;
+      if (l.startsWith('>') && ch < l.length) { ch += 1; setPos({ line, ch }); t = setTimeout(tick, 26); return; }
+      line += 1; ch = 0; setPos({ line, ch });
+      const next = SESSION[line];
+      t = setTimeout(tick, next && next.startsWith('>') ? 520 : next === '' ? 80 : 70);
+    };
+    t = setTimeout(tick, 300);
+    return () => clearTimeout(t);
+  }, [seen]);
+  return (
+    <div className="code" aria-label="Ejemplo de llamada" ref={ref}>
+      <div className="code-bar"><i /><i /><i /><span>observe → act</span></div>
+      <pre>{SESSION.map((l, k) => {
+        const shown = k < pos.line ? l : k === pos.line ? l.slice(0, pos.ch) : '';
+        return (
+          <span key={k} className="cl">
+            <span className="cl-ghost" aria-hidden="true">{l || ' '}</span>
+            <span className="cl-on">{shown}{k === pos.line && pos.line < SESSION.length ? <i className="caret" /> : null}</span>
+          </span>
+        );
+      })}</pre>
+    </div>
   );
 }
 
@@ -185,8 +240,9 @@ const ROWS = [
 ];
 const Mark = ({ v }) => (v === 1 ? <span className="mk yes" aria-label="sí">✓</span> : v === 0 ? <span className="mk no" aria-label="no">✕</span> : <span className="mk half" aria-label="en parte">/</span>);
 export function Compare() {
+  const [ref, seen] = useSeen(0.35);
   return (
-    <section id="comparar" className="block block-cobalt compare" aria-labelledby="h-cmp">
+    <section id="comparar" className={'block block-cobalt compare' + (seen ? ' seen' : '')} aria-labelledby="h-cmp" ref={ref}>
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="curiosidad" say="Faltaba esta pieza." />
@@ -195,10 +251,10 @@ export function Compare() {
         </div>
         <div className="cmp" role="table" aria-label="Comparativa">
           <div className="cmp-r cmp-h" role="row"><span role="columnheader" />{COLS.map((c) => <span role="columnheader" key={c}>{c}</span>)}</div>
-          {ROWS.map(([name, vals]) => (
-            <div className={'cmp-r' + (name === 'Priv8' ? ' me' : '')} role="row" key={name}>
+          {ROWS.map(([name, vals], r) => (
+            <div className={'cmp-r' + (name === 'Priv8' ? ' me' : '')} role="row" key={name} style={{ '--r': r }}>
               <span role="rowheader">{name}</span>
-              {vals.map((v, i) => <span role="cell" key={i} data-label={COLS[i]}><Mark v={v} /></span>)}
+              {vals.map((v, i) => <span role="cell" key={i} data-label={COLS[i]} style={{ '--c': i }}><Mark v={v} /></span>)}
             </div>
           ))}
         </div>
@@ -215,8 +271,9 @@ const LAWS = [
   ['AI Act', 'Supervisión humana y trazabilidad', 'Lo irreversible espera a una persona y cada paso queda en un registro firmado.'],
 ];
 export function Compliance() {
+  const [ref, seen] = useSeen(0.3);
   return (
-    <section id="cumplimiento" className="block block-cobalt laws" aria-labelledby="h-laws">
+    <section id="cumplimiento" className={'block block-cobalt laws' + (seen ? ' seen' : '')} aria-labelledby="h-laws" ref={ref}>
       <div className="wrap">
         <div className="block-head">
           <Spot className="spot-inline" mode="leer" say="Hecho para pasar auditoría." />
@@ -225,7 +282,7 @@ export function Compliance() {
           <p className="lead">Priv8 está diseñado para que tu equipo legal pueda decir que sí.</p>
         </div>
         <div className="laws-grid">
-          {LAWS.map(([k, sub, t]) => (<article key={k} className="law"><h3>{k}</h3><p className="law-sub">{sub}</p><p>{t}</p></article>))}
+          {LAWS.map(([k, sub, t], i) => (<article key={k} className="law" style={{ '--d': i }}><h3><span className="seal">{k}</span></h3><p className="law-sub">{sub}</p><p>{t}</p><p className="law-ok" aria-hidden="true">revisado · en el registro</p></article>))}
         </div>
         <p className="more-row"><a className="more" href="cumplimiento/">Cumplimiento en detalle</a></p>
       </div>

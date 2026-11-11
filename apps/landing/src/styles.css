@@ -1217,7 +1217,7 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .tmap-m .tz-cloud { top: 74%; bottom: 0; display: block; }
   .tmap-m .tz-cloud .models { display: none; }
   .tmap-m .tz span { font-size: .72rem; }
-  .tmap-m .tline { left: 4%; right: 4%; top: 65%; bottom: auto; width: auto; height: 2px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .8) 0 8px, transparent 8px 14px); }
+  .tmap-m .tline { left: 4%; right: 4%; top: 63%; bottom: auto; width: auto; height: 2px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .8) 0 8px, transparent 8px 14px); }
   .tmap-m .tn { min-width: 128px; padding: 10px 12px; }
   .tmap-m .tn b { font-size: .86rem; }
   .tmap-m .tn small { display: block; font-size: .66rem; }
@@ -1263,4 +1263,80 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .nf { background: transparent; }
   .nf .field { display: none; }
   .nf::after { background: radial-gradient(ellipse 72% 74% at 50% 52%, var(--band) 52%, rgba(45, 69, 214, 0) 92%); }
+}
+
+/* "Cómo funciona" en móvil: los logos de los modelos también, abajo del recuadro del proveedor */
+@media (max-width: 760px) {
+  .tmap.tmap-m { height: 610px; }
+  .tmap-m .tz-local { bottom: 44%; }
+  .tmap-m .tz-cloud { top: 71%; display: grid; align-content: space-between; padding-bottom: 12px; }
+  .tmap-m .tz-cloud .models { display: flex; gap: 6px; }
+  .tmap-m .tz-cloud .models i { height: 34px; border-radius: 11px; }
+  .tmap-m .tz-cloud .models svg { width: 18px; height: 18px; }
+}
+/* barra azul: todo el texto en blanco, también el nombre de la sección y el menú del móvil */
+.nav.on-white { color: #fff; }
+.nav.on-white .now, .nav.on-white .word, .nav.on-white .nav-menu a { color: #fff; }
+/* móvil: la sombra de la banca cabe entera dentro de la escena, sin cortarse por abajo */
+@media (max-width: 900px) {
+  .bank, .scene-paper .bank { box-shadow: 0 10px 28px rgba(11, 27, 51, .11), 0 0 0 1px rgba(11, 27, 51, .06); }
+  .scene-paper .stage { padding-bottom: 8px; }
+}
+
+/* ================= animaciones propias de cada sección =================
+   Nada de aparecer desde abajo sin más: cada sección hace lo que cuenta. */
+
+/* Garantías: cada tarjeta entra y su pieza actúa (tokeniza, retiene, responde, firma) */
+.guar .gp { opacity: 0; transform: translateY(10px) scale(.985); transition: opacity .5s var(--ease), transform .6s var(--ease); transition-delay: calc(var(--d) % 4 * 70ms); }
+.guar .gp.in { opacity: 1; transform: none; }
+.gp-v .dv3 { display: inline; }
+.gate-v { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.gate-v .gate-req { transition: color .3s ease, text-decoration-color .3s ease; text-decoration: line-through transparent; }
+.gate-v.hit .gate-req { color: #a83228; text-decoration-color: rgba(168, 50, 40, .6); }
+.gate-stamp { color: #c23a2e !important; border: 2px solid #c23a2e; border-radius: 8px; padding: 2px 7px; font: 700 .74rem/1 var(--f-display); letter-spacing: .02em; opacity: 0; transform: rotate(-8deg) scale(1.8); transition: opacity .2s ease, transform .45s cubic-bezier(.34, 1.56, .64, 1); }
+.gate-v.hit .gate-stamp { opacity: 1; transform: rotate(-8deg) scale(1); }
+.oracle-v .ans { display: inline-block; opacity: 0; transform: translateY(4px) scale(.6); transition: opacity .25s ease .25s, transform .45s cubic-bezier(.34, 1.56, .64, 1) .25s; }
+.oracle-v.hit .ans { opacity: 1; transform: none; }
+.prov-v .prov-no { display: inline-block; color: #c23a2e !important; opacity: 0; transform: scale(2); transition: opacity .2s ease .3s, transform .4s cubic-bezier(.34, 1.56, .64, 1) .3s; }
+.prov-v.hit .prov-no { opacity: 1; transform: none; }
+.yes-v i.yes { position: relative; display: inline-grid; animation: none; transition: background .3s ease, transform .2s ease; }
+.yes-v i.yes > span { grid-area: 1 / 1; transition: opacity .25s ease; }
+.yes-v .y1 { opacity: 0; }
+.yes-v.hit i.yes { background: #1f8a5b; animation: press .5s ease .2s both; }
+.yes-v.hit .y0 { opacity: 0; transition-delay: .45s; } .yes-v.hit .y1 { opacity: 1; transition-delay: .45s; }
+@keyframes press { 40% { transform: scale(.9); } 100% { transform: none; } }
+.log-v .signed { display: inline-block; color: #1f8a5b !important; opacity: 0; transform: translateX(-4px); transition: opacity .3s ease .55s, transform .4s var(--ease) .55s; }
+.log-v.hit .signed { opacity: 1; transform: none; }
+
+/* Integración: la sesión se escribe sola */
+.code pre .cl { position: relative; display: block; }
+.code pre .cl-ghost { visibility: hidden; }
+.code pre .cl-on { position: absolute; left: 0; top: 0; white-space: pre; }
+.code .caret { display: inline-block; width: .55em; height: 1.05em; margin-left: 1px; vertical-align: -.15em; background: #8fa2ff; animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+
+/* Comparativa: las filas se marcan una a una y la de Priv8 se sella columna a columna */
+.compare .cmp-r { opacity: 0; transform: translateX(-12px); transition: opacity .45s var(--ease), transform .55s var(--ease); transition-delay: calc(var(--r) * 110ms); }
+.compare.seen .cmp-r { opacity: 1; transform: none; }
+.compare .cmp-r .mk { transform: scale(.4); opacity: 0; transition: transform .4s cubic-bezier(.34, 1.56, .64, 1), opacity .25s ease; transition-delay: calc(var(--r) * 110ms + var(--c) * 70ms + 200ms); }
+.compare.seen .cmp-r .mk { transform: none; opacity: 1; }
+.compare .cmp-r.me .mk { transform: scale(1.9); transition-delay: calc(700ms + var(--c) * 160ms); }
+.compare.seen .cmp-r.me .mk { transform: none; }
+.compare .cmp-r.me { position: relative; overflow: hidden; }
+.compare .cmp-r.me::after { content: ""; position: absolute; top: 0; bottom: 0; width: 30%; left: -30%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent); pointer-events: none; }
+.compare.seen .cmp-r.me::after { animation: sweep 1.1s var(--ease) .6s both; }
+@keyframes sweep { to { left: 110%; } }
+
+/* Cumplimiento: cada norma se sella como en una auditoría y queda anotada */
+.law .seal { display: inline-block; padding: 4px 10px; border: 2.5px solid currentColor; border-radius: 10px; opacity: 0; transform: rotate(-6deg) scale(1.9); transition: opacity .2s ease, transform .5s cubic-bezier(.34, 1.56, .64, 1); transition-delay: calc(var(--d) * 220ms + 150ms); }
+.laws.seen .law .seal { opacity: 1; transform: rotate(-4deg); }
+.law { position: relative; }
+.laws.seen .law { animation: thud .45s ease both; animation-delay: calc(var(--d) * 220ms + 260ms); }
+@keyframes thud { 30% { transform: translateY(2px); } 100% { transform: none; } }
+.law-ok { font: 500 .74rem/1 var(--f-mono) !important; color: #1f8a5b !important; opacity: 0; transition: opacity .4s ease; transition-delay: calc(var(--d) * 220ms + 700ms); }
+.laws.seen .law-ok { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .guar .gp, .compare .cmp-r, .compare .cmp-r .mk, .law .seal, .law-ok { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .laws.seen .law, .compare.seen .cmp-r.me::after, .yes-v.hit i.yes { animation: none !important; }
 }

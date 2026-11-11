@@ -2,9 +2,9 @@
    Las zonas cobalto son transparentes y lo dejan ver, así el texto sigue continuo de una sección a otra
    (y por debajo de las transiciones), y cada zona enseña filas distintas. */
 const DATA = [
-  'ES43 9100 0001 5740 1234 5678', 'Lucía Ferrer', '3.412,58 €', '‹IBAN_1›', '12345678Z', 'Suministros Lumen', '1.180,00 €',
-  '‹IMPORTE_2›', 'lucia.ferrer@correo.es', 'B12345674', '‹NOMBRE_1›', '+34 600 000 000', 'ES71 9400 0007 0206 0223 3441',
-  '200,00 €', 'X1234567L', 'Talleres Norte', '12.050,00 €', '4111 1111 1111 1111', '‹DNI_1›', '‹EMAIL_1›', 'F-2611',
+  'ES43 9100 0001 5740 1234 5678', 'Ángel Martín', '3.412,58 €', '‹IBAN_1›', '12345678Z', 'Suministros Lumen', '1.180,00 €',
+  '‹IMPORTE_2›', 'angel.martin@correo.es', 'B12345674', '‹NOMBRE_1›', '+34 600 000 000', 'ES71 9400 0007 0206 0223 3441',
+  '200,00 €', 'X1234567L', 'Talleres Norte', 'Álvaro Carpintero', 'Pablo Rojo', 'Marco Barroso', '12.050,00 €', '4111 1111 1111 1111', '‹DNI_1›', '‹EMAIL_1›', 'F-2611',
   'Nimbo Bróker', '‹IMPORTE_1›', 'Brezo Banco', '‹CIF_1›', '980,40 €', 'ES08 9300 0001 0522 0033 4455',
 ];
 const W = 2200, ROW = 31, ROWS = 96, H = ROW * ROWS;
