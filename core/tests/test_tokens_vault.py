@@ -77,7 +77,7 @@ def test_mismo_valor_mismo_token():
 
 def test_sesiones_aisladas():
     store = VaultStore()
-    t1 = store.get("s1").tokenize("PERSONA", "Lucía Ferrer", "titular")
+    t1 = store.get("s1").tokenize("PERSONA", "Ángel Martín", "titular")
     assert store.get("s1") is store.get("s1")
     assert t1 not in store.get("s2")
 
@@ -112,7 +112,7 @@ def alcor_raw():
         "elements": [
             {"id": "n0", "role": "other", "sel": "id/screen_inicio"},
             {"id": "n1", "role": "text", "text": "Banca Alcor", "sel": "id/banco_nombre"},
-            {"id": "n2", "role": "text", "text": "Hola, Lucía Ferrer", "sel": "id/saludo"},
+            {"id": "n2", "role": "text", "text": "Hola, Ángel Martín", "sel": "id/saludo"},
             {"id": "n3", "role": "text", "text": "3.412,58 €", "sel": "id/saldo_total"},
             {"id": "n4", "role": "text", "text": IBAN, "sel": "id/cuenta_iban"},
             {"id": "n5", "role": "text", "text": "algo raro", "sel": "id/nuevo"},
@@ -140,7 +140,7 @@ def test_observacion_de_alcor():
     assert "1234" not in v.values()
     assert counts == {"verde": 3, "ambar": 4, "rojo": 1}
     dump = json.dumps(obs, ensure_ascii=False)
-    for real in ("Lucía", "3.412,58", "0418", "1234"):
+    for real in ("Ángel", "3.412,58", "0418", "1234"):
         assert real not in dump
 
 

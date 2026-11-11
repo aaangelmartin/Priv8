@@ -12,7 +12,7 @@ Busca:
 - valores sensibles de una lista de confianza (seed), aunque no estén en la
   bóveda todavía.
 
-Los nombres por contexto ("Hola, Lucía") no se usan aquí: darían falsos
+Los nombres por contexto ("Hola, Ángel") no se usan aquí: darían falsos
 positivos con el texto propio del agente. Los nombres se cubren con la bóveda
 y la lista de confianza.
 
@@ -34,7 +34,7 @@ _COMPACT_TIPOS = {"IBAN", "DNI", "NIE", "CIF", "TEL", "FACTURA", "CODIGO"}
 
 
 def _readable(payload: str) -> str:
-    """Si es JSON, lo reescribe sin escapes \\uXXXX para que 'Lucía' se lea como tal."""
+    """Si es JSON, lo reescribe sin escapes \\uXXXX para que 'Ángel' se lea como tal."""
     try:
         return json.dumps(json.loads(payload), ensure_ascii=False)
     except (ValueError, TypeError):

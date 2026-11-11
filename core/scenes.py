@@ -27,12 +27,12 @@ FACTURA = "F-2026-0412"
 IMPORTE = "1.254,30 €"
 CORREO_PROVEEDOR = "facturacion@lumen.example"
 
-TITULAR = "Lucía Ferrer"
+TITULAR = "Ángel Martín"
 CUENTAS = [("nomina", "Cuenta nómina", "ES43 9100 0001 5740 1234 5678", "3.412,58 €"),
            ("ahorro", "Cuenta ahorro", "ES66 9100 0001 5140 8765 4321", "12.050,00 €")]
-NIMBO = ("Lucía Ferrer - Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
-MARTA = ("Marta Ruiz Gil", "ES48 9100 0004 9633 0099 8877")
-# Los otros dos bancos de Lucía (apps/banks-sim, data/seed.json): paquete → banco, cuenta, IBAN, saldo.
+NIMBO = ("Ángel Martín - Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
+MARCO = ("Marco Barroso", "ES48 9100 0004 9633 0099 8877")
+# Los otros dos bancos de Ángel (apps/banks-sim, data/seed.json): paquete → banco, cuenta, IBAN, saldo.
 # Con Alcor suman 3.412,58 + 12.050,00 + 1.875,40 + 640,00 = 17.977,98 €.
 OTROS_BANCOS = {
     "es.priv8.banks.brezo": ("Brezo Banco", "Cuenta online", "ES89 9200 0003 7855 0066 7788", "1.875,40 €"),
@@ -235,7 +235,7 @@ class TransferenciaAlcor(Scene):
             els = [root("transferencia"),
                    _el("t1", "text", "id/origen_alias", alias), _el("t2", "text", "id/origen_iban", iban),
                    _el("t3", "text", "id/origen_saldo", f"Disponible: {saldo}")]
-            for k, (nombre, ib) in enumerate((NIMBO, MARTA)):
+            for k, (nombre, ib) in enumerate((NIMBO, MARCO)):
                 els += [_el(f"k{k}", "listitem", "id/contacto", None, "Contacto", ["tap"]),
                         _el(f"k{k}n", "text", "id/contacto_nombre", nombre, parent=f"k{k}"),
                         _el(f"k{k}i", "text", "id/contacto_iban", ib, parent=f"k{k}")]
@@ -290,7 +290,7 @@ class TransferenciaAlcor(Scene):
             return True
         if self.page == "transferencia":
             if op == "tap" and t in ("k0", "k1"):
-                nombre, ib = (NIMBO, MARTA)[int(t[1])]
+                nombre, ib = (NIMBO, MARCO)[int(t[1])]
                 self.form.update(iban=ib, beneficiario=nombre)
                 return True
             fields = {"t4": "iban", "t5": "beneficiario", "t6": "importe", "t7": "concepto"}

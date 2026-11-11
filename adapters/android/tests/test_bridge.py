@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[3]
 CONTRACTS = ROOT / "docs" / "contracts"
 REPLAY = ROOT / "agent" / "replays" / "b2c_android.json"
 SEED_VALUES = ["3.412,58", "12.050,00", "15.462,58", "1.875,40", "640,00", "17.977,98", "ES43 9100", "ES08 9300",
-               "ES89 9200", "Lucía Ferrer", "200 €", "200,00"]
+               "ES89 9200", "Ángel Martín", "200 €", "200,00"]
 
 _n = iter(range(10_000))
 
@@ -253,7 +253,7 @@ def test_agent_android_waits_for_dictated_tasks(monkeypatch, tmp_path):
     """Without --task, each dictated task (core.next_task, #47) is tokenized and run."""
     from agent import agent
 
-    said = iter(["pasa 200 € a Marta", "¿cuánto tengo?", None])  # None: dictation closed
+    said = iter(["pasa 200 € a Marco", "¿cuánto tengo?", None])  # None: dictation closed
     asked: list = []
 
     def next_task(session, timeout=None):

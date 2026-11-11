@@ -11,7 +11,7 @@ VAULT = {
     "‹SUMA_1›": "4.873,00 €",
     "‹IMPORTE_6›": "200 €",
     "‹PROVEEDOR_2›": "Nimbo Bróker",
-    "‹PERSONA_1›": "Lucía Ferrer",
+    "‹PERSONA_1›": "Ángel Martín",
     "‹IBAN_1›": "ES91 2100 0418 4502 0005 1332",
 }
 render = VaultRenderer(VAULT)
@@ -56,7 +56,7 @@ def test_confirmation_example_keeps_order():
 
 def test_token_label_is_optional_for_lookup():
     u = seg("Hola, ‹PERSONA_1-titular›")
-    assert u.segments[1].spoken == "Lucía Ferrer"
+    assert u.segments[1].spoken == "Ángel Martín"
 
 
 def test_punctuation_between_tokens_is_not_a_segment():
@@ -77,12 +77,12 @@ def test_iban_is_spelled_out_locally():
 
 def test_leak_keeps_the_whole_sentence_local_and_audits_it():
     events = []
-    u = seg("Lucía Ferrer, entre tus cuentas tienes ‹SUMA_1›. ¿Algo más?", audit=events.append)
+    u = seg("Ángel Martín, entre tus cuentas tienes ‹SUMA_1›. ¿Algo más?", audit=events.append)
     assert u.blocked
     assert u.cloud_texts == []
     assert all(s.voice == "local" for s in u.segments)
     assert u.to_contract()["segments"] == [
-        {"voice": "local", "text": "Lucía Ferrer, entre tus cuentas tienes"},
+        {"voice": "local", "text": "Ángel Martín, entre tus cuentas tienes"},
         {"voice": "local", "token": "‹SUMA_1›", "say_as": "currency"},
         {"voice": "local", "text": "¿Algo más?"},
     ]
@@ -109,9 +109,9 @@ def test_default_leak_check_is_used_when_none_given():
 
 def test_audit_event_has_no_real_values():
     events = []
-    seg("Lucía Ferrer, pasa 200 € a ‹PROVEEDOR_2›", audit=events.append)
+    seg("Ángel Martín, pasa 200 € a ‹PROVEEDOR_2›", audit=events.append)
     dumped = json.dumps(events, ensure_ascii=False)
-    for value in [*VAULT.values(), "Lucía", "200", "doscientos"]:
+    for value in [*VAULT.values(), "Ángel", "200", "doscientos"]:
         assert value not in dumped
 
 
@@ -123,10 +123,10 @@ TEMPLATES = [
     "‹PERSONA_1›, ¿pasamos ‹IMPORTE_6›?",
     "Hecho.",
     # the model misbehaves and writes data itself
-    "Tienes 4.873,00 € en total, Lucía Ferrer",
+    "Tienes 4.873,00 € en total, Ángel Martín",
     "Paso doscientos euros a Nimbo Bróker",
     "Tu cuenta ES91 2100 0418 4502 0005 1332 está lista",
-    "Hola Lucía Ferrer, tienes ‹SUMA_1›",
+    "Hola Ángel Martín, tienes ‹SUMA_1›",
 ]
 
 
