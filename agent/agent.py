@@ -19,6 +19,7 @@ Claude passes the final block first. The replay format is in agent/README.md.
 from __future__ import annotations
 
 import argparse
+import os
 import json
 import sys
 import time
@@ -32,9 +33,11 @@ from mcp import Client
 from agent import asesoria
 from agent.core_port import JSON, Core, tokens_in
 
-MODEL = "claude-opus-5-5"
+# PRIV8_MODEL / PRIV8_EFFORT abaratan las pruebas en vivo (p. ej. claude-sonnet-5-5 y low);
+# la demo usa los valores por defecto.
+MODEL = os.environ.get("PRIV8_MODEL", "claude-opus-5-5")
 MAX_TOKENS = 16000
-EFFORT = "high"
+EFFORT = os.environ.get("PRIV8_EFFORT", "high")
 DEFAULT_MAX_STEPS = 20
 EXPECTED_TOOLS = {"observe", "act", "oracle"}
 REPLAY_FORMAT = "priv8-replay/1"
@@ -313,7 +316,28 @@ async def _main(a: argparse.Namespace) -> int:
                                              for e in core.audit.events), encoding="utf-8")  # type: ignore[attr-defined]
     err(f"status={result.status} steps={result.steps}")
     print(result.final_text)
+    if a.web:
+        _wait_for_approvals(a.session, err)
     return 0 if result.status in ("done", "asesoria") else 1
+
+
+def _wait_for_approvals(session: str, err: Any, timeout_s: float = 180) -> None:
+    """With --web the held actions run when the person approves them in the console, so the
+    process (core, adapter and browser) stays up until nothing is pending or time runs out."""
+    import time
+
+    import core as real
+
+    end = time.monotonic() + timeout_s
+    if real.pending(session):
+        err("priv8: hay acciones retenidas; apruébalas o recházalas en la consola (http://127.0.0.1:5175)")
+    while real.pending(session) and time.monotonic() < end:
+        real.expire_due()
+        time.sleep(1)
+    if real.pending(session):
+        err("priv8: sin respuesta de la persona; las acciones retenidas no se ejecutan")
+    else:
+        time.sleep(2)  # que la consola reciba el último evento
 
 
 def main(argv: list[str] | None = None) -> int:

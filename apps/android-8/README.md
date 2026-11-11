@@ -150,3 +150,19 @@ Lo que dice 8 sale debajo de los ojos con los valores reales puestos en el móvi
 - Es un aspecto provisional (Sora blanca sobre cobalto) hasta el diseño de la app (#36).
 
 Tests: `./gradlew testDebugUnitTest` (`FraseTest`, con los ejemplos de `docs/contracts/examples`).
+
+## Dictado (issue #47)
+
+Toca a 8 y dile la tarea: «¿Cuánto tengo entre mis bancos?». El texto sale en el subtítulo. Vuelve a tocar para dejar de escuchar.
+
+- **El audio no sale del móvil.** Solo `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. Si el móvil no reconoce la voz sin red, 8 lo dice y no hay dictado: nunca se cae a un reconocedor en la nube.
+- **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra que hay una tarea lista y su longitud.
+- **Todavía no se envía.** Ningún mensaje lleva una tarea del móvil al núcleo (el contrato de eventos solo admite `approval_result`). La propuesta está en la #47: un `task_request` al núcleo, que tokeniza el texto antes de que llegue al modelo.
+
+Probar en el emulador, sin tocar la pantalla:
+
+```bash
+adb emu avd hostmicon   # el micrófono del portátil entra al emulador
+adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true
+adb logcat -s Priv8Dictado
+```

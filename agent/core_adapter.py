@@ -204,6 +204,9 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     from voice.call import make_on_call  # llamada de verificación al teléfono de la ficha (#23)
 
     web = WebAdapter(start=start, on_call=make_on_call(session))
+    print("priv8: entra en Alba Core en la ventana de Chromium (admin.alba / Alba-2026!)", file=sys.stderr)
+    if not web.wait_until_logged_in("alba-core"):
+        raise TimeoutError("nadie entró en Alba Core en 5 minutos")
     mod.connect(session, web)
     if events:
         importlib.import_module(f"{module}.server").start()
