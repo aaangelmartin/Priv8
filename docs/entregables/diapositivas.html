@@ -1,268 +1,840 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Priv8 - Diapositivas</title>
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Priv8 · Pitch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
-  /* Fuentes locales: la presentación funciona sin red (OFL, @fontsource 5.2.5) */
-  @font-face { font-family: Sora; font-weight: 600; src: url(fonts/sora-latin-600-normal.woff2) format("woff2"); }
-  @font-face { font-family: Sora; font-weight: 700; src: url(fonts/sora-latin-700-normal.woff2) format("woff2"); }
-  @font-face { font-family: "IBM Plex Sans"; font-weight: 400; src: url(fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2"); }
-  @font-face { font-family: "IBM Plex Sans"; font-weight: 600; src: url(fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2"); }
-  @font-face { font-family: "IBM Plex Mono"; font-weight: 500; src: url(fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2"); }
-  @font-face { font-family: "IBM Plex Mono"; font-weight: 600; src: url(fonts/ibm-plex-mono-latin-600-normal.woff2) format("woff2"); }
+/* Diapositivas a 1920x1080 escaladas a la ventana. Tres fondos como en la landing:
+   cobalto con el campo de datos (portada, solución, cierre), papel (contenido) y noche (demo). */
+:root {
+  --band: #2d45d6; --night: #0b1b33; --paper: #ffffff; --mist: #eef2fb; --card: #f4f6fd;
+  --ink: #0b1b33; --ink-2: #4e5a72; --line: #dde3f3;
+  --soft: #c3ccff; --on-dark-2: #dbe1ff;
+  --tok-bg: #e4e9fd; --tok-fg: #2236b5;
+  --ok: #1f8a5b; --ok-text: #18734c; --ok-soft: #dff2e7;
+  --warn: #a86400; --warn-text: #8a5200; --warn-soft: #fcefd9;
+  --bad: #c23a2e; --bad-text: #a83228; --bad-soft: #fbe5e3;
+  --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r: 28px;
+}
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { margin: 0; background: #050d1a; color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; overflow: hidden }
+.deck { position: fixed; inset: 0; display: grid; place-items: center }
+.slide {
+  position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+  transform: translate(-50%, -50%) scale(var(--s, .5)); transform-origin: center;
+  overflow: hidden; display: none; background: var(--paper);
+  padding: 200px 128px 110px;
+}
+.slide.on { display: block }
+.slide .notes { display: none }
 
-  @page { size: 1280px 720px; margin: 0; }
-  :root {
-    --cobalto: #2D45D6; --noche: #0B1B33; --claro: #8FA2FF; --niebla: #EEF2F8; --pizarra: #5A6478; --linea: #D6DCE8;
-    --tok-bg: #E4E9FD; --tok-fg: #2236B5; --rojo: #A83228; --rojo-bg: #FBE5E3; --verde: #18734C; --verde-bg: #DFF2E7;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { background: #05101f; height: 100%; }
-  body { font: 400 22px/1.4 "IBM Plex Sans", sans-serif; color: var(--noche); -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden; }
-  h1, h2, h3, b.s { font-family: Sora, sans-serif; letter-spacing: -.025em; }
+/* ---------- fondos ---------- */
+.cobalto { background: var(--band); color: #fff }
+.noche { background: var(--night); color: #fff }
+.papel { background: var(--paper) }
+.campo { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none }
+:where(.cobalto, .noche) > :not(.campo, .marca, .pie, .reloj, .notes) { position: relative }
 
-  .deck { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform-origin: center; }
-  .slide { position: absolute; inset: 0; padding: 64px 80px; display: none; flex-direction: column; background: #fff; overflow: hidden; }
-  .slide.on { display: flex; }
-  .slide.cob { background: var(--cobalto); color: #fff; }
-  .slide.night { background: var(--noche); color: #fff; }
-  .kick { font: 600 15px/1 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--cobalto); margin-bottom: 18px; }
-  .cob .kick, .night .kick { color: #c4cdff; }
-  h2 { font-size: 46px; line-height: 1.08; max-width: 1050px; }
-  .lead { margin-top: 18px; font-size: 24px; color: var(--pizarra); max-width: 980px; }
-  .cob .lead, .night .lead { color: #dbe1ff; }
-  .num { position: absolute; right: 36px; bottom: 26px; font: 500 14px/1 "IBM Plex Mono", monospace; color: var(--pizarra); }
-  .cob .num, .night .num { color: #c4cdff; }
-  .tok { font: 600 .9em/1 "IBM Plex Mono", monospace; background: var(--tok-bg); color: var(--tok-fg); padding: .2em .45em; border-radius: 6px; white-space: nowrap; }
-  .real { font: 600 .9em/1 "IBM Plex Mono", monospace; background: var(--rojo-bg); color: var(--rojo); padding: .2em .45em; border-radius: 6px; white-space: nowrap; }
-  .grow { flex: 1; }
+/* ---------- tipografía ---------- */
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; font-weight: 700 }
+h1 { font-size: 156px; line-height: .98; letter-spacing: -.045em }
+h2 { font-size: 96px; line-height: 1.0; letter-spacing: -.04em }
+h3 { font-size: 34px; line-height: 1.15; letter-spacing: -.02em; font-weight: 600 }
+p { margin: 0 }
+.soft { color: var(--soft) }
+.azul { color: var(--band) }
+.eyebrow { font: 500 26px/1 var(--f-mono); color: var(--band); margin-bottom: 28px; letter-spacing: .01em }
+.cobalto .eyebrow, .noche .eyebrow { color: var(--soft) }
+.lead { font-size: 36px; line-height: 1.5; color: var(--ink-2); max-width: 30ch }
+.cobalto .lead, .noche .lead { color: var(--on-dark-2) }
+.tok { font: 600 .86em/1.4 var(--f-mono); background: var(--tok-bg); color: var(--tok-fg); border-radius: 10px; padding: .1em .45em; white-space: nowrap }
+.real { font-weight: 500; background: var(--bad-soft); color: var(--bad-text); border-radius: 8px; padding: .05em .35em; white-space: nowrap }
+.fuente { font: 400 20px/1.4 var(--f-mono); color: var(--ink-2) }
+.cobalto .fuente, .noche .fuente { color: var(--on-dark-2); opacity: .8 }
 
-  /* 1 - portada */
-  .cover { justify-content: center; }
-  .cover .eyes { width: 150px; margin-bottom: 40px; }
-  .cover h1 { font-size: 64px; line-height: 1.05; max-width: 1060px; }
-  .cover .logo { position: absolute; left: 80px; bottom: 56px; height: 34px; filter: brightness(0) invert(1); }
-  .cover .who { position: absolute; right: 80px; bottom: 58px; font: 500 16px/1.4 "IBM Plex Mono", monospace; color: #dbe1ff; text-align: right; }
+/* ---------- piezas comunes ---------- */
+.marca { position: absolute; top: 64px; left: 128px; height: 46px; display: flex; align-items: center; gap: 18px }
+.marca svg { height: 46px; width: auto }
+.pie { position: absolute; left: 128px; right: 128px; bottom: 56px; display: flex; justify-content: space-between; font: 400 20px/1 var(--f-mono); color: var(--ink-2) }
+.cobalto .pie, .noche .pie { color: var(--on-dark-2) }
+.ocho { color: #fff; display: block }
+.ocho svg { width: 100%; height: auto; display: block }
+.ocho.azul { color: var(--band) }
+.tarjeta { background: #fff; color: var(--ink); border-radius: var(--r); padding: 36px 40px 40px; box-shadow: 0 1px 2px rgba(11,27,51,.05), 0 18px 40px rgba(11,27,51,.12) }
+.papel .tarjeta { background: var(--card); box-shadow: none; border: 1px solid var(--line) }
+.tarjeta h3 { margin-bottom: 16px }
+.tarjeta p { font-size: 25px; line-height: 1.5; color: var(--ink-2) }
+.muestra { background: #fff; border-radius: 18px; padding: 14px 20px; margin-bottom: 24px; font: 500 23px/1.6 var(--f-mono); box-shadow: inset 0 0 0 1px var(--line) }
+.papel .muestra { background: #fff }
 
-  /* pantalla de ejemplo */
-  .screen { border-radius: 18px; background: #fff; color: var(--noche); box-shadow: 0 24px 60px rgba(5, 16, 31, .25); padding: 22px 26px; display: grid; gap: 12px; font-size: 20px; }
-  .screen .row { display: flex; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--linea); padding-bottom: 10px; }
-  .screen .row:last-child { border: 0; padding: 0; }
-  .screen .row span:first-child { color: var(--pizarra); }
+/* ---------- 1 portada ---------- */
+.slide:has(.portada) { padding: 0 128px }
+.portada { display: grid; place-items: center; text-align: center; height: 100% }
+.portada .ocho { width: 250px; margin: 0 auto 40px }
+.portada h1 { font-size: 138px }
+.portada .lead { margin: 36px auto 0; max-width: 52ch; font-size: 31px }
+.portada .equipo { font: 500 23px/1.6 var(--f-mono); color: var(--on-dark-2); margin-top: 44px }
 
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-top: 40px; }
-  .three { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; align-items: stretch; margin-top: 44px; }
-  .arrow { display: grid; place-items: center; font: 600 34px/1 "IBM Plex Mono", monospace; color: var(--cobalto); }
-  .cob .arrow { color: #fff; }
-  .zone { border-radius: 18px; padding: 24px; display: grid; gap: 12px; align-content: start; background: var(--niebla); }
-  .zone h3 { font-size: 24px; }
-  .zone small { font-size: 17px; color: var(--pizarra); line-height: 1.35; }
-  .zone.cloud { background: var(--noche); color: #fff; }
-  .zone.cloud small { color: #c4cdff; }
-  .zone .lbl { font: 600 13px/1 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--pizarra); }
-  .zone.cloud .lbl { color: #c4cdff; }
+/* ---------- 2 problema ---------- */
+.problema { display: grid; grid-template-columns: 700px 1fr; gap: 80px; align-items: start }
+.problema h2 { font-size: 72px }
+.problema .lead { margin-top: 28px; max-width: 32ch; font-size: 30px }
+.ventana { border-radius: 26px; overflow: hidden; box-shadow: 0 1px 2px rgba(11,27,51,.05), 0 24px 60px rgba(11,27,51,.16); border: 1px solid var(--line) }
+.ventana .barra { display: flex; align-items: center; gap: 14px; padding: 20px 26px; background: var(--card); border-bottom: 1px solid var(--line); font: 600 24px var(--f-display) }
+.ventana .barra i { width: 14px; height: 14px; border-radius: 50%; background: #cfd6ea; display: inline-block }
+.ventana .barra small { font: 400 20px var(--f-mono); color: var(--ink-2); margin-left: 6px }
+.ventana .cuerpo { padding: 22px 30px; display: grid; gap: 12px; font-size: 23px }
+.ventana .fila { display: grid; grid-template-columns: 210px 1fr; align-items: baseline; gap: 18px; padding-bottom: 10px; border-bottom: 1px solid var(--line) }
+.ventana .fila:last-child { border: 0; padding: 0 }
+.ventana .fila span:first-child { color: var(--ink-2); font-size: 21px }
+.ventana .correo { background: var(--bad-soft); border-radius: 16px; padding: 14px 20px; font-size: 21px; line-height: 1.5; color: var(--ink) }
+.ventana .contador { display: flex; align-items: center; gap: 22px; padding: 14px 30px; background: var(--bad-soft); color: var(--bad-text); font-size: 26px }
+.ventana .contador b { font: 700 52px/1 var(--f-display); letter-spacing: -.03em }
+.cifras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 56px; margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--line) }
+.cifra b { display: block; font: 700 56px/1 var(--f-display); letter-spacing: -.04em; color: var(--band); margin-bottom: 12px }
+.cifra p { font-size: 25px; line-height: 1.45; color: var(--ink) }
+.cifra .fuente { margin-top: 8px; font-size: 18px }
 
-  ul.pts { list-style: none; display: grid; gap: 14px; margin-top: 30px; max-width: 1000px; }
-  ul.pts li { padding-left: 30px; position: relative; font-size: 24px; }
-  ul.pts li::before { content: ""; position: absolute; left: 0; top: .5em; width: 12px; height: 12px; border-radius: 50%; background: var(--cobalto); }
-  .cob ul.pts li::before { background: #fff; }
+/* ---------- 3 solución ---------- */
+.solucion h2 { font-size: 100px }
+.solucion .tres { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; margin-top: 64px }
+.solucion .remate { margin-top: 44px; font: 600 34px/1.3 var(--f-display); color: #fff }
 
-  .pieces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 36px; }
-  .piece { border-radius: 16px; padding: 20px; background: rgba(255, 255, 255, .1); }
-  .piece b { display: block; font: 700 21px/1.2 Sora, sans-serif; margin-bottom: 8px; }
-  .piece span { font-size: 17px; color: #dbe1ff; line-height: 1.35; display: block; }
 
-  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 40px; counter-reset: s; }
-  .step { border: 1.5px solid var(--linea); border-radius: 16px; padding: 18px; counter-increment: s; display: grid; gap: 8px; align-content: start; }
-  .step::before { content: counter(s); width: 32px; height: 32px; border-radius: 50%; background: var(--cobalto); color: #fff; display: grid; place-items: center; font: 600 16px/1 "IBM Plex Mono", monospace; }
-  .step b { font: 700 20px/1.2 Sora, sans-serif; }
-  .step span { font-size: 16.5px; color: var(--pizarra); line-height: 1.35; }
-  .step.stop { border-color: var(--rojo); background: var(--rojo-bg); }
-  .step.stop::before { background: var(--rojo); }
+/* ---------- 2b móvil ---------- */
+.movil { justify-self: center; width: 440px; border-radius: 56px; padding: 18px; background: var(--night); box-shadow: 0 24px 60px rgba(11,27,51,.22) }
+.pantallita { background: #fff; border-radius: 40px; padding: 30px 28px 28px; display: grid; gap: 12px }
+.pantallita .que { font: 500 20px/1 var(--f-mono); color: var(--ink-2); margin-bottom: 6px }
+.pantallita .app { display: grid; gap: 4px; padding: 14px 20px; border-radius: 22px; background: var(--card); border: 1px solid var(--line) }
+.pantallita .app b { font: 600 26px/1.2 var(--f-display) }
+.pantallita .app span { font: 400 20px/1.3 var(--f-mono); color: var(--bad-text) }
+.pantallita .total { margin-top: 8px; padding: 16px 22px; border-radius: 22px; background: var(--bad-soft); color: var(--bad-text); font-size: 22px }
+.pantallita .total b { font: 700 40px/1 var(--f-display); margin-right: 6px }
+/* ---------- 3 dos verticales ---------- */
+.solucion .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; margin-top: 60px }
+.solucion .vert { font: 600 22px/1 var(--f-mono); color: var(--band); margin-bottom: 18px }
+.solucion .dos h3 { font-size: 38px }
+.garantias { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 44px }
+.garantias > span { font: 500 22px/1 var(--f-mono); color: #fff; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 14px 20px; background: rgba(11,27,51,.18); display: inline-flex; gap: 12px; align-items: center }
 
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px; }
-  .m { border-radius: 18px; padding: 26px 24px; background: rgba(255, 255, 255, .1); }
-  .m strong { display: block; font: 700 54px/1 Sora, sans-serif; letter-spacing: -.03em; }
-  .m strong i { font-style: normal; color: #c4cdff; font-size: 36px; }
-  .m span { display: block; margin-top: 12px; font-size: 18px; color: #dbe1ff; line-height: 1.35; }
-  .foot { margin-top: auto; font-size: 16px; color: #c4cdff; }
+/* ---------- 4 producto ---------- */
+.producto h2 { font-size: 76px }
+.flujo { display: grid; grid-template-columns: 1fr 70px 1fr 70px 1fr; align-items: stretch; margin-top: 56px }
+.flujo .flecha { display: grid; place-items: center; font: 600 46px var(--f-display); color: var(--band) }
+.paso { border-radius: var(--r); padding: 36px 38px; border: 1px solid var(--line); background: var(--card) }
+.paso.ia { background: var(--night); color: #fff; border-color: var(--night) }
+.paso .que { font: 500 22px/1 var(--f-mono); color: var(--ink-2); margin-bottom: 22px }
+.paso.ia .que { color: var(--soft) }
+.paso h3 { font-size: 32px; margin-bottom: 24px }
+.paso .lineas { display: grid; gap: 14px; font-size: 26px }
+.paso .lineas div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline }
+.paso .lineas small { color: var(--ink-2); font-size: 22px }
+.paso.ia .lineas small { color: var(--on-dark-2) }
+.paso .pie-paso { margin-top: 24px; font-size: 22px; color: var(--ink-2); line-height: 1.45 }
+.paso.ia .pie-paso { color: var(--on-dark-2) }
+.claves { display: flex; gap: 16px; margin-top: 44px; flex-wrap: wrap }
+.clave { font: 500 21px/1 var(--f-mono); padding: 14px 20px; border-radius: 999px; background: var(--mist); color: var(--ink) }
 
-  .vs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 40px; margin-top: 36px; }
-  .vs div { border-left: 4px solid var(--linea); padding-left: 18px; }
-  .vs div.us { border-color: var(--cobalto); }
-  .vs b { display: block; font: 700 22px/1.25 Sora, sans-serif; }
-  .vs span { font-size: 19px; color: var(--pizarra); }
+/* ---------- 5-6 demo ---------- */
+.demo { display: grid; grid-template-columns: 1fr 520px; gap: 90px }
+.demo h2 { font-size: 72px }
+.pasos { list-style: none; padding: 0; margin: 56px 0 0; display: grid; gap: 26px; counter-reset: p }
+.pasos li { display: grid; grid-template-columns: 64px 1fr; gap: 20px; align-items: baseline; font-size: 34px; line-height: 1.4; color: var(--on-dark-2) }
+.pasos li::before { counter-increment: p; content: counter(p); font: 600 26px/1 var(--f-mono); color: var(--night); background: var(--soft); width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center }
+.pasos li b { color: #fff; font-weight: 600 }
+.pasos li.bloq::before { background: #ff9a8f }
+.lado { align-self: center; display: grid; gap: 28px }
+.lado .ocho { width: 200px; justify-self: center }
+.caja { border: 1px solid rgba(255,255,255,.22); background: rgba(11,27,51,.6); border-radius: var(--r); padding: 26px 30px }
+.caja .que { font: 500 22px/1 var(--f-mono); color: var(--soft); margin-bottom: 14px }
+.caja p { font-size: 24px; line-height: 1.5; color: var(--on-dark-2) }
+.reloj { position: absolute; top: 64px; right: 128px; font: 500 24px/1 var(--f-mono); color: var(--soft); border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 14px 22px }
 
-  .hint { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); font: 500 12px/1 "IBM Plex Mono", monospace; color: #5a6478; }
+/* ---------- 7 métricas ---------- */
+.metricas h2 { font-size: 84px }
+.rejilla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 48px }
+.metrica { border-radius: var(--r); padding: 30px 36px; background: var(--card); border: 1px solid var(--line) }
+.metrica .num { font: 700 84px/1 var(--f-display); letter-spacing: -.045em; display: flex; align-items: baseline; gap: 22px }
+.metrica .num s { text-decoration: none; color: var(--bad); font-size: 60px }
+.metrica .num em { font-style: normal; color: var(--ok) }
+.metrica .num i { font-style: normal; font-size: 48px; color: var(--ink-2) }
+.metrica p { margin-top: 14px; font-size: 27px; line-height: 1.45; color: var(--ink-2) }
+.metrica.ancha { grid-column: span 1 }
+.metricas .fuente { margin-top: 28px }
 
-  @media print {
-    html, body { background: #fff; height: auto; overflow: visible; }
-    .deck { position: static; transform: none !important; width: auto; height: auto; }
-    .slide { position: relative; display: flex !important; width: 1280px; height: 720px; page-break-after: always; break-after: page; }
-    .hint { display: none; }
-  }
+/* ---------- 8 mercado ---------- */
+.mercado { display: grid; grid-template-columns: 700px 1fr; gap: 90px; align-items: center; margin-top: -40px }
+.circulos { position: relative; width: 700px; height: 700px }
+.circulos div { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 50%; display: grid; justify-items: center; align-content: start; text-align: center }
+.circulos .tam { width: 700px; height: 700px; background: var(--mist); padding-top: 64px }
+.circulos .sam { width: 480px; height: 480px; background: var(--tok-bg); padding-top: 56px }
+.circulos .som { width: 260px; height: 260px; background: var(--band); color: #fff; align-content: center }
+.circulos b { font: 700 60px/1 var(--f-display); letter-spacing: -.04em; display: block }
+.circulos small { font: 500 22px/1.2 var(--f-mono); color: var(--ink-2); display: block; margin-top: 8px }
+.circulos .som small { color: var(--soft) }
+.capas { display: grid; gap: 36px }
+.capa h3 { font-size: 30px; display: flex; gap: 16px; align-items: baseline }
+.capa h3 span { font: 600 22px/1 var(--f-mono); color: var(--band); width: 64px }
+.capa p { font-size: 24px; line-height: 1.5; color: var(--ink-2); margin: 10px 0 0 80px }
+.capa .fuente { margin: 8px 0 0 80px; font-size: 18px }
+.hipotesis { display: inline-block; font: 600 18px/1 var(--f-mono); background: var(--warn-soft); color: var(--warn-text); border-radius: 999px; padding: 8px 12px; margin-left: 10px; vertical-align: middle }
+
+
+/* ---------- 4 mercado en dos columnas ---------- */
+.mercado2 h2 { font-size: 72px }
+.dosm { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 36px }
+.dosm .col { display: grid; gap: 14px; align-content: start }
+.vert { font: 600 22px/1 var(--f-mono); color: var(--band); margin-bottom: 6px }
+.capa2 { display: grid; grid-template-columns: 70px 220px 1fr; gap: 4px 18px; align-items: baseline; padding: 18px 24px; border-radius: 22px; background: var(--card); border: 1px solid var(--line) }
+.capa2 > span { font: 600 20px/1 var(--f-mono); color: var(--band) }
+.capa2 b { font: 700 44px/1 var(--f-display); letter-spacing: -.035em }
+.capa2 p { font-size: 24px; line-height: 1.45; color: var(--ink-2) }
+.capa2 .fuente { grid-column: 3; font-size: 16px; margin-top: -2px }
+.capa2.som { background: var(--band); border-color: var(--band) }
+.capa2.som > span, .capa2.som p { color: var(--soft) }
+.capa2.som b { color: #fff }
+.capa2.som .hipotesis { background: rgba(255,255,255,.16); color: #fff }
+.vert2 { font: 600 20px/1 var(--f-mono); color: var(--band); margin-bottom: 12px }
+
+/* ---------- 9 competencia ---------- */
+.competencia h2 { font-size: 76px }
+.tabla { margin-top: 48px; width: 100%; border-collapse: separate; border-spacing: 0; font-size: 26px }
+.tabla th, .tabla td { padding: 18px 20px; text-align: center; border-bottom: 1px solid var(--line) }
+.tabla th { font: 600 24px/1.25 var(--f-display); color: var(--ink); vertical-align: bottom }
+.tabla th small { display: block; font: 400 19px/1.3 var(--f-mono); color: var(--ink-2); margin-top: 6px }
+.tabla td:first-child, .tabla th:first-child { text-align: left; color: var(--ink) }
+.tabla .p8 { background: var(--band); color: #fff }
+.tabla th.p8 { border-radius: 22px 22px 0 0 }
+.tabla tr:last-child td.p8 { border-radius: 0 0 22px 22px }
+.si, .no, .parcial { font: 600 24px/1 var(--f-mono) }
+.si { color: var(--ok-text) } .no { color: #9aa4b8 } .parcial { color: var(--warn-text) }
+.tabla .p8 .si { color: #fff }
+
+/* ---------- 10 modelo y go to market ---------- */
+.negocio { display: grid; grid-template-columns: 1fr 1fr; gap: 80px }
+.negocio h2 { font-size: 68px; margin-bottom: 40px }
+.bloques { display: grid; gap: 26px }
+.lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 22px; counter-reset: g }
+.lista li { display: grid; grid-template-columns: 56px 1fr; gap: 20px; font-size: 30px; line-height: 1.45; color: var(--ink-2) }
+.lista li::before { counter-increment: g; content: counter(g); font: 600 24px/1 var(--f-mono); color: #fff; background: var(--band); width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center }
+.lista b { color: var(--ink); font-weight: 600 }
+
+/* ---------- 11 equipo ---------- */
+.equipo-s h2 { font-size: 84px }
+.personas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; margin-top: 56px }
+.persona { border-radius: var(--r); padding: 40px 36px; background: var(--card); border: 1px solid var(--line); display: grid; gap: 14px; align-content: start }
+.persona .ini { width: 96px; height: 96px; border-radius: 50%; background: var(--band); color: #fff; display: grid; place-items: center; font: 700 38px/1 var(--f-display); letter-spacing: -.03em; margin-bottom: 10px }
+.persona h3 { font-size: 34px }
+.persona .rol { font: 500 22px/1.3 var(--f-mono); color: var(--band) }
+.persona p { font-size: 25px; line-height: 1.5; color: var(--ink-2) }
+.equipo-s .remate { margin-top: 56px; font-size: 30px; color: var(--ink-2) }
+
+/* ---------- 12 cierre ---------- */
+.cierre { display: grid; align-content: center; margin-top: -60px }
+.cierre .ocho { width: 170px; margin-bottom: 44px }
+.cierre h2 { font-size: 92px; max-width: 19ch }
+.cierre .pide { margin-top: 52px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: center; max-width: 1300px }
+.cierre .pide .etq { font: 600 24px/1 var(--f-mono); background: #fff; color: var(--band); border-radius: 999px; padding: 16px 22px }
+.cierre .pide p { font-size: 30px; line-height: 1.45; color: #fff }
+
+/* ---------- anexo ---------- */
+.anexo h2 { font-size: 60px }
+.preguntas { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 64px; margin-top: 44px }
+.preg h3 { font-size: 28px; margin-bottom: 10px }
+.preg p { font-size: 23px; line-height: 1.5; color: var(--ink-2) }
+
+
+/* ---------- v4: cómo funciona, arquitectura, mercado, modelo, gtm ---------- */
+.como .flujo { margin-top: 80px }
+.cobalto .paso { background: #fff; border-color: #fff; color: var(--ink) }
+.cobalto .paso.ia { background: var(--night); border-color: var(--night); color: #fff }
+.cobalto .flecha { color: #fff }
+.paso .que { font: 600 24px/1 var(--f-mono) }
+.paso .lineas { font-size: 30px; gap: 20px }
+.paso .lineas small { font-size: 26px }
+.espera { font: 600 26px/1 var(--f-mono); color: var(--warn-text); background: var(--warn-soft); border-radius: 10px; padding: 8px 12px }
+.arq-s h2 { font-size: 72px }
+.arq { display: grid; grid-template-columns: 1fr 250px 400px; gap: 0; margin-top: 56px; align-items: stretch }
+.zona { border-radius: var(--r); padding: 30px 32px; display: grid; gap: 20px; align-content: start }
+.zona.local { background: var(--card); border: 2px solid var(--line) }
+.zona.nube { background: var(--night); color: #fff; align-content: center }
+.zona-t { font: 600 22px/1 var(--f-mono); color: var(--band) }
+.zona.nube .zona-t { color: var(--soft) }
+.adapt { display: grid; grid-template-columns: 1fr 1fr; gap: 16px }
+.adapt span { font: 600 24px/1.2 var(--f-display); text-align: center; padding: 18px; border-radius: 18px; background: #fff; border: 1px solid var(--line) }
+.adapt.salida span { background: transparent; border-style: dashed; color: var(--ink-2); font-weight: 500 }
+.nucleo { background: var(--band); border-radius: 22px; padding: 22px 24px 26px }
+.nucleo-t { font: 700 30px/1 var(--f-display); color: #fff; margin-bottom: 18px }
+.piezas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px }
+.piezas span { background: rgba(255,255,255,.14); color: #fff; border-radius: 14px; padding: 16px 10px; text-align: center; font: 600 22px/1.2 var(--f-body) }
+.frontera { position: relative; display: grid; align-content: center; gap: 80px; justify-items: center; text-align: center }
+.frontera::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 3px dashed var(--line) }
+.frontera span { position: relative; font: 600 22px/1.35 var(--f-mono); background: #fff; padding: 10px 6px }
+.frontera .ida { color: var(--band) } .frontera .vuelta { color: var(--ink-2) }
+.modelo { border: 1px solid rgba(255,255,255,.25); border-radius: 20px; padding: 22px 24px; display: grid; gap: 6px }
+.modelo b { font: 700 30px/1.1 var(--f-display) }
+.modelo span { font: 500 21px/1.2 var(--f-mono); color: var(--soft) }
+.ocho.grande { width: 380px }
+.lado { justify-items: center }
+.mercado3 h2 { font-size: 80px }
+.dosc { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; margin-top: 30px }
+.mc .vert { text-align: center; font-size: 26px; margin-bottom: 18px }
+.circ { position: relative; width: 600px; height: 600px; margin: 0 auto }
+.circ > div { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); border-radius: 50%; display: grid; justify-items: center; align-content: start; text-align: center }
+.circ .c1 { width: 600px; height: 600px; background: var(--mist); padding-top: 58px }
+.circ .c2 { width: 400px; height: 400px; background: var(--tok-bg); padding-top: 50px }
+.circ .c3 { width: 210px; height: 210px; background: var(--band); color: #fff; align-content: center }
+.circ b { font: 700 52px/1 var(--f-display); letter-spacing: -.04em }
+.circ .c3 b { font-size: 40px }
+.circ small { font: 500 19px/1.25 var(--f-mono); color: var(--ink-2); margin-top: 8px; max-width: 300px }
+.circ .c3 small { color: var(--soft); max-width: 170px; font-size: 16px }
+.modelo-s h2 { font-size: 80px }
+.dosm2 { display: grid; grid-template-columns: 1fr 1fr; gap: 90px; margin-top: 64px }
+.col2 { display: grid; gap: 28px; align-content: start }
+.col2 .vert { font-size: 26px }
+.barras { display: grid; gap: 18px }
+.barra-c { display: grid; grid-template-columns: 230px 1fr 170px; align-items: center; gap: 18px; font-size: 26px; color: var(--ink-2) }
+.barra-c i { display: block; height: 46px; border-radius: 12px; background: var(--bad-soft); box-shadow: inset 0 0 0 2px var(--bad) }
+.barra-c.mejor i { background: var(--ok-soft); box-shadow: inset 0 0 0 2px var(--ok) }
+.barra-c b { font: 700 40px/1 var(--f-display); color: var(--ink); text-align: right; white-space: nowrap }
+.precio { display: grid; gap: 6px; padding: 28px 32px; border-radius: var(--r); background: var(--band); color: #fff }
+.precio b { font: 700 40px/1.1 var(--f-display) }
+.precio span { font: 500 26px/1.2 var(--f-mono); color: var(--soft) }
+.planes { display: grid; gap: 16px }
+.plan { display: grid; grid-template-columns: 260px 1fr; align-items: baseline; gap: 20px; padding: 24px 30px; border-radius: 22px; background: var(--card); border: 1px solid var(--line) }
+.plan b { font: 700 40px/1 var(--f-display); letter-spacing: -.03em }
+.plan span { font-size: 26px; color: var(--ink-2) }
+.plan.plus { background: var(--band); border-color: var(--band) }
+.plan.plus b { color: #fff } .plan.plus span { color: var(--soft) }
+.sin { font: 500 24px/1.3 var(--f-mono); color: var(--ink-2) }
+.gtm h2 { font-size: 104px; margin-top: 40px }
+.camino { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr 60px 1fr; align-items: center; margin-top: 110px }
+.camino .flecha { font: 600 46px var(--f-display); color: var(--band); text-align: center }
+.etapa { border-radius: var(--r); background: var(--card); border: 1px solid var(--line); padding: 34px 30px; display: grid; gap: 10px }
+.etapa span { width: 52px; height: 52px; border-radius: 50%; background: var(--band); color: #fff; display: grid; place-items: center; font: 600 26px/1 var(--f-mono) }
+.etapa b { font: 700 38px/1.1 var(--f-display); letter-spacing: -.02em }
+.etapa small { font: 500 22px/1.2 var(--f-mono); color: var(--ink-2) }
+.equipo-s .personas { margin-top: 90px }
+.persona { padding: 44px 36px }
+.metricas .num s { font-size: 64px }
+
+
+/* ---------- v5: sin azul noche en las diapositivas ---------- */
+body { background: #eef2fb }
+.cobalto .paso.ia, .paso.ia { background: var(--tok-bg); border-color: var(--tok-bg); color: var(--ink) }
+.paso.ia .que { color: var(--band) } .paso.ia .lineas small { color: var(--ink-2) }
+.zona.nube { background: var(--band) }
+.movil { background: var(--band) }
+.cobalto .pasos li::before { color: var(--band); background: #fff }
+.cobalto .pasos li.bloq::before { background: #ff9a8f; color: #fff }
+.cobalto .pasos li { color: var(--on-dark-2) }
+.reloj { border-color: rgba(255,255,255,.4); color: #fff }
+.hud { background: rgba(45,69,214,.92); color: #fff }
+.nota-panel { background: #fff; color: var(--ink); border-top: 1px solid var(--line) }
+.nota-panel .cab { color: var(--band) }
+.dost { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; margin-top: 60px }
+.dost .tabla { margin-top: 0; font-size: 24px }
+.dost .tabla th { font-size: 22px }
+.dost .tabla th small { font-size: 16px }
+.dost .tabla th, .dost .tabla td { padding: 16px 12px }
+.tabla th.grupo { font: 600 26px/1 var(--f-mono); color: var(--band) }
+.dost .tabla .p8 { width: 110px } .dost .tabla td:first-child { width: 190px }
+.competencia h2 { font-size: 80px }
+
+
+/* ---------- v6: equipo con laaabs y cierre con QR ---------- */
+.equipo-cab { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px }
+.laaabs { flex: none; padding-bottom: 14px }
+.laaabs svg { height: 64px; width: auto; display: block }
+.cierre2 { display: grid; grid-template-columns: 1fr auto; gap: 90px; align-items: center; height: 100%; margin-top: -60px }
+.cierre2 .ocho { width: 150px; margin-bottom: 40px }
+.cierre2 h2 { font-size: 96px; max-width: 12ch }
+.qrs { display: grid; grid-template-columns: repeat(2, 300px); gap: 32px }
+.qr { background: #fff; color: var(--ink); border-radius: var(--r); padding: 26px 26px 28px; display: grid; gap: 6px; justify-items: center; text-align: center; box-shadow: 0 18px 40px rgba(5,16,31,.25) }
+.qr .cod { width: 236px; height: 236px; margin-bottom: 14px }
+.qr .cod svg { width: 100%; height: 100%; display: block }
+.qr b { font: 700 30px/1.15 var(--f-display); letter-spacing: -.02em }
+.qr span { font: 500 21px/1 var(--f-mono); color: var(--band) }
+
+
+/* ---------- v7: equipo con fotos y verticales ---------- */
+.persona { justify-items: center; text-align: center; padding: 48px 30px 44px }
+.foto { width: 200px; height: 200px; border-radius: 50%; object-fit: cover; display: block; margin-bottom: 18px }
+.persona h3 { font-size: 36px }
+.verticales h2 { font-size: 92px }
+.dosv { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; margin-top: 64px }
+.vcol { display: grid; gap: 20px; align-content: start }
+.vcol .vert { font-size: 28px; margin-bottom: 4px }
+.dato { display: grid; gap: 8px; padding: 34px 40px; border-radius: var(--r); background: var(--card); border: 1px solid var(--line) }
+.dato small { font: 600 21px/1 var(--f-mono); color: var(--ink-2); text-transform: none }
+.dato b { font: 700 88px/1 var(--f-display); letter-spacing: -.045em }
+.dato span { font-size: 28px; color: var(--ink-2) }
+.dato.obj { background: var(--band); border-color: var(--band) }
+.dato.obj small, .dato.obj span { color: var(--soft) }
+.dato.obj b { color: #fff }
+
+
+/* ---------- controles ---------- */
+.hud { position: fixed; z-index: 10; left: 50%; bottom: max(14px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; gap: 6px; align-items: center; padding: 6px; border-radius: 999px; background: rgba(11,27,51,.82); color: #dbe1ff; font: 500 13px/1 var(--f-mono); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); opacity: .25; transition: opacity .2s }
+.hud:hover, .hud:focus-within, body.guion .hud { opacity: 1 }
+.hud button { border: 0; background: transparent; color: inherit; font: inherit; padding: 9px 12px; border-radius: 999px; cursor: pointer }
+.hud button:hover { background: rgba(255,255,255,.12) }
+.hud button[aria-pressed="true"] { background: #fff; color: var(--night) }
+.hud .n { padding: 0 8px; font-variant-numeric: tabular-nums; min-width: 64px; text-align: center }
+.hud .t { color: var(--soft); font-variant-numeric: tabular-nums; padding: 0 8px }
+:focus-visible { outline: 3px solid #8fa2ff; outline-offset: 2px }
+.nota-panel {
+  position: fixed; z-index: 9; left: 0; right: 0; bottom: 0; max-height: 42vh; overflow: auto;
+  background: #0b1b33; color: #e9eef7; padding: 22px max(24px, env(safe-area-inset-left, 0px)) 76px; border-top: 1px solid #22324d;
+  font: 400 17px/1.6 var(--f-body); display: none
+}
+body.notas .nota-panel { display: block }
+.nota-panel .cab { display: flex; gap: 14px; align-items: baseline; margin-bottom: 8px; font: 600 13px var(--f-mono); color: #8fa2ff }
+.nota-panel p { max-width: 90ch; margin: 0 0 8px }
+
+/* ---------- vista de guion: todas las diapositivas con su texto ---------- */
+body.guion { overflow: auto; background: #eef2fb }
+body.guion .deck { position: static; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 560px), 1fr)); gap: 28px; padding: 28px max(16px, env(safe-area-inset-left, 0px)) 110px max(16px, env(safe-area-inset-right, 0px)); place-items: stretch }
+body.guion .marco { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 14px; box-shadow: 0 10px 30px rgba(11,27,51,.15); cursor: pointer; max-width: 100% }
+body.guion .slide { display: block; position: absolute; left: 0; top: 0; transform: scale(var(--ts, .29)); transform-origin: 0 0 }
+body.guion .item .notes { display: block; margin-top: 12px; font: 400 15px/1.55 var(--f-body); color: #0b1b33 }
+body.guion .item .notes b { font: 600 12px var(--f-mono); color: #2d45d6; display: block; margin-bottom: 4px }
+body.guion .nota-panel { display: none }
+.item { display: contents }
+body.guion .item { display: block }
 </style>
-</head>
-<body>
+
 <div class="deck" id="deck">
 
-  <section class="slide cob cover">
-    <img class="eyes" src="../../brand/logo/8-reposo-cobalto.svg" alt="8">
-    <h1>Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja.</h1>
-    <img class="logo" src="../../brand/logo/priv8-cua-claro.svg" alt="Priv8 CUA">
-    <div class="who">Hackfinance - Madrid Engineering Week 2026<br>Ángel, Álvaro, Marco y Pablo</div>
-  </section>
+<!-- 1 · LA IDEA -->
+<section class="slide cobalto" data-t="0:00-0:15" data-paso="1: La idea">
+  <canvas class="campo"></canvas>
+  <div class="portada">
+    <div>
+      <div class="ocho"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.39 250.82" role="img" aria-label="8, el agente de Priv8"><path fill="currentColor" d="M244.2 125.52Q244.2 145.14 238.4 159.75Q232.6 174.35 221.46 182.49Q210.31 190.63 194.26 190.63Q184 190.63 176.08 187.28Q168.17 183.94 162.59 177.81Q157.02 171.67 153.9 163.42H150.49Q147.37 171.67 141.8 177.81Q136.22 183.94 128.31 187.28Q120.39 190.63 110.14 190.63Q94.08 190.63 82.94 182.49Q71.79 174.35 65.99 159.75Q60.19 145.14 60.19 125.52Q60.19 105.68 65.99 91.07Q71.79 76.47 82.94 68.33Q94.08 60.19 110.14 60.19Q120.39 60.19 128.31 63.54Q136.22 66.88 141.8 73.13Q147.37 79.37 150.49 87.62H153.9Q157.02 79.37 162.59 73.13Q168.17 66.88 176.08 63.54Q184 60.19 194.26 60.19Q210.31 60.19 221.46 68.33Q232.6 76.47 238.4 91.07Q244.2 105.68 244.2 125.52ZM90.29 125.52Q90.29 134.44 92.97 141.24Q95.64 148.04 101.11 151.61Q106.57 155.17 114.37 155.17Q122.18 155.17 127.42 151.61Q132.66 148.04 135.44 141.24Q138.23 134.44 138.23 125.52Q138.23 116.38 135.44 109.58Q132.66 102.78 127.42 99.1Q122.18 95.42 114.37 95.42Q106.57 95.42 101.11 99.21Q95.64 103 92.97 109.69Q90.29 116.38 90.29 125.52ZM214.1 125.52Q214.1 116.38 211.42 109.69Q208.75 103 203.29 99.21Q197.82 95.42 190.02 95.42Q182.22 95.42 176.98 99.1Q171.74 102.78 168.95 109.58Q166.16 116.38 166.16 125.52Q166.16 134.44 168.95 141.24Q171.74 148.04 176.98 151.61Q182.22 155.17 190.02 155.17Q197.82 155.17 203.29 151.61Q208.75 148.04 211.42 141.24Q214.1 134.44 214.1 125.52ZM125.69 113.95C129.66 118.49 129.74 124.91 125.87 128.3C121.99 131.69 115.63 130.76 111.66 126.22C107.69 121.69 107.61 115.26 111.48 111.87C115.36 108.48 121.72 109.41 125.69 113.95ZM200.77 113.95C204.74 118.49 204.82 124.91 200.95 128.3C197.07 131.69 190.71 130.76 186.74 126.22C182.77 121.69 182.69 115.26 186.56 111.87C190.44 108.48 196.8 109.41 200.77 113.95Z"/></svg>
+</div>
+      <h1>8 hace el trámite.<br><span class="soft">Sin ver tus datos.</span></h1>
+      <p class="equipo">Ángel Martín, Álvaro Carpintero, Marco Barroso y Pablo Rojo<br>Hackfinance, Madrid Engineering Week, 12 nov 2026</p>
+    </div>
+  </div>
+</section>
 
-  <section class="slide">
-    <p class="kick">El problema</p>
-    <h2>Un agente que usa la pantalla lo ve todo.</h2>
-    <div class="two">
-      <div class="screen">
-        <div class="row"><span>Titular</span><span class="real">Ángel Martín</span></div>
-        <div class="row"><span>IBAN</span><span class="real">ES91 9400 0001 3211 …</span></div>
-        <div class="row"><span>Saldo</span><span class="real">12.050,00 €</span></div>
-        <div class="row"><span>DNI</span><span class="real">12345678Z</span></div>
+<!-- 2 · PROBLEMA B2B -->
+<section class="slide papel" data-t="0:15-0:50" data-paso="2: Problema, empresas y bancos">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="problema">
+    <div>
+      <p class="eyebrow">Empresas y bancos</p>
+      <h2>La IA podría hacerlo. <span class="azul">Pero vería los datos.</span></h2>
+    </div>
+    <div class="ventana">
+      <div class="barra"><i></i><i></i><i></i> Alba Core <small>lo que recibiría la IA</small></div>
+      <div class="cuerpo">
+        <div class="fila"><span>Proveedor</span><span class="real">Suministros Lumen S.L.</span></div>
+        <div class="fila"><span>CIF</span><span class="real">B12345674</span></div>
+        <div class="fila"><span>Importe</span><span class="real">1.254,30 €</span></div>
+        <div class="fila"><span>IBAN</span><span class="real">ES91 2100 0418 4502 0005 1332</span></div>
       </div>
-      <ul class="pts" style="margin-top:0">
-        <li>Cada captura viaja entera al proveedor del modelo.</li>
-        <li>Un correo puede «cambiar la cuenta» o dar órdenes a la IA.</li>
-        <li>Transferir o firmar queda en manos del modelo.</li>
-      </ul>
+      <div class="contador"><b>6</b> datos reales al modelo</div>
     </div>
-    <p class="lead" style="margin-top:auto">Por eso los procesos con ERP, CRM y banca que no tienen API siguen sin automatizarse.</p>
-    <span class="num">2</span>
-  </section>
+  </div>
+  <div class="cifras">
+    <div class="cifra"><b>67 %</b><p>de los grandes bancos, frenados por la privacidad</p><p class="fuente">EY-Parthenon, 2025</p></div>
+    <div class="cifra"><b>52 %</b><p>de los agentes, parados en piloto</p><p class="fuente">Dynatrace</p></div>
+    <div class="cifra"><b>97 %</b><p>de los datos sensibles, al modelo</p><p class="fuente">Tsinghua, 2026</p></div>
+  </div>
+</section>
 
-  <section class="slide">
-    <p class="kick">La frontera</p>
-    <h2>El modelo ve tokens. Tu máquina pone los datos.</h2>
-    <div class="three">
-      <div class="zone">
-        <span class="lbl">Entorno de confianza</span>
-        <h3>Tu pantalla</h3>
-        <div>Saldo <span class="real">12.050,00 €</span></div>
-        <div>IBAN <span class="real">ES91 9400 …</span></div>
-        <small>Se lee el DOM o la accesibilidad. Detector con IBAN mod-97, letra del DNI, Luhn y bóveda local.</small>
-      </div>
-      <div class="arrow">→</div>
-      <div class="zone cloud">
-        <span class="lbl">Proveedor del modelo</span>
-        <h3>Lo que recibe la IA</h3>
-        <div>Saldo <span class="tok">‹IMPORTE_2›</span></div>
-        <div>IBAN <span class="tok">‹IBAN_1-propio›</span></div>
-        <small>Solo tres herramientas: observe, act y oracle. Contraseñas, PIN y OTP no salen nunca.</small>
-      </div>
-      <div class="arrow">→</div>
-      <div class="zone">
-        <span class="lbl">Entorno de confianza</span>
-        <h3>Ejecutor local</h3>
-        <div>act(type, <span class="tok">‹IBAN_1›</span>)</div>
-        <div>escribe <span class="real">ES91 9400 …</span></div>
-        <small>Lo irreversible espera tu «sí». Todo queda en un registro firmado.</small>
+<!-- 3 · PROBLEMA B2C -->
+<section class="slide papel" data-t="0:50-1:20" data-paso="2: Problema, personas">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="problema">
+    <div>
+      <p class="eyebrow">Personas</p>
+      <h2>Tres bancos, tres apps. <span class="azul">Ninguna ayuda.</span></h2>
+    </div>
+    <div class="movil">
+      <div class="pantallita">
+        <div class="app"><b>Banca Alcor</b><span>clave y SMS</span></div>
+        <div class="app"><b>Brezo Banco</b><span>clave y huella</span></div>
+        <div class="app"><b>Nimbo Bróker</b><span>clave y código</span></div>
+        <div class="total"><b>3</b> apps, 3 claves</div>
       </div>
     </div>
-    <span class="num">3</span>
-  </section>
+  </div>
+  <div class="cifras">
+    <div class="cifra"><b>57 %</b><p>con cuentas en varias entidades</p><p class="fuente">Visa y Ditrendia, 2025</p></div>
+    <div class="cifra"><b>1,81</b><p>bancos por persona</p><p class="fuente">Inmark, 2024</p></div>
+    <div class="cifra"><b>+600.000</b><p>firmas en «Soy mayor, no idiota»</p><p class="fuente">2022</p></div>
+  </div>
+</section>
 
-  <section class="slide cob">
-    <p class="kick">El protocolo</p>
-    <h2>Ocho piezas, sobre cualquier modelo.</h2>
-    <div class="pieces">
-      <div class="piece"><b>Tokens</b><span>Tipados y estables por sesión.</span></div>
-      <div class="piece"><b>Tres clases</b><span>Rojo nunca sale, ámbar se tokeniza, verde es interfaz.</span></div>
-      <div class="piece"><b>Oráculo</b><span>Suma y compara sin revelar, con presupuesto.</span></div>
-      <div class="piece"><b>Ejecutor</b><span>Pone el valor real en local, justo antes de actuar.</span></div>
-      <div class="piece"><b>Procedencia</b><span>Un IBAN llegado por correo no entra en un campo de pago.</span></div>
-      <div class="piece"><b>Tu «sí»</b><span>Transferir, invertir, firmar o enviar esperan a una persona.</span></div>
-      <div class="piece"><b>Bloqueo final</b><span>Si algo se escapa sin tokenizar, la petición no sale.</span></div>
-      <div class="piece"><b>Auditoría</b><span>Qué vio el modelo, qué se bloqueó y quién aprobó, firmado.</span></div>
+<!-- 4 · CÓMO FUNCIONA -->
+<section class="slide cobalto" data-t="1:20-1:55" data-paso="3: Cómo funciona">
+  <canvas class="campo"></canvas>
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#FFFFFF" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#FFFFFF" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="como">
+    <h2>El modelo ve tokens.<br><span class="soft">Tu máquina pone los datos.</span></h2>
+    <div class="flujo">
+      <div class="paso">
+        <p class="que">1. Tu pantalla</p>
+        <div class="lineas">
+          <div><small>Saldo</small><span class="real">12.050,00 €</span></div>
+          <div><small>IBAN</small><span class="real">ES91 9400 …</span></div>
+          <div><small>Clave</small><span class="real">••••••</span></div>
+        </div>
+      </div>
+      <div class="flecha">→</div>
+      <div class="paso ia">
+        <p class="que">2. Lo que ve la IA</p>
+        <div class="lineas">
+          <div><small>Saldo</small><span class="tok">‹IMPORTE_2›</span></div>
+          <div><small>IBAN</small><span class="tok">‹IBAN_1-propio›</span></div>
+          <div><small>Clave</small><span>nunca sale</span></div>
+        </div>
+      </div>
+      <div class="flecha">→</div>
+      <div class="paso">
+        <p class="que">3. Tu máquina actúa</p>
+        <div class="lineas">
+          <div><small>escribe</small><span class="real">ES91 9400 …</span></div>
+          <div><small>pagar</small><span class="espera">espera tu «sí»</span></div>
+        </div>
+      </div>
     </div>
-    <span class="num">4</span>
-  </section>
+  </div>
+</section>
 
-  <section class="slide">
-    <p class="kick">Demo 1 | B2B - Priv8 para empresas</p>
-    <h2>Una factura llega por correo. 8 la registra sin ver los datos.</h2>
-    <div class="steps">
-      <div class="step"><b>Bandeja</b><span>Correo del proveedor con la factura en PDF.</span></div>
-      <div class="step"><b>ERP</b><span>Registra número e importe con tokens en Alba Core.</span></div>
-      <div class="step stop"><b>IBAN nuevo</b><span>El correo pide cambiar la cuenta. La procedencia lo bloquea.</span></div>
-      <div class="step"><b>Llamada</b><span>8 llama al número de la ficha, no al del correo.</span></div>
-      <div class="step"><b>Registro</b><span>Tu «sí» en la consola y el registro firmado.</span></div>
+<!-- 5 · ARQUITECTURA -->
+<section class="slide papel" data-t="1:55-2:35" data-paso="6: Arquitectura">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="arq-s">
+    <h2>Ocho piezas. <span class="azul">Ninguna depende de que el modelo obedezca.</span></h2>
+    <div class="arq">
+      <div class="zona local">
+        <p class="zona-t">Tu entorno de confianza</p>
+        <div class="adapt">
+          <span>Web: ERP y correo</span>
+          <span>Móvil con accesibilidad</span>
+        </div>
+        <div class="nucleo">
+          <p class="nucleo-t">Núcleo Priv8</p>
+          <div class="piezas">
+            <span>Detector</span><span>Tokens y bóveda</span><span>Procedencia</span><span>Oráculo</span>
+            <span>Ejecutor</span><span>Tu «sí»</span><span>Bloqueo final</span><span>Registro firmado</span>
+          </div>
+        </div>
+        <div class="adapt salida">
+          <span>Consola de auditoría</span>
+          <span>App 8 con voz local</span>
+        </div>
+      </div>
+      <div class="frontera">
+        <span class="ida">solo tokens<br>→</span>
+        <span class="vuelta">←<br>observe<br>act<br>oracle</span>
+      </div>
+      <div class="zona nube">
+        <p class="zona-t">Nube</p>
+        <div class="modelo"><b>Cualquier modelo</b><span>3 herramientas cerradas</span></div>
+        <div class="modelo voz"><b>Voz en la nube</b><span>frases sin datos</span></div>
+      </div>
     </div>
-    <p class="lead" style="margin-top:auto">Sobre un ERP sin API, con el modelo que la empresa elija.</p>
-    <span class="num">5</span>
-  </section>
+  </div>
+</section>
 
-  <section class="slide">
-    <p class="kick">Demo 2 | B2C - 8 en tu móvil</p>
-    <h2>«¿Cuánto tengo entre mis bancos?»</h2>
-    <div class="two" style="align-items:start">
-      <ul class="pts" style="margin-top:0">
-        <li>8 recorre Banca Alcor, Brezo Banco y Nimbo Bróker por accesibilidad.</li>
-        <li>Suma con el oráculo: la IA solo ve <span class="tok">‹SUMA_1›</span>.</li>
-        <li>La cifra la dice la voz del móvil. A la nube solo van frases sin datos.</li>
-      </ul>
-      <ul class="pts" style="margin-top:0">
-        <li>«Pasa 200 € al bróker»: 8 lo prepara y te pregunta por voz.</li>
-        <li>Mira a otro lado mientras pones tu huella o tu clave.</li>
-        <li>Si le pides consejo de inversión, no asesora: ejecuta lo que tú elijas.</li>
-      </ul>
+<!-- 6 · DEMO MÓVIL -->
+<section class="slide cobalto" data-t="2:35-3:45" data-paso="Demo 1: móvil">
+  <canvas class="campo"></canvas>
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#FFFFFF" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#FFFFFF" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <span class="reloj">demo en directo, 1:10</span>
+  <div class="demo">
+    <div>
+      <p class="eyebrow">Demo 1: 8 en tu móvil</p>
+      <h2>«¿Cuánto tengo entre mis bancos?»</h2>
+      <ol class="pasos">
+        <li><span><b>Recorre tus bancos</b></span></li>
+        <li><span><b>Suma sin ver</b> <span class="tok">‹SUMA_1›</span></span></li>
+        <li><span><b>«Pasa 200 € al bróker»</b></span></li>
+        <li class="bloq"><span><b>Tu huella: 8 no mira</b></span></li>
+      </ol>
     </div>
-    <span class="num">6</span>
-  </section>
+    <div class="lado"><div class="ocho grande"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.39 250.82" role="img" aria-label="8 no ve"><path fill="currentColor" d="M244.2 125.52Q244.2 145.14 238.4 159.75Q232.6 174.35 221.46 182.49Q210.31 190.63 194.26 190.63Q184 190.63 176.08 187.28Q168.17 183.94 162.59 177.81Q157.02 171.67 153.9 163.42H150.49Q147.37 171.67 141.8 177.81Q136.22 183.94 128.31 187.28Q120.39 190.63 110.14 190.63Q94.08 190.63 82.94 182.49Q71.79 174.35 65.99 159.75Q60.19 145.14 60.19 125.52Q60.19 105.68 65.99 91.07Q71.79 76.47 82.94 68.33Q94.08 60.19 110.14 60.19Q120.39 60.19 128.31 63.54Q136.22 66.88 141.8 73.13Q147.37 79.37 150.49 87.62H153.9Q157.02 79.37 162.59 73.13Q168.17 66.88 176.08 63.54Q184 60.19 194.26 60.19Q210.31 60.19 221.46 68.33Q232.6 76.47 238.4 91.07Q244.2 105.68 244.2 125.52ZM110.24 102.49C109.46 102.49 108.84 103.11 108.84 103.89V115.69L98.65 109.81C97.98 109.42 97.12 109.65 96.73 110.32L92.31 117.98C91.93 118.65 92.16 119.5 92.83 119.89L103.04 125.78L92.81 131.69C92.14 132.08 91.91 132.93 92.29 133.6L96.71 141.26C97.1 141.93 97.96 142.16 98.63 141.77L108.84 135.88V147.69C108.84 148.46 109.46 149.09 110.24 149.09H119.08C119.85 149.09 120.48 148.46 120.48 147.69V135.85L130.76 141.79C131.43 142.18 132.29 141.95 132.67 141.28L137.09 133.62C137.48 132.95 137.25 132.1 136.58 131.71L126.32 125.78L136.56 119.87C137.23 119.48 137.46 118.63 137.07 117.96L132.65 110.3C132.27 109.63 131.41 109.4 130.74 109.79L120.48 115.71V103.89C120.48 103.11 119.85 102.49 119.08 102.49ZM185.28 102.49C184.5 102.49 183.88 103.11 183.88 103.89V115.69L173.69 109.81C173.02 109.42 172.16 109.65 171.77 110.32L167.35 117.98C166.97 118.65 167.2 119.5 167.87 119.89L178.08 125.78L167.85 131.69C167.18 132.08 166.95 132.93 167.33 133.6L171.75 141.26C172.14 141.93 173 142.16 173.67 141.77L183.88 135.88V147.69C183.88 148.46 184.5 149.09 185.28 149.09H194.12C194.89 149.09 195.52 148.46 195.52 147.69V135.85L205.8 141.79C206.47 142.18 207.33 141.95 207.71 141.28L212.13 133.62C212.52 132.95 212.29 132.1 211.62 131.71L201.36 125.78L211.6 119.87C212.27 119.48 212.5 118.63 212.11 117.96L207.69 110.3C207.31 109.63 206.45 109.4 205.78 109.79L195.52 115.71V103.89C195.52 103.11 194.89 102.49 194.12 102.49Z"/></svg>
+</div></div>
+  </div>
+</section>
 
-  <section class="slide cob">
-    <p class="kick">Medido en las dos escenas</p>
-    <h2>Mismo trámite, sin y con Priv8.</h2>
-    <div class="metrics">
-      <div class="m"><strong>6 <i>→</i> 0</strong><span>datos reales que llegan al modelo en la escena B2B</span></div>
-      <div class="m"><strong>8 <i>→</i> 0</strong><span>datos reales que llegan al modelo en la escena B2C</span></div>
-      <div class="m"><strong>3 <i>→</i> 0</strong><span>frases con datos enviadas a la voz en la nube</span></div>
-      <div class="m"><strong>10/10</strong><span>correos con cambio de cuenta detectados, 0 falsos positivos en 20</span></div>
+<!-- 7 · DEMO EMPRESA -->
+<section class="slide cobalto" data-t="3:45-5:00" data-paso="Demo 2: empresa">
+  <canvas class="campo"></canvas>
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#FFFFFF" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#FFFFFF" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <span class="reloj">demo en directo, 1:15</span>
+  <div class="demo">
+    <div>
+      <p class="eyebrow">Demo 2: Priv8 para empresas y bancos</p>
+      <h2>Una factura llega por correo. <span class="soft">8 la registra sin ver los datos.</span></h2>
+      <ol class="pasos">
+        <li><span><b>Sin Priv8:</b> 6 datos fuera</span></li>
+        <li><span><b>Con Priv8:</b> solo tokens</span></li>
+        <li class="bloq"><span><b>Otra cuenta:</b> bloqueada</span></li>
+        <li><span><b>Tu «sí»:</b> firmado</span></li>
+      </ol>
     </div>
-    <p class="foot">Las dos tareas se completan igual, con 1,8 ms añadidos por paso. Se reproduce sin claves con make metrics. Todos los datos son inventados.</p>
-    <span class="num">7</span>
-  </section>
+    <div class="lado"><div class="ocho grande"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.39 250.82" role="img" aria-label="8, el agente de Priv8"><path fill="currentColor" d="M244.2 125.52Q244.2 145.14 238.4 159.75Q232.6 174.35 221.46 182.49Q210.31 190.63 194.26 190.63Q184 190.63 176.08 187.28Q168.17 183.94 162.59 177.81Q157.02 171.67 153.9 163.42H150.49Q147.37 171.67 141.8 177.81Q136.22 183.94 128.31 187.28Q120.39 190.63 110.14 190.63Q94.08 190.63 82.94 182.49Q71.79 174.35 65.99 159.75Q60.19 145.14 60.19 125.52Q60.19 105.68 65.99 91.07Q71.79 76.47 82.94 68.33Q94.08 60.19 110.14 60.19Q120.39 60.19 128.31 63.54Q136.22 66.88 141.8 73.13Q147.37 79.37 150.49 87.62H153.9Q157.02 79.37 162.59 73.13Q168.17 66.88 176.08 63.54Q184 60.19 194.26 60.19Q210.31 60.19 221.46 68.33Q232.6 76.47 238.4 91.07Q244.2 105.68 244.2 125.52ZM90.29 125.52Q90.29 134.44 92.97 141.24Q95.64 148.04 101.11 151.61Q106.57 155.17 114.37 155.17Q122.18 155.17 127.42 151.61Q132.66 148.04 135.44 141.24Q138.23 134.44 138.23 125.52Q138.23 116.38 135.44 109.58Q132.66 102.78 127.42 99.1Q122.18 95.42 114.37 95.42Q106.57 95.42 101.11 99.21Q95.64 103 92.97 109.69Q90.29 116.38 90.29 125.52ZM214.1 125.52Q214.1 116.38 211.42 109.69Q208.75 103 203.29 99.21Q197.82 95.42 190.02 95.42Q182.22 95.42 176.98 99.1Q171.74 102.78 168.95 109.58Q166.16 116.38 166.16 125.52Q166.16 134.44 168.95 141.24Q171.74 148.04 176.98 151.61Q182.22 155.17 190.02 155.17Q197.82 155.17 203.29 151.61Q208.75 148.04 211.42 141.24Q214.1 134.44 214.1 125.52ZM125.69 113.95C129.66 118.49 129.74 124.91 125.87 128.3C121.99 131.69 115.63 130.76 111.66 126.22C107.69 121.69 107.61 115.26 111.48 111.87C115.36 108.48 121.72 109.41 125.69 113.95ZM200.77 113.95C204.74 118.49 204.82 124.91 200.95 128.3C197.07 131.69 190.71 130.76 186.74 126.22C182.77 121.69 182.69 115.26 186.56 111.87C190.44 108.48 196.8 109.41 200.77 113.95Z"/></svg>
+</div></div>
+  </div>
+</section>
 
-  <section class="slide">
-    <p class="kick">Por qué nosotros</p>
-    <h2>Los demás resuelven el pago o la bóveda. Priv8, lo que el agente ve.</h2>
-    <div class="vs">
-      <div><b>Visa TAP, Google AP2, x402</b><span>Cómo paga un agente.</span></div>
-      <div><b>Bóvedas de datos (Skyflow)</b><span>Datos en APIs, sin agentes que usen pantallas.</span></div>
-      <div><b>Redacción en pantalla</b><span>Tapar datos impide trabajar.</span></div>
-      <div class="us"><b>Priv8 CUA</b><span>El agente trabaja con tokens, actúa con tu permiso y deja un registro firmado.</span></div>
+<!-- 9 · MERCADO -->
+<section class="slide papel" data-t="5:00-5:30" data-paso="4: Mercado">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="verticales">
+    <h2>Dos verticales, <span class="azul">un mismo núcleo.</span></h2>
+    <div class="dosv">
+      <div class="vcol">
+        <p class="vert">B2B: empresas y bancos</p>
+        <div class="dato"><small>mercado total</small><b>6.900 M$</b><span>automatizar cuentas a pagar</span></div>
+        <div class="dato obj"><small>nuestro objetivo</small><b>34.711</b><span>empresas en España con +50 empleados</span></div>
+      </div>
+      <div class="vcol">
+        <p class="vert">B2C: personas</p>
+        <div class="dato"><small>mercado total</small><b>27 M</b><span>personas con banca online en España</span></div>
+        <div class="dato obj"><small>nuestro objetivo</small><b>15 M</b><span>con cuentas en varios bancos</span></div>
+      </div>
     </div>
-    <span class="num">8</span>
-  </section>
+  </div>
+</section>
 
-  <section class="slide cob cover">
-    <img class="eyes" src="../../brand/logo/8-reposo-cobalto.svg" alt="8">
-    <h1>El agente hace el trámite. Los datos se quedan contigo.</h1>
-    <img class="logo" src="../../brand/logo/priv8-cua-claro.svg" alt="Priv8 CUA">
-    <div class="who">github.com/aaangelmartin/Priv8</div>
-  </section>
+<!-- 10 · COMPETENCIA -->
+<section class="slide papel" data-t="5:30-6:00" data-paso="5: Competencia">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="competencia">
+    <h2>Otros enmascaran o enseñan. <span class="azul">8 hace el trámite sin ver.</span></h2>
+    <div class="dost">
+      <table class="tabla">
+        <thead><tr><th class="grupo">B2B</th><th class="p8">Priv8</th><th>Enmascarado propio<small>como MyInvestor</small></th><th>RPA con IA<small>UiPath</small></th><th>Agentes BPO<small>Zomma</small></th></tr></thead>
+        <tbody>
+          <tr><td>Pantallas sin API</td><td class="p8"><span class="si">sí</span></td><td><span class="no">no</span></td><td><span class="si">sí</span></td><td><span class="si">sí</span></td></tr>
+          <tr><td>La IA no ve datos</td><td class="p8"><span class="si">sí</span></td><td><span class="parcial">en el chat</span></td><td><span class="parcial">parcial</span></td><td><span class="no">no</span></td></tr>
+          <tr><td>Bloquea por origen</td><td class="p8"><span class="si">sí</span></td><td><span class="no">no</span></td><td><span class="no">no</span></td><td><span class="no">no</span></td></tr>
+        </tbody>
+      </table>
+      <table class="tabla">
+        <thead><tr><th class="grupo">B2C</th><th class="p8">8</th><th>Agregadores<small>Fintonic</small></th><th>Tu banco en un chat<small>MyInvestor en ChatGPT</small></th><th>Agentes generales<small>ChatGPT, Gemini</small></th></tr></thead>
+        <tbody>
+          <tr><td>Todas tus cuentas</td><td class="p8"><span class="si">sí</span></td><td><span class="si">sí</span></td><td><span class="no">no</span></td><td><span class="si">sí</span></td></tr>
+          <tr><td>Hace la gestión</td><td class="p8"><span class="si">sí</span></td><td><span class="no">no</span></td><td><span class="no">no</span></td><td><span class="si">sí</span></td></tr>
+          <tr><td>La IA no ve datos</td><td class="p8"><span class="si">sí</span></td><td><span class="no">—</span></td><td><span class="no">no</span></td><td><span class="no">no</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · GO TO MARKET -->
+<section class="slide papel" data-t="6:00-6:20" data-paso="7 y 8: Modelo y go to market">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="gtm">
+    <h2>Un banco, <span class="azul">los dos lados.</span></h2>
+    <div class="camino">
+      <div class="etapa"><span>1</span><b>Piloto</b><small>4 semanas</small></div>
+      <div class="flecha">→</div>
+      <div class="etapa"><span>2</span><b>Su back office</b><small>licencia por proceso</small></div>
+      <div class="flecha">→</div>
+      <div class="etapa"><span>3</span><b>Sus clientes</b><small>por usuario activo</small></div>
+      <div class="flecha">→</div>
+      <div class="etapa"><span>4</span><b>Más empresas</b><small>integradores de ERP</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- 13 · EQUIPO -->
+<section class="slide papel" data-t="6:20-6:35" data-paso="9: Equipo">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="equipo-s">
+    <h2>Cuatro personas, <span class="azul">un protocolo que ya funciona.</span></h2>
+    <div class="personas">
+      <div class="persona"><img class="foto" src="data:image/png;base64,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" alt=""><h3>Pablo Rojo</h3></div>
+      <div class="persona"><img class="foto" src="data:image/png;base64,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" alt=""><h3>Ángel Martín</h3></div>
+      <div class="persona"><img class="foto" src="data:image/png;base64,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" alt=""><h3>Álvaro Carpintero</h3></div>
+      <div class="persona"><img class="foto" src="data:image/png;base64,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" alt=""><h3>Marco Barroso</h3></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 · OBJETIVO -->
+<section class="slide cobalto" data-t="6:35-7:00" data-paso="10: Objetivo">
+  <canvas class="campo"></canvas>
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#FFFFFF" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#FFFFFF" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="cierre2">
+    <div>
+      <div class="ocho"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 304.39 250.82" role="img" aria-label="8, el agente de Priv8"><path fill="currentColor" d="M244.2 125.52Q244.2 145.14 238.4 159.75Q232.6 174.35 221.46 182.49Q210.31 190.63 194.26 190.63Q184 190.63 176.08 187.28Q168.17 183.94 162.59 177.81Q157.02 171.67 153.9 163.42H150.49Q147.37 171.67 141.8 177.81Q136.22 183.94 128.31 187.28Q120.39 190.63 110.14 190.63Q94.08 190.63 82.94 182.49Q71.79 174.35 65.99 159.75Q60.19 145.14 60.19 125.52Q60.19 105.68 65.99 91.07Q71.79 76.47 82.94 68.33Q94.08 60.19 110.14 60.19Q120.39 60.19 128.31 63.54Q136.22 66.88 141.8 73.13Q147.37 79.37 150.49 87.62H153.9Q157.02 79.37 162.59 73.13Q168.17 66.88 176.08 63.54Q184 60.19 194.26 60.19Q210.31 60.19 221.46 68.33Q232.6 76.47 238.4 91.07Q244.2 105.68 244.2 125.52ZM90.29 125.52Q90.29 134.44 92.97 141.24Q95.64 148.04 101.11 151.61Q106.57 155.17 114.37 155.17Q122.18 155.17 127.42 151.61Q132.66 148.04 135.44 141.24Q138.23 134.44 138.23 125.52Q138.23 116.38 135.44 109.58Q132.66 102.78 127.42 99.1Q122.18 95.42 114.37 95.42Q106.57 95.42 101.11 99.21Q95.64 103 92.97 109.69Q90.29 116.38 90.29 125.52ZM214.1 125.52Q214.1 116.38 211.42 109.69Q208.75 103 203.29 99.21Q197.82 95.42 190.02 95.42Q182.22 95.42 176.98 99.1Q171.74 102.78 168.95 109.58Q166.16 116.38 166.16 125.52Q166.16 134.44 168.95 141.24Q171.74 148.04 176.98 151.61Q182.22 155.17 190.02 155.17Q197.82 155.17 203.29 151.61Q208.75 148.04 211.42 141.24Q214.1 134.44 214.1 125.52ZM125.69 113.95C129.66 118.49 129.74 124.91 125.87 128.3C121.99 131.69 115.63 130.76 111.66 126.22C107.69 121.69 107.61 115.26 111.48 111.87C115.36 108.48 121.72 109.41 125.69 113.95ZM200.77 113.95C204.74 118.49 204.82 124.91 200.95 128.3C197.07 131.69 190.71 130.76 186.74 126.22C182.77 121.69 182.69 115.26 186.56 111.87C190.44 108.48 196.8 109.41 200.77 113.95Z"/></svg>
+</div>
+      <h2>El agente hace el trámite. <span class="soft">Los datos se quedan contigo.</span></h2>
+    </div>
+    <div class="qrs">
+      <div class="qr"><div class="cod">
+<svg version="1.1" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><path fill="#0b1b33" d="M0,0H1V1H0zM1,0H2V1H1zM2,0H3V1H2zM3,0H4V1H3zM4,0H5V1H4zM5,0H6V1H5zM6,0H7V1H6zM8,0H9V1H8zM9,0H10V1H9zM10,0H11V1H10zM12,0H13V1H12zM13,0H14V1H13zM14,0H15V1H14zM15,0H16V1H15zM18,0H19V1H18zM19,0H20V1H19zM20,0H21V1H20zM21,0H22V1H21zM22,0H23V1H22zM23,0H24V1H23zM24,0H25V1H24zM0,1H1V2H0zM6,1H7V2H6zM8,1H9V2H8zM9,1H10V2H9zM11,1H12V2H11zM12,1H13V2H12zM13,1H14V2H13zM14,1H15V2H14zM15,1H16V2H15zM18,1H19V2H18zM24,1H25V2H24zM0,2H1V3H0zM2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM6,2H7V3H6zM8,2H9V3H8zM10,2H11V3H10zM12,2H13V3H12zM13,2H14V3H13zM14,2H15V3H14zM18,2H19V3H18zM20,2H21V3H20zM21,2H22V3H21zM22,2H23V3H22zM24,2H25V3H24zM0,3H1V4H0zM2,3H3V4H2zM3,3H4V4H3zM4,3H5V4H4zM6,3H7V4H6zM9,3H10V4H9zM12,3H13V4H12zM14,3H15V4H14zM15,3H16V4H15zM16,3H17V4H16zM18,3H19V4H18zM20,3H21V4H20zM21,3H22V4H21zM22,3H23V4H22zM24,3H25V4H24zM0,4H1V5H0zM2,4H3V5H2zM3,4H4V5H3zM4,4H5V5H4zM6,4H7V5H6zM8,4H9V5H8zM9,4H10V5H9zM12,4H13V5H12zM13,4H14V5H13zM15,4H16V5H15zM18,4H19V5H18zM20,4H21V5H20zM21,4H22V5H21zM22,4H23V5H22zM24,4H25V5H24zM0,5H1V6H0zM6,5H7V6H6zM9,5H10V6H9zM11,5H12V6H11zM12,5H13V6H12zM13,5H14V6H13zM14,5H15V6H14zM18,5H19V6H18zM24,5H25V6H24zM0,6H1V7H0zM1,6H2V7H1zM2,6H3V7H2zM3,6H4V7H3zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM10,6H11V7H10zM12,6H13V7H12zM14,6H15V7H14zM16,6H17V7H16zM18,6H19V7H18zM19,6H20V7H19zM20,6H21V7H20zM21,6H22V7H21zM22,6H23V7H22zM23,6H24V7H23zM24,6H25V7H24zM9,7H10V8H9zM10,7H11V8H10zM11,7H12V8H11zM14,7H15V8H14zM15,7H16V8H15zM0,8H1V9H0zM3,8H4V9H3zM4,8H5V9H4zM5,8H6V9H5zM6,8H7V9H6zM7,8H8V9H7zM8,8H9V9H8zM9,8H10V9H9zM10,8H11V9H10zM12,8H13V9H12zM13,8H14V9H13zM14,8H15V9H14zM15,8H16V9H15zM17,8H18V9H17zM20,8H21V9H20zM22,8H23V9H22zM23,8H24V9H23zM24,8H25V9H24zM0,9H1V10H0zM4,9H5V10H4zM5,9H6V10H5zM7,9H8V10H7zM8,9H9V10H8zM10,9H11V10H10zM11,9H12V10H11zM12,9H13V10H12zM14,9H15V10H14zM15,9H16V10H15zM17,9H18V10H17zM19,9H20V10H19zM20,9H21V10H20zM21,9H22V10H21zM22,9H23V10H22zM23,9H24V10H23zM0,10H1V11H0zM3,10H4V11H3zM4,10H5V11H4zM6,10H7V11H6zM7,10H8V11H7zM8,10H9V11H8zM10,10H11V11H10zM14,10H15V11H14zM15,10H16V11H15zM16,10H17V11H16zM17,10H18V11H17zM18,10H19V11H18zM20,10H21V11H20zM21,10H22V11H21zM24,10H25V11H24zM0,11H1V12H0zM7,11H8V12H7zM9,11H10V12H9zM12,11H13V12H12zM14,11H15V12H14zM17,11H18V12H17zM21,11H22V12H21zM22,11H23V12H22zM23,11H24V12H23zM24,11H25V12H24zM2,12H3V13H2zM4,12H5V13H4zM5,12H6V13H5zM6,12H7V13H6zM7,12H8V13H7zM10,12H11V13H10zM13,12H14V13H13zM14,12H15V13H14zM15,12H16V13H15zM16,12H17V13H16zM18,12H19V13H18zM24,12H25V13H24zM0,13H1V14H0zM1,13H2V14H1zM2,13H3V14H2zM3,13H4V14H3zM4,13H5V14H4zM5,13H6V14H5zM7,13H8V14H7zM10,13H11V14H10zM12,13H13V14H12zM15,13H16V14H15zM16,13H17V14H16zM20,13H21V14H20zM23,13H24V14H23zM0,14H1V15H0zM1,14H2V15H1zM2,14H3V15H2zM5,14H6V15H5zM6,14H7V15H6zM9,14H10V15H9zM10,14H11V15H10zM14,14H15V15H14zM15,14H16V15H15zM16,14H17V15H16zM20,14H21V15H20zM21,14H22V15H21zM22,14H23V15H22zM23,14H24V15H23zM24,14H25V15H24zM0,15H1V16H0zM2,15H3V16H2zM3,15H4V16H3zM4,15H5V16H4zM5,15H6V16H5zM7,15H8V16H7zM9,15H10V16H9zM12,15H13V16H12zM13,15H14V16H13zM14,15H15V16H14zM15,15H16V16H15zM17,15H18V16H17zM18,15H19V16H18zM19,15H20V16H19zM21,15H22V16H21zM22,15H23V16H22zM24,15H25V16H24zM0,16H1V17H0zM2,16H3V17H2zM4,16H5V17H4zM6,16H7V17H6zM8,16H9V17H8zM9,16H10V17H9zM10,16H11V17H10zM11,16H12V17H11zM12,16H13V17H12zM16,16H17V17H16zM17,16H18V17H17zM18,16H19V17H18zM19,16H20V17H19zM20,16H21V17H20zM22,16H23V17H22zM23,16H24V17H23zM8,17H9V18H8zM9,17H10V18H9zM10,17H11V18H10zM11,17H12V18H11zM16,17H17V18H16zM20,17H21V18H20zM22,17H23V18H22zM23,17H24V18H23zM0,18H1V19H0zM1,18H2V19H1zM2,18H3V19H2zM3,18H4V19H3zM4,18H5V19H4zM5,18H6V19H5zM6,18H7V19H6zM8,18H9V19H8zM10,18H11V19H10zM12,18H13V19H12zM13,18H14V19H13zM14,18H15V19H14zM16,18H17V19H16zM18,18H19V19H18zM20,18H21V19H20zM24,18H25V19H24zM0,19H1V20H0zM6,19H7V20H6zM8,19H9V20H8zM11,19H12V20H11zM13,19H14V20H13zM16,19H17V20H16zM20,19H21V20H20zM24,19H25V20H24zM0,20H1V21H0zM2,20H3V21H2zM3,20H4V21H3zM4,20H5V21H4zM6,20H7V21H6zM8,20H9V21H8zM10,20H11V21H10zM11,20H12V21H11zM13,20H14V21H13zM15,20H16V21H15zM16,20H17V21H16zM17,20H18V21H17zM18,20H19V21H18zM19,20H20V21H19zM20,20H21V21H20zM24,20H25V21H24zM0,21H1V22H0zM2,21H3V22H2zM3,21H4V22H3zM4,21H5V22H4zM6,21H7V22H6zM8,21H9V22H8zM9,21H10V22H9zM10,21H11V22H10zM12,21H13V22H12zM13,21H14V22H13zM16,21H17V22H16zM17,21H18V22H17zM18,21H19V22H18zM23,21H24V22H23zM24,21H25V22H24zM0,22H1V23H0zM2,22H3V23H2zM3,22H4V23H3zM4,22H5V23H4zM6,22H7V23H6zM11,22H12V23H11zM13,22H14V23H13zM15,22H16V23H15zM16,22H17V23H16zM20,22H21V23H20zM21,22H22V23H21zM22,22H23V23H22zM23,22H24V23H23zM24,22H25V23H24zM0,23H1V24H0zM6,23H7V24H6zM10,23H11V24H10zM11,23H12V24H11zM12,23H13V24H12zM13,23H14V24H13zM15,23H16V24H15zM18,23H19V24H18zM19,23H20V24H19zM20,23H21V24H20zM22,23H23V24H22zM23,23H24V24H23zM24,23H25V24H24zM0,24H1V25H0zM1,24H2V25H1zM2,24H3V25H2zM3,24H4V25H3zM4,24H5V25H4zM5,24H6V25H5zM6,24H7V25H6zM8,24H9V25H8zM9,24H10V25H9zM10,24H11V25H10zM11,24H12V25H11zM12,24H13V25H12zM13,24H14V25H13zM15,24H16V25H15zM16,24H17V25H16zM17,24H18V25H17zM21,24H22V25H21zM24,24H25V25H24z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none" /></svg></div><b>Explóralo</b><span>priv8.es</span></div>
+      <div class="qr"><div class="cod">
+<svg version="1.1" viewBox="0 0 25 25" xmlns="http://www.w3.org/2000/svg"><path fill="#0b1b33" d="M0,0H1V1H0zM1,0H2V1H1zM2,0H3V1H2zM3,0H4V1H3zM4,0H5V1H4zM5,0H6V1H5zM6,0H7V1H6zM8,0H9V1H8zM10,0H11V1H10zM12,0H13V1H12zM14,0H15V1H14zM16,0H17V1H16zM18,0H19V1H18zM19,0H20V1H19zM20,0H21V1H20zM21,0H22V1H21zM22,0H23V1H22zM23,0H24V1H23zM24,0H25V1H24zM0,1H1V2H0zM6,1H7V2H6zM9,1H10V2H9zM11,1H12V2H11zM13,1H14V2H13zM14,1H15V2H14zM18,1H19V2H18zM24,1H25V2H24zM0,2H1V3H0zM2,2H3V3H2zM3,2H4V3H3zM4,2H5V3H4zM6,2H7V3H6zM8,2H9V3H8zM9,2H10V3H9zM13,2H14V3H13zM14,2H15V3H14zM15,2H16V3H15zM16,2H17V3H16zM18,2H19V3H18zM20,2H21V3H20zM21,2H22V3H21zM22,2H23V3H22zM24,2H25V3H24zM0,3H1V4H0zM2,3H3V4H2zM3,3H4V4H3zM4,3H5V4H4zM6,3H7V4H6zM9,3H10V4H9zM10,3H11V4H10zM12,3H13V4H12zM13,3H14V4H13zM14,3H15V4H14zM15,3H16V4H15zM16,3H17V4H16zM18,3H19V4H18zM20,3H21V4H20zM21,3H22V4H21zM22,3H23V4H22zM24,3H25V4H24zM0,4H1V5H0zM2,4H3V5H2zM3,4H4V5H3zM4,4H5V5H4zM6,4H7V5H6zM10,4H11V5H10zM13,4H14V5H13zM14,4H15V5H14zM16,4H17V5H16zM18,4H19V5H18zM20,4H21V5H20zM21,4H22V5H21zM22,4H23V5H22zM24,4H25V5H24zM0,5H1V6H0zM6,5H7V6H6zM8,5H9V6H8zM10,5H11V6H10zM11,5H12V6H11zM12,5H13V6H12zM14,5H15V6H14zM18,5H19V6H18zM24,5H25V6H24zM0,6H1V7H0zM1,6H2V7H1zM2,6H3V7H2zM3,6H4V7H3zM4,6H5V7H4zM5,6H6V7H5zM6,6H7V7H6zM8,6H9V7H8zM10,6H11V7H10zM12,6H13V7H12zM14,6H15V7H14zM16,6H17V7H16zM18,6H19V7H18zM19,6H20V7H19zM20,6H21V7H20zM21,6H22V7H21zM22,6H23V7H22zM23,6H24V7H23zM24,6H25V7H24zM9,7H10V8H9zM10,7H11V8H10zM14,7H15V8H14zM15,7H16V8H15zM16,7H17V8H16zM0,8H1V9H0zM2,8H3V9H2zM6,8H7V9H6zM7,8H8V9H7zM9,8H10V9H9zM11,8H12V9H11zM12,8H13V9H12zM15,8H16V9H15zM19,8H20V9H19zM22,8H23V9H22zM24,8H25V9H24zM0,9H1V10H0zM1,9H2V10H1zM2,9H3V10H2zM3,9H4V10H3zM5,9H6V10H5zM8,9H9V10H8zM12,9H13V10H12zM14,9H15V10H14zM15,9H16V10H15zM16,9H17V10H16zM18,9H19V10H18zM19,9H20V10H19zM21,9H22V10H21zM23,9H24V10H23zM24,9H25V10H24zM3,10H4V11H3zM6,10H7V11H6zM7,10H8V11H7zM9,10H10V11H9zM11,10H12V11H11zM12,10H13V11H12zM14,10H15V11H14zM15,10H16V11H15zM17,10H18V11H17zM18,10H19V11H18zM20,10H21V11H20zM21,10H22V11H21zM22,10H23V11H22zM24,10H25V11H24zM2,11H3V12H2zM3,11H4V12H3zM5,11H6V12H5zM9,11H10V12H9zM10,11H11V12H10zM11,11H12V12H11zM12,11H13V12H12zM14,11H15V12H14zM17,11H18V12H17zM18,11H19V12H18zM19,11H20V12H19zM20,11H21V12H20zM21,11H22V12H21zM2,12H3V13H2zM3,12H4V13H3zM5,12H6V13H5zM6,12H7V13H6zM7,12H8V13H7zM8,12H9V13H8zM10,12H11V13H10zM13,12H14V13H13zM14,12H15V13H14zM16,12H17V13H16zM18,12H19V13H18zM19,12H20V13H19zM24,12H25V13H24zM2,13H3V14H2zM4,13H5V14H4zM5,13H6V14H5zM8,13H9V14H8zM13,13H14V14H13zM15,13H16V14H15zM16,13H17V14H16zM17,13H18V14H17zM18,13H19V14H18zM19,13H20V14H19zM23,13H24V14H23zM24,13H25V14H24zM0,14H1V15H0zM1,14H2V15H1zM2,14H3V15H2zM3,14H4V15H3zM6,14H7V15H6zM8,14H9V15H8zM11,14H12V15H11zM15,14H16V15H15zM16,14H17V15H16zM17,14H18V15H17zM18,14H19V15H18zM21,14H22V15H21zM22,14H23V15H22zM24,14H25V15H24zM3,15H4V16H3zM5,15H6V16H5zM7,15H8V16H7zM8,15H9V16H8zM10,15H11V16H10zM13,15H14V16H13zM15,15H16V16H15zM19,15H20V16H19zM20,15H21V16H20zM21,15H22V16H21zM0,16H1V17H0zM1,16H2V17H1zM2,16H3V17H2zM4,16H5V17H4zM6,16H7V17H6zM8,16H9V17H8zM11,16H12V17H11zM12,16H13V17H12zM13,16H14V17H13zM15,16H16V17H15zM16,16H17V17H16zM17,16H18V17H17zM18,16H19V17H18zM19,16H20V17H19zM20,16H21V17H20zM23,16H24V17H23zM8,17H9V18H8zM12,17H13V18H12zM15,17H16V18H15zM16,17H17V18H16zM20,17H21V18H20zM24,17H25V18H24zM0,18H1V19H0zM1,18H2V19H1zM2,18H3V19H2zM3,18H4V19H3zM4,18H5V19H4zM5,18H6V19H5zM6,18H7V19H6zM8,18H9V19H8zM9,18H10V19H9zM10,18H11V19H10zM12,18H13V19H12zM13,18H14V19H13zM14,18H15V19H14zM16,18H17V19H16zM18,18H19V19H18zM20,18H21V19H20zM24,18H25V19H24zM0,19H1V20H0zM6,19H7V20H6zM11,19H12V20H11zM12,19H13V20H12zM14,19H15V20H14zM15,19H16V20H15zM16,19H17V20H16zM20,19H21V20H20zM0,20H1V21H0zM2,20H3V21H2zM3,20H4V21H3zM4,20H5V21H4zM6,20H7V21H6zM10,20H11V21H10zM13,20H14V21H13zM14,20H15V21H14zM15,20H16V21H15zM16,20H17V21H16zM17,20H18V21H17zM18,20H19V21H18zM19,20H20V21H19zM20,20H21V21H20zM24,20H25V21H24zM0,21H1V22H0zM2,21H3V22H2zM3,21H4V22H3zM4,21H5V22H4zM6,21H7V22H6zM13,21H14V22H13zM14,21H15V22H14zM20,21H21V22H20zM22,21H23V22H22zM23,21H24V22H23zM0,22H1V23H0zM2,22H3V23H2zM3,22H4V23H3zM4,22H5V23H4zM6,22H7V23H6zM8,22H9V23H8zM9,22H10V23H9zM11,22H12V23H11zM15,22H16V23H15zM16,22H17V23H16zM17,22H18V23H17zM19,22H20V23H19zM20,22H21V23H20zM21,22H22V23H21zM23,22H24V23H23zM24,22H25V23H24zM0,23H1V24H0zM6,23H7V24H6zM9,23H10V24H9zM10,23H11V24H10zM13,23H14V24H13zM15,23H16V24H15zM16,23H17V24H16zM17,23H18V24H17zM18,23H19V24H18zM19,23H20V24H19zM20,23H21V24H20zM0,24H1V25H0zM1,24H2V25H1zM2,24H3V25H2zM3,24H4V25H3zM4,24H5V25H4zM5,24H6V25H5zM6,24H7V25H6zM8,24H9V25H8zM9,24H10V25H9zM11,24H12V25H11zM12,24H13V25H12zM13,24H14V25H13zM16,24H17V25H16zM17,24H18V25H17zM21,24H22V25H21zM24,24H25V25H24z" id="qr-path" fill="#000000" fill-opacity="1" fill-rule="nonzero" stroke="none" /></svg></div><b>Conéctalo a Claude</b><span>mcp.priv8.es</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ANEXO · PREGUNTAS -->
+<section class="slide papel" data-t="preguntas" data-paso="Anexo: Preguntas (1)">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="anexo">
+    <p class="eyebrow">Anexo: preguntas del jurado</p>
+    <h2>Lo que nos pueden preguntar</h2>
+    <div class="preguntas">
+      <div class="preg"><h3>¿Y si el modelo adivina la cifra a base de preguntas?</h3><p>El oráculo tiene un presupuesto de preguntas por sesión y responde por tramos, nunca con la cifra.</p></div>
+      <div class="preg"><h3>¿Qué pasa con un dato en texto libre?</h3><p>Reglas por pantalla, patrones validados (IBAN mod-97, DNI, Luhn) y la bóveda local. Si algo se escapa, el bloqueo final retiene la petición.</p></div>
+      <div class="preg"><h3>¿Un token sigue siendo un dato personal?</h3><p>Es seudonimización: la tabla token-valor no sale de la máquina. El RGPD sigue aplicando y el registro sirve de evidencia; no decimos que certifique nada.</p></div>
+      <div class="preg"><h3>¿Por qué no usar la API del ERP?</h3><p>Porque muchos no tienen, o integrarla cuesta meses. Priv8 trabaja sobre las pantallas que ya existen.</p></div>
+      <div class="preg"><h3>¿Y la inyección de instrucciones en un correo?</h3><p>No dependemos de que el modelo la ignore: la procedencia impide por diseño que un dato del correo entre en un campo de pago.</p></div>
+      <div class="preg"><h3>¿Cuánto añade de latencia y de coste?</h3><p>Unos 2 ms por paso en local. El coste es el del modelo que elija el cliente, sin llamadas extra.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide papel" data-t="preguntas" data-paso="Anexo: Preguntas (2)">
+  <div class="marca"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-43.12 -26.34 518.31 179.68" role="img" aria-label="Priv8"><path fill="#2D45D6" d="M131.82 63.58Q131.82 77.64 127.67 88.1Q123.51 98.56 115.53 104.39Q107.54 110.22 96.04 110.22Q88.69 110.22 83.02 107.82Q77.35 105.43 73.36 101.04Q69.37 96.64 67.13 90.73H64.69Q62.45 96.64 58.46 101.04Q54.47 105.43 48.8 107.82Q43.13 110.22 35.78 110.22Q24.28 110.22 16.29 104.39Q8.31 98.56 4.15 88.1Q-0 77.64 -0 63.58Q-0 49.36 4.15 38.9Q8.31 28.44 16.29 22.61Q24.28 16.78 35.78 16.78Q43.13 16.78 48.8 19.18Q54.47 21.57 58.46 26.04Q62.45 30.52 64.69 36.43H67.13Q69.37 30.52 73.36 26.04Q77.35 21.57 83.02 19.18Q88.69 16.78 96.04 16.78Q107.54 16.78 115.53 22.61Q123.51 28.44 127.67 38.9Q131.82 49.36 131.82 63.58ZM21.56 63.58Q21.56 69.97 23.48 74.84Q25.4 79.71 29.31 82.27Q33.22 84.82 38.81 84.82Q44.4 84.82 48.16 82.27Q51.91 79.71 53.91 74.84Q55.9 69.97 55.9 63.58Q55.9 57.03 53.91 52.16Q51.91 47.29 48.16 44.65Q44.4 42.02 38.81 42.02Q33.22 42.02 29.31 44.73Q25.4 47.45 23.48 52.24Q21.56 57.03 21.56 63.58ZM110.26 63.58Q110.26 57.03 108.34 52.24Q106.42 47.45 102.51 44.73Q98.6 42.02 93.01 42.02Q87.42 42.02 83.66 44.65Q79.91 47.29 77.91 52.16Q75.91 57.03 75.91 63.58Q75.91 69.97 77.91 74.84Q79.91 79.71 83.66 82.27Q87.42 84.82 93.01 84.82Q98.6 84.82 102.51 82.27Q106.42 79.71 108.34 74.84Q110.26 69.97 110.26 63.58ZM46.92 55.29C49.77 58.54 49.82 63.15 47.05 65.57C44.27 68 39.72 67.34 36.87 64.08C34.03 60.83 33.97 56.23 36.74 53.8C39.52 51.37 44.08 52.04 46.92 55.29ZM100.71 55.29C103.55 58.54 103.61 63.15 100.83 65.57C98.06 68 93.5 67.34 90.66 64.08C87.81 60.83 87.76 56.23 90.53 53.8C93.31 51.37 97.86 52.04 100.71 55.29Z"/><path fill="#0B1B33" d="M402.76 102.1Q393.96 102.1 387.41 99.5Q380.86 96.9 377.21 91.9Q373.56 86.9 373.56 79.7Q373.56 75.1 375.06 71.55Q376.56 68 379.31 65.5Q382.06 63 385.76 61.6V60.3Q382.96 59.1 380.66 57.05Q378.36 55 377.06 52Q375.76 49 375.76 45Q375.76 38.2 379.31 33.8Q382.86 29.4 389.01 27.15Q395.16 24.9 402.76 24.9Q410.56 24.9 416.66 27.15Q422.76 29.4 426.26 33.8Q429.76 38.2 429.76 45Q429.76 49 428.51 52Q427.26 55 424.96 57.05Q422.66 59.1 419.76 60.3V61.6Q423.46 63 426.26 65.5Q429.06 68 430.56 71.55Q432.06 75.1 432.06 79.7Q432.06 86.9 428.41 91.9Q424.76 96.9 418.21 99.5Q411.66 102.1 402.76 102.1ZM179.26 100V26.4H205.96Q215.26 26.4 221.91 29.5Q228.56 32.6 232.11 38.3Q235.66 44 235.66 52V53.6Q235.66 61.4 232.11 67.15Q228.56 72.9 221.91 76Q215.26 79.1 205.96 79.1H195.66V100ZM328.66 100 312.26 45.2H328.76L340.43 86.7H342.79L352.86 45.2H368.26L354.06 100ZM244.56 100V45.2H257.26V63.31Q258.18 55.55 261.91 50.8Q266.86 44.5 276.26 44.5H278.36V58.3H274.36Q267.76 58.3 264.16 61.85Q260.56 65.4 260.56 72.1V100ZM288.26 100V57H280.96V45.2H304.26V100ZM195.66 40.6V64.9H206.76Q210.56 64.9 213.31 63.4Q216.06 61.9 217.56 59.15Q219.06 56.4 219.06 52.8Q219.06 49 217.56 46.25Q216.06 43.5 213.31 42.05Q210.56 40.6 206.76 40.6H195.66ZM402.76 88.6Q406.86 88.6 409.86 87.4Q412.86 86.2 414.56 83.75Q416.26 81.3 416.26 77.8Q416.26 74.3 414.61 71.95Q412.96 69.6 409.91 68.35Q406.86 67.1 402.76 67.1Q398.76 67.1 395.71 68.35Q392.66 69.6 391.06 71.95Q389.46 74.3 389.46 77.8Q389.46 81.3 391.06 83.75Q392.66 86.2 395.71 87.4Q398.76 88.6 402.76 88.6ZM402.76 55Q407.96 55 410.96 52.85Q413.96 50.7 413.96 46.6Q413.96 42.5 410.96 40.4Q407.96 38.3 402.76 38.3Q397.56 38.3 394.56 40.45Q391.56 42.6 391.56 46.6Q391.56 50.7 394.61 52.85Q397.66 55 402.76 55ZM294.46 39.8Q289.96 39.8 287.81 37.45Q285.66 35.1 285.66 31.5Q285.66 27.8 287.81 25.45Q289.96 23.1 294.46 23.1Q298.96 23.1 301.11 25.45Q303.26 27.8 303.26 31.5Q303.26 35.1 301.11 37.45Q298.96 39.8 294.46 39.8Z"/></svg>
+</div>
+  <div class="anexo">
+    <p class="eyebrow">Anexo: preguntas del jurado</p>
+    <h2>Lo que nos pueden preguntar</h2>
+    <div class="preguntas">
+      <div class="preg"><h3>¿Funciona con cualquier modelo?</h3><p>Sí. El modelo solo recibe tokens y tiene tres herramientas cerradas: observe, act y oracle. Ni navegador, ni sistema, ni código propio.</p></div>
+      <div class="preg"><h3>¿Y la autenticación del banco (PSD2)?</h3><p>La hace siempre la persona. Mientras pone huella, clave u OTP, 8 no recibe nada y mira a otro lado.</p></div>
+      <div class="preg"><h3>¿El agente da consejos de inversión?</h3><p>No. El asesoramiento está regulado: 8 ejecuta lo que la persona elige y dice «no puedo» si le piden consejo.</p></div>
+      <div class="preg"><h3>¿Cuánto cobraréis?</h3><p>Licencia anual por proceso más un precio por documento. La cifra saldrá del coste por tarea que ya medimos y del ahorro frente a hacerlo a mano.</p></div>
+      <div class="preg"><h3>¿Qué os diferencia de Tsinghua?</h3><p>Su trabajo valida la idea en un emulador. Nosotros añadimos procedencia, oráculo con presupuesto, confirmación y registro firmado, y lo llevamos a un producto.</p></div>
+      <div class="preg"><h3>¿Qué haríais con un piloto?</h3><p>Un proceso de cuentas a pagar en 4 semanas, sobre el ERP del cliente, midiendo datos expuestos, fraudes bloqueados y horas ahorradas.</p></div>
+    </div>
+  </div>
+</section>
 
 </div>
-<p class="hint">← → para pasar | F para pantalla completa</p>
+
+
+<nav class="hud" aria-label="Controles de la presentación">
+  <button id="prev" aria-label="Anterior">←</button>
+  <span class="n" id="n">1 / 14</span>
+  <button id="next" aria-label="Siguiente">→</button>
+  <span class="t" id="t">0:00</span>
+  <button id="bt" title="Cronómetro (T)">Crono</button>
+  <button id="bg" aria-pressed="false" title="Todas las diapositivas con su texto (G)">Vista general</button>
+  <button id="bf" title="Pantalla completa (F)">Completa</button>
+</nav>
+
 <script>
-  const slides = [...document.querySelectorAll('.slide')];
-  let i = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));
-  const show = () => { slides.forEach((s, k) => s.classList.toggle('on', k === i)); history.replaceState(null, '', '#' + (i + 1)); };
-  const fit = () => { const s = Math.min(innerWidth / 1280, innerHeight / 720); document.getElementById('deck').style.transform = `translate(-50%, -50%) scale(${s})`; };
+(() => {
+  const deck = document.getElementById('deck')
+  const slides = [...deck.querySelectorAll('.slide')]
+  let i = 0
+  try { i = Math.min(slides.length - 1, Math.max(0, +(new URLSearchParams(location.hash.slice(1)).get('s') || 1) - 1)) } catch {}
+
+  // Campo de datos de la landing: valores ficticios en mono, unos pocos ya tokenizados.
+  const DATOS = ['ES43 9100 0001 5740 1234 5678', 'Suministros Lumen', '1.254,30 €', 'B12345674', 'Ángel Martín', 'Álvaro Carpintero',
+    'Pablo Rojo', 'Marco Barroso', '12.050,00 €', 'facturacion@lumen.example', '48215963M', '+34 611 222 333', 'F-2026-0412',
+    'ES91 2100 0418 4502 0005 1332', 'Talleres Norte', '3.412,58 €', '4111 1111 1111 1111', 'PIN 4821']
+  const TOKS = ['‹IBAN_1›', '‹IMPORTE_2›', '‹NOMBRE_1›', '‹CIF_1›', '‹EMAIL_4›', '‹FACTURA_1›']
+  function campo(c) {
+    const w = 1920, h = 1080, x = c.getContext('2d')
+    c.width = w; c.height = h
+    x.font = '500 19px "IBM Plex Mono", monospace'
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647
+    for (let y = 24; y < h; y += 34) {
+      let px = -rnd() * 200
+      while (px < w) {
+        const tok = rnd() < .12
+        const s = tok ? TOKS[Math.floor(rnd() * TOKS.length)] : DATOS[Math.floor(rnd() * DATOS.length)]
+        x.fillStyle = tok ? 'rgba(195,204,255,.22)' : `rgba(255,255,255,${(.03 + rnd() * .06).toFixed(3)})`
+        x.fillText(s, px, y)
+        px += x.measureText(s).width + 36
+      }
+    }
+  }
+  const pintar = () => deck.querySelectorAll('canvas.campo').forEach(campo)
+  document.fonts?.ready.then(pintar); pintar()
+
+  // Vista general: cada diapositiva dentro de un marco, con su texto debajo.
+  slides.forEach((s, k) => {
+    const item = document.createElement('div'); item.className = 'item'
+    const marco = document.createElement('div'); marco.className = 'marco'
+    s.parentNode.insertBefore(item, s); marco.appendChild(s); item.appendChild(marco)
+    const n = s.querySelector('.notes'); const notas = document.createElement('div'); notas.className = 'notes'
+    notas.innerHTML = `<b>${k + 1}. ${s.dataset.paso} (${s.dataset.t})</b>`
+    item.appendChild(notas)
+    marco.addEventListener('click', () => { if (document.body.classList.contains('guion')) { i = k; modo('guion'); mostrar() } })
+  })
+
+  function escalar() {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080)
+    document.documentElement.style.setProperty('--s', s)
+    const m = deck.querySelector('.marco'); if (m) document.documentElement.style.setProperty('--ts', m.clientWidth / 1920)
+  }
+  function mostrar() {
+    slides.forEach((s, k) => s.classList.toggle('on', k === i))
+    document.getElementById('n').textContent = `${i + 1} / ${slides.length}`
+    const s = slides[i], n = s.querySelector('.notes')
+    try { history.replaceState(null, '', '#s=' + (i + 1)) } catch {}
+  }
+  const ir = (d) => { i = Math.min(slides.length - 1, Math.max(0, i + d)); mostrar() }
+  function modo(m) {
+    const on = document.body.classList.toggle(m)
+    document.getElementById('bg').setAttribute('aria-pressed', on)
+    escalar()
+    if (m === 'guion' && on) requestAnimationFrame(escalar)
+  }
+
+  // Cronómetro de los 7 minutos.
+  let t0 = null, iv = null
+  function crono() {
+    if (iv) { clearInterval(iv); iv = null; t0 = null; document.getElementById('t').textContent = '0:00'; return }
+    t0 = Date.now()
+    iv = setInterval(() => {
+      const s = Math.floor((Date.now() - t0) / 1000)
+      const el = document.getElementById('t')
+      el.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+      el.style.color = s > 420 ? '#ff9a8f' : ''
+    }, 250)
+  }
+
+  document.getElementById('prev').onclick = () => ir(-1)
+  document.getElementById('next').onclick = () => ir(1)
+    document.getElementById('bg').onclick = () => modo('guion')
+  document.getElementById('bt').onclick = crono
+  document.getElementById('bf').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.().catch(() => {}) }
   addEventListener('keydown', (e) => {
-    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) i = Math.min(slides.length - 1, i + 1);
-    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) i = Math.max(0, i - 1);
-    else if (e.key === 'Home') i = 0; else if (e.key === 'End') i = slides.length - 1;
-    else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); return; }
-    else return;
-    e.preventDefault(); show();
-  });
-  addEventListener('click', (e) => { i = e.clientX > innerWidth / 3 ? Math.min(slides.length - 1, i + 1) : Math.max(0, i - 1); show(); });
-  addEventListener('resize', fit); fit(); show();
+    if (e.target.closest('button') && (e.key === ' ' || e.key === 'Enter')) return
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); ir(1) }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); ir(-1) }
+    else if (e.key === 'g' || e.key === 'G') modo('guion')
+    else if (e.key === 't' || e.key === 'T') crono()
+    else if (e.key === 'f' || e.key === 'F') document.getElementById('bf').click()
+    else if (e.key === 'Home') { i = 0; mostrar() } else if (e.key === 'End') { i = slides.length - 1; mostrar() }
+  })
+  let x0 = null
+  addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX }, { passive: true })
+  addEventListener('touchend', (e) => { if (x0 == null || document.body.classList.contains('guion')) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) ir(dx < 0 ? 1 : -1); x0 = null })
+  addEventListener('resize', escalar)
+  escalar(); mostrar()
+})()
 </script>
-</body>
-</html>

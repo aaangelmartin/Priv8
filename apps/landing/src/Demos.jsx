@@ -74,7 +74,7 @@ const STEPS = [
   ['Lee la factura', 'Al modelo le llegan ‹CIF_1-proveedor› e ‹IMPORTE_2-factura›.'],
   ['La registra en el ERP Alba Core', 'El ejecutor escribe los valores reales en local.'],
   ['El pie del correo pide pagar a otro IBAN', null],
-  ['Llama al proveedor al número de su ficha', 'Se presenta como IA y pregunta por el último pedido.'],
+  ['Avisa del posible fraude', 'La consola muestra la alarma y el registro espera tu «sí».'],
 ];
 
 function InjectionDemo() {

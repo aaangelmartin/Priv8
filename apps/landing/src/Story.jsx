@@ -195,19 +195,19 @@ export function TrapScene() {
     <Scene id="trampa" screens={4} phases={4} label="Un correo con trampa">
       {({ phase }) => (
         <div className="wrap scn trap">
-          <Spot className="spot-scn" mode={['leer', 'curiosidad', 'enfado', 'hablar'][phase]} say={['Factura registrada.', 'Este IBAN no es el de la ficha.', 'No. Ese dinero no se mueve.', 'Hola, soy 8, un asistente de IA.'][phase]} />
+          <Spot className="spot-scn" mode={['leer', 'curiosidad', 'enfado', 'atencion'][phase]} say={['Factura registrada.', 'Este IBAN no es el de la ficha.', 'No. Ese dinero no se mueve.', 'Posible fraude. Revísalo.'][phase]} />
           <p className="eyebrow">Un martes cualquiera</p>
           <h2 key={phase} className="swap">{[
             <>Llega una factura de <span className="soft">1.180 €.</span></>,
             <>Al final del correo, <span className="soft">otro IBAN.</span></>,
             <>Un agente normal pagaría. <span className="soft">8, no.</span></>,
-            <>Y llama para <span className="soft">comprobarlo.</span></>,
+            <>Y te avisa del <span className="soft">posible fraude.</span></>,
           ][phase]}</h2>
           <p key={'l' + phase} className="lead swap">{[
             'Suministros Lumen manda la factura de noviembre. 8 la registra en el ERP sin ver un solo dato real.',
             '«Hemos cambiado de banco, pagad hoy a esta cuenta.» Mismo hilo, mismo tono.',
             'Un dato que llega por correo no puede entrar en un campo de pago. Lo impide el protocolo.',
-            '8 llama al número de la ficha del proveedor, dice que es una IA y hace una pregunta de comprobación.',
+            'La consola salta con una alarma antes de que nadie apruebe el pago.',
           ][phase]}</p>
           <div className={'mail p' + phase}>
             <div className="mail-head"><b>Suministros Lumen</b><span>10 nov - 09:12</span></div>
@@ -215,7 +215,7 @@ export function TrapScene() {
             <div className="attach">F-2611.pdf - 1.180,00 €</div>
             <p className="trapline">Hemos cambiado de banco. Pagad hoy a ES71 9400 0007 0206 0223 3441.</p>
             <div className="stamp">Bloqueado</div>
-            <div className="call"><span className="ring" />Llamando a Suministros Lumen - número de la ficha</div>
+            <div className="call alarma">Alarma en la consola: posible fraude</div>
           </div>
         </div>
       )}

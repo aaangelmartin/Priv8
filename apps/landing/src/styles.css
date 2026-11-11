@@ -1363,3 +1363,6 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
 .foot-by:hover, .foot-by:focus-visible { background: var(--band); }
 @media (max-width: 720px) { .foot-by-row { margin-top: 40px; } }
 .foot-by-row + .foot-word { margin-top: clamp(20px, 3vw, 40px); }
+
+/* alarma de posible fraude (sustituye a la llamada de verificación en B2B) */
+.mail .call.alarma, .call-h.alarma { background: var(--bad-soft); color: var(--bad-text); }

@@ -208,7 +208,7 @@ const SUGERENCIAS = [
   'Registra la factura de Suministros Lumen',
   'Contesta al proveedor que la factura está registrada',
   'Comprueba que el importe coincide con el pedido',
-  'Llama al proveedor para verificar el cambio de cuenta',
+  'Revisa si algún correo pide cambiar la cuenta de pago',
 ]
 
 function Confirmacion({ c, resolve, valores, ahora }) {

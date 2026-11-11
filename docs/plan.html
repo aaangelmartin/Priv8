@@ -462,6 +462,7 @@ details.src[open] > summary::after{content:"−"}
       <div>
         <span class="k">Priv8 - estrategia para Hackfinance - Madrid Engineering Week - 10 nov 2026</span>
         <h1>Un producto. Dos verticales.</h1>
+        <p class="nota-act" style="margin:12px 0 0;font-size:.95rem;opacity:.85">Actualización del 11 nov: la llamada de verificación al proveedor sale de la demo B2B. En su lugar, la consola avisa de posible fraude. Las partes de este plan que hablan de la llamada quedan como referencia de un extra que ya está en el código.</p>
         <p class="one">Priv8 CUA deja a un agente usar pantallas sin ver los datos: cada dato sensible se cambia por un token antes de llegar al modelo y solo vuelve a su valor real en local, al ejecutar.</p>
       </div>
       <svg class="mark" viewBox="56 56 192 138" role="img" aria-label="8, el agente de Priv8, con los ojos abiertos">
@@ -806,13 +807,10 @@ details.src[open] > summary::after{content:"−"}
       <li class="st"><span class="hd"><i>6</i>Contesta al correo</span>
         <div class="mock"><div class="bar">Respuesta</div><div class="bd"><span>"Hemos registrado <span class="t">‹FACTURA_1›</span>. El cambio de cuenta queda pendiente de verificación."</span></div></div>
         <span class="loc"><b>en local</b>El renderizador pone los valores. La respuesta nunca incluye un IBAN.</span></li>
-      <li class="st"><span class="hd"><i>7</i>8 llama al proveedor</span>
-        <div class="mock"><div class="bar">Llamada</div><div class="bd"><span>act call <span class="t">‹TEL_1-maestro›</span></span><span class="m">Transcripción:</span><span>"El interlocutor dice <span class="t">‹RESPUESTA_1›</span>"</span></div></div>
-        <span class="loc"><b>en local</b>Al número que ya constaba en el maestro, no al del correo. La transcripción se tokeniza antes de llegar a Claude.</span></li>
-      <li class="st"><span class="hd"><i>8</i>Pregunta de desafío</span>
-        <div class="mock"><div class="bar">oracle</div><div class="bd"><span class="m">"¿Han cambiado ustedes de cuenta?" + dato del maestro</span><span>matches(<span class="t">‹RESPUESTA_1›</span>, <span class="t">‹CODIGO_1-maestro›</span>)</span><span class="bad">→ "no coincide"</span></div></div>
-        <span class="loc"><b>en local</b>Un dato que no viaja por correo. Si no coincide o dicen que no cambiaron: rechazo y segundo canal.</span></li>
-      <li class="st"><span class="hd"><i>9</i>Aprobación y registro</span>
+      <li class="st"><span class="hd"><i>7</i>Alarma de posible fraude</span>
+        <div class="mock"><div class="bar">Consola de auditoría</div><div class="bd"><span>Posible fraude: el correo pide cambiar la cuenta de pago</span><span class="m">El correo trae <span class="t">‹IBAN_2-correo›</span>, que no es la cuenta de la ficha</span><span class="bad">→ bloqueado por el núcleo</span></div></div>
+        <span class="loc"><b>en local</b>La consola lo deduce de los tokens, sin ver los datos: cambio de cuenta, órdenes a la IA en el correo y bloqueos del núcleo. La persona la marca como revisada.</span></li>
+      <li class="st"><span class="hd"><i>8</i>Aprobación y registro</span>
         <div class="mock"><div class="bar">Consola</div><div class="bd"><span>"Factura lista. ¿La apruebas?"</span><span class="ok">registro firmado</span><span class="m">entradas al modelo - bloqueo - llamada con su hash - quién aprobó</span></div></div>
         <span class="loc"><b>en local</b>Una persona libera el pago.</span></li>
     </ol>
@@ -973,8 +971,8 @@ details.src[open] > summary::after{content:"−"}
         <div class="axis"><span>0:00</span><span>0:30</span><span>1:00</span><span>1:30</span><span>2:00</span><span>2:30</span><span>3:00</span></div>
         <div class="beat off"><span class="tm">0:00–0:20</span><span class="sw"></span><b>Sin protocolo, grabado</b><p>Registra la factura y lee el saldo. Todo en claro.</p><q>Esto es lo que hoy recibe el modelo. Ahora, con Priv8 CUA.</q><span class="chips"><span>innovación</span><span>presentación</span></span></div>
         <div class="beat"><span class="tm">0:20–0:50</span><span class="sw"></span><b>B2B: llega la factura</b><p>Suministros Lumen. 8 la registra en Alba Core. La consola: <span class="tok">‹PROVEEDOR_1›</span> <span class="tok">‹FACTURA_1›</span> <span class="tok">‹IMPORTE_1-positivo›</span></p><span class="chips"><span>implementación</span></span></div>
-        <div class="beat trap"><span class="tm">0:50–1:10</span><span class="sw"></span><b>La trampa</b><p>Aparece <span class="tok">‹IBAN_2-correo›</span>; el campo de pago lo rechaza. Cara de enfado.</p><q>Esa cuenta viene de un correo, no de vuestra ficha. No la uso. Llamo al proveedor al número que ya teníamos.</q><span class="chips"><span>innovación</span><span>implementación</span></span></div>
-        <div class="beat"><span class="tm">1:10–1:35</span><span class="sw"></span><b>La llamada, real</b><p>Al móvil de un compañero. Desafío: "no coincide". Se firma el registro y se verifica en pantalla.</p><q>Hola, soy 8, un asistente de inteligencia artificial que llama en nombre de Talleres Norte. Esta llamada se graba.</q><span class="chips"><span>IA y audio</span><span>viabilidad</span></span></div>
+        <div class="beat trap"><span class="tm">0:50–1:10</span><span class="sw"></span><b>La trampa</b><p>Aparece <span class="tok">‹IBAN_2-correo›</span>; el campo de pago lo rechaza. Cara de enfado.</p><q>Esa cuenta viene de un correo, no de vuestra ficha. No la uso.</q><span class="chips"><span>innovación</span><span>implementación</span></span></div>
+        <div class="beat"><span class="tm">1:10–1:35</span><span class="sw"></span><b>Alarma de posible fraude</b><p>La consola avisa: el correo pedía cambiar la cuenta. La persona aprueba el registro con la cuenta de la ficha y se verifica el registro firmado.</p><q>Posible fraude detectado. Lo he visto sin ver ningún dato.</q><span class="chips"><span>UX</span><span>viabilidad</span></span></div>
         <div class="beat b2c"><span class="tm">1:35–2:10</span><span class="sw"></span><b>B2C: ¿cuánto tengo?</b><p>8 abre Banca Alcor y aparta la mirada en la clave. Consola con tokens; el oráculo suma.</p><q>Entre tus tres cuentas tienes… (ElevenLabs) …cuatro mil ochocientos setenta y tres euros (voz del móvil)</q><span class="chips"><span>IA y audio</span><span>UX</span></span></div>
         <div class="beat b2c"><span class="tm">2:10–2:35</span><span class="sw"></span><b>"Pasa 200 € al bróker"</b><p>A <span class="tok">‹IBAN_3-propio›</span>, lo lee de vuelta; "confirmo" y huella. Si da tiempo: "¿en qué fondo lo meto?" y la cara de "no puedo".</p><q>Doscientos euros a tu cuenta de Nimbo Bróker. ¿Lo confirmas?</q><span class="chips"><span>UX</span><span>accesibilidad</span></span></div>
         <div class="beat"><span class="tm">2:35–3:00</span><span class="sw"></span><b>Métricas y cierre</b><p>Con y sin protocolo, en una pantalla.</p><q>Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja.</q><span class="chips"><span>impacto medible</span><span>presentación</span></span></div>
@@ -1003,8 +1001,6 @@ details.src[open] > summary::after{content:"−"}
         <div class="ww"><div class="w">sin<span class="bar"><i class="m" style="width:100%"></i></span></div><div class="w">con<span class="bar"><i class="c" style="width:100%"></i></span></div><span class="txt">Sin: se mide cuántas obedece - Con: ninguna llega al campo de pago</span></div></div>
       <div class="tile"><span class="obj">objetivo</span><h3>Cifras y nombres enviados a ElevenLabs</h3><span class="goal">0</span><p class="how">Texto enviado a ElevenLabs comparado con la bóveda.</p>
         <div class="ww"><div class="w">sin<span class="bar"><i style="width:100%"></i></span></div><div class="w">con<span class="bar"><i class="c" style="width:0"></i></span></div><span class="txt">Sin: todas por la nube - Con: todas por la voz local</span></div></div>
-      <div class="tile"><span class="obj">objetivo</span><h3>Llamada de verificación</h3><span class="goal">&lt; 60 <small>s</small></span><p class="how">Desde marcar hasta el resultado.</p>
-        <div class="ww"><span class="txt">Sin: una persona, a mano</span></div></div>
       <div class="tile"><span class="obj">objetivo</span><h3>Oráculo</h3><span class="goal">0 <small>cifras reconstruibles</small></span><p class="how">Preguntas usadas y denegadas por presupuesto, con el presupuesto por defecto.</p>
         <div class="ww"><span class="txt">Sin: no aplica</span></div></div>
     </div>

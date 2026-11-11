@@ -12,7 +12,7 @@
 
 El agente se llama **8**. Proyecto para Hackfinance, Madrid Engineering Week 2026. Todos los datos, bancos y empresas de la demo son inventados.
 
-**[Web](https://priv8.es)** | **[Demo en el navegador](https://demo.priv8.es)** | **[Priv8 como servidor MCP](https://mcp.priv8.es)** | **Presentación** (pendiente) | **[Especificación](docs/SPEC.md)**
+**[Web](https://priv8.es)** | **[Demo en el navegador](https://demo.priv8.es)** | **[Priv8 como servidor MCP](https://mcp.priv8.es)** | **[Presentación](docs/entregables/priv8-diapositivas.pdf)** | **[Especificación](docs/SPEC.md)**
 
 ## Cómo funciona
 
@@ -37,7 +37,7 @@ La respuesta de 8 también llega con tokens. Un renderizador local pone los valo
 
 ## Dos verticales sobre el mismo núcleo
 
-**B2B: Priv8 para empresas.** Es un arnés para automatizar con IA procesos que hoy no se automatizan por miedo a exponer datos. En la demo llega un correo con la factura de un proveedor. 8 la registra en un ERP antiguo (Alba Core, simulado) sin ver los datos y contesta el correo. El mismo correo trae un cambio de IBAN, y 8 lo bloquea por procedencia. Después llama al proveedor al teléfono de su ficha. Todo queda en el registro firmado y en la consola de auditoría.
+**B2B: Priv8 para empresas.** Es un arnés para automatizar con IA procesos que hoy no se automatizan por miedo a exponer datos. En la demo llega un correo con la factura de un proveedor. 8 la registra en un ERP antiguo (Alba Core, simulado) sin ver los datos y contesta el correo. El mismo correo trae un cambio de IBAN: el núcleo lo bloquea por procedencia y la consola de auditoría avisa de posible fraude. El registro espera el «sí» de la persona y todo queda firmado.
 
 **B2C: 8 en tu móvil.** Es una app Android para el emulador que maneja las apps de banca simuladas (Banca Alcor, Brezo Banco y Nimbo Bróker) por accesibilidad y habla con voz. Responde a "¿cuánto tengo entre mis bancos?" y prepara una transferencia con confirmación por voz. Mientras la persona pone su huella, su clave o el código, 8 mira a otro lado. No asesora inversiones ni firma por nadie.
 
@@ -184,7 +184,7 @@ core/            Núcleo Priv8 CUA: detector, tokens, bóveda, oráculo, ejecuto
 policies/        Políticas por sitio en YAML: qué es rojo, ámbar o verde en cada pantalla
 agent/           Servidor MCP (observe, act, oracle) y bucle del agente con Claude
 adapters/        Adaptadores de pantalla: web (Playwright, DOM) y Android (puente WebSocket)
-voice/           Voz mixta, llamada al banco, llamada de verificación y dictado local
+voice/           Voz mixta, llamada al banco y dictado local (la llamada de verificación al proveedor queda como extra, fuera de la demo)
 apps/android-8/  App 8 para Android: servicio de accesibilidad, ojos, voz y confirmaciones
 apps/banks-sim/  Banca Alcor, Brezo Banco y Nimbo Bróker: bancos simulados para Android
 apps/erp-sim/    Alba Core, el ERP antiguo simulado

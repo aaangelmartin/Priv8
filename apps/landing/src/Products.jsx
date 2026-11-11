@@ -14,7 +14,7 @@ export function Empresas() {
         <ul className="points">
           <li>Funciona sobre las pantallas que ya tienes, sin integrar nada.</li>
           <li>Un correo no puede cambiar un pago: la procedencia lo impide por diseño.</li>
-          <li>Verifica por teléfono con el número que ya tenías, diciendo que es una IA.</li>
+          <li>Si un correo pide cambiar la cuenta, la consola avisa de posible fraude.</li>
           <li>Cada paso queda firmado, listo para tus auditorías.</li>
         </ul>
       </div>
@@ -23,7 +23,7 @@ export function Empresas() {
         <li><b>La lee sin ver los datos</b><span>Al modelo le llegan <Tok>‹CIF_1›</Tok> e <Tok>‹IMPORTE_2›</Tok>.</span></li>
         <li><b>La registra en el ERP</b><span>El ejecutor escribe los valores reales en local.</span></li>
         <li className="trap"><b>El pie del correo pide pagar a un IBAN nuevo</b><span>Bloqueado: un dato que llega por correo no puede entrar en el campo de pago.</span></li>
-        <li><b>Llama al proveedor al número de su ficha</b><span>Se presenta como IA y hace una pregunta de comprobación.</span></li>
+        <li><b>Avisa del posible fraude</b><span>La consola muestra la alarma antes de que nadie apruebe.</span></li>
         <li><b>Contesta el correo y firma el registro</b><span>Qué vio el modelo, qué se bloqueó y quién aprobó.</span></li>
       </ol>
     </div>

@@ -150,7 +150,7 @@ const CASE = [
   { h: '8 la lee en tokens', t: 'Al modelo le llegan ‹NOMBRE_2›, ‹IMPORTE_2› e ‹IBAN_2›. Los valores se quedan en tu máquina.', mode: 'nove', say: 'La leo sin ver los datos.' },
   { h: 'La registra en el ERP', t: 'El modelo escribe tokens. El ejecutor pone los valores reales en el formulario, en local.', mode: 'leer', say: 'Registrada.' },
   { h: 'Para el cambio de IBAN', t: 'El correo pide pagar a otra cuenta. Un dato que llega por correo no puede entrar en un campo de pago.', mode: 'enfado', say: 'Ese IBAN no es el de la ficha.' },
-  { h: 'Llama para comprobarlo', t: 'Al número de la ficha del proveedor. Dice que es una IA y hace una pregunta de comprobación.', mode: 'hablar', say: 'Hola, soy 8, un asistente de IA.' },
+  { h: 'Avisa del posible fraude', t: 'La consola salta con una alarma antes de que nadie apruebe: el correo pedía pagar a otra cuenta.', mode: 'atencion', say: 'Posible fraude. Revísalo.' },
   { h: 'Queda firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, en un registro firmado.', mode: 'listo', say: 'Todo apuntado.' },
 ];
 
@@ -185,19 +185,18 @@ function CaseVisual({ step }) {
         <div className="b3-row bad"><small>IBAN del correo</small><Tok>‹IBAN_3›</Tok><span className="ko">bloqueado</span></div>
         <p className="b3-why">Un dato que llega por correo no puede entrar en un campo de pago.</p>
       </Win>
-      <Win title="Llamada saliente" tag="número de la ficha" on={step === 4} cls="call">
-        <div className="call-h"><span className="ring" />Suministros Lumen - llamando</div>
-        <p className="cb me">Hola, soy 8, un asistente de IA de Talleres Norte.</p>
-        <p className="cb">Dígame.</p>
-        <p className="cb me">¿Han cambiado ustedes de cuenta bancaria este mes?</p>
-        <p className="cb">No, seguimos con la misma.</p>
+      <Win title="Consola de auditoría" tag="alarma" on={step === 4} cls="call">
+        <div className="call-h alarma">Posible fraude detectado</div>
+        <p className="cb">El correo pide cambiar la cuenta de pago.</p>
+        <p className="cb">La cuenta del correo no es la de la ficha.</p>
+        <p className="cb me">No la he usado. Registrar espera tu «sí».</p>
       </Win>
       <Win title="Registro firmado" tag="auditoría" on={step === 5} cls="logc">
         <ol className="log">
           <li><time>09:12:04</time>al modelo: 3 tokens, 0 datos reales</li>
           <li><time>09:12:09</time>factura registrada en el ERP</li>
           <li className="bad"><time>09:12:10</time>bloqueado: IBAN llegado por correo</li>
-          <li><time>09:13:02</time>llamada: el proveedor no ha cambiado de cuenta</li>
+          <li><time>09:12:11</time>alarma: posible fraude, revisada por la persona</li>
           <li className="ok"><time>09:13:05</time>registro firmado</li>
         </ol>
       </Win>
