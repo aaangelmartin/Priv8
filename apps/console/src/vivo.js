@@ -103,6 +103,10 @@ export function lineaDe(ev, screen) {
         if (/recib/i.test(d)) return null
         return { tipo: 'encargo', tono: 'cobalto', titulo: 'Encargo', texto: ev.model_saw ?? null }
       }
+      // lo que razona 8 antes de actuar (el agente lo publica como «paso N - razona»)
+      if (ev.model_saw && /razona/i.test(d)) {
+        return { tipo: 'piensa', tono: 'neutro', titulo: paso ? `Paso ${paso} - piensa` : 'Piensa', texto: ev.model_saw }
+      }
       if (ev.model_saw && !ES_LLAMADA.test(ev.model_saw)) {
         return { tipo: 'dice', tono: 'seguro', titulo: paso ? `Paso ${paso} - responde` : 'Responde', texto: ev.model_saw }
       }
