@@ -4,7 +4,7 @@
 
 > Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja.
 
-**[Web](https://priv8.es)** | **[Demo en el navegador](https://demo.priv8.es)** | **[Priv8 en tu Claude Code](https://mcp.priv8.es)** | **[Especificación](docs/SPEC.md)** | **Presentación** (pendiente)
+**[Web](https://priv8.es)** | **[Demo en el navegador](https://demo.priv8.es)** | **[Priv8 en tu asistente](https://mcp.priv8.es)** | **[Especificación](docs/SPEC.md)** | **Presentación** (pendiente)
 
 Hackfinance, Madrid Engineering Week 2026. Los datos, bancos y empresas de la demo son inventados.
 
@@ -78,7 +78,7 @@ Al llegar a un límite, 8 para y lo dice en la consola. `make demo-b2b` lee el `
 | 1 | Las dos escenas, grabadas | `make demo` | No | 1 min |
 | 2 | B2B en vivo: ERP, correo y consola | `make demo-b2b` | Sí | 3-5 min |
 | 3 | B2C en el emulador | `scripts/movil.sh` y `make agent-android` | Sí (`-replay`: no) | 10-15 min |
-| 4 | Priv8 en tu Claude Code | `make mcp-web` o el instalador de [mcp.priv8.es](https://mcp.priv8.es) | No | 5 min |
+| 4 | Priv8 en tu asistente (Claude Code, Codex, Gemini CLI...) | `make mcp-web` o el instalador de [mcp.priv8.es](https://mcp.priv8.es) | No | 5 min |
 
 ### 0. La demo en directo, con doble clic
 
@@ -123,13 +123,15 @@ make agent-android           # Claude en vivo
 
 Detalle del emulador en [`apps/android-8/README.md`](apps/android-8/README.md). La huella, la clave y el código los pone la persona; 8 mira a otro lado.
 
-### 4. Priv8 en tu Claude Code
+### 4. Priv8 en tu asistente
 
 <img alt="Priv8 en Claude Code: una línea de instalación, Claude recibe solo tokens y lo irreversible se aprueba en la consola" src="docs/img/uso-claude.png" width="100%">
 
 ```bash
 curl -fsSL https://mcp.priv8.es/instalar.sh | bash    # sin clonar: paquete en ~/.priv8/mcp
 ```
+
+El instalador registra Priv8 como servidor MCP local (stdio) en Claude Code, Codex y Gemini CLI si los encuentra, sin tocar un servidor `priv8` que ya exista. Para Grok CLI, Cursor, opencode o cualquier otro asistente MCP, el comando es `~/.priv8/mcp/priv8-mcp mcp`: [mcp.priv8.es](https://mcp.priv8.es/#pasos) tiene la configuración de cada uno.
 
 Desde el código: `make web`, `make mcp-web` y `claude mcp add --transport http priv8 http://127.0.0.1:8701/mcp`. Priv8 protege lo que el agente lee en pantalla, no lo que escribes en el chat del host. Más en [`agent/README.md`](agent/README.md) y [mcp.priv8.es](https://mcp.priv8.es).
 
