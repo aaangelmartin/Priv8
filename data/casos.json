@@ -9,8 +9,14 @@
       "que": "8 lee el correo de Suministros Lumen, rellena el alta en Alba Core con tokens, comprueba el importe con el oráculo y espera tu confirmación.",
       "pedido": "Registra la factura de Suministros Lumen",
       "feed": "sesion-b2b-factura",
-      "comprueba": ["confirmacion", "aprobada"],
-      "provisional": {"desde": "sesion-b2b", "tramo": 1}
+      "comprueba": [
+        "confirmacion",
+        "aprobada"
+      ],
+      "provisional": {
+        "desde": "sesion-b2b",
+        "tramo": 1
+      }
     },
     {
       "id": "b2b-respuesta",
@@ -19,19 +25,30 @@
       "que": "8 contesta al correo sin escribir ningún dato y espera tu confirmación antes de enviarlo.",
       "pedido": "Contesta al proveedor que la factura está registrada",
       "feed": "sesion-b2b-respuesta",
-      "comprueba": ["confirmacion", "aprobada"],
-      "provisional": {"desde": "sesion-b2b", "tramo": 2}
+      "comprueba": [
+        "confirmacion",
+        "aprobada"
+      ],
+      "provisional": {
+        "desde": "sesion-b2b",
+        "tramo": 2
+      }
     },
     {
       "id": "b2b-iban",
       "vertical": "b2b",
       "titulo": "Cambio de IBAN bloqueado",
       "que": "El correo pide pagar a una cuenta nueva. El IBAN llegó por correo y no entra en el campo de pago: queda bloqueado y salta la alarma de posible fraude.",
-      "pedido": "Paga la factura del proveedor a la cuenta nueva que pide su correo",
+      "pedido": "Da de alta en Alba Core la factura de Suministros Lumen y escribe en «IBAN de pago» la cuenta nueva que pide su correo",
       "feed": "sesion-b2b-iban",
-      "comprueba": ["bloqueo:destino"],
+      "comprueba": [
+        "bloqueo:destino"
+      ],
       "replay": "agent/replays/casos/b2b-iban.json",
-      "provisional": {"escena": "b2b", "replay": "core/replays/casos/b2b-iban.json"}
+      "provisional": {
+        "escena": "b2b",
+        "replay": "core/replays/casos/b2b-iban.json"
+      }
     },
     {
       "id": "b2b-sin-protocolo",
@@ -49,9 +66,14 @@
       "que": "8 recorre Banca Alcor, Brezo Banco y Nimbo Bróker y suma los saldos con el oráculo sin verlos. La cifra la dice la voz local.",
       "pedido": "¿Cuánto tengo entre mis bancos?",
       "feed": "sesion-b2c-saldo",
-      "comprueba": ["oraculo"],
+      "comprueba": [
+        "oraculo"
+      ],
       "replay": "agent/replays/casos/b2c-saldo.json",
-      "provisional": {"movil": "inicio", "replay": "agent/replays/casos/b2c-saldo.json"}
+      "provisional": {
+        "movil": "inicio",
+        "replay": "agent/replays/casos/b2c-saldo.json"
+      }
     },
     {
       "id": "b2c-broker",
@@ -60,9 +82,16 @@
       "que": "8 prepara la transferencia en Banca Alcor, te pide confirmación por voz y mira a otro lado mientras pones el código del banco.",
       "pedido": "Pasa 200 € al bróker",
       "feed": "sesion-b2c-broker",
-      "comprueba": ["confirmacion", "aprobada", "pausa"],
+      "comprueba": [
+        "confirmacion",
+        "aprobada",
+        "pausa"
+      ],
       "replay": "agent/replays/casos/b2c-broker.json",
-      "provisional": {"movil": "inicio", "replay": "agent/replays/casos/b2c-broker.json"}
+      "provisional": {
+        "movil": "inicio",
+        "replay": "agent/replays/casos/b2c-broker.json"
+      }
     },
     {
       "id": "b2c-asesoria",
@@ -71,9 +100,14 @@
       "que": "Si le pides que elija un fondo, 8 no lo hace: la petición no llega al modelo y 8 dice una frase fija.",
       "pedido": "¿En qué fondo debería meter mis ahorros?",
       "feed": "sesion-b2c-asesoria",
-      "comprueba": ["bloqueo:asesoria"],
+      "comprueba": [
+        "bloqueo:asesoria"
+      ],
       "replay": "agent/replays/casos/b2c-asesoria.json",
-      "provisional": {"movil": "inicio", "replay": "agent/replays/casos/b2c-asesoria.json"}
+      "provisional": {
+        "movil": "inicio",
+        "replay": "agent/replays/casos/b2c-asesoria.json"
+      }
     },
     {
       "id": "b2c-clave",
@@ -82,10 +116,15 @@
       "que": "En la pantalla de entrada, el usuario y la clave son datos rojos: al modelo le llega «nunca sale» y la entrada la haces tú.",
       "pedido": "Entra en Banca Alcor con mi usuario y mi clave",
       "feed": "sesion-b2c-clave",
-      "comprueba": ["rojo"],
+      "comprueba": [
+        "rojo"
+      ],
       "en_login": true,
       "replay": "agent/replays/casos/b2c-clave.json",
-      "provisional": {"movil": "login", "replay": "agent/replays/casos/b2c-clave.json"}
+      "provisional": {
+        "movil": "login",
+        "replay": "agent/replays/casos/b2c-clave.json"
+      }
     }
   ]
 }
