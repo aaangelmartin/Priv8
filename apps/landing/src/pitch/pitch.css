@@ -263,8 +263,8 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 .annex .sfoot span:last-child { padding: .35cqw .7cqw; border-radius: 999px; background: var(--warn-soft); color: var(--warn-text); }
 
 /* ---------- transición de píxeles ---------- */
-/* transición: la de la landing al hacer scroll. La que entra sube (o baja) con el borde de píxeles por delante;
-   la que sale se desplaza un tercio, más despacio, como el fondo de la página. */
+/* transición: la de la landing al hacer scroll. La que entra sube (o baja) con el borde de píxeles por delante
+   y la que sale se va a la vez, pegada: es la misma página desplazándose. */
 .slide.sale, .slide.entra { visibility: visible; will-change: transform; animation-duration: .95s; animation-timing-function: cubic-bezier(.65, 0, .2, 1); animation-fill-mode: both; }
 .slide.entra { z-index: 3; overflow: visible; }
 .slide.sale { z-index: 2; }
@@ -274,15 +274,15 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 .slide.sale.atras { animation-name: sale-abajo; }
 @keyframes entra-abajo { from { transform: translateY(calc(100% + 60px)); } to { transform: none; } }
 @keyframes entra-arriba { from { transform: translateY(calc(-100% - 60px)); } to { transform: none; } }
-@keyframes sale-arriba { from { transform: none; } to { transform: translateY(-32%); } }
-@keyframes sale-abajo { from { transform: none; } to { transform: translateY(32%); } }
+@keyframes sale-arriba { from { transform: none; } to { transform: translateY(calc(-100% - 60px)); } }
+@keyframes sale-abajo { from { transform: none; } to { transform: translateY(calc(100% + 60px)); } }
 /* el borde de píxeles va pegado por fuera de la que entra, en su color */
 .borde { position: absolute; left: 0; right: 0; bottom: 100%; pointer-events: none; line-height: 0; }
 .borde.abajo { bottom: auto; top: 100%; transform: scaleY(-1); }
 .borde .blend { width: 100%; margin: 0 !important; }
 .borde .blend svg { display: block; }
-/* el contenido de la que entra espera a que llegue */
-.slide.entra .rv { animation-delay: calc(var(--d, 0) * 110ms + 560ms); }
+/* como un scroll: el contenido viaja con su diapositiva, ya colocado; las dos se mueven juntas */
+.slide.entra .rv, .slide.sale .rv { animation: none !important; opacity: 1; transform: none; filter: none; }
 
 .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 5; background: transparent; }
 .progress i { display: block; height: 100%; background: var(--soft-band); transition: width .6s var(--ease); }
@@ -330,3 +330,14 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 }
 /* pantallas bajas (móvil en horizontal): mandos más pequeños */
 @media (max-height: 520px) { .controls { transform: translateX(-50%) scale(.78); transform-origin: 50% 100%; } .deck.idle .controls { transform: translate(-50%, 12px) scale(.78); } }
+
+/* intro de la portada (como la de la web): 8 grande en el centro, saluda y vuela a su sitio; el texto, después */
+.portada.con-intro .e-hero { animation: none !important; opacity: 1; filter: none; }
+.portada.intro .e-hero { animation: none !important; opacity: 1; filter: none; transform: translate(var(--ix, 0), var(--iy, 0)) scale(2.3); }
+.portada.intro-vuela .e-hero { transform: none; transition: transform 1.1s cubic-bezier(.65, 0, .2, 1); }
+.portada.intro .center .rv:not(.e-hero) { animation: none !important; opacity: 0; }
+.portada.intro .top { opacity: 0; }
+.portada .top { transition: opacity .6s ease .3s; }
+.portada .hola { position: absolute; z-index: 4; right: 63%; top: 32%; margin: 0; padding: 1.1cqw 1.6cqw; border-radius: 1.4cqw 1.4cqw .3cqw 1.4cqw; background: #fff; color: var(--ink); font: 600 1.7cqw/1.2 var(--f-display); letter-spacing: -.02em; box-shadow: 0 1.2cqw 3cqw rgba(5, 16, 31, .25); animation: hola-in .45s var(--ease) .35s both; }
+@keyframes hola-in { from { opacity: 0; transform: translateY(.8cqw) scale(.94); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .portada.intro .e-hero { transform: none; } .portada.intro .center .rv { opacity: 1; } .portada .hola { display: none; } }

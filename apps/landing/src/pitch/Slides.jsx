@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Eight from '../eight/Eight.jsx';
 import Field from '../Field.jsx';
 import correo from './img/correo.jpg';
@@ -16,7 +16,7 @@ export const SlideCtx = createContext({ live: false, active: false, printing: fa
 const COL = { band: { fg: '#FFFFFF', cut: '#2D45D6' }, paper: { fg: '#2D45D6', cut: '#FFFFFF' } };
 
 /* 8 vivo; solo se monta en la diapositiva que se ve (y en todas al imprimir) */
-function E({ mode = 'mirar', on = 'band', className = '', seq = null, id }) {
+function E({ mode = 'mirar', on = 'band', className = '', seq = null, id, look = null }) {
   const { live, active } = useContext(SlideCtx);
   const [m, setM] = useState(seq ? seq[0][0] : mode);
   useEffect(() => {
@@ -30,7 +30,7 @@ function E({ mode = 'mirar', on = 'band', className = '', seq = null, id }) {
   }, [active, mode]);
   return (
     <div id={id} className={'e8 ' + className} aria-hidden="true">
-      {live && <Eight mode={m} fg={COL[on].fg} cut={COL[on].cut} label="8" />}
+      {live && <Eight mode={m} look={look} fg={COL[on].fg} cut={COL[on].cut} label="8" />}
     </div>
   );
 }
@@ -59,15 +59,54 @@ function Head({ eyebrow, children, d = 0, chip }) {
 }
 
 /* ---------------------------------------------------------------- 1 portada */
+/* La intro, como la de la web: al abrir la presentación, 8 grande en el centro con los ojos abiertos saluda, mira a
+   un lado y a otro, y vuela a su sitio en la portada; el texto entra detrás. Solo la primera vez y con movimiento. */
+let introHecha = false;
+function useIntro(active, printing) {
+  const [fase, setFase] = useState(() => {
+    let still = false;
+    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
+    return !introHecha && active && !printing && !still ? 'hola' : 'fin';
+  });
+  const [look, setLook] = useState(null);
+  useEffect(() => {
+    if (fase !== 'hola') return undefined;
+    introHecha = true;
+    const t = [
+      setTimeout(() => setLook([-0.95, 0.05, -6]), 800),
+      setTimeout(() => setLook([0.95, 0.05, 6]), 1550),
+      setTimeout(() => setLook(null), 2250),
+      setTimeout(() => setFase('vuela'), 2550),
+      setTimeout(() => setFase('fin'), 3650),
+    ];
+    return () => t.forEach(clearTimeout);
+  }, []);
+  return [fase, look];
+}
+
 function Portada() {
-  const { active } = useContext(SlideCtx);
+  const { active, printing } = useContext(SlideCtx);
+  const [fase, look] = useIntro(active, printing);
+  const [conIntro] = useState(fase !== 'fin');
+  const caja = useRef(null);
+  /* cuánto hay que mover y agrandar a 8 para que salga del centro de la diapositiva */
+  useLayoutEffect(() => {
+    const el = caja.current;
+    if (!el || fase === 'fin') return;
+    const hero = el.querySelector('.e-hero');
+    if (!hero) return;
+    const r = hero.getBoundingClientRect(), s = el.getBoundingClientRect();
+    el.style.setProperty('--ix', `${s.left + s.width / 2 - (r.left + r.width / 2)}px`);
+    el.style.setProperty('--iy', `${s.top + s.height / 2 - (r.top + r.height / 2)}px`);
+  }, [fase]);
   return (
-    <div className={'in portada' + (active ? ' live' : '')}>
+    <div ref={caja} className={'in portada' + (active ? ' live' : '') + (conIntro ? ' con-intro' : '') + (fase !== 'fin' ? ` intro intro-${fase}` : '')}>
       {active && <Field />}
       {active && <div className="clean" />}
       <div className="top"><span className="brand">Priv8</span><span>priv8.es</span></div>
+      {fase === 'hola' && <p className="hola" aria-hidden="true">¡Hola, soy 8!</p>}
       <div className="center">
-        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['saludar', 1700], ['mirar', 0]]} />
+        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" look={look} />
         <R d={1} as="h1"><span className="line">8 hace el trámite.</span><span className="line soft">Sin ver tus datos.</span></R>
         <R d={3} as="p" className="who">Ángel Martín, Álvaro Carpintero, Marco Barroso y Pablo Rojo</R>
         <R d={4} as="p" className="event">Hackfinance | Madrid Engineering Week | 12 nov 2026</R>
