@@ -1,0 +1,13 @@
+{
+  "type": "voice",
+  "utterance": {
+    "utterance": "u1",
+    "session": "b2c",
+    "segments": [
+      {
+        "voice": "cloud",
+        "text": "Eso sería asesorarte y no puedo hacerlo. Si eliges tú el fondo, lo preparo."
+      }
+    ]
+  }
+}

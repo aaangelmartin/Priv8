@@ -110,3 +110,20 @@ PRIV8_IVR_URL=http://127.0.0.1:8711 make llamada-banco          # same call over
 | 8's voice | `VOZ=auto`: system voice (`say` on macOS, `espeak`); `VOZ=texto` silent | `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`: ElevenLabs |
 
 Tests: `voice/tests/test_bank_call.py` (menu navigation for every branch, hold and handover, disclosure first, red-data handover with no keys pressed after the request, no seed value in anything model-bound, in the audit or in what 8 said, audit events valid against `audit.schema.json`, the HTTP line, the Claude navigator seeing tokens only).
+
+## Dictation on the laptop (issue #47)
+
+The emulator's speech recognizer does not work, so the app 8 on the emulator sends `dictation_start` over the events channel and the core transcribes the laptop microphone with Whisper, locally (`dictado.py`). On a real Android the phone's on-device recognizer does it and the app sends `task_request` with the text. No cloud recognizer in either path: the audio never leaves the phone or the laptop.
+
+```
+app 8 ─ dictation_start ─▶ core.server ─ microphone (until 1.2 s of silence, 7 s max)
+                                        ─ faster-whisper small, es, CPU int8, local
+                           ◀─ dictation {"text": "¿Cuánto tengo entre mis bancos?"}   (subtitle)
+                              core.submit_task ─▶ core.next_task(session) ─▶ agent
+```
+
+- `make dictado-install` once: installs the optional `dictado` extra (`faster-whisper`, `sounddevice`, `numpy`) and downloads the model to the Hugging Face cache. Only the model comes from the internet. `PRIV8_WHISPER_MODEL=base` for a smaller one.
+- `make dictado` records the microphone once and prints the text (macOS asks for microphone permission for the terminal the first time). `make dictado FILE=frase.wav` transcribes a 16 kHz mono WAV.
+- What was heard is never logged; the audit keeps a `task` event with the tokens and the length of the task.
+- Without the extra, `dictation_start` answers `{"type":"dictation","text":"","error":"no_disponible"}` and everything else works.
+- Tests (`voice/tests/test_dictado.py`) use a WAV made with `say -v Monica`; the one with the real model is skipped if the model is not in the cache.

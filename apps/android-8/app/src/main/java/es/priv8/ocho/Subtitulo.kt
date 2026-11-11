@@ -48,6 +48,19 @@ class Subtitulo(context: Context) : TextView(context) {
         pintar(frase, intentos = REINTENTOS)
     }
 
+    /**
+     * Plain text from the device itself, not from 8: what the dictation
+     * heard (#47), or why it cannot listen. Stays [ms] milliseconds.
+     */
+    fun mostrarTexto(texto: String, ms: Long = VISIBLE_MS) {
+        main.removeCallbacksAndMessages(null)
+        actual = null
+        text = texto
+        contentDescription = texto
+        visibility = View.VISIBLE
+        main.postDelayed({ if (actual == null) ocultar() }, ms)
+    }
+
     fun ocultar() {
         main.removeCallbacksAndMessages(null)
         actual = null

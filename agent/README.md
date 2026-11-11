@@ -13,6 +13,7 @@ Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo): `tools.schem
 | `core_adapter.py` | Adaptador al núcleo real en el mismo proceso: `build_real_core()` importa `core` solo cuando se pide y conecta los cinco puertos a sus funciones; `select_core()` elige según `PRIV8_CORE`; `mount_scene()` conecta una escena de `core/scenes.py` a la sesión y `tokenize_task()` pasa la orden de la persona por el núcleo |
 | `fakes.py` | Núcleo falso en memoria: pantalla de alta de factura de Alba Core, bóveda, política de destino, oráculo con presupuesto, ejecutor que rehidrata, confirmación, bloqueo final y auditoría encadenada por hashes. Datos inventados en `SEED` |
 | `server.py` | Servidor MCP (SDK oficial `mcp`, servidor de bajo nivel con esquemas explícitos). Streamable HTTP en `127.0.0.1:8701/mcp` o stdio |
+| `asesoria.py` | Guarda de «no puedo» (#43): detecta peticiones de consejo de inversión y responde con la frase fija sin llamar al modelo |
 | `agent.py` | Bucle del agente con el SDK oficial `anthropic` (`claude-opus-5-5`, pensamiento adaptativo), límite de pasos, auditoría por paso, modo replay y grabación |
 | `replays/registrar_factura.json` | Respuestas grabadas de «registrar factura» |
 | `tests/` | pytest |
@@ -55,7 +56,8 @@ El núcleo lee la pantalla por un adaptador conectado a cada sesión (`core.conn
 - **Auditoría, un dueño por evento.** Cada evento sale una sola vez en el registro:
   - **El núcleo** registra lo que hace en cada llamada: `observe_sent`, `act`, `held`, `approval`, `oracle` y `blocked` por sus propias denegaciones. El núcleo falso (`fakes.py`) hace lo mismo.
   - **El servidor** (`server.py`) solo registra `blocked` de lo que el núcleo no ve: herramienta desconocida, entrada inválida, dato real en la entrada y respuesta retenida por su bloqueo final.
-  - **El bucle** (`agent.py`) registra `task` (inicio, cada paso del modelo con lo que dijo y `ms.model`, fin, errores) y `blocked` si retiene una petición a Claude.
+  - **El bucle** (`agent.py`) registra `task` (inicio, cada paso del modelo con lo que dijo y `ms.model`, fin, errores) y `blocked` si retiene una petición a Claude, o `blocked` con `reason: asesoria` si la persona pide consejo de inversión.
+- **Ejecuta, no asesora** (#43). Antes de llamar a Claude, `asesoria.py` mira la tarea con reglas fijas: si pide elegir un producto o decidir si o cuánto invertir («¿en qué fondo lo meto?»), el modelo no la recibe. 8 dice la frase fija («Eso sería asesorarte y no puedo hacerlo. Si eliges tú el fondo, lo preparo.») con `Core.voice` (`core.say`, un `voice` toda en `cloud`) y queda el `blocked`, que la app 8 pinta con la cara «no puedo». Una orden con el producto elegido («invierte 200 € en el fondo X que he elegido») sigue su camino. El prompt de sistema repite la regla por si algo se escapa.
   - Con `PRIV8_CORE=real`, `--audit-out` solo trae lo que registró el lado del agente; el registro completo y firmado es el del núcleo (`audit/priv8.jsonl`).
 
 ## Formato de replay (`priv8-replay/1`)
