@@ -23,7 +23,8 @@
   var CARA_VIVA = { microfono: 'escuchar', voz: 'hablar' };
   var enAndroid = !!window.OchoAndroid;
   var params = new URLSearchParams(location.search);
-  var depurar = params.has('debug') || (enAndroid && window.OchoAndroid.debug && window.OchoAndroid.debug());
+  /* la línea de estado solo sale si se pide (?debug en el navegador): en el móvil nunca, ni en la build de depuración */
+  var depurar = params.has('debug');
 
   /* ---------- cara ---------- */
   function poner(cara) {
@@ -67,7 +68,7 @@
   }
   marco.addEventListener('load', prepararOjos);
 
-  /* ---------- estado para depurar (solo con ?debug o build de depuración) ---------- */
+  /* ---------- estado para depurar (solo con ?debug) ---------- */
   var conexion = null; // aún no se sabe
   function pintarEstado() {
     if (!depurar) return;

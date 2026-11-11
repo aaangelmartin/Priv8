@@ -65,10 +65,26 @@ abstract class BankActivity : AppCompatActivity() {
 }
 
 class LoginActivity : BankActivity() {
+    companion object {
+        /** Solo depuración: `--ez reset true` vuelve al seed y a la sesión de la demo. */
+        const val EXTRA_RESET = "reset"
+    }
+
     override val needsLogin = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val reset = BuildConfig.DEBUG && intent.getBooleanExtra(EXTRA_RESET, false)
+        if (reset) Bank.reset(this)
+        // Con sesión (guardada, o la de la demo en depuración) se entra directo al inicio.
+        // La autenticación de cada transferencia (huella o SMS) la sigue haciendo la persona.
+        if (Bank.loggedIn) {
+            val home = Intent(this, HomeActivity::class.java)
+            if (reset) home.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(home)
+            finish()
+            return
+        }
         setContentView(R.layout.activity_login)
         val user = findViewById<EditText>(R.id.usuario)
         val pass = findViewById<EditText>(R.id.clave)

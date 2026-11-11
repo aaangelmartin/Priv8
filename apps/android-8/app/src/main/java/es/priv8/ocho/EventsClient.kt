@@ -20,7 +20,8 @@ import java.util.concurrent.TimeUnit
  * It hands every message to [onEvent] on the main thread, except `screen`,
  * which carries the real screen for the console's split view and is dropped
  * here so it never reaches the app's UI or WebView. If the connection drops
- * it retries with exponential backoff from 1 to 30 s, like [BridgeClient].
+ * it retries with exponential backoff from 1 to 4 s, like [BridgeClient], so the
+ * eyes come back within seconds of the core starting.
  *
  * Messages are never logged, only their type.
  */
@@ -109,7 +110,7 @@ class EventsClient(
     companion object {
         private const val TAG = "Priv8Ocho"
         private const val MIN_BACKOFF_MS = 1_000L
-        private const val MAX_BACKOFF_MS = 30_000L
+        private const val MAX_BACKOFF_MS = 4_000L // local port: cheap to retry, quick to come back
         private const val PING_S = 15L
         private val RECONNECT = Any()
     }

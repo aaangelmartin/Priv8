@@ -1,9 +1,12 @@
 # apps/android-8
 
-App Android de 8 (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad `Priv8AccessibilityService`, que es el adaptador Android del núcleo.
+App Android **Priv8** (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad «Priv8» (`Priv8AccessibilityService`), que es el adaptador Android del núcleo. 8 es el nombre del agente dentro de la app.
+
+- **Icono:** adaptativo (`mipmap-anydpi-v26`), 8 blanco sobre cobalto, sacado de `brand/logo/icono-app-cuadrado.svg`; también monocromo para los iconos temáticos de Android 13+.
+- **Arranque:** la pantalla de los ojos (`Theme.Priv8.Ojos`) es cobalto desde el primer fotograma y la pantalla de bienvenida del sistema (Android 12+) es 8 sobre cobalto. Antes la ventana era blanca (`Theme.Material.Light`) y la bienvenida no tenía icono, así que al abrirla desde el icono se veía una pantalla en blanco mientras arrancaba el WebView.
 
 - **Snapshot** (`SnapshotBuilder.kt`): convierte el árbol de accesibilidad de la ventana activa en un snapshot crudo según `docs/contracts/snapshot.schema.json`. Ids `n1`, `n2`… en preorden, estables dentro de un snapshot; `role` por clase de vista; `label` de `contentDescription`, `labelFor` o la pista; `sel` es el `viewIdResourceName` sin el paquete de la app (`id/iban_destino`); `screen` sale de la vista raíz `screen_<nombre>` si existe. Los campos rojos (`RojoField.kt`: `isPassword`, tipo de entrada de contraseña como `numberPassword` de los OTP, o un campo editable cuyo id, pista o etiqueta nombra un secreto: otp, pin, clave, código...) llevan `password: true` y su texto va enmascarado ya en el dispositivo; 8 no escribe en ellos. Antes de leer espera a que la ventana se asiente: 300 ms sin cambios, la reacción a la última acción y que la ventana activa sea la del último `TYPE_WINDOW_STATE_CHANGED`.
-- **Puente** (`BridgeClient.kt`): cliente WebSocket a `ws://127.0.0.1:8765` (por `adb reverse`), mensajes de `docs/contracts/bridge.schema.json` (contratos v1.1). Envía `hello` al conectar, responde a `snapshot.request` y `perform`, y emite los eventos `focus_password`, `focus_left`, `system_dialog`, `system_dialog_closed`, `screen_changed` y `app_changed`. Si se cae, reintenta con espera exponencial de 1 a 30 s.
+- **Puente** (`BridgeClient.kt`): cliente WebSocket a `ws://127.0.0.1:8765` (por `adb reverse`), mensajes de `docs/contracts/bridge.schema.json` (contratos v1.1). Envía `hello` al conectar, responde a `snapshot.request` y `perform`, y emite los eventos `focus_password`, `focus_left`, `system_dialog`, `system_dialog_closed`, `screen_changed` y `app_changed`. Si se cae, reintenta con espera exponencial de 1 a 4 s: en cuanto arranca el núcleo, el móvil se conecta solo.
 - **Acciones** (`Performer.kt`): `tap`, `type` (`ACTION_SET_TEXT`), `back`, `open_app` (paquete en `text`), `scroll` (con o sin `target`) y `key` (`enter`, `back`, `home`) sobre el id del último snapshot. Errores del contrato: `target_no_encontrado` (id inexistente o vista que ya no está), `no_permitido` (escribir en un campo de contraseña, operación que no corresponde a la pantalla), `timeout` (más de 5 s) y `otro`.
 - **Cursor de 8** (`CursorOverlay.kt`, `CursorMotion.kt`, #135): quien mira el móvil ve a 8 trabajar. Una capa `TYPE_ACCESSIBILITY_OVERLAY` del propio servicio (sin permisos nuevos, no enfocable y no táctil, oculta a la accesibilidad, así que no entra en el snapshot) dibuja los ojos de 8 en cobalto. Antes de `tap` y `type` se desliza al centro del nodo (350 a 500 ms con suavizado), deja una onda al pulsar y rodea el campo mientras el texto aparece en unos pasos; el último `ACTION_SET_TEXT` pone siempre el valor entero. Se oculta en todas las pausas (clave, OTP, huella, diálogo del sistema), en las pantallas de 8 y mientras hay una confirmación abierta, y se desvanece tras 4 s sin acciones.
 
@@ -106,7 +109,7 @@ La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos d
 
 - **`OjosView.kt`**: WebView con `assets/ocho/app.html`. Todo se sirve desde el APK (`https://appassets.androidplatform.net/assets/`); la página no sale a la red: la petición a Google Fonts de `ojos.html` se responde con la Sora incluida (`assets/ocho/fonts/`, OFL) y cualquier otra recibe un 403.
 - **`docs/ojos.html` es la única fuente de los ojos.** El build lo copia sin tocarlo a `build/generated/ojos/ocho/ojos.html` (tarea `copyOjos`). `app.html` lo carga en un iframe, deja visible solo el 8 grande y lo mueve con `P8.poner()`.
-- **`EventsClient.kt`**: cliente WebSocket del canal de eventos, con reconexión de 1 a 30 s. Descarta `screen` (lleva la pantalla real para la consola) antes de que llegue a la interfaz y solo registra tipos de mensaje.
+- **`EventsClient.kt`**: cliente WebSocket del canal de eventos, con reconexión de 1 a 4 s: sin núcleo, 8 pone la cara «sin conexión» y vuelve sola al arrancarlo. Descarta `screen` (lleva la pantalla real para la consola) antes de que llegue a la interfaz y solo registra tipos de mensaje.
 - **`assets/ocho/estados.js`**: de evento a cara. Función pura, con tests en `dev/test_estados.mjs`.
 
 | Evento | Cara |
@@ -125,7 +128,7 @@ La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos d
 | `approval_result` | confirmado o cancelado |
 | `screen`, `audit` `voice_out` | no cambian la cara |
 
-Los gestos de una vez duran 2,8 s (`--p8-dur-gesto`) y vuelven a reposo (`mirar`). En los builds de depuración se ve abajo el estado de la conexión y la cara actual.
+Los gestos de una vez duran 2,8 s (`--p8-dur-gesto`) y vuelven a reposo (`mirar`). En el móvil no sale ningún texto de depuración; la línea con el estado de la conexión y la cara solo aparece en la vista previa del navegador con `?debug`.
 
 ### Probar sin el núcleo
 

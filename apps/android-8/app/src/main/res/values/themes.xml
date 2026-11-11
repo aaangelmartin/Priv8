@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The eyes screen: cobalt from the first frame, so a cold start (WebView
+         start-up included) never shows a blank white window. -->
+    <style name="Theme.Priv8.Ojos" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/cobalto</item>
+        <item name="android:colorBackground">@color/cobalto</item>
+        <item name="android:statusBarColor">@color/cobalto</item>
+        <item name="android:navigationBarColor">@color/cobalto</item>
+    </style>
+</resources>
