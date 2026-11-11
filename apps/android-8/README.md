@@ -1,4 +1,4 @@
-# apps/android-8
+# App 8 para Android (`apps/android-8/`)
 
 App Android **Priv8** (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad «Priv8» (`Priv8AccessibilityService`), que es el adaptador Android del núcleo. 8 es el nombre del agente dentro de la app.
 
