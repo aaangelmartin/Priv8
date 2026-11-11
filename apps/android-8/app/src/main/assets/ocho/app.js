@@ -85,11 +85,12 @@
       aplicar(E.decidir(msg));
       return true;
     },
-    /* 'conectado' | 'sin_conexion' */
-    conexion: function (c) {
+    /* 'conectado' | 'sin_conexion'. Con sinCara solo se anota, sin saludar: la pantalla
+       de confirmación, cuya petición llegó por el puente con el núcleo en marcha. */
+    conexion: function (c, sinCara) {
       if (c === conexion) return;
       conexion = c;
-      aplicar(E.conexion(c));
+      if (!sinCara) aplicar(E.conexion(c));
       pintarEstado();
     },
     /* Nivel real de la voz, de 0 a 1, unas 30 veces por segundo mientras suena:

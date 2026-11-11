@@ -43,8 +43,9 @@ class OjosView(context: Context) : WebView(context) {
     /** One message of the event channel (JSON text). */
     fun evento(json: String) = call("Ocho.evento(${JSONObject.quote(json)})")
 
-    fun conexion(connected: Boolean) =
-        call("Ocho.conexion(${JSONObject.quote(if (connected) "conectado" else "sin_conexion")})")
+    /** Connection to the core. With [face] false it is only noted (debug label): no greeting face. */
+    fun conexion(connected: Boolean, face: Boolean = true) =
+        call("Ocho.conexion(${JSONObject.quote(if (connected) "conectado" else "sin_conexion")}, ${!face})")
 
     /** Puts a face from the closed set (P8.estados), e.g. "esperar". */
     fun cara(id: String) = call("Ocho.cara(${JSONObject.quote(id)})")
