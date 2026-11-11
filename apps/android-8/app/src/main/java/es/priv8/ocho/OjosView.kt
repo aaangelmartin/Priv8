@@ -46,6 +46,28 @@ class OjosView(context: Context) : WebView(context) {
     fun conexion(connected: Boolean) =
         call("Ocho.conexion(${JSONObject.quote(if (connected) "conectado" else "sin_conexion")})")
 
+    /** Puts a face from the closed set (P8.estados), e.g. "esperar". */
+    fun cara(id: String) = call("Ocho.cara(${JSONObject.quote(id)})")
+
+    /** SpeechRecognizer.onRmsChanged: «escuchar» follows the microphone (#42). Any thread. */
+    fun microfono(rmsdB: Float) {
+        medidorMic.ofrecer(Nivel.microfono(rmsdB))?.let { nivel("microfono", it) }
+    }
+
+    /** Output level from 0 to 1 ([SalidaTts], or [Nivel.salidaRms] of played PCM): «hablar» follows it (#42). Any thread. */
+    fun voz(nivel: Float) {
+        medidorVoz.ofrecer(nivel)?.let { nivel("voz", it) }
+    }
+
+    private val medidorMic = Medidor(reloj = android.os.SystemClock::elapsedRealtime)
+    private val medidorVoz = Medidor(reloj = android.os.SystemClock::elapsedRealtime)
+
+    /** Levels are live: dropped, not queued, until the page is ready. */
+    private fun nivel(fuente: String, v: Float) {
+        val js = "window.Ocho && Ocho.nivel('$fuente', ${"%.3f".format(java.util.Locale.ROOT, v)})"
+        post { if (ready) evaluateJavascript(js, null) }
+    }
+
     private fun call(js: String) {
         if (!ready) { queue.add(js); return }
         evaluateJavascript("window.Ocho && $js", null)
