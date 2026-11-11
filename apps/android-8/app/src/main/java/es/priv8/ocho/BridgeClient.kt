@@ -27,6 +27,8 @@ class BridgeClient(
     /** Thread where messages are handled; it may block (settle, gestures). */
     private val worker: Handler,
     private val onMessage: (JSONObject) -> Unit,
+    /** On [worker], once per new connection, before hello and before any of its messages. */
+    private val onConnected: () -> Unit = {},
 ) {
     private val http = OkHttpClient.Builder()
         .pingInterval(PING_S, TimeUnit.SECONDS)
@@ -73,6 +75,7 @@ class BridgeClient(
                     socket = webSocket
                     backoff = MIN_BACKOFF_MS
                     Log.i(TAG, "bridge: connected")
+                    onConnected()
                     webSocket.send(
                         JSONObject().put("type", "hello").put("device", device).put("version", VERSION).toString(),
                     )

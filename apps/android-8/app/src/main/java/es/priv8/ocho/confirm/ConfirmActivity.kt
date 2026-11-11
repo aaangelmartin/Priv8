@@ -120,7 +120,7 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         status.text = if (ok) "Confirmado." else "Cancelado."
         confirm.isEnabled = false
         cancel.isEnabled = false
-        ConfirmFlow.answer(r.id, ok, via)
+        ConfirmFlow.answer(r, ok, via)
     }
 
     private fun tick() {
