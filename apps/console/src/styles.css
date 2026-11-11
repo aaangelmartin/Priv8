@@ -689,6 +689,8 @@ mark.dato.escrito { background: var(--accent-soft); color: var(--ink) }
 .mirada { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 4px }
 .mirada-pantalla { position: relative; flex: 1; min-height: 0; display: flex }
 .mirada-pantalla > .escenario { flex: 1 }
+/* en las dos miradas, la pantalla va pegada a su cabecera, no centrada en el hueco */
+.mirada-pantalla > .vista-escenario, .mirada-pantalla > .movil-escenario { align-items: flex-start }
 .mirada-cab { display: flex; align-items: center; gap: 12px; padding: 8px 14px 8px 8px; border-radius: 18px; background: #fff; color: var(--ink);
   border: 2px solid transparent; min-width: 0 }
 .mirada-cab.t-tu { border-color: #fff }
