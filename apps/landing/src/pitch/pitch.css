@@ -277,13 +277,14 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 @keyframes sale-arriba { from { transform: none; } to { transform: translateY(calc(-100% - 60px)); } }
 @keyframes sale-abajo { from { transform: none; } to { transform: translateY(calc(100% + 60px)); } }
 /* el borde de píxeles va pegado por fuera de la que entra, en su color */
-.borde { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -2px; padding-top: 3px; pointer-events: none; line-height: 0; }
-/* se solapa 2-3 px con las dos diapositivas: sin juntas finas por medio píxel */
-.borde.abajo { bottom: auto; top: 100%; margin: -2px 0 0; padding: 0 0 3px; transform: scaleY(-1); }
+.borde { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -2px; padding-top: 14px; pointer-events: none; line-height: 0; }
+/* el fondo del borde se mete bajo la que sale y 2 px en la que entra: nunca queda una raya entre las dos */
+.borde.abajo { bottom: auto; top: 100%; margin: -2px 0 0; padding: 0 0 14px; transform: scaleY(-1); }
 .borde .blend { width: 100%; margin: 0 !important; }
 .borde .blend svg { display: block; }
-/* como un scroll: el contenido viaja con su diapositiva, ya colocado; las dos se mueven juntas */
-.slide.entra .rv, .slide.sale .rv { animation: none !important; opacity: 1; transform: none; filter: none; }
+/* como un scroll: el contenido viaja con su diapositiva, ya colocado, y al llegar no vuelve a entrar.
+   La entrada escalonada solo la tiene la primera diapositiva al abrir la presentación. */
+.slide.entra .rv, .slide.sale .rv, .slide.quieta .rv { animation: none !important; opacity: 1; transform: none; filter: none; }
 
 .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 5; background: transparent; }
 .progress i { display: block; height: 100%; background: var(--soft-band); transition: width .6s var(--ease); }
@@ -331,16 +332,3 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 }
 /* pantallas bajas (móvil en horizontal): mandos más pequeños */
 @media (max-height: 520px) { .controls { transform: translateX(-50%) scale(.78); transform-origin: 50% 100%; } .deck.idle .controls { transform: translate(-50%, 12px) scale(.78); } }
-
-/* intro de la portada (como la de la web): 8 grande en el centro, saluda y vuela a su sitio; el texto, después */
-.portada.con-intro .e-hero { animation: none !important; opacity: 1; filter: none; }
-.portada.intro .e-hero { animation: none !important; opacity: 1; filter: none; transform: translate(var(--ix, 0), var(--iy, 0)) scale(2.3); }
-.portada.intro-vuela .e-hero { transform: none; transition: transform 1.1s cubic-bezier(.65, 0, .2, 1); }
-.portada.intro .center .rv:not(.e-hero) { animation: none !important; opacity: 0; }
-.portada.intro .top { opacity: 0; }
-.portada .top { transition: opacity .6s ease .3s; }
-/* el bocadillo de la intro, como el de la web (.bubble8): arriba a la izquierda de 8, con la esquina hacia él */
-.portada .hola { position: absolute; z-index: 4; right: calc(50% + 15.6cqw); bottom: calc(50% + 8.6cqw); margin: 0; padding: .85cqw 1.2cqw; border-radius: 1.5cqw 1.5cqw .45cqw 1.5cqw; background: #fff; color: var(--ink); font: 400 1.5cqw/1.5 var(--f-body); white-space: nowrap; box-shadow: 0 1cqw 2.6cqw rgba(5, 16, 31, .22); animation: hola-in .45s var(--ease) .35s both; }
-@keyframes hola-in { from { opacity: 0; transform: translateY(.8cqw) scale(.94); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .portada.intro .e-hero { transform: none; } .portada.intro .center .rv { opacity: 1; } /* el bocadillo de la intro, como el de la web (.bubble8): arriba a la izquierda de 8, con la esquina hacia él */
-.portada .hola { position: absolute; z-index: 4; right: calc(50% + 15.6cqw); bottom: calc(50% + 8.6cqw); margin: 0; padding: .85cqw 1.2cqw; border-radius: 1.5cqw 1.5cqw .45cqw 1.5cqw; background: #fff; color: var(--ink); font: 400 1.5cqw/1.5 var(--f-body); white-space: nowrap; box-shadow: 0 1cqw 2.6cqw rgba(5, 16, 31, .22); animation: hola-in .45s var(--ease) .35s both; } }
