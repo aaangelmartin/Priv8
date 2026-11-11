@@ -104,6 +104,8 @@ Y en la B2C:
 
 ### Con Claude en vivo
 
+Límites de gasto: cada encargo para al llegar a 0,05 $ y la sesión (el proceso del agente) a 0,50 $; los dos se cambian en el `.env` (`PRIV8_TASK_BUDGET_USD`, `PRIV8_SESSION_BUDGET_USD`) y 8 lo dice en el chat de la consola cuando para. El tope total se pone en la Console de Anthropic como límite de gasto del workspace de la clave.
+
 ```bash
 uv run --env-file .env python -m agent.agent --serve --task "registrar factura"
 ```
