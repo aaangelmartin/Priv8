@@ -17,7 +17,8 @@ import java.io.File
  * Dictation (issue #47): 8 listens to a task, on the device only. The audio
  * never leaves the phone: only SpeechRecognizer.createOnDeviceSpeechRecognizer,
  * with the same es-ES request as spoken confirmations. Without an on-device
- * recognizer there is no dictation, never a fallback to a cloud one.
+ * recognizer the laptop dictates with local Whisper ([alPortatil]), never a
+ * cloud recognizer.
  *
  * What is heard is never logged: it may carry data.
  */
@@ -26,6 +27,12 @@ class Dictador(
     private val onParcial: (String) -> Unit,
     private val onTarea: (String) -> Unit,
     private val onAviso: (String) -> Unit,
+    /**
+     * The phone cannot recognise speech (no on-device recognizer, no es-ES,
+     * recognizer error): hand the dictation to the laptop's Whisper (#47).
+     * True if the laptop took it; false shows the notice instead.
+     */
+    private val alPortatil: () -> Boolean = { false },
 ) {
     private var recognizer: SpeechRecognizer? = null
     /** Stopped by the person: the recognizer's error after cancel() is not a failure. */
@@ -46,7 +53,11 @@ class Dictador(
 
     fun escuchar(audio: File? = null) {
         if (escuchando) return
-        noDisponible()?.let { Log.i(TAG, "dictado off: $it"); onAviso(it); return }
+        noDisponible()?.let {
+            Log.i(TAG, "dictado off on the phone: $it")
+            if (!alPortatil()) onAviso(it)
+            return
+        }
         // A fresh recognizer for every task: the recognition service can restart
         // between two taps, and a reused one then fails with ERROR_CLIENT forever.
         recognizer?.destroy()
@@ -130,6 +141,9 @@ class Dictador(
             escuchando = false
             if (parado) return
             Log.i(TAG, "dictado: recognizer error $error")
+            val noOido = error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+            // The phone cannot recognise (not "it heard nothing"): the laptop's Whisper takes over.
+            if (!noOido && alPortatil()) return
             onAviso(
                 when {
                     error == SpeechRecognizer.ERROR_NO_MATCH || error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT ->
