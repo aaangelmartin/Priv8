@@ -277,9 +277,10 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 @keyframes sale-arriba { from { transform: none; } to { transform: translateY(calc(-100% - 60px)); } }
 @keyframes sale-abajo { from { transform: none; } to { transform: translateY(calc(100% + 60px)); } }
 /* el borde de píxeles va pegado por fuera de la que entra, en su color */
-.borde { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -2px; padding-top: 14px; pointer-events: none; line-height: 0; }
+.borde { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -4px; padding-top: 14px; pointer-events: none; line-height: 0; }
 /* el fondo del borde se mete bajo la que sale y 2 px en la que entra: nunca queda una raya entre las dos */
-.borde.abajo { bottom: auto; top: 100%; margin: -2px 0 0; padding: 0 0 14px; transform: scaleY(-1); }
+/* hacia atrás el borde va debajo y dado la vuelta: el relleno se pone arriba para que, girado, quede bajo la que sale */
+.borde.abajo { bottom: auto; top: 100%; margin: -4px 0 0; padding: 14px 0 0; transform: scaleY(-1); }
 .borde .blend { width: 100%; margin: 0 !important; }
 .borde .blend svg { display: block; }
 /* como un scroll: el contenido viaja con su diapositiva, ya colocado, y al llegar no vuelve a entrar.
