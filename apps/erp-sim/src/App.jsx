@@ -97,7 +97,7 @@ function Ventana({ usuario, go, onSalir, children }) {
   return (
     <div className="ventana">
       <div className="titulo">
-        <span>Alba Core {ERP.version} · {seed.empresa.nombre}</span>
+        <span>Alba Core {ERP.version} - {seed.empresa.nombre}</span>
         <span className="botones-ventana" aria-hidden="true">
           <i>_</i>
           <i>□</i>
@@ -122,7 +122,7 @@ function Ventana({ usuario, go, onSalir, children }) {
       <main className="cuerpo">{children}</main>
       <footer className="estado">
         <span>Usuario: {persona ? persona.nombre : usuario}</span>
-        <span>Empresa 01 · Ejercicio 2026</span>
+        <span>Empresa 01 - Ejercicio 2026</span>
         <button className="salir" onClick={onSalir}>
           Cerrar sesión
         </button>
@@ -146,7 +146,7 @@ function Login({ onLogin, go }) {
     <div className="login-fondo">
       <form className="ventana login" onSubmit={entrar}>
         <div className="titulo">
-          <span>Alba Core {ERP.version} · Acceso</span>
+          <span>Alba Core {ERP.version} - Acceso</span>
         </div>
         <div className="cuerpo">
           <h1 id="login-titulo" data-p8="heading">

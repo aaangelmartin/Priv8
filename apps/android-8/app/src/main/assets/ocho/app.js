@@ -72,7 +72,7 @@
   function pintarEstado() {
     if (!depurar) return;
     estado.hidden = false;
-    estado.textContent = 'núcleo: ' + (conexion === 'conectado' ? 'conectado' : 'sin conexión') + ' · cara: ' + (actual || '—');
+    estado.textContent = 'núcleo: ' + (conexion === 'conectado' ? 'conectado' : 'sin conexión') + ' | cara: ' + (actual || '—');
   }
 
   /* ---------- API para Kotlin y para el navegador ---------- */
