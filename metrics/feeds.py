@@ -59,7 +59,13 @@ def _paso(m: dict[str, Any]) -> str:
 def _tareas(msgs: list[dict[str, Any]]) -> tuple[int | None, int | None]:
     """Índices de la orden inicial y del mensaje final de 8 (el resto de `task` son pasos internos)."""
     idx = [i for i, m in enumerate(msgs) if m["type"] == "audit" and m["event"]["kind"] == "task"]
-    return (idx[0], idx[-1]) if idx else (None, None)
+    if not idx:
+        return None, None
+    # Desde #117 el último `task` solo marca el fin; el texto final va en el último paso que
+    # no es una llamada a herramienta.
+    final = [i for i in idx[1:] if msgs[i]["event"].get("model_saw")
+             and "tool_use" not in (msgs[i]["event"].get("detail") or "")]
+    return idx[0], (final[-1] if final else idx[-1])
 
 
 def _cronometrar(feed: list[dict[str, Any]], pausa: dict[str, float]) -> list[dict[str, Any]]:
