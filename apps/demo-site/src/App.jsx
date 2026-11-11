@@ -116,8 +116,8 @@ function Hero() {
       <Field />
       <div className="wrap hero-stage">
         <div className="hero-anchor dhero-eight"><Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8, el agente de Priv8" /></div>
-        <h1 id="h-hero"><span className="line">La demo</span><span className="soft line">de Priv8.</span></h1>
-        <p className="hero-sub">Elige un caso y míralo de principio a fin.</p>
+        <h1 id="h-hero"><span className="line">Míralo funcionar.</span><span className="soft line">Sin que la IA vea un dato.</span></h1>
+        <p className="hero-sub">Casos reales de Priv8 para empresas y Priv8 en el móvil, grabados de principio a fin.</p>
         <div className="cta">
           <a className="btn btn-white" href="#empresas">Priv8 para empresas</a>
           <a className="btn btn-white" href="#movil">Priv8 en el móvil</a>
