@@ -52,7 +52,7 @@ class Priv8AccessibilityService : AccessibilityService() {
         workerThread = HandlerThread("priv8-bridge").also { it.start() }
         worker = Handler(workerThread.looper)
         performer = Performer(this, { id -> lastNodes[id] }, ::firstScrollable)
-        bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage)
+        bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage, ConfirmFlow::onConnected)
         bridge.start()
         ConfirmFlow.init(this) { bridge.send(it) }
         Log.i(TAG, "service connected")

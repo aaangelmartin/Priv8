@@ -18,6 +18,8 @@ data class ConfirmRequest(
     val channels: Set<String>,
     val sca: String?,
     val expiresS: Int,
+    /** SHA-256 (hex) of the whole canonical confirm_request: tells a true re-send from a new request with a reused id. */
+    val fingerprint: String,
 ) {
     companion object {
         private val ID = Regex("^c[0-9]+$")
@@ -47,7 +49,28 @@ data class ConfirmRequest(
             if (channels.isEmpty() || !channels.all { it == "voz" || it == "pantalla" }) return null
             val sca = if (msg.isNull("sca")) null else msg.optString("sca")
             val expires = msg.optInt("expires_s", DEFAULT_EXPIRES_S).takeIf { it >= 1 } ?: return null
-            return ConfirmRequest(id, session, kind, segments, channels, sca, expires)
+            return ConfirmRequest(id, session, kind, segments, channels, sca, expires, fingerprint(msg))
+        }
+
+        /**
+         * SHA-256 of [msg] in canonical form: object keys sorted at every
+         * level, no whitespace. Covers every field, including `action`, so
+         * two requests match only if the core sent the very same request.
+         */
+        fun fingerprint(msg: JSONObject): String {
+            val bytes = java.security.MessageDigest.getInstance("SHA-256")
+                .digest(canonical(msg).toByteArray(Charsets.UTF_8))
+            return bytes.joinToString("") { "%02x".format(it) }
+        }
+
+        internal fun canonical(v: Any?): String = when (v) {
+            null, JSONObject.NULL -> "null"
+            is JSONObject -> v.keys().asSequence().toList().sorted()
+                .joinToString(",", "{", "}") { JSONObject.quote(it) + ":" + canonical(v.opt(it)) }
+            is org.json.JSONArray -> (0 until v.length()).joinToString(",", "[", "]") { canonical(v.opt(it)) }
+            is String -> JSONObject.quote(v)
+            is Number -> JSONObject.numberToString(v)
+            else -> v.toString()
         }
     }
 }
