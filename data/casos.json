@@ -45,10 +45,7 @@
         "bloqueo:destino"
       ],
       "replay": "agent/replays/casos/b2b-iban.json",
-      "provisional": {
-        "escena": "b2b",
-        "replay": "core/replays/casos/b2b-iban.json"
-      }
+      "fuente": "Alba Core y el correo reales, núcleo real; las decisiones del modelo, escritas a mano"
     },
     {
       "id": "b2b-sin-protocolo",
