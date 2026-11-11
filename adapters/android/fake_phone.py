@@ -35,7 +35,7 @@ OTHER_BANKS = {
     BREZO: ("Brezo Banco", "Cuenta online", "ES89 9200 0003 7855 0066 7788", "1.875,40 €"),
     NIMBO_APP: ("Nimbo Bróker", "Efectivo del bróker", "ES08 9300 0001 0522 0033 4455", "640,00 €"),
 }
-NIMBO = ("Lucía Ferrer · Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
+NIMBO = ("Ángel Martín - Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
 
 
 def _el(i: int, role: str, sel: str | None, text: str | None = None, label: str | None = None,
@@ -251,7 +251,7 @@ class FakePhone:
         return [_el(1, "other", "id/screen_inicio", parent=None),
                 _el(2, "heading", "id/banco_nombre", "Banca Alcor"),
                 _el(3, "button", "id/btn_salir", "Salir", "Cerrar la sesión", actions=["tap"]),
-                _el(4, "heading", "id/saludo", "Hola, Lucía Ferrer"),
+                _el(4, "heading", "id/saludo", "Hola, Ángel Martín"),
                 _el(5, "text", "id/saldo_total_label", "Saldo total"),
                 _el(6, "text", "id/saldo_total", "15.462,58 €"),
                 _el(7, "heading", "id/cuentas_titulo", "Tus cuentas"),
@@ -272,7 +272,7 @@ class FakePhone:
         return [_el(1, "other", "id/screen_inicio", parent=None),
                 _el(2, "heading", "id/banco_nombre", nombre),
                 _el(3, "button", "id/btn_salir", "Salir", "Cerrar la sesión", actions=["tap"]),
-                _el(4, "heading", "id/saludo", "Hola, Lucía Ferrer"),
+                _el(4, "heading", "id/saludo", "Hola, Ángel Martín"),
                 _el(5, "text", "id/saldo_total_label", "Saldo total"),
                 _el(6, "text", "id/saldo_total", saldo),
                 _el(7, "heading", "id/cuentas_titulo", "Tus cuentas"),
@@ -305,10 +305,10 @@ class FakePhone:
             ("k0n", "text", "id/contacto_nombre", NIMBO[0], None, "k0", None, True, True),
             ("k0i", "text", "id/contacto_iban", NIMBO[1], None, "k0", None, True, True),
             ("k1", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
-            ("k1n", "text", "id/contacto_nombre", "Lucía Ferrer · Brezo Banco", None, "k1", None, True, True),
+            ("k1n", "text", "id/contacto_nombre", "Ángel Martín - Brezo Banco", None, "k1", None, True, True),
             ("k1i", "text", "id/contacto_iban", "ES89 9200 0003 7855 0066 7788", None, "k1", None, True, True),
             ("k2", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
-            ("k2n", "text", "id/contacto_nombre", "Marta Ruiz Gil", None, "k2", None, True, True),
+            ("k2n", "text", "id/contacto_nombre", "Marco Barroso", None, "k2", None, True, True),
             ("k2i", "text", "id/contacto_iban", "ES48 9100 0004 9633 0099 8877", None, "k2", None, True, True),
             ("l_iban", "text", "id/iban_destino_label", "IBAN de destino", None, "scroll", None, True, True),
             ("iban", "textbox", "id/iban_destino", f["iban"] or None, "IBAN de destino", "scroll", ["tap", "type"], True, True),

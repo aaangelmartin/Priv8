@@ -1,10 +1,12 @@
 """Adaptador web contra el ERP y la bandeja reales, y de punta a punta con el núcleo.
 
-Necesita las dos apps en marcha (5173 y 5174). Si no lo están, las arranca con
-pnpm (hace falta `pnpm install` en apps/erp-sim y apps/inbox-sim) y, si no se
-puede, salta los tests.
+Necesita las dos apps en marcha (5173 y 5174, o PRIV8_ALBA_URL y PRIV8_INBOX_URL
+para usar otra copia sin tocar la demo). Si no lo están, las arranca con vite
+(hace falta `pnpm install` en apps/erp-sim y apps/inbox-sim) y, si no se puede,
+salta los tests.
 
     uv run pytest adapters/web/tests
+    PRIV8_ALBA_URL=http://127.0.0.1:5190 PRIV8_INBOX_URL=http://127.0.0.1:5191 uv run pytest adapters/web/tests
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ import tempfile
 import time
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 import pytest
 
@@ -30,7 +33,10 @@ from referencing import Registry, Resource  # noqa: E402
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACTS = ROOT / "docs" / "contracts"
 SEED = json.loads((ROOT / "data" / "seed.json").read_text(encoding="utf-8"))
-APPS = {"alba-core": ("apps/erp-sim", 5173), "inbox": ("apps/inbox-sim", 5174)}
+from adapters.web.adapter import APPS as _URLS  # noqa: E402
+
+APPS = {"alba-core": ("apps/erp-sim", urlparse(_URLS["alba-core"]).port),
+        "inbox": ("apps/inbox-sim", urlparse(_URLS["inbox"]).port)}
 IBAN_MAESTRO = SEED["erp"]["proveedores"][0]["iban"]
 IBAN_TRAMPA = SEED["bancos"]["alcor"]["trampa_iban"]
 
@@ -51,7 +57,8 @@ def servers():
             continue
         if not shutil.which("pnpm") or not (ROOT / path / "node_modules").exists():
             pytest.skip(f"{path} no está en marcha y no se puede arrancar (pnpm install)")
-        procs.append(subprocess.Popen(["pnpm", "dev"], cwd=ROOT / path,
+        procs.append(subprocess.Popen(["pnpm", "exec", "vite", "--port", str(port), "--strictPort",
+                                       "--host", "127.0.0.1"], cwd=ROOT / path,
                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
     for _ in range(60):
         if all(_up(p) for _, p in APPS.values()):
@@ -198,7 +205,7 @@ def test_punta_a_punta_factura_y_trampa(web, core):
     ibans = {t for e in obs["elements"] for t in e.get("tokens", []) if t.startswith("‹IBAN_")}
     assert len(ibans) == 1
     trampa = ibans.pop()
-    assert trampa.endswith("·correo›")
+    assert trampa.endswith("-correo›")
     pdf = {e["label"]: e for e in obs["elements"] if (e.get("label") or "").endswith("(PDF)")}
     num_tok, imp_tok = pdf["Número (PDF)"]["text"], pdf["Importe (PDF)"]["text"]
 
@@ -261,3 +268,58 @@ def test_open_app_acepta_nombres_naturales():
     for n in ("correo", "Bandeja", "inbox"):
         assert app_key(n, APPS) == "inbox"
     assert app_key("banco", APPS) is None
+
+
+# ---------------------------------------------------------------- cursor de 8 (#135)
+
+@pytest.fixture(scope="module")
+def web_cursor(servers):
+    from adapters.web import WebAdapter
+
+    w = WebAdapter(start="inbox", headless=True, cursor=True)
+    w.goto("inbox", "/reset")
+    yield w
+    w.close()
+
+
+def test_cursor_no_entra_en_el_snapshot(web, web_cursor):
+    """La capa del cursor está en la página, pero el snapshot es el mismo que sin ella."""
+    import time as _t
+
+    snaps = []
+    for w in (web, web_cursor):
+        w.goto("inbox", "/reset")  # mismo estado de partida en los dos navegadores
+        w.goto("inbox", "/responder/9")
+        s = by_sel(w.snapshot())
+        t0 = _t.monotonic()
+        assert w.perform({"op": "type", "target": s["#texto"]["id"], "text": "Recibida, gracias."})["ok"]
+        if w is web_cursor:
+            assert _t.monotonic() - t0 < 1.5  # deslizamiento y tecleo visible acotados
+        snaps.append(w.snapshot())
+    sin, con = snaps
+    page = web_cursor._pages["inbox"]
+    hay = web_cursor._call(lambda: page.evaluate(
+        "() => { const h = document.getElementById('p8-cursor-8');"
+        " return !!h && h.hasAttribute('data-p8-ignore') && h.getAttribute('aria-hidden') === 'true'"
+        " && getComputedStyle(h).pointerEvents === 'none' && !!h.shadowRoot.querySelector('.cur.on'); }"))
+    assert hay  # la capa está y se ve
+    assert by_sel(con)["#texto"]["text"] == "Recibida, gracias."
+    assert con["elements"] == sin["elements"] and con["focus"] == sin["focus"]
+    assert "8 escribe" not in json.dumps(con, ensure_ascii=False)
+    # Lo que cuelga de data-p8-ignore no entra aunque lleve data-p8 y se vea.
+    web_cursor._call(lambda: page.evaluate(
+        "() => { const w = document.createElement('div'); w.setAttribute('data-p8-ignore', '');"
+        " const d = document.createElement('span'); d.setAttribute('data-p8', 'text');"
+        " d.textContent = 'capa'; w.appendChild(d); document.body.appendChild(w); }"))
+    assert "capa" not in json.dumps(web_cursor.snapshot(), ensure_ascii=False)
+    assert web.perform({"op": "tap", "target": "e999"})["ok"] is False  # web sigue en marcha
+
+
+def test_cursor_apagado_con_priv8_cursor(monkeypatch):
+    from adapters.web.adapter import cursor_enabled
+    monkeypatch.setenv("PRIV8_CURSOR", "0")
+    assert cursor_enabled(True) is False
+    monkeypatch.setenv("PRIV8_CURSOR", "1")
+    assert cursor_enabled(False) is True
+    monkeypatch.delenv("PRIV8_CURSOR")
+    assert cursor_enabled(True) is True and cursor_enabled(False) is False

@@ -26,8 +26,8 @@ async def test_observe_returns_tokens_not_values(world):
     snap = r.structured_content
     assert snap["screen"] == "factura.alta"
     by_id = {e["id"]: e for e in snap["elements"]}
-    assert by_id["e10"]["text"] == "‹IBAN_1·maestro›" and by_id["e10"]["cls"] == "ambar"
-    assert "‹IBAN_2·correo›" in by_id["e5"]["text"]
+    assert by_id["e10"]["text"] == "‹IBAN_1-maestro›" and by_id["e10"]["cls"] == "ambar"
+    assert "‹IBAN_2-correo›" in by_id["e5"]["text"]
     assert by_id["e12"]["text"] is None and by_id["e12"]["cls"] == "rojo"
     assert by_id["e13"]["cls"] == "verde"
     assert seed_leaks(r.structured_content) == []
@@ -39,7 +39,7 @@ async def test_tokenized_snapshot_reaches_the_model(world):
     model, result = await _run_replay(core)
     assert result.status == "done"
     second = json.dumps(model.requests[1], ensure_ascii=False)
-    assert "‹IBAN_1·maestro›" in second and "‹PROVEEDOR_1·correo›" in second
+    assert "‹IBAN_1-maestro›" in second and "‹PROVEEDOR_1-correo›" in second
 
 
 async def test_no_seed_value_in_any_model_bound_payload(world):

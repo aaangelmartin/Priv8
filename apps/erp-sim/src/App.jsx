@@ -8,15 +8,18 @@
 // y la escena b2b de core/scenes.py usan los mismos.
 import React, { useEffect, useState } from 'react'
 import seed from '../../../data/seed.json'
+import { cerrarSesion, entrarComo, sesionInicial, trasReset } from './sesion.js'
 
 const ERP = seed.erp
 const KEY = 'alba-core'
+// Sesión ya abierta de la demo (make demo-b2b, solo en desarrollo): ver sesion.js.
+const SESION_DEMO = (import.meta.env.DEV && import.meta.env.VITE_ALBA_SESION) || ''
 
 function load() {
   try {
-    return JSON.parse(localStorage.getItem(KEY)) || {}
+    return sesionInicial(JSON.parse(localStorage.getItem(KEY)), SESION_DEMO, ERP.usuarios)
   } catch {
-    return {}
+    return sesionInicial({}, SESION_DEMO, ERP.usuarios)
   }
 }
 function save(state) {
@@ -68,16 +71,16 @@ export default function App() {
 
   if (path === '/reset') {
     save({})
-    location.replace('/login')
+    location.replace(trasReset(SESION_DEMO))
     return null
   }
   if (!state.usuario && path !== '/login') {
     history.replaceState(null, '', '/login')
-    return <Login onLogin={(u) => update({ usuario: u })} go={go} />
+    return <Login onLogin={(u) => update(entrarComo(u))} go={go} />
   }
 
   let page
-  if (path === '/login') page = <Login onLogin={(u) => update({ usuario: u })} go={go} />
+  if (path === '/login') page = <Login onLogin={(u) => update(entrarComo(u))} go={go} />
   else if (path === '/' || path === '/facturas/alta') page = <AltaFactura state={state} update={update} go={go} />
   else if (path === '/facturas') page = <Facturas state={state} go={go} />
   else if (path === '/proveedores') page = <Proveedores go={go} />
@@ -86,7 +89,7 @@ export default function App() {
 
   if (path === '/login') return page
   return (
-    <Ventana usuario={state.usuario} go={go} onSalir={() => update({ usuario: null })}>
+    <Ventana usuario={state.usuario} go={go} onSalir={() => update(cerrarSesion())}>
       {page}
     </Ventana>
   )

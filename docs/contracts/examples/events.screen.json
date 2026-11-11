@@ -13,7 +13,7 @@
         "id": "n2",
         "role": "text",
         "label": null,
-        "text": "Hola, Lucía Ferrer",
+        "text": "Hola, Ángel Martín",
         "bounds": [
           32,
           180,
@@ -58,20 +58,20 @@
         "id": "n2",
         "role": "text",
         "label": null,
-        "text": "Hola, ‹PERSONA_1·titular›",
+        "text": "Hola, ‹PERSONA_1-titular›",
         "cls": "ambar",
         "tokens": [
-          "‹PERSONA_1·titular›"
+          "‹PERSONA_1-titular›"
         ]
       },
       {
         "id": "n3",
         "role": "text",
         "label": "Saldo",
-        "text": "‹IMPORTE_1·positivo›",
+        "text": "‹IMPORTE_1-positivo›",
         "cls": "ambar",
         "tokens": [
-          "‹IMPORTE_1·positivo›"
+          "‹IMPORTE_1-positivo›"
         ]
       },
       {

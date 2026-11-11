@@ -73,7 +73,7 @@ class FakeVault:
             return self._by_value[key]
         n = self._counters.get(tipo, 0) + 1
         self._counters[tipo] = n
-        token = f"‹{tipo}_{n}·{etiqueta}›" if etiqueta else f"‹{tipo}_{n}›"
+        token = f"‹{tipo}_{n}-{etiqueta}›" if etiqueta else f"‹{tipo}_{n}›"
         self._by_value[key] = token
         self._by_token[token] = value
         return token

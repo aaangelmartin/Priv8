@@ -20,19 +20,39 @@ pasa por una cola.
 
 from __future__ import annotations
 
+import os
 import queue
 import re
 import threading
 import urllib.request
 from collections.abc import Callable
 from concurrent.futures import Future
+from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
+# PRIV8_ALBA_URL y PRIV8_INBOX_URL apuntan a otra copia de las apps (tests sin tocar la demo).
 APPS: dict[str, str] = {
-    "alba-core": "http://127.0.0.1:5173",
-    "inbox": "http://127.0.0.1:5174",
+    "alba-core": os.environ.get("PRIV8_ALBA_URL", "http://127.0.0.1:5173").rstrip("/"),
+    "inbox": os.environ.get("PRIV8_INBOX_URL", "http://127.0.0.1:5174").rstrip("/"),
 }
+
+# Cursor de 8 (#135): capa visible en la ventana de Chromium. PRIV8_CURSOR=0 la apaga.
+_CURSOR_JS = (Path(__file__).with_name("cursor8.js")).read_text(encoding="utf-8")
+# Tecleo visible: hasta TYPE_VISIBLE caracteres a ritmo humano y el resto de golpe, para que
+# el retraso añadido por acción (deslizamiento hasta 0,5 s más tecleo) quede por debajo de 0,8 s.
+TYPE_VISIBLE = 16
+TYPE_BUDGET_MS = 220
+
+
+def cursor_enabled(default: bool) -> bool:
+    """PRIV8_CURSOR=0|off|false lo apaga, 1|on lo enciende; sin la variable, `default`."""
+    v = os.environ.get("PRIV8_CURSOR")
+    if v is None or not v.strip():
+        return default
+    return v.strip().lower() not in ("0", "off", "false", "no")
+
+
 HOME: dict[str, str] = {"alba-core": "/facturas/alta", "inbox": "/bandeja"}
 # Nombres con los que el agente puede pedir cada app en open_app (minúsculas, sin espacios ni guiones).
 ALIASES: dict[str, str] = {
@@ -50,6 +70,24 @@ def app_key(name: str, apps: dict[str, str]) -> str | None:
     n = "".join(c for c in n if c.isalnum())
     key = ALIASES.get(n)
     return key if key in apps else None
+
+
+# Perfil de Chromium que recuerda la sesión entre ejecuciones (#137), como el navegador de
+# un ordenador de la empresa. PRIV8_WEB_PROFILE=<carpeta> usa otra; "off", uno de usar y tirar.
+DEFAULT_PROFILE = Path(__file__).resolve().parents[2] / ".priv8" / "chromium"
+
+
+def profile_dir(env: dict[str, str] | None = None) -> Path | None:
+    """Carpeta del perfil persistente, o None si PRIV8_WEB_PROFILE=off."""
+    v = (os.environ if env is None else env).get("PRIV8_WEB_PROFILE", "").strip()
+    if v.lower() in ("off", "0", "no", "false"):
+        return None
+    return Path(v).expanduser() if v else DEFAULT_PROFILE
+
+
+def on_login_screen(url: str) -> bool:
+    """La app pide identificarse (su ruta es /login): la clave la escribe la persona."""
+    return urlparse(url).path.rstrip("/").endswith("/login")
 
 # Recorre el DOM y devuelve los elementos marcados con data-p8. Marca cada uno con
 # data-p8-ref para que perform() lo encuentre sin recalcular selectores.
@@ -76,7 +114,7 @@ _SNAPSHOT_JS = r"""
   const out = [];
   let n = 0;
   for (const el of document.querySelectorAll('[data-p8]')) {
-    if (!visible(el)) continue;
+    if (!visible(el) || el.closest('[data-p8-ignore]')) continue;  // la capa del cursor de 8 no entra
     const ref = 'e' + (++n);
     el.setAttribute('data-p8-ref', ref);
     const role = el.dataset.p8;
@@ -148,14 +186,19 @@ class WebAdapter:
 
     def __init__(self, apps: dict[str, str] | None = None, start: str = "inbox", *,
                  headless: bool = False, on_call: Callable[[str], bool] | None = None,
-                 timeout_ms: int = 5000, slow_mo_ms: int = 0) -> None:
+                 timeout_ms: int = 5000, slow_mo_ms: int = 0, profile: str | Path | None = None,
+                 cursor: bool | None = None) -> None:
         self.apps = dict(apps or APPS)
+        # Con ventana, la persona ve a 8 mover el cursor; sin ventana (tests) no hace falta.
+        self.cursor = cursor_enabled(not headless) if cursor is None else cursor
+        self._cursor_pos: dict[str, tuple[int, int]] = {}
         if start not in self.apps:
             raise ValueError(f"app desconocida: {start}")
         self.on_call = on_call or self._llamada_simulada
         self.calls: list[str] = []
         self.seq = 0
         self._timeout = timeout_ms
+        self.profile = Path(profile) if profile else None  # None: contexto de usar y tirar
         self._jobs: queue.Queue[tuple[Callable[[], Any], Future] | None] = queue.Queue()
         self._ready: Future = Future()
         self._thread = threading.Thread(target=self._run, args=(start, headless, slow_mo_ms),
@@ -170,8 +213,7 @@ class WebAdapter:
 
         try:
             self._pw = sync_playwright().start()
-            self._browser = self._pw.chromium.launch(headless=headless, slow_mo=slow_mo_ms)
-            self._ctx = self._browser.new_context(viewport={"width": 1100, "height": 760}, locale="es-ES")
+            self._ctx = self._open_context(headless, slow_mo_ms)
             self._ctx.set_default_timeout(self._timeout)
             self._pages: dict[str, Any] = {}
             self.app = start
@@ -188,8 +230,28 @@ class WebAdapter:
                 fut.set_result(fn())
             except BaseException as e:  # noqa: BLE001
                 fut.set_exception(e)
-        self._browser.close()
+        self._ctx.close()
+        if self._browser is not None:
+            self._browser.close()
         self._pw.stop()
+
+    def _open_context(self, headless: bool, slow_mo_ms: int) -> Any:
+        """Con perfil, uno persistente: la sesión de Alba Core sigue en la siguiente ejecución.
+        Si el perfil está en uso (otro agente abierto), uno de usar y tirar."""
+        opts = {"viewport": {"width": 1100, "height": 760}, "locale": "es-ES"}
+        self._browser = None
+        if self.profile is not None:
+            try:
+                self.profile.mkdir(parents=True, exist_ok=True)
+                return self._pw.chromium.launch_persistent_context(
+                    str(self.profile), headless=headless, slow_mo=slow_mo_ms, **opts)
+            except Exception as e:  # noqa: BLE001
+                import sys
+                print(f"priv8: perfil de Chromium {self.profile} no disponible ({type(e).__name__}); "
+                      "sesión sin recordar", file=sys.stderr)
+                self.profile = None
+        self._browser = self._pw.chromium.launch(headless=headless, slow_mo=slow_mo_ms)
+        return self._browser.new_context(**opts)
 
     def _call(self, fn: Callable[[], Any]) -> Any:
         fut: Future = Future()
@@ -199,7 +261,9 @@ class WebAdapter:
     def _page(self, app: str) -> Any:
         page = self._pages.get(app)
         if page is None or page.is_closed():
-            page = self._ctx.new_page()
+            # El perfil persistente abre con una pestaña en blanco: se aprovecha.
+            libres = [p for p in self._ctx.pages if p.url == "about:blank" and p not in self._pages.values()]
+            page = libres[0] if libres else self._ctx.new_page()
             page.goto(self.apps[app] + HOME.get(app, "/"))
             self._pages[app] = page
         return page
@@ -272,14 +336,19 @@ class WebAdapter:
             if el.count() != 1:
                 return {"ok": False, "error": "target_no_encontrado"}
             if op in ("tap", "send"):
+                self._cursor(page, "tap", target, "pulsa")
                 el.click()
                 return {"ok": True}
             if op == "type":
                 if not el.is_editable():
                     return {"ok": False, "error": "no_permitido"}
-                el.fill(text)
+                if self._cursor(page, "type", target, "escribe"):
+                    self._type_visible(el, text)
+                el.fill(text)  # el valor final es siempre el mismo, con cursor o sin él
+                self._cursor(page, "done")
                 return {"ok": True}
             if op == "call":
+                self._cursor(page, "tap", target, "llama a")
                 numero = text or (el.input_value() if el.is_editable() else el.inner_text())
                 self.calls.append(numero)
                 return {"ok": bool(self.on_call(numero))}
@@ -288,6 +357,42 @@ class WebAdapter:
             return {"ok": False, "error": "timeout"}
         except PwError:
             return {"ok": False, "error": "otro"}
+
+    # ---- cursor de 8 (#135) ----
+
+    def _cursor(self, page: Any, op: str, target: str | None = None, verb: str | None = None) -> bool:
+        """Lleva el cursor de 8 hasta `target` (o lo recoge con op='done'). Solo es pantalla:
+        si algo falla, la acción sigue igual que sin cursor."""
+        if not self.cursor:
+            return False
+        from playwright.sync_api import Error as PwError
+
+        try:
+            if target:
+                page.locator(f'[data-p8-ref="{target}"]').scroll_into_view_if_needed(timeout=1000)
+            pos = self._cursor_pos.get(self.app)
+            done = page.evaluate(_CURSOR_JS, {"op": op, "ref": target, "verb": verb,
+                                              "from": list(pos) if pos else None})
+            if isinstance(done, list):
+                self._cursor_pos[self.app] = (done[0], done[1])
+            return bool(done)
+        except PwError:
+            return False
+
+    @staticmethod
+    def _type_visible(el: Any, text: str) -> None:
+        """Teclea el principio de `text` letra a letra para que se vea escribir. Para en el primer
+        salto de línea (un Enter podría enviar el formulario); fill() pone luego el valor entero."""
+        from playwright.sync_api import Error as PwError
+
+        visible = text.split("\n", 1)[0][:TYPE_VISIBLE]
+        if not visible:
+            return
+        try:
+            el.fill("")
+            el.press_sequentially(visible, delay=max(8, min(45, TYPE_BUDGET_MS // len(visible))))
+        except PwError:
+            pass
 
     # ---- utilidades ----
 
@@ -308,7 +413,7 @@ class WebAdapter:
 
         def on_login() -> bool:
             page = self._page(app)
-            if "/login" in page.url:
+            if on_login_screen(self._settled_url(page)):
                 page.bring_to_front()
                 return True
             return False
@@ -320,6 +425,18 @@ class WebAdapter:
                 return True
             time.sleep(1)
         return False
+
+    def logged_in(self, app: str = "alba-core") -> bool:
+        """`app` ya tiene la sesión abierta (recordada en el perfil o la de la demo), sin esperar."""
+        return self._call(lambda: not on_login_screen(self._settled_url(self._page(app))))
+
+    def _settled_url(self, page: Any) -> str:
+        """URL una vez la app ha pintado: el ERP lleva a /login al arrancar si no hay sesión."""
+        try:
+            page.wait_for_selector("[data-p8]", timeout=self._timeout)
+        except Exception:  # noqa: BLE001  sin elementos marcados: vale la URL que haya
+            pass
+        return page.url
 
     def close(self) -> None:
         if self._thread.is_alive():

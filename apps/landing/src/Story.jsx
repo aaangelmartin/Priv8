@@ -150,8 +150,8 @@ export function HowScene() {
                 <pre className="tree">{'pantalla "Banca Alcor"\n├ campo  "Titular"         ‹NOMBRE_1›\n├ campo  "Cuenta nómina"   ‹IBAN_1›\n├ campo  "Saldo"           ‹IMPORTE_1›\n├ campo  "Clave"           nunca sale\n└ botón  "Hacer una transferencia"'}</pre>
               </div>
               <div className={'hv hv-1' + (phase === 1 ? ' on' : '')}>
-                <div className="pair"><span className="real">ES43 9100 0001 5740…</span><span className="arrow" /><Tok>‹IBAN_1·propio›</Tok></div>
-                <div className="pair"><span className="real">3.412,58 €</span><span className="arrow" /><Tok>‹IMPORTE_1·positivo›</Tok></div>
+                <div className="pair"><span className="real">ES43 9100 0001 5740…</span><span className="arrow" /><Tok>‹IBAN_1-propio›</Tok></div>
+                <div className="pair"><span className="real">3.412,58 €</span><span className="arrow" /><Tok>‹IMPORTE_1-positivo›</Tok></div>
                 <div className="pair"><span className="real">••••••••</span><span className="arrow" /><span className="never">nunca sale</span></div>
               </div>
               <div className={'hv hv-2' + (phase === 2 ? ' on' : '')}>

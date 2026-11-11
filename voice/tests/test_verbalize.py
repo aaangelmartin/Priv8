@@ -68,7 +68,7 @@ def test_parse_amount(text, value):
 
 def test_parse_amount_rejects_text():
     with pytest.raises(ValueError):
-        parse_amount("Lucía Ferrer")
+        parse_amount("Ángel Martín")
 
 
 @pytest.mark.parametrize("text, spoken", [

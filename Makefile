@@ -1,6 +1,6 @@
 # Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
 
-.PHONY: agent agent-web web web-install replay replay-fake demo test metrics events dictado dictado-install llamada-banco linea-alcor sin-protocolo video-sin-protocolo video-con-protocolo videos
+.PHONY: agent agent-web demo-b2b web web-install replay replay-fake demo test metrics events dictado dictado-install llamada-banco linea-alcor sin-protocolo video-sin-protocolo video-con-protocolo videos
 
 # MCP server (streamable HTTP on :8701) and the agent loop, live against the Claude API.
 # Needs ANTHROPIC_API_KEY (see .env.example).
@@ -39,6 +39,12 @@ mcp-web:
 mcp-android:
 	uv run python -m agent.server --android
 
+# The whole B2B demo ready to test (#137): starts the three web apps if they are not running,
+# Alba Core with the demo session already open (VITE_ALBA_SESION, dev only), then the agent
+# waiting for requests in the console (:5175) with .env if present. Ctrl-C stops it all.
+demo-b2b:
+	scripts/demo_b2b.sh
+
 # Alba Core (:5173), the mailbox (:5174) and the audit console (:5175). First time: make web-install.
 web:
 	(cd apps/erp-sim && pnpm dev) & (cd apps/inbox-sim && pnpm dev) & (cd apps/console && pnpm dev) & wait
@@ -71,6 +77,7 @@ test:
 	uv run python data/check_seed.py
 	node apps/console/src/alertas.test.mjs
 	node apps/console/src/tokens.test.mjs
+	node apps/erp-sim/src/sesion.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
 metrics:

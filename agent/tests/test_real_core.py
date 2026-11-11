@@ -36,7 +36,7 @@ def seeds() -> list[str]:
     from core import scenes as s
 
     values = [s.PROVEEDOR, s.CIF, s.IBAN_MAESTRO, s.IBAN_TRAMPA, s.TEL_FICHA, s.TEL_CORREO, s.FACTURA,
-              s.IMPORTE, s.CORREO_PROVEEDOR, s.TITULAR, *s.NIMBO, *s.MARTA, "200 €"]
+              s.IMPORTE, s.CORREO_PROVEEDOR, s.TITULAR, *s.NIMBO, *s.MARCO, "200 €"]
     return values + [x for c in s.CUENTAS for x in c[2:]]
 
 

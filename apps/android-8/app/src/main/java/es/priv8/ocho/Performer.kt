@@ -22,6 +22,8 @@ class Performer(
     private val service: AccessibilityService,
     private val nodeFor: (String) -> AccessibilityNodeInfo?,
     private val findScrollable: () -> AccessibilityNodeInfo?,
+    /** 8's visible cursor (#135); null keeps the old behaviour, with nothing drawn. */
+    private val cursor: CursorOverlay? = null,
 ) {
 
     /** Outcome per the contract: ok, or one of the error codes of `result.error`. */
@@ -50,6 +52,8 @@ class Performer(
     private fun tap(target: String?): Outcome {
         val node = resolve(target) ?: return NOT_FOUND
         if (!node.isEnabled) return NOT_ALLOWED
+        val bounds = Rect().also { node.getBoundsInScreen(it) }
+        if (cursor?.glideTo(bounds, ring = false) == true) cursor.ripple()
         var n: AccessibilityNodeInfo? = node
         while (n != null) {
             if (n.isClickable && n.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return Outcome.Ok
@@ -68,10 +72,22 @@ class Performer(
         val field = if (node.isEditable) node else findEditable(node) ?: return NOT_ALLOWED
         if (RojoField.isRojo(field)) return NOT_ALLOWED
         field.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
-        val args = Bundle().apply {
-            putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
+        // With the cursor on the field, the text appears in a few steps, like someone typing;
+        // the last SET_TEXT always puts the whole value, as without the cursor.
+        val bounds = Rect().also { field.getBoundsInScreen(it) }
+        if (cursor?.glideTo(bounds, ring = true) == true) {
+            for (part in CursorMotion.typingSteps(text)) {
+                field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, setText(part))
+                Thread.sleep(CursorMotion.TYPE_STEP_MS)
+            }
         }
-        return if (field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)) Outcome.Ok else OTHER
+        val ok = field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, setText(text))
+        cursor?.clearRing()
+        return if (ok) Outcome.Ok else OTHER
+    }
+
+    private fun setText(text: String) = Bundle().apply {
+        putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text)
     }
 
     private fun openApp(pkg: String?): Outcome {

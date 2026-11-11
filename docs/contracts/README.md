@@ -40,6 +40,10 @@ dictado  app 8 ─ dictation_start ─▶ núcleo ─ micro del portátil + Whis
                                                                    └─ tarea en cola ─▶ next_task()
 ```
 
+## v1.3 (11 nov) - separador de la etiqueta
+
+No aditivo: la etiqueta del token se separa con un guion, `‹IBAN_1-propio›`, no con el punto medio (issue #130). Cambian a la vez el núcleo, el agente, la voz, la consola, la app 8, los ejemplos y las repeticiones grabadas. Ver `token.md`.
+
 ## v1.2 (11 nov) · cambios aditivos
 
 Aditivo: un cliente v1.1 sigue validando.

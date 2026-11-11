@@ -31,7 +31,7 @@ def seed_values() -> set[str]:
     return out
 
 
-INVENTED = {"Javier Sanz"}  # el gestor de la línea simulada
+INVENTED = {"Álvaro Carpintero"}  # el gestor de la línea simulada
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -138,12 +138,12 @@ def test_no_seed_value_in_anything_model_bound():
                 f"mi DNI es 12345678Z y mi cuenta {alcor['cuentas'][0]['iban']}")
     for obj, sid in ((objetivo, "bk-seed-1"),
                      (f"Soy {alcor['titular']} y quiero bloquear la tarjeta débito", "bk-seed-5"), ("Quiero hablar con un gestor", "bk-seed-2"),
-                     ("Haz una transferencia de 200 € a Marta Ruiz Gil", "bk-seed-3")):
+                     ("Haz una transferencia de 200 € a Marco Barroso", "bk-seed-3")):
         call, linea, res, events = run(obj, sid)
         bound = "\n".join(call.modelo_vio)
         audit = json.dumps(events, ensure_ascii=False)
         dicho = "\n".join(call.dicho)
-        for v in seeds | {"12345678Z", "Marta Ruiz Gil", "200 €", alcor["titular"]}:
+        for v in seeds | {"12345678Z", "Marco Barroso", "200 €", alcor["titular"]}:
             assert v not in bound, v
             assert v not in audit, v
             assert v not in dicho, v
@@ -199,10 +199,10 @@ def test_claude_navigator_gets_tokens_only():
                 return type("R", (), {"content": [type("B", (), {"text": "3"})()]})()
 
     nav = B.NavegadorClaude(client=Fake(), model="test-model")
-    call, linea, res, _ = run("Soy Lucía Ferrer y quiero hablar con un gestor", "bk-claude", navegador=nav)
+    call, linea, res, _ = run("Soy Ángel Martín y quiero hablar con un gestor", "bk-claude", navegador=nav)
     assert teclas(linea) == ["3"] and res["cedida"]
     sent = json.dumps(seen, ensure_ascii=False)
-    assert "Lucía Ferrer" not in sent and "‹PERSONA_" in sent
+    assert "Ángel Martín" not in sent and "‹PERSONA_" in sent
 
 
 def test_live_mode_off_without_flag_and_keys():

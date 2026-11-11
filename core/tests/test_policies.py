@@ -69,7 +69,7 @@ def test_extract_saludo():
     screen = load_policies()["es.priv8.banks.alcor"].screen_for(ex("snapshot.android-inicio"))
     saludo = next(e for e in ex("snapshot.android-inicio")["elements"] if e["id"] == "n2")
     rule = screen.rule_for(saludo)
-    assert re.match(rule.extract, saludo["text"]).group(1) == "Lucía Ferrer"
+    assert re.match(rule.extract, saludo["text"]).group(1) == "Ángel Martín"
 
 
 def test_inbox_marca_origen_correo():
