@@ -13,6 +13,8 @@
   --f-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --ease: cubic-bezier(.2, .8, .2, 1);
+  /* velo de las diapositivas cobalto en sus bordes: el mismo en el borde de píxeles, así el fondo sigue continuo */
+  --edge-clean: rgba(45, 69, 214, .62);
   color-scheme: light;
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -28,13 +30,13 @@ h1, h2, h3 { font-family: var(--f-display); font-weight: 700; margin: 0; text-wr
 .deck { position: fixed; inset: 0; display: grid; place-items: center; background: #05101f; transition: background .6s ease; }
 .deck.tone-band { background: #1c2e9e; }
 .deck.tone-paper { background: #dfe5f6; }
-.stage { position: relative; width: min(100vw, calc(100dvh * 16 / 9)); aspect-ratio: 16 / 9; overflow: hidden; touch-action: pan-y; container-type: size; user-select: none; -webkit-user-select: none; box-shadow: 0 30px 90px rgba(5, 16, 31, .35); }
+.stage { position: relative; width: min(100vw, calc(100dvh * 16 / 9)); aspect-ratio: 16 / 9; background: var(--paper); overflow: hidden; touch-action: pan-y; container-type: size; user-select: none; -webkit-user-select: none; box-shadow: 0 30px 90px rgba(5, 16, 31, .35); }
 .slide { position: absolute; inset: 0; container-type: size; visibility: hidden; overflow: hidden; }
 .slide.on { visibility: visible; z-index: 1; }
 .s-paper { background: var(--paper); color: var(--ink); }
-.s-band { background: var(--band) var(--texture, none) repeat 0 0 / 114.6cqw auto; color: #fff; }
+.s-band { background: var(--band) var(--texture, none) repeat 0 var(--ty, 0) / 114.6cqw auto; color: #fff; }
 /* el centro de las diapositivas cobalto se limpia, como en las secciones de la landing */
-.s-band::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 70% 70% at 50% 55%, rgba(45, 69, 214, .9) 40%, rgba(45, 69, 214, .78) 100%); }
+.s-band::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 47% 45% at 50% 52%, rgba(45, 69, 214, .9) 45%, var(--edge-clean) 100%); }
 /* en la portada y el cierre el campo de datos vivo sustituye al dibujo fijo */
 .in.live { background: var(--band); }
 .in { position: relative; z-index: 1; height: 100%; padding: 4.2cqw 5.2cqw 5cqw; display: flex; flex-direction: column; }
@@ -262,30 +264,24 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 .e-qa { position: absolute; right: 5.2cqw; top: 4.2cqw; width: 6cqw; }
 .annex .sfoot span:last-child { padding: .35cqw .7cqw; border-radius: 999px; background: var(--warn-soft); color: var(--warn-text); }
 
-/* ---------- transición de píxeles ---------- */
-/* transición: la de la landing al hacer scroll. La que entra sube (o baja) con el borde de píxeles por delante
-   y la que sale se va a la vez, pegada: es la misma página desplazándose. */
-.slide.sale, .slide.entra { visibility: visible; will-change: transform; animation-duration: .95s; animation-timing-function: cubic-bezier(.65, 0, .2, 1); animation-fill-mode: both; }
+/* ---------- transición: el scroll de la landing ---------- */
+/* Las dos diapositivas se mueven con JavaScript (Deck.jsx), pegadas y a píxeles enteros. Entre dos de distinto color
+   va el borde de píxeles, colgado de la que entra, con el mismo fondo de datos en su sitio de la «página». */
+.slide.sale, .slide.entra { visibility: visible; will-change: transform; }
 .slide.entra { z-index: 3; overflow: visible; }
 .slide.sale { z-index: 2; }
-.slide.entra.adelante { animation-name: entra-abajo; }
-.slide.entra.atras { animation-name: entra-arriba; }
-.slide.sale.adelante { animation-name: sale-arriba; }
-.slide.sale.atras { animation-name: sale-abajo; }
-@keyframes entra-abajo { from { transform: translateY(calc(100% + 60px)); } to { transform: none; } }
-@keyframes entra-arriba { from { transform: translateY(calc(-100% - 60px)); } to { transform: none; } }
-@keyframes sale-arriba { from { transform: none; } to { transform: translateY(calc(-100% - 60px)); } }
-@keyframes sale-abajo { from { transform: none; } to { transform: translateY(calc(100% + 60px)); } }
-/* el borde de píxeles va pegado por fuera de la que entra, en su color */
-.borde { position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: -4px; padding-top: 14px; pointer-events: none; line-height: 0; }
-/* el fondo del borde se mete bajo la que sale y 2 px en la que entra: nunca queda una raya entre las dos */
-/* hacia atrás el borde va debajo y dado la vuelta: el relleno se pone arriba para que, girado, quede bajo la que sale */
-.borde.abajo { bottom: auto; top: 100%; margin: -4px 0 0; padding: 14px 0 0; transform: scaleY(-1); }
-.borde .blend { width: 100%; margin: 0 !important; }
-.borde .blend svg { display: block; }
+.borde { position: absolute; left: 0; right: 0; bottom: 100%; pointer-events: none; line-height: 0; z-index: 4;
+  background: linear-gradient(var(--edge-clean), var(--edge-clean)), var(--texture, none) repeat 0 var(--ty, 0) / 114.6cqw auto, var(--band); }
+.borde.abajo { bottom: auto; top: 100%; }
+/* junto a la portada y el cierre, que llevan el campo vivo, el fondo va sin velo, como el campo en sus bordes */
+.borde.campo { background: var(--texture, none) repeat 0 var(--ty, 0) / 114.6cqw auto, var(--band); }
+.borde .blend { width: 100%; margin: 0; overflow: visible; }
+.borde .blend svg { display: block; overflow: visible; }
 /* como un scroll: el contenido viaja con su diapositiva, ya colocado, y al llegar no vuelve a entrar.
    La entrada escalonada solo la tiene la primera diapositiva al abrir la presentación. */
 .slide.entra .rv, .slide.sale .rv, .slide.quieta .rv { animation: none !important; opacity: 1; transform: none; filter: none; }
+/* lo que se está animando al llegar se para si la diapositiva se va antes de acabar */
+.slide.sale, .slide.sale * { animation-play-state: paused !important; }
 
 .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 5; background: transparent; }
 .progress i { display: block; height: 100%; background: var(--soft-band); transition: width .6s var(--ease); }
@@ -324,7 +320,7 @@ html.printing, html.printing body { height: auto; overflow: visible; background:
 html.printing .deck { position: static; display: block; background: #fff; }
 html.printing .stage { container-type: normal; width: 100vw; aspect-ratio: auto; overflow: visible; box-shadow: none; }
 html.printing .slide { position: relative; inset: auto; width: 100vw; height: 56.25vw; visibility: visible; break-after: page; page-break-after: always; }
-html.printing #d-anexo-2 { break-after: auto; page-break-after: auto; }
+html.printing #d-anexo-5 { break-after: auto; page-break-after: auto; }
 html.printing .rv, html.printing .morph, html.printing .srow .real, html.printing .row2 i.yes, html.printing .chip::before { animation: none !important; }
 html.printing .controls, html.printing .turn, html.printing .progress, html.printing .borde { display: none; }
 @media print {
@@ -333,3 +329,85 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 }
 /* pantallas bajas (móvil en horizontal): mandos más pequeños */
 @media (max-height: 520px) { .controls { transform: translateX(-50%) scale(.78); transform-origin: 50% 100%; } .deck.idle .controls { transform: translate(-50%, 12px) scale(.78); } }
+
+/* ---------- v2: piezas nuevas ---------- */
+.laws { margin-top: 1.4cqw; display: flex; flex-wrap: wrap; gap: .6cqw; align-items: center; }
+.laws span { font: 600 1cqw/1 var(--f-mono); padding: .55cqw .9cqw; border-radius: 999px; background: var(--bad-soft); color: var(--bad-text); }
+.laws em { font: 600 1.05cqw/1 var(--f-display); font-style: normal; color: var(--ink-2); margin-left: .4cqw; }
+.split .screen .srow { padding: .55cqw 1.2cqw; }
+.central { margin-top: 1.6cqw; display: flex; align-items: center; gap: 1.2cqw; padding: 1.2cqw 1.4cqw; border-radius: 1.5cqw; background: var(--bad-soft); color: var(--bad-text); width: 40cqw; }
+.central p { display: grid; gap: .3cqw; }
+.central b { font: 700 1.35cqw/1.15 var(--f-display); letter-spacing: -.02em; }
+.central span { font-size: 1.05cqw; line-height: 1.35; }
+.e-central { width: 5cqw; flex: none; }
+.split .phones3 .mini { height: 15cqw; }
+.cangrid { margin: auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4cqw; }
+.cancard { padding: 1.6cqw; border-radius: 1.6cqw; background: var(--card); display: grid; gap: .8cqw; align-content: start; justify-items: start; }
+.cancard small { font: 600 .9cqw/1 var(--f-mono); color: var(--accent); }
+.cancard.p small { color: var(--ok-text); }
+.cancard b { font: 700 1.7cqw/1.15 var(--f-display); letter-spacing: -.03em; }
+.cancard .tok { font-size: 1.05cqw; }
+.can-note { margin-bottom: 1.4cqw; font: 600 1.4cqw/1.3 var(--f-display); color: var(--ink-2); }
+.how .flow { margin-top: 2cqw; margin-bottom: 0; }
+.how-pieces { margin: 1.6cqw 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1cqw; }
+.hp { padding: 1cqw 1.2cqw; border-radius: 1.2cqw; background: rgba(255, 255, 255, .12); display: grid; gap: .3cqw; }
+.hp b { font: 700 1.25cqw/1.1 var(--f-display); }
+.hp span { font-size: .95cqw; line-height: 1.35; color: var(--on-band-2); }
+/* arquitectura en cobalto */
+.s-band .arch .trust { background: rgba(255, 255, 255, .1); border-color: rgba(196, 205, 255, .5); }
+.s-band .arch .zone, .s-band .arch .wire span { color: var(--soft-band); }
+.s-band .arch .ends span { background: #fff; color: var(--ink); }
+.s-band .arch .core { background: #fff; color: var(--ink); }
+.s-band .arch .piece { background: var(--tok-bg); color: var(--ink); }
+.s-band .arch .piece b { background: var(--band); color: #fff; }
+.s-band .arch .wire i { background: #fff; }
+.s-band .arch .w-out i::after { border-left-color: #fff; }
+.s-band .arch .w-in i::after { border-right-color: #fff; }
+.s-band .arch .cloud { border-color: rgba(196, 205, 255, .5); }
+.s-band .arch .cbox { background: #fff; color: var(--ink); }
+/* demos con grabación */
+.vrow { margin: auto 0 1.4cqw; display: grid; grid-template-columns: 58cqw 1fr; gap: 2.4cqw; align-items: center; }
+.vbox { border-radius: 1.4cqw; overflow: hidden; background: #fff; box-shadow: 0 1.6cqw 4cqw rgba(11, 27, 51, .18), 0 0 0 1px rgba(11, 27, 51, .08); line-height: 0; }
+.clip { width: 100%; aspect-ratio: 16 / 10; display: block; object-fit: cover; }
+.vcaps { display: grid; gap: 1.6cqw; }
+.vcaps .scap p { font-size: 1.1cqw; }
+.vlink { justify-self: start; font: 700 1.6cqw/1 var(--f-display); color: #fff; background: var(--band); padding: .9cqw 1.6cqw; border-radius: 999px; }
+.s-paper .demo .pcap b { background: var(--band); color: #fff; }
+/* verticales */
+.vcard { padding: 2cqw; border-radius: 1.8cqw; background: var(--card); display: grid; gap: 1cqw; align-content: start; }
+.vcard h3 { font-size: 2.6cqw; letter-spacing: -.05em; line-height: 1; }
+.vcard > p:not(.tag) { font-size: 1.3cqw; line-height: 1.45; color: var(--ink-2); }
+.vt { display: flex; flex-wrap: wrap; gap: .6cqw; }
+.vt .tok, .vt .never { font: 600 1.05cqw/1.4 var(--f-mono); padding: .2cqw .6cqw; border-radius: .45cqw; }
+.vt .never { background: var(--bad-soft); color: var(--bad-text); }
+/* foco */
+.foco { grid-template-columns: repeat(3, 1fr); gap: 3cqw; }
+.foco .gstep p { font-size: 1.35cqw; }
+/* mercado */
+.mk2 { margin: auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 3cqw; }
+.mk2 .big { padding: 1.1cqw 1.6cqw; grid-template-columns: 4cqw auto 1fr; align-items: baseline; column-gap: 1.2cqw; row-gap: .2cqw; width: var(--w); }
+.mk2 .big small { grid-row: span 2; font-weight: 600; }
+.mk2 .big b { font-size: 3.2cqw; }
+.mk2 .big span { font-size: 1cqw; }
+.mk2 .big em { grid-column: 2 / 4; font: 500 .78cqw/1.2 var(--f-mono); font-style: normal; color: var(--ink-2); }
+.mk2 .big.obj em { color: var(--on-band-2); }
+/* tabla de cómo llegamos */
+.gtable { margin: auto 0; }
+.gtable table { width: 100%; border-collapse: collapse; background: #fff; color: var(--ink); border-radius: 1.6cqw; overflow: hidden; box-shadow: 0 1.6cqw 4.4cqw rgba(5, 16, 31, .3); }
+.gtable th { text-align: left; font: 600 .95cqw/1.2 var(--f-mono); color: var(--accent); padding: 1.1cqw 1.2cqw; background: var(--card); }
+.gtable td { padding: 1.1cqw 1.2cqw; font-size: 1.15cqw; line-height: 1.35; border-top: 1px solid var(--line); vertical-align: top; }
+.gtable td:nth-child(2) { font: 700 1.4cqw/1.2 var(--f-display); letter-spacing: -.02em; }
+.gnum { width: 2.4cqw; height: 2.4cqw; border-radius: 50%; display: grid; place-items: center; background: var(--band); color: #fff; font: 700 1.1cqw/1 var(--f-display); }
+.gtm .e-gtm { top: 3.4cqw; width: 5.5cqw; }
+/* cierre con dos QR grandes */
+.close2 { position: relative; z-index: 1; height: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3cqw; padding: 0 5.2cqw; }
+.cl-left { display: grid; justify-items: start; text-align: left; }
+.cl-left .e-hero { width: 12cqw; }
+.cierre .cl-left h2 { font-size: 4.2cqw; justify-items: start; }
+.cl-left .event { margin-top: 2cqw; }
+.qrs { display: grid; gap: 1.6cqw; }
+.qr.big { margin: 0; padding: 1.2cqw 2cqw 1.2cqw 1.2cqw; }
+.qr.big svg { width: 19cqw; height: 19cqw; display: block; }
+.qr.big b { font-size: 2.2cqw; }
+.qa .qgrid { gap: 1.2cqw; }
+.qa .qcard p { font-size: 1.02cqw; }
