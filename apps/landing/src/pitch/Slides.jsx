@@ -56,7 +56,7 @@ function Foot() {
   return (
     <footer className="sfoot" aria-hidden="true">
       <span className="brand">Priv8</span>
-      <span>{annex ? `${n} | Preguntas del jurado` : n}</span>
+      <span>{annex ? `${n} - Preguntas del jurado` : n}</span>
     </footer>
   );
 }
@@ -82,8 +82,8 @@ function Portada() {
       <div className="center">
         <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" />
         <R d={1} as="h1"><span className="line">8 hace el trámite.</span><span className="line soft">Sin ver tus datos.</span></R>
-        <R d={3} as="p" className="who">Ángel Martín, Álvaro Carpintero, Marco Barroso y Pablo Rojo</R>
-        <R d={4} as="p" className="event">Hackfinance | Madrid Engineering Week | 12 nov 2026</R>
+        <R d={3} as="p" className="who">Ángel Martín, Álvaro Carpintero, Pablo Rojo y Marco Barroso</R>
+        <R d={4} as="p" className="event">Hackfinance - Madrid Engineering Week - 12 nov 2026</R>
       </div>
     </div>
   );
@@ -110,7 +110,7 @@ function ProblemaB2B() {
   return (
     <div className="in split">
       <div className="col">
-        <Head eyebrow="El problema | empresas y bancos">Procesos que la IA ya sabe hacer. <span className="soft">No se automatizan.</span></Head>
+        <Head eyebrow="El problema - empresas y bancos">Procesos que la IA ya sabe hacer. <span className="soft">No se automatizan.</span></Head>
         <R d={3} className="screen">
           <div className="screen-bar"><i /><i /><i /><b>Alba Core</b><span>lo que recibiría la IA</span></div>
           {LUMEN.map(([k, v], i) => (
@@ -138,9 +138,14 @@ const BANKS = [
 ];
 function ProblemaB2C() {
   return (
-    <div className="in split">
+    <div className="in split rev">
+      <div className="col stats">
+        <Stat d={4} n="57 %" t="tiene cuentas en varios bancos" s="Visa, Pecunpay y Ditrendia, 2025" />
+        <Stat d={5} n="33,8 %" t="no tiene competencias digitales básicas: 12,6 M de personas" s="Comisión Europea, Década Digital 2025" />
+        <Stat d={6} n="+600.000" t="firmas de «Soy mayor, no idiota»: muchas personas no saben hacer sus gestiones en la app" s="elDiario.es, 2022" />
+      </div>
       <div className="col">
-        <Head eyebrow="El problema | personas">Gestionar el banco cuesta. <span className="soft">Y ningún asistente puede con todos sin verlo todo.</span></Head>
+        <Head eyebrow="El problema - personas">Gestionar el banco cuesta. <span className="soft">Y ningún asistente puede con todos sin verlo todo.</span></Head>
         <div className="phones3">
           {BANKS.map(([b, a, c], i) => (
             <R d={3 + i} key={b} className="mini" style={{ '--d': 3 + i, '--bk': c }}>
@@ -151,11 +156,6 @@ function ProblemaB2C() {
           ))}
         </div>
         <R d={6} className="central"><E mode="miedo" on="paper" className="e-central" /><p><b>Un asistente para todos tus bancos</b><span>hoy recibiría los saldos, movimientos y claves de todos.</span></p></R>
-      </div>
-      <div className="col stats">
-        <Stat d={4} n="57 %" t="tiene cuentas en varios bancos" s="Visa, Pecunpay y Ditrendia, 2025" />
-        <Stat d={5} n="33,8 %" t="no tiene competencias digitales básicas: 12,6 M de personas" s="Comisión Europea, Década Digital 2025" />
-        <Stat d={6} n="+600.000" t="firmas de «Soy mayor, no idiota»: muchas personas no saben hacer sus gestiones en la app" s="elDiario.es, 2022" />
       </div>
       <Foot />
     </div>
@@ -197,37 +197,77 @@ const HOW = [
   ['IBAN', 'ES91 9400 0007 0206 0223 3441', '‹IBAN_1-propio›'],
   ['Clave', '••••••', null],
 ];
-function Como() {
+const CLASES = [
+  ['ok', 'Se ve', 'La interfaz: botones, etiquetas, menús.', 'Pagar a proveedor'],
+  ['tk', 'Se tokeniza', 'IBAN, DNI, nombres, importes y movimientos.', '‹IBAN_1-propio›'],
+  ['no', 'Nunca sale', 'Contraseñas, PIN, OTP, claves y tarjeta completa.', 'nunca sale'],
+];
+function Como1() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona">El modelo ve tokens. <span className="soft">Tu máquina pone los datos.</span></Head>
-      <div className="flow">
-        <R d={3} className="card">
-          <p className="step"><b>1</b>Tu pantalla</p>
-          {HOW.map(([k, v]) => <div className="kv" key={k}><span>{k}</span><em className="real">{v}</em></div>)}
-          <p className="cap">El dato real, en tu máquina</p>
-        </R>
-        <R d={4} className="arrow" />
-        <R d={5} className="card ai">
-          <p className="step"><b>2</b>Lo que ve la IA <E mode="leer" on="paper" className="e-card" /></p>
-          {HOW.map(([k, , t], i) => <div className="kv" key={k}><span>{k}</span>{t ? <span className="tok morph" style={{ '--i': i }}>{t}</span> : <span className="never morph" style={{ '--i': i }}>nunca sale</span>}</div>)}
-          <p className="cap">Solo tokens y la interfaz</p>
-        </R>
-        <R d={6} className="arrow" />
-        <R d={7} className="card">
-          <p className="step"><b>3</b>Tu máquina actúa</p>
-          <div className="kv"><span>escribe</span><em className="real">ES91 9400 …</em></div>
-          <div className="kv"><span>pagar</span><span className="wait">espera tu «sí»</span></div>
-          <p className="cap">El ejecutor pone el valor real</p>
-        </R>
+      <Head eyebrow="Cómo funciona - 1 de 3 - Tokens">El modelo ve tokens. <span className="soft">Los datos no salen de tu máquina.</span></Head>
+      <div className="how3">
+        <div className="flow2">
+          <R d={3} className="card">
+            <p className="step"><b>1</b>Tu pantalla</p>
+            {HOW.map(([k, v]) => <div className="kv" key={k}><span>{k}</span><em className="real">{v}</em></div>)}
+            <p className="cap">El dato real, en tu máquina</p>
+          </R>
+          <R d={4} className="arrow" />
+          <R d={5} className="card ai">
+            <p className="step"><b>2</b>Lo que ve la IA <E mode="leer" on="paper" className="e-card" /></p>
+            {HOW.map(([k, , t], i) => <div className="kv" key={k}><span>{k}</span>{t ? <span className="tok morph" style={{ '--i': i }}>{t}</span> : <span className="never morph" style={{ '--i': i }}>nunca sale</span>}</div>)}
+            <p className="cap">Solo tokens y la interfaz</p>
+          </R>
+        </div>
+        <div className="clases">
+          {CLASES.map(([c, t, d, ex], i) => (
+            <R d={6 + i * 0.6} key={t} className={'clase ' + c}><b>{t}</b><span>{d}</span><code>{ex}</code></R>
+          ))}
+        </div>
       </div>
-      <div className="how-pieces">
-        <R d={8} className="hp"><b>Oráculo</b><span>suma y compara sin revelar, con presupuesto</span></R>
-        <R d={8.5} className="hp"><b>Procedencia</b><span>un dato del correo no entra en un campo de pago</span></R>
-        <R d={9} className="hp"><b>Tu «sí»</b><span>para pagar, enviar o firmar</span></R>
-        <R d={9.5} className="hp"><b>Registro firmado</b><span>qué vio, qué se bloqueó, quién aprobó</span></R>
+      <R d={8} as="p" className="foot-note">Cada token es tipado y estable en la sesión: ‹IBAN_1› es siempre la misma cuenta. La tabla token - valor vive solo en tu máquina. Se detecta con reglas por sitio, patrones validados (IBAN mod-97, letra del DNI, Luhn), tu bóveda local y nombres de personas.</R>
+      <Foot />
+    </div>
+  );
+}
+
+function Pieza({ d, t, k, children, ex }) {
+  return (
+    <R d={d} className="pz">
+      <p className="pz-k">{k}</p>
+      <h3>{t}</h3>
+      <p>{children}</p>
+      {ex && <code className="pz-ex">{ex}</code>}
+    </R>
+  );
+}
+function Como2() {
+  return (
+    <div className="in how">
+      <Head eyebrow="Cómo funciona - 2 de 3 - Actuar sin ver">8 trabaja con los tokens. <span className="soft">Tu máquina pone los valores.</span></Head>
+      <div className="pzs">
+        <Pieza d={3} k="Ejecutor" t="Escribe sin conocer el dato" ex="act(escribir, ‹IBAN_1-propio›)">El modelo pide escribir un token en un campo. El ejecutor, en tu máquina, pone el valor real en la pantalla. El modelo nunca lo recibe.</Pieza>
+        <Pieza d={4} k="Oráculo" t="Calcula sin revelar" ex="compare(‹SALDO_1›, ‹IMPORTE_1›) → mayor">Suma, compara y comprueba en local. Responde por tramos, nunca con la cifra, y con un presupuesto de preguntas: no se puede adivinar un saldo a base de comparar.</Pieza>
+        <Pieza d={5} k="Procedencia" t="Cada dato sabe de dónde viene" ex="IBAN del correo → campo de pago: bloqueado">Un IBAN que llega en un correo no puede entrar en un campo de pago. Así se para el fraude del cambio de cuenta, aunque el modelo se lo crea.</Pieza>
       </div>
-      <R d={10} as="p" className="foot-note">Modo estricto, el de serie: al modelo solo llega lo que marca una regla del sitio. Tres herramientas cerradas: <code>observe</code>, <code>act</code> y <code>oracle</code>.</R>
+      <R d={7} as="p" className="foot-note">El modelo solo tiene tres herramientas cerradas: <code>observe</code>, <code>act</code> y <code>oracle</code>. Sin navegador, sin acceso al sistema y sin código propio.</R>
+      <Foot />
+    </div>
+  );
+}
+
+function Como3() {
+  return (
+    <div className="in how">
+      <Head eyebrow="Cómo funciona - 3 de 3 - Control">Lo importante lo decides tú. <span className="soft">Y queda escrito.</span></Head>
+      <div className="pzs four">
+        <Pieza d={3} k="Tu «sí»" t="Confirmación obligatoria">Pagar, transferir, invertir, firmar o enviar un formulario espera siempre tu «sí». La huella, la clave o el OTP del banco los pones tú, y 8 mira a otro lado.</Pieza>
+        <Pieza d={4} k="Bloqueo final" t="Si algo se escapa, no sale">Antes de enviar nada al modelo, se revisa la petición entera. Si queda un IBAN, un DNI o una tarjeta sin tokenizar, la petición se retiene.</Pieza>
+        <Pieza d={5} k="Registro firmado" t="Qué vio, qué se bloqueó, quién aprobó">Cada paso queda en un registro firmado: lo que recibió el modelo, lo que se bloqueó y lo que aprobaste. Sirve de evidencia ante auditoría.</Pieza>
+        <Pieza d={6} k="Modo estricto" t="De serie, lo mínimo">Al modelo solo llega lo que marca una regla del sitio. Lo que no está previsto no sale, en lugar de confiar en detectarlo.</Pieza>
+      </div>
+      <E mode="listo" on="band" className="e-gtm rv" />
       <Foot />
     </div>
   );
@@ -279,15 +319,15 @@ function Demo1() {
   if (HAS('b2c')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo | Priv8 en el móvil" chip="grabación real">«¿Cuánto tengo entre mis bancos?» <span className="soft">8 suma sin ver la cifra.</span></Head>
-        <div className="vrow">
-          <R d={3} className="vbox"><Clip name="b2c" alt="Grabación real: 8 recorre tres bancos en el emulador Android y responde el total; el modelo solo ve tokens" /></R>
+        <Head eyebrow="Demo - Priv8 en el móvil" chip="grabación real">«¿Cuánto tengo entre mis bancos?» <span className="soft">8 suma sin ver la cifra.</span></Head>
+        <div className="vrow rev">
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Recorre tus tres bancos</strong>Banca Alcor, Brezo Banco y Nimbo Bróker, por accesibilidad.</p></R>
             <R d={5} className="scap"><b>2</b><p><strong>El modelo ve <Tok>‹SUMA_1›</Tok></strong>La cifra solo suena con la voz del móvil.</p></R>
             <R d={6} className="scap"><b>3</b><p><strong>«Pasa 200 € al bróker»</strong>Lo prepara, mira a otro lado en tu huella y espera tu «sí».</p></R>
             <R d={7} as="p" className="vlink">demo.priv8.es</R>
           </div>
+          <R d={3} className="vbox"><Clip name="b2c" alt="Grabación real: 8 recorre tres bancos en el emulador Android y responde el total; el modelo solo ve tokens" /></R>
         </div>
         <Foot />
       </div>
@@ -295,7 +335,7 @@ function Demo1() {
   }
   return (
     <div className="in demo">
-      <Head eyebrow="Demo | Priv8 en el móvil" chip="en directo">«¿Cuánto tengo entre mis bancos?»</Head>
+      <Head eyebrow="Demo - Priv8 en el móvil" chip="en directo">«¿Cuánto tengo entre mis bancos?»</Head>
       <div className="phones">
         <div className="pcol">
           <Phone d={3} state="Escuchando" mode="escuchar">
@@ -308,7 +348,7 @@ function Demo1() {
           <Phone d={5} state="Hablando" mode="hablar">
             <p className="me">¿Cuánto tengo entre mis bancos?</p>
             <p className="it">Entre tus tres cuentas tienes <mark>17.977,98 €</mark>.</p>
-            <p className="sys">voz local | el modelo solo ve <Tok>‹SUMA_1›</Tok></p>
+            <p className="sys">voz local - el modelo solo ve <Tok>‹SUMA_1›</Tok></p>
           </Phone>
           <R d={6} as="p" className="pcap"><b>2</b>La cifra solo suena en tu móvil</R>
         </div>
@@ -339,7 +379,7 @@ function Demo2() {
   if (HAS('b2b')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo | Priv8 para empresas" chip="grabación real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
+        <Head eyebrow="Demo - Priv8 para empresas" chip="grabación real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
         <div className="vrow">
           <R d={3} className="vbox"><Clip name="b2b" alt="Grabación real de la consola: 8 registra la factura en Alba Core con tokens y salta la alarma de posible fraude" /></R>
           <div className="vcaps">
@@ -355,7 +395,7 @@ function Demo2() {
   }
   return (
     <div className="in demo2">
-      <Head eyebrow="Demo | Priv8 para empresas" chip="consola real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
+      <Head eyebrow="Demo - Priv8 para empresas" chip="consola real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
       <div className="shots">
         <div className="scol">
           <Shot d={3} src={correo} alt="Correo de Suministros Lumen con la factura F-2026-0412 y un cambio de cuenta" title="Correo" z={1.6} x="-20%" y="-14%" />
@@ -380,7 +420,7 @@ function Demo2() {
 function Verticales() {
   return (
     <div className="in markets">
-      <Head eyebrow="Producto">Un protocolo, <span className="soft">dos productos.</span></Head>
+      <Head eyebrow="Producto">Un núcleo, <span className="soft">dos productos.</span></Head>
       <div className="mk">
         <R d={3} className="vcard">
           <p className="tag">B2B</p>
@@ -388,11 +428,11 @@ function Verticales() {
           <p>8 trabaja en tu ERP o tu CRM de siempre, aunque no tenga API. Facturas, conciliación, altas.</p>
           <div className="vt"><Tok>‹IMPORTE_1›</Tok><Tok>‹CIF_1›</Tok><span className="never">bloqueo por origen</span></div>
         </R>
-        <R d={5} className="hub"><E mode="mirar" on="band" className="e-hub" /><span>Priv8 CUA</span></R>
+        <R d={5} className="hub"><E mode="mirar" on="band" className="e-hub" /><span>Núcleo Priv8</span></R>
         <R d={4} className="vcard">
           <p className="tag">B2C</p>
           <h3>Priv8 en el móvil</h3>
-          <p>Le hablas a 8 y maneja tus apps de banca. Suma, prepara y espera tu «sí». Tu clave la pones tú.</p>
+          <p>Una app para llevar todas tus cuentas desde el móvil, con seguridad. Le hablas a 8: suma, prepara y espera tu «sí». Tu clave la pones tú.</p>
           <div className="vt"><Tok>‹SUMA_1›</Tok><Tok>‹IBAN_2›</Tok><span className="never">nunca sale</span></div>
         </R>
       </div>
@@ -405,11 +445,11 @@ function Verticales() {
 function Foco() {
   return (
     <div className="in gtm">
-      <Head eyebrow="Negocio">Empezamos por empresas. <span className="soft">El banco lo lleva a sus clientes.</span></Head>
+      <Head eyebrow="Negocio">Dos productos, <span className="soft">dos clientes.</span></Head>
       <div className="steps foco">
         <R d={3} className="gstep"><b className="gn">1</b><h3>En qué nos centramos</h3><span className="gs">B2B</span><p>Procesos de back office que hoy no se automatizan por protección de datos. Empezamos por cuentas a pagar.</p></R>
-        <R d={4} className="gstep"><b className="gn">2</b><h3>Nuestro cliente</h3><span className="gs">quien paga</span><p>Bancos y brókers, departamentos financieros de empresas medianas y grandes, y quien construye agentes para ellos.</p></R>
-        <R d={5} className="gstep"><b className="gn">3</b><h3>Por qué también B2C</h3><span className="gs">con la marca del banco</span><p>El mismo núcleo en el móvil. El banco ofrece 8 a sus clientes: no vendemos a personas una a una.</p></R>
+        <R d={4} className="gstep"><b className="gn">2</b><h3>Nuestro cliente</h3><span className="gs">quien paga</span><p>Bancos y brókers, departamentos financieros de empresas medianas y grandes, y quien construye agentes para ellos. Licencia por proceso.</p></R>
+        <R d={5} className="gstep"><b className="gn">3</b><h3>Priv8 en el móvil</h3><span className="gs">para personas</span><p>Una app para gestionar todas tus cuentas desde el móvil, con seguridad. La persona se la descarga y paga una suscripción.</p></R>
         <R d={2} className="rail" />
       </div>
       <Foot />
@@ -419,12 +459,12 @@ function Foco() {
 
 /* ---------------------------------------------------------------- mercado: TAM, SAM y SOM */
 const MK = [
-  { tag: 'B2B | Priv8 para empresas', rows: [
+  { tag: 'B2B - Priv8 para empresas', rows: [
     ['TAM', '7.000 M$', 'software de cuentas a pagar en el mundo, 2030', 'Grand View Research, 2024'],
     ['SAM', '212 M€', '35.354 empresas en España con 50 o más empleados, a 6.000 € al año', 'Cifras PYME, sept. 2026; precio, estimación propia'],
     ['SOM', '0,56 M€', '60 empresas y 2 bancos o BPO en 3 años', 'estimación propia'],
   ] },
-  { tag: 'B2C | Priv8 en el móvil', rows: [
+  { tag: 'B2C - Priv8 en el móvil', rows: [
     ['TAM', '27,8 M', 'personas con banca online en España (74,7 % de 16 a 74 años)', 'INE, TIC-H 2025; Eurostat'],
     ['SAM', '15,8 M', 'con cuentas en varios bancos (57 %)', 'Visa, Pecunpay y Ditrendia, 2025; cálculo propio'],
     ['SOM', '0,6 M€', '100.000 usuarios activos de 1 o 2 bancos, a 6 € al año', 'estimación propia'],
@@ -499,13 +539,13 @@ function Competencia() {
 const GTM = [
   ['1', 'Piloto', '4 semanas', 'Un banco o una empresa', 'Un proceso de cuentas a pagar sobre su ERP', 'datos expuestos, fraudes bloqueados, horas'],
   ['2', 'Su back office', 'meses 2 a 12', 'El mismo cliente', 'Facturas, conciliación, altas', 'licencia por proceso + por documento'],
-  ['3', 'Sus clientes', 'año 2', 'El banco', '8 en su app, con su marca', 'por usuario activo'],
+  ['3', 'Priv8 en el móvil', 'año 1 y 2', 'Personas con varios bancos', 'La app para todas tus cuentas', 'suscripción de la persona'],
   ['4', 'Más empresas', 'año 2 y 3', 'Integradores de ERP y BPO', 'El mismo núcleo, otros sectores', 'reparto de ingresos'],
 ];
 function Mercado() {
   return (
     <div className="in gtm">
-      <Head eyebrow="Cómo llegamos">Un piloto, <span className="soft">y de ahí a los dos lados del banco.</span></Head>
+      <Head eyebrow="Cómo llegamos">Un piloto en empresas. <span className="soft">La app, directa a las personas.</span></Head>
       <R d={3} className="gtable">
         <table>
           <thead><tr><th /><th>Fase</th><th>Cuándo</th><th>Con quién</th><th>Qué hacemos</th><th>Qué medimos o cobramos</th></tr></thead>
@@ -520,9 +560,9 @@ function Mercado() {
 
 /* ---------------------------------------------------------------- 11 equipo */
 const TEAM = [
-  ['Pablo Rojo', 'rrojjo', 'Núcleo del protocolo', pablo],
   ['Ángel Martín', 'aaangelmartin', 'Agente, Android, voz y diseño', angel],
   ['Álvaro Carpintero', 'alvaarocl', 'Empresa: ERP, correo y consola', alvaro],
+  ['Pablo Rojo', 'rrojjo', 'Núcleo del protocolo', pablo],
   ['Marco Barroso', 'marcoobarroso', 'App 8 y bancos simulados', marco],
 ];
 function Equipo() {
@@ -566,12 +606,9 @@ function Cierre() {
         <div className="cl-left">
           <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
           <R d={1} as="h2"><span className="line">El agente hace el trámite.</span><span className="line soft">Los datos se quedan contigo.</span></R>
-          <R d={2} as="p" className="event">priv8.es | github.com/aaangelmartin/Priv8</R>
+          <R d={2} as="p" className="cl-url">priv8.es</R>
         </div>
-        <div className="qrs">
-          <R d={3} className="qr big"><Qr rows={QR.demo} label="Código QR a demo.priv8.es" /><div><small>Las grabaciones reales</small><b>demo.priv8.es</b></div></R>
-          <R d={4} className="qr big"><Qr rows={QR.mcp} label="Código QR a mcp.priv8.es" /><div><small>Pruébalo con tu asistente</small><b>mcp.priv8.es</b></div></R>
-        </div>
+        <R d={3} className="qr solo"><Qr rows={QR.web} label="Código QR a priv8.es" /></R>
       </div>
     </div>
   );
@@ -595,9 +632,9 @@ const QA2 = [
   ['¿Qué haríais con un piloto?', 'Un proceso de cuentas a pagar en 4 semanas, sobre el ERP del cliente, midiendo datos expuestos, fraudes bloqueados y horas ahorradas.'],
 ];
 const QA3 = [
-  ['¿Cómo lo vendéis?', 'Venta directa a bancos y brókers, y a departamentos financieros, con un piloto de 4 semanas sobre un proceso real. Después, a través de integradores de ERP y empresas de BPO.'],
-  ['¿Cuánto cuesta?', 'Unos 0,50 € por documento, con una cuota mínima por proceso. Hoy una factura cuesta de media 9,84 $ en cuentas a pagar (Ardent Partners, 2025). En el móvil, el banco paga por usuario activo. Estimación propia.'],
-  ['¿Cuál es el modelo de negocio?', 'B2B de suscripción. El núcleo es el mismo en los dos productos: cada proceso o banco nuevo cuesta reglas de sitio, no un producto nuevo.'],
+  ['¿Cómo lo vendéis?', 'Venta directa a bancos y brókers, y a departamentos financieros, con un piloto de 4 semanas sobre un proceso real. Después, a través de integradores de ERP y empresas de BPO. La app del móvil se vende directa a las personas.'],
+  ['¿Cuánto cuesta?', 'Unos 0,50 € por documento, con una cuota mínima por proceso. Hoy una factura cuesta de media 9,84 $ en cuentas a pagar (Ardent Partners, 2025). En el móvil, la persona paga una suscripción de unos 6 € al año. Estimación propia.'],
+  ['¿Cuál es el modelo de negocio?', 'Suscripción en los dos: licencia por proceso para empresas y app de pago para personas. El núcleo es el mismo en los dos productos: cada proceso o banco nuevo cuesta reglas de sitio, no un producto nuevo.'],
   ['¿Sale a cuenta?', 'El núcleo corre en la máquina del cliente: no tenemos coste de cómputo por tarea. El coste del modelo lo elige y lo paga el cliente; nosotros cobramos por el proceso que ya no se hace a mano.'],
   ['¿Quién decide la compra?', 'Dirección financiera y de operaciones, con el visto bueno de protección de datos y seguridad. El registro firmado es lo que les deja decir que sí.'],
   ['¿Qué pasa tras el piloto?', 'Medimos datos expuestos (cero), fraudes bloqueados y horas ahorradas. Con eso se amplía a otros procesos del mismo cliente.'],
@@ -614,34 +651,60 @@ const QA5 = [
   ['¿Por qué ahora?', 'Los modelos ya usan pantallas y los bancos ya prueban agentes. Lo que frena es qué ven. Visa y Google resolvieron cómo paga un agente; nadie, qué ve mientras trabaja.'],
   ['¿Qué riesgos veis?', 'Que un dato se escape en texto libre (por eso el modo estricto y el bloqueo final), que el modelo falle una tarea (por eso tu «sí») y ciclos de venta largos en banca (por eso el piloto corto).'],
   ['¿Y si un gran proveedor lo hace?', 'Un proveedor de modelos no puede ser a la vez quien no ve los datos. Somos neutrales: funcionamos con cualquier modelo.'],
-  ['¿Hoja de ruta?', 'Primer piloto de cuentas a pagar, más pantallas con reglas listas (ERP habituales), app con la marca del banco y certificaciones (ISO 27001, SOC 2).'],
+  ['¿Hoja de ruta?', 'Primer piloto de cuentas a pagar, más pantallas con reglas listas (ERP habituales), la app de 8 en las tiendas y certificaciones (ISO 27001, SOC 2).'],
   ['¿Puede el equipo sacarlo?', 'Cuatro personas han construido en tres días el núcleo, la consola, el ERP simulado, tres bancos y la app Android, todo funcionando.'],
   ['¿Funciona hoy?', 'Sí: demo.priv8.es tiene las grabaciones reales y mcp.priv8.es lo conecta a tu asistente con tu modelo y tu clave.'],
 ];
-function Anexo({ qa, part, title }) {
+const GROUPS = [
+  ['Negocio', QA3],
+  ['Cumplimiento y límites', QA4],
+  ['Seguridad y técnica', QA1],
+  ['Producto y regulación', QA2],
+  ['Mercado, riesgos y equipo', QA5],
+];
+const QS = GROUPS.flatMap(([g, qa]) => qa.map(([q, a]) => ({ g, q, a })));
+/* el anexo va justo después de las diapositivas principales: índice y luego una pregunta por diapositiva */
+const ANNEX_AT = () => SLIDES.findIndex((x) => x.annex) + 1;
+const qHref = (i) => `#${ANNEX_AT() + 1 + i}`;
+function Indice() {
+  let k = -1;
   return (
     <div className="in qa">
-      <Head eyebrow={`Anexo ${part} de 5 | Preguntas del jurado`}>{title}</Head>
-      <div className="qgrid">
-        {qa.map(([q, a], i) => <R d={3 + i * 0.6} key={q} className="qcard"><h3>{q}</h3><p>{a}</p></R>)}
+      <Head eyebrow="Anexo - Preguntas del jurado">Preguntas <span className="soft">y respuestas.</span></Head>
+      <div className="qindex">
+        {GROUPS.map(([g, qa], j) => (
+          <R d={3 + j * 0.5} key={g} className="qgroup">
+            <h3>{g}</h3>
+            <ol>{qa.map(([q]) => { k += 1; return <li key={q}><a href={qHref(k)}>{q}</a></li>; })}</ol>
+          </R>
+        ))}
       </div>
+      <Foot />
+    </div>
+  );
+}
+function Pregunta({ i }) {
+  const { g, q, a } = QS[i];
+  return (
+    <div className="in qa qone">
+      <Head eyebrow={`${g} - Pregunta ${i + 1} de ${QS.length}`}>{q}</Head>
+      <R d={3} as="p" className="qans">{a}</R>
+      <R d={4} as="a" className="qback" href={`#${ANNEX_AT()}`}>Volver al índice de preguntas</R>
       <E mode="duda" on="paper" className="e-qa rv" />
       <Foot />
     </div>
   );
 }
-const Anexo1 = () => <Anexo qa={QA3} part={1} title={<>Negocio: <span className="soft">cómo lo vendemos.</span></>} />;
-const Anexo2 = () => <Anexo qa={QA4} part={2} title={<>Cumplimiento <span className="soft">y límites.</span></>} />;
-const Anexo3 = () => <Anexo qa={QA1} part={3} title={<>Seguridad <span className="soft">y técnica.</span></>} />;
-const Anexo4 = () => <Anexo qa={QA2} part={4} title={<>Producto <span className="soft">y regulación.</span></>} />;
-const Anexo5 = () => <Anexo qa={QA5} part={5} title={<>Mercado, riesgos <span className="soft">y equipo.</span></>} />;
+const PREGUNTAS = QS.map((_, i) => ({ id: `pregunta-${i + 1}`, tone: 'paper', C: () => <Pregunta i={i} />, annex: true }));
 
 export const SLIDES = [
   { id: 'portada', tone: 'band', C: Portada, field: true },
   { id: 'empresas', tone: 'paper', C: ProblemaB2B },
   { id: 'personas', tone: 'paper', C: ProblemaB2C },
   { id: 'podria', tone: 'paper', C: Podria },
-  { id: 'como', tone: 'band', C: Como },
+  { id: 'como', tone: 'band', C: Como1 },
+  { id: 'como-2', tone: 'band', C: Como2 },
+  { id: 'como-3', tone: 'band', C: Como3 },
   { id: 'arquitectura', tone: 'band', C: Arquitectura },
   { id: 'verticales', tone: 'paper', C: Verticales },
   { id: 'demo-empresas', tone: 'paper', C: Demo2 },
@@ -652,9 +715,6 @@ export const SLIDES = [
   { id: 'llegar', tone: 'band', C: Mercado },
   { id: 'equipo', tone: 'paper', C: Equipo },
   { id: 'cierre', tone: 'band', C: Cierre, field: true },
-  { id: 'anexo-1', tone: 'paper', C: Anexo1, annex: true },
-  { id: 'anexo-2', tone: 'paper', C: Anexo2, annex: true },
-  { id: 'anexo-3', tone: 'paper', C: Anexo3, annex: true },
-  { id: 'anexo-4', tone: 'paper', C: Anexo4, annex: true },
-  { id: 'anexo-5', tone: 'paper', C: Anexo5, annex: true },
+  { id: 'anexo', tone: 'paper', C: Indice, annex: true },
+  ...PREGUNTAS,
 ];
