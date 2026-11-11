@@ -223,6 +223,13 @@ def pause_before_policy(raw: dict[str, Any]) -> str | None:
     return None
 
 
+def no_policy_detail(adapter: Any) -> str:
+    """Denegación de una pantalla sin política, con la forma de volver a una que sí la tiene."""
+    apps = [a for a in (getattr(adapter, "apps", None) or {}) if a in policies()]
+    back = " o ".join(f"act open_app {a}" for a in apps) or "act open_app con la app del encargo"
+    return f"No hay política para esta pantalla. Vuelve con {back}."
+
+
 def observe(session: str) -> dict[str, Any]:
     t0 = time.perf_counter()
     sess = SESSIONS.get(session)
@@ -240,12 +247,21 @@ def observe(session: str) -> dict[str, Any]:
                 "detail": paused, "ms": {"core": _ms(t0) - adapter_ms, "adapter": adapter_ms, "model": None}})
         return obs
     screen = policies().screen_for(raw)
+    recover = getattr(sess.adapter, "recover", None)
+    if screen is None and callable(recover) and recover():
+        # El adaptador ha vuelto a una pantalla conocida de la app (p. ej. tras un back que salía).
+        record({"session": session, "kind": "blocked", "reason": "sin_regla", "app": raw.get("app"),
+                "model_saw": None, "detail": "pantalla sin política: vuelta a la pantalla de inicio"})
+        ta = time.perf_counter()
+        raw = sess.adapter.snapshot()
+        adapter_ms += _ms(ta)
+        screen = None if pause_before_policy(raw) else policies().screen_for(raw)
     if screen is None:
         sess.last_raw, sess.last_screen = None, None
         record({"session": session, "kind": "blocked", "reason": "sin_regla", "app": raw.get("app"),
                 "model_saw": None, "detail": "pantalla sin política: no sale",
                 "ms": {"core": _ms(t0), "adapter": adapter_ms, "model": None}})
-        return {"denied": "sin_regla", "detail": "No hay política para esta pantalla"}
+        return {"denied": "sin_regla", "detail": no_policy_detail(sess.adapter)}
     obs, counts = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session))
     verdict = check(json.dumps(obs, ensure_ascii=False))
     if not verdict["allowed"]:

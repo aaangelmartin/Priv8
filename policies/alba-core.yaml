@@ -4,7 +4,8 @@ app: alba-core
 source: web
 screens:
   - id: factura.alta
-    url_re: /facturas/alta
+    # "/" es la misma pantalla de alta (inicio del ERP).
+    url_re: '/facturas/alta|^https?://[^/]+/?$'
     rules:
       - match: {sel: "#proveedor"}
         cls: ambar

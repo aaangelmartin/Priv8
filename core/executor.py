@@ -1,7 +1,7 @@
 """Ejecutor: el modelo escribe tokens, el ejecutor pone el valor real en pantalla.
 
 Antes de tocar la pantalla comprueba, en este orden:
-1. Que haya pantalla observada y el elemento exista en ella.
+1. Que haya pantalla observada (salvo open_app) y el elemento exista en ella.
 2. Que el agente no esté en pausa (la persona se autentica) y que el elemento
    no sea rojo, una contraseña ni algo que solo pulsa la persona.
 3. Que todos los tokens del texto existan en la bóveda de la sesión.
@@ -44,7 +44,8 @@ def execute(sess: Session, op: str, target: str | None = None, text: str | None 
     if sess.last_paused:
         return denied("rojo", f"en pausa ({sess.last_paused}): lo está haciendo la persona; "
                               "espera y vuelve a observar")
-    if sess.last_raw is None or sess.last_screen is None:
+    # open_app no toca nada de la pantalla: es la salida de una pantalla sin política.
+    if (sess.last_raw is None or sess.last_screen is None) and op != "open_app":
         return denied("sin_regla", "observa la pantalla antes de actuar")
 
     el, rule = None, None

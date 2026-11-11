@@ -205,7 +205,9 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
 
     # Perfil persistente (.priv8/chromium): la sesión de Alba Core se recuerda entre ejecuciones,
     # y con `make demo-b2b` el ERP ya abre con la sesión de la demo (#137). 8 nunca escribe la clave.
-    web = WebAdapter(start=start, on_call=make_on_call(session), profile=profile_dir())
+    # known: back, open_app y la recuperación del observe nunca dejan una pantalla sin política.
+    web = WebAdapter(start=start, on_call=make_on_call(session), profile=profile_dir(),
+                     known=lambda raw: mod.policies().screen_for(raw) is not None)
     if web.logged_in("alba-core"):
         print("priv8: Alba Core ya tiene la sesión abierta", file=sys.stderr)
     else:
