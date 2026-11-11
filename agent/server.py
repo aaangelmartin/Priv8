@@ -220,7 +220,9 @@ async def serve_stdio(server: Server[Any], *, on_start: Callable[[], Any] | None
 
 # ------------------------------------------------------------------ external MCP hosts
 
-CONSOLE_URL = "http://127.0.0.1:5175"  # the audit console (apps/console)
+# The audit console (apps/console). PRIV8_CONSOLE_URL moves it (the priv8-mcp launcher sets
+# it when the ports are not the default ones, with ?ws= for the events port).
+CONSOLE_URL = os.environ.get("PRIV8_CONSOLE_URL") or "http://127.0.0.1:5175"
 
 
 def _token_examples() -> tuple[str, str, str]:
@@ -260,8 +262,10 @@ class Mount:
     gets the MCP handshake at once while the person logs in. Until then every call is
     refused with a denial that says to observe again later."""
 
-    def __init__(self, session: str, connect: Callable[[], Any], *, what: str) -> None:
+    def __init__(self, session: str, connect: Callable[[], Any], *, what: str,
+                 on_ready: Callable[[], Any] | None = None) -> None:
         self.session, self._connect, self.what = session, connect, what
+        self._on_ready = on_ready
         self.ready = threading.Event()
         self.error: str | None = None
         self.adapter: Any = None
@@ -275,6 +279,11 @@ class Mount:
         try:
             self.adapter = self._connect()
             log.info("%s: connected to session %s", self.what, self.session)
+            if self._on_ready is not None:
+                try:
+                    self._on_ready()
+                except Exception as e:  # noqa: BLE001 - a browser that does not open is not a failed mount
+                    log.warning("%s: %s", self.what, e)
         except Exception as e:  # noqa: BLE001 - reported on stderr; the host gets a fixed denial
             self.error = f"{type(e).__name__}: {e}"
             log.error("%s: could not connect: %s", self.what, self.error)
@@ -319,6 +328,14 @@ def make_hints(mode: str, *, pending: Callable[[str], list[str]] | None = None) 
     return hints
 
 
+def _open_console() -> None:
+    """The console in the person's browser, where held actions are approved."""
+    import webbrowser
+
+    log.info("opening the console at %s", CONSOLE_URL)
+    webbrowser.open(CONSOLE_URL)
+
+
 def _core_pending(session: str) -> list[str]:
     """Ids of the held actions of `session` in the real core, after expiring the old ones."""
     import core as real
@@ -339,6 +356,8 @@ def plan(a: argparse.Namespace) -> tuple[str, str]:
         return mode, a.session or "s1"  # the fake core's own screen, as in agent.agent
     if a.simulated_persona and mode == "web":
         raise ValueError("--simulated-persona does not apply to --web: the person approves in the console")
+    if (a.serve_apps or a.open_console) and mode != "web":
+        raise ValueError("--serve-apps and --open-console need --web")
     if mode == "web":
         return mode, a.session or DEFAULT_SCENE
     if mode == "android":
@@ -362,6 +381,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                              "needs scripts/movil.sh; held actions are approved on the phone")
     p.add_argument("--session", default=None,
                    help="session id (default: the scene name, b2b with --web, b2c with --android)")
+    p.add_argument("--serve-apps", metavar="DIR", default=None,
+                   help="with --web: serve the static builds of Alba Core, the mailbox and the console in DIR "
+                        "(erp-sim/, inbox-sim/, console/) on the ports that are not answering yet "
+                        "(agent/static_apps.py; the priv8-mcp bundle)")
+    p.add_argument("--open-console", action="store_true",
+                   help="with --web: open the console in the browser once Alba Core is connected")
     p.add_argument("--simulated-persona", action="store_true",
                    help="a simulated person approves held actions (replays and tests only; not with --web)")
     return p.parse_args(argv)
@@ -381,7 +406,13 @@ def main(argv: list[str] | None = None) -> None:
             core = default_core()
             real = ca.core_choice() == "real"
             if mode == "web":  # same adapter as agent.agent --web; it also starts the events server (:8700)
-                mount = Mount(session, lambda: ca.mount_web(session), what="Alba Core y el correo")
+                if a.serve_apps:  # before the mount: Chromium opens these URLs
+                    from agent import static_apps
+
+                    for app, (port, new) in static_apps.serve(a.serve_apps).items():
+                        log.info("%s on http://127.0.0.1:%d/%s", app, port, "" if new else " (already running)")
+                mount = Mount(session, lambda: ca.mount_web(session), what="Alba Core y el correo",
+                              on_ready=_open_console if a.open_console else None)
             elif mode == "android":  # same as agent.agent --android; bridge (:8765) and events (:8700)
                 mount = Mount(session, lambda: ca.mount_android(session, simulated_persona=a.simulated_persona),
                               what="el móvil")
@@ -389,7 +420,7 @@ def main(argv: list[str] | None = None) -> None:
                 scene = a.scene or ca.DEFAULT_SCENE
                 ca.mount_scene(session, scene, simulated_persona=a.simulated_persona)
                 log.info("real core - scene %s on session %s", scene, session)
-    except (ca.RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
+    except (ca.RealCoreUnavailable, ValueError, FileNotFoundError, OSError) as e:  # PRIV8_CORE wrong, core/ not ready, no builds
         sys.exit(f"priv8: {e}")
     server = build_server(core, instructions=host_instructions(session, mode),
                           gate=mount.gate if mount else None,
