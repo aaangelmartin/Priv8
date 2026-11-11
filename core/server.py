@@ -11,6 +11,15 @@ De los clientes acepta:
 
 Solo escucha en 127.0.0.1: el mensaje screen lleva la pantalla real.
 
+Pantalla real (#147): un cliente que conecta con ?frames=1 (la consola) recibe
+además los fotogramas (`frame`) de la pantalla que maneja 8. Van por su propio
+canal (core.events.subscribe_frames), nunca al registro, y si el cliente va lento
+se descartan: gana el último de cada sesión.
+
+PRIV8_EVENTS_PORT cambia el puerto (por defecto 8700) y PRIV8_EVENTS_ORIGINS
+añade orígenes de navegador permitidos (separados por comas), para probar con
+otra copia de la consola sin tocar la demo.
+
 En el proceso del agente:   core.server.start()          (hilo en segundo plano)
 Suelto, para probar:        python -m core.server
 """
@@ -19,6 +28,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 import threading
 
@@ -33,7 +43,8 @@ from starlette.websockets import WebSocket, WebSocketDisconnect
 import core
 from core import events
 
-HOST, PORT = "127.0.0.1", 8700
+HOST = "127.0.0.1"
+PORT = int(os.environ.get("PRIV8_EVENTS_PORT") or 8700)
 
 
 # Navegadores que pueden abrir el canal. Un cliente nativo (app 8, agente) no manda Origin.
@@ -41,6 +52,7 @@ HOST, PORT = "127.0.0.1", 8700
 # y mandar approval_result (cross-site WebSocket hijacking).
 ALLOWED_ORIGINS = {"http://127.0.0.1:5175", "http://localhost:5175",
                    "http://127.0.0.1:8710"}  # consola y vista previa de la app 8 en navegador
+ALLOWED_ORIGINS |= {o.strip().rstrip("/") for o in os.environ.get("PRIV8_EVENTS_ORIGINS", "").split(",") if o.strip()}
 
 
 SESSION_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")  # common.schema.json#/$defs/session
@@ -82,14 +94,42 @@ async def events_ws(ws: WebSocket) -> None:
     queue: asyncio.Queue = asyncio.Queue()
     unsubscribe = events.subscribe(lambda msg: loop.call_soon_threadsafe(queue.put_nowait, msg))
 
+    send_lock = asyncio.Lock()
+
+    async def send(msg: dict) -> None:
+        text = json.dumps(msg, ensure_ascii=False)
+        async with send_lock:
+            await ws.send_text(text)
+
     async def pump() -> None:
         while True:
-            msg = await queue.get()
-            await ws.send_text(json.dumps(msg, ensure_ascii=False))
+            await send(await queue.get())
+
+    # Fotogramas: un hueco por sesión. Mientras se envía uno, el siguiente pisa al anterior.
+    latest: dict[str, dict] = {}
+    ready = asyncio.Event()
+
+    def put_frame(msg: dict) -> None:
+        latest[str(msg.get("session"))] = msg
+        ready.set()
+
+    async def pump_frames() -> None:
+        while True:
+            await ready.wait()
+            ready.clear()
+            batch = list(latest.values())
+            latest.clear()
+            for msg in batch:
+                await send(msg)
 
     for req in core.pending():  # confirmaciones que ya esperaban antes de conectarse
         queue.put_nowait(req)
-    sender = asyncio.create_task(pump())
+    tasks = [asyncio.create_task(pump())]
+    if ws.query_params.get("frames") == "1":
+        tasks.append(asyncio.create_task(pump_frames()))
+        unsubscribe_frames = events.subscribe_frames(lambda msg: loop.call_soon_threadsafe(put_frame, msg))
+    else:
+        unsubscribe_frames = lambda: None  # noqa: E731
     try:
         while True:
             data = json.loads(await ws.receive_text())
@@ -99,7 +139,9 @@ async def events_ws(ws: WebSocket) -> None:
         pass
     finally:
         unsubscribe()
-        sender.cancel()
+        unsubscribe_frames()
+        for t in tasks:
+            t.cancel()
 
 
 def _verify_log() -> dict:

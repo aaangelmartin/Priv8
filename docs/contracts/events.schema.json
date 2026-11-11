@@ -2,73 +2,262 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://priv8.dev/contracts/events.schema.json",
   "title": "Canal de eventos del núcleo",
-  "description": "Mensajes del WebSocket ws://127.0.0.1:8700/events. Lo escuchan la consola de auditoría (Camino 2), la app 8 (Camino 4) y el bucle del agente (Camino 3). Es local: screen lleva valores reales para la mitad 'lo que ves' de la consola y nunca se escribe en el registro ni sale a la nube. Los clientes envían al núcleo approval_result, task_request y dictation_start; dictation lleva la tarea en claro y por eso solo viaja por este canal local.",
+  "description": "Mensajes del WebSocket ws://127.0.0.1:8700/events. Lo escuchan la consola de auditoría (Camino 2), la app 8 (Camino 4) y el bucle del agente (Camino 3). Es local: screen lleva valores reales para la mitad 'lo que ves' de la consola y nunca se escribe en el registro ni sale a la nube. Los clientes envían al núcleo approval_result, task_request y dictation_start; dictation lleva la tarea en claro y por eso solo viaja por este canal local. frame lleva los píxeles de la pantalla real: solo lo reciben los clientes que conectan con ?frames=1 (la consola), nunca se registra y nunca sale del portátil.",
   "oneOf": [
     {
       "description": "núcleo → clientes: cada línea nueva del registro.",
       "type": "object",
-      "required": ["type", "event"],
+      "required": [
+        "type",
+        "event"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "audit" },
-        "event": { "$ref": "audit.schema.json" }
+        "type": {
+          "const": "audit"
+        },
+        "event": {
+          "$ref": "audit.schema.json"
+        }
       }
     },
     {
       "description": "núcleo → clientes: la pantalla en crudo y lo que vio el modelo, para la vista partida.",
       "type": "object",
-      "required": ["type", "session", "raw", "observed"],
+      "required": [
+        "type",
+        "session",
+        "raw",
+        "observed"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "screen" },
-        "session": { "$ref": "common.schema.json#/$defs/session" },
-        "raw": { "$ref": "snapshot.schema.json" },
-        "observed": { "$ref": "observation.schema.json" }
+        "type": {
+          "const": "screen"
+        },
+        "session": {
+          "$ref": "common.schema.json#/$defs/session"
+        },
+        "raw": {
+          "$ref": "snapshot.schema.json"
+        },
+        "observed": {
+          "$ref": "observation.schema.json"
+        }
+      }
+    },
+    {
+      "description": "núcleo → consola (solo con ?frames=1): un fotograma de la pantalla real que maneja 8 (#147), con las cajas de los elementos de la última observación. Lleva valores reales en los píxeles, como screen.raw: solo local, nunca al registro. Si el cliente va lento se descartan y gana el último. w y h son el espacio de las cajas (px CSS en web, px del móvil en Android); la imagen puede ser más pequeña. Con fresh false, la pantalla aún no la ha leído el modelo y rects va vacío.",
+      "type": "object",
+      "required": [
+        "type",
+        "session",
+        "app",
+        "screen",
+        "fresh",
+        "w",
+        "h",
+        "mime",
+        "img",
+        "rects"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "frame"
+        },
+        "session": {
+          "$ref": "common.schema.json#/$defs/session"
+        },
+        "app": {
+          "type": "string"
+        },
+        "screen": {
+          "description": "Pantalla según la política, o null si no casa con la última observación.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "paused": {
+          "enum": [
+            null,
+            "autenticacion",
+            "dialogo_sistema",
+            "confirmacion"
+          ]
+        },
+        "fresh": {
+          "description": "Las cajas son las de la última observación (misma app y url o pantalla).",
+          "type": "boolean"
+        },
+        "w": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "h": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "mime": {
+          "enum": [
+            "image/jpeg",
+            "image/png"
+          ]
+        },
+        "img": {
+          "description": "La imagen en base64.",
+          "type": "string",
+          "contentEncoding": "base64",
+          "minLength": 1
+        },
+        "rects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "x",
+              "y",
+              "w",
+              "h",
+              "cls",
+              "token"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "common.schema.json#/$defs/element_id"
+              },
+              "x": {
+                "type": "integer"
+              },
+              "y": {
+                "type": "integer"
+              },
+              "w": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "h": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "cls": {
+                "$ref": "common.schema.json#/$defs/cls"
+              },
+              "token": {
+                "description": "Primer token del elemento, o null.",
+                "anyOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/token"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "text": {
+                "description": "Lo que leyó el modelo de ese elemento (con tokens, nunca valores); null si es rojo.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
       }
     },
     {
       "description": "núcleo → clientes: frase que 8 debe decir.",
       "type": "object",
-      "required": ["type", "utterance"],
+      "required": [
+        "type",
+        "utterance"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "voice" },
-        "utterance": { "$ref": "voice.schema.json" }
+        "type": {
+          "const": "voice"
+        },
+        "utterance": {
+          "$ref": "voice.schema.json"
+        }
       }
     },
-    { "$ref": "confirm.schema.json#/$defs/request" },
-    { "$ref": "confirm.schema.json#/$defs/approval_result" },
+    {
+      "$ref": "confirm.schema.json#/$defs/request"
+    },
+    {
+      "$ref": "confirm.schema.json#/$defs/approval_result"
+    },
     {
       "description": "cliente → núcleo: tarea de la persona, ya en texto (dictada en el móvil con el reconocedor del dispositivo, o escrita). El núcleo la tokeniza antes de que llegue al modelo; la auditoría guarda sus tokens y su longitud, nunca el texto.",
       "type": "object",
-      "required": ["type", "session", "text"],
+      "required": [
+        "type",
+        "session",
+        "text"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "task_request" },
-        "session": { "$ref": "common.schema.json#/$defs/session" },
-        "text": { "type": "string", "minLength": 1, "maxLength": 500 }
+        "type": {
+          "const": "task_request"
+        },
+        "session": {
+          "$ref": "common.schema.json#/$defs/session"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        }
       }
     },
     {
       "description": "cliente → núcleo: la persona quiere dictar y el móvil no reconoce la voz (emulador). El núcleo graba el micrófono del portátil y lo transcribe con Whisper en local; el audio no sale del portátil.",
       "type": "object",
-      "required": ["type", "session"],
+      "required": [
+        "type",
+        "session"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "dictation_start" },
-        "session": { "$ref": "common.schema.json#/$defs/session" }
+        "type": {
+          "const": "dictation_start"
+        },
+        "session": {
+          "$ref": "common.schema.json#/$defs/session"
+        }
       }
     },
     {
       "description": "núcleo → clientes: lo que entendió el dictado del portátil, para el subtítulo de la app 8. Lleva el texto real: solo viaja por este canal local y nunca se registra. Con error, text va vacío: no_disponible (sin Whisper o sin micrófono) o sin_voz (no se entendió nada).",
       "type": "object",
-      "required": ["type", "session", "text"],
+      "required": [
+        "type",
+        "session",
+        "text"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type": { "const": "dictation" },
-        "session": { "$ref": "common.schema.json#/$defs/session" },
-        "text": { "type": "string", "maxLength": 200 },
-        "error": { "enum": ["no_disponible", "sin_voz"] }
+        "type": {
+          "const": "dictation"
+        },
+        "session": {
+          "$ref": "common.schema.json#/$defs/session"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "error": {
+          "enum": [
+            "no_disponible",
+            "sin_voz"
+          ]
+        }
       }
     }
   ]
