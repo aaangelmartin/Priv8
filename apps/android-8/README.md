@@ -28,6 +28,7 @@ Paquete `es.priv8.ocho.confirm`, aislado para que la app (#39) y el diseño (#36
 - `ConfirmActivity` muestra la frase con los valores («200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?») y la dice con TextToSpeech es-ES, solo con una voz instalada (sin síntesis en red), con las cifras ya en palabras («Doscientos euros…», `Verbalizer.kt`, port de `voice/verbalize.py`).
 - Escucha «confirmo» o «cancela» con el reconocedor en el dispositivo (`createOnDeviceSpeechRecognizer`). Si no hay reconocedor local, permiso de micrófono o modelo es-ES, lo dice en pantalla y quedan los botones. La app pide el modelo es-ES al abrirla, nunca en mitad de una confirmación.
 - `emu.sh --headless` arranca el emulador con `-no-audio`: ahí la voz no suena ni hay micrófono, el reconocedor solo oye silencio y se responde con los botones. Para probar la voz, arrancarlo con ventana (con audio). Si el motor no avisa del final de la frase, 8 empieza a escuchar tras un margen calculado por longitud.
+- 8 está arriba y se mueve con el volumen real (#42): «hablar» sigue a la salida de TextToSpeech y «escuchar» al micrófono (`onRmsChanged`). La salida se mide con `Visualizer` sobre una sesión de audio propia (necesita `RECORD_AUDIO`, el mismo permiso que el micrófono); si no se puede, con una envolvente por palabras (`onRangeStart`). Solo se mide el volumen, nunca el audio. Unas 30 veces por segundo, por `OjosView.microfono`/`voz` → `Ocho.nivel` → `P8.nivel` (`docs/ojos.html`).
 - Botones Confirmar y Cancelar. Si falta el valor de algún token, Confirmar no se ofrece.
 - Una respuesta por petición: `approval_result` con `by: persona` y `via: voz|pantalla`, o `caducado` (`via` y `by` `sistema`) a los `expires_s` (300 por defecto).
 - El agente no puede leer ni tocar esta pantalla: snapshot vacío y `perform` rechazado mientras está delante.
@@ -116,7 +117,7 @@ La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos d
 | `audit` `held` | esperar |
 | `audit` `paused` | mirar a otro lado (`apartar`), hasta el siguiente evento |
 | `audit` `approval` | confirmado (`asentir`) o cancelado (`negar`) |
-| `audit` `blocked` | `rojo`: nunca sale · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
+| `audit` `blocked` | `rojo`: nunca sale · `asesoria`: no puedo · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
 | `audit` `call` | hablar |
 | `voice` | hablar, con una duración aproximada hasta que la voz mixta avise del final |
 | `confirm_request` | llamar (`atencion`) y luego esperar |
@@ -155,14 +156,18 @@ Tests: `./gradlew testDebugUnitTest` (`FraseTest`, con los ejemplos de `docs/con
 
 Toca a 8 y dile la tarea: «¿Cuánto tengo entre mis bancos?». El texto sale en el subtítulo. Vuelve a tocar para dejar de escuchar.
 
-- **El audio no sale del móvil.** Solo `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. Si el móvil no reconoce la voz sin red, 8 lo dice y no hay dictado: nunca se cae a un reconocedor en la nube.
-- **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra que hay una tarea lista y su longitud.
-- **Todavía no se envía.** Ningún mensaje lleva una tarea del móvil al núcleo (el contrato de eventos solo admite `approval_result`). La propuesta está en la #47: un `task_request` al núcleo, que tokeniza el texto antes de que llegue al modelo.
+Dos caminos, decididos por Ángel en la #47. En los dos el audio no sale del móvil o del portátil: nunca hay un reconocedor en la nube.
 
-Probar en el emulador, sin tocar la pantalla:
+- **Móvil real (A).** `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. El texto va al núcleo en un `task_request` por el canal de eventos (`events.schema.json` v1.2); el núcleo lo tokeniza antes de que llegue al modelo. Sin conexión, la tarea espera y sale al reconectar.
+- **Emulador (B).** Su reconocedor no funciona, así que la app manda `dictation_start` y el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`, `make dictado-install`). El núcleo devuelve `dictation` con el texto, que sale en el subtítulo, y encola la tarea él mismo.
+- **Cuál se usa:** `auto` elige B en el emulador (`Build.FINGERPRINT`, `Build.HARDWARE`...) y A en un móvil. Un móvil sin reconocedor en el dispositivo, sin es-ES o con un error del reconocedor pasa también a B. Para forzarlo: `./gradlew assembleDebug -Ppriv8.dictado=portatil` (o `movil`), o `--es dictado portatil` en el `am start`. La sesión es `b2c` (`-Ppriv8.session=...`).
+- **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra la longitud de la tarea. El texto de `dictation` no llega al WebView de los ojos.
+
+Probar en el emulador, sin tocar la pantalla (con el núcleo corriendo y `adb reverse tcp:8700 tcp:8700`):
 
 ```bash
-adb emu avd hostmicon   # el micrófono del portátil entra al emulador
 adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true
-adb logcat -s Priv8Dictado
+adb logcat -s Priv8Dictado   # «dictado: listening on the laptop», luego «laptop task (N chars)»
 ```
+
+Para probar el reconocedor del emulador (A) en vez de Whisper: `adb emu avd hostmicon` y `--es dictado movil`.

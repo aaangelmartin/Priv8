@@ -55,7 +55,7 @@ class EventsClient(
         socket = null
     }
 
-    /** Sends a message to the core (only `approval_result` is allowed by the contract). */
+    /** Sends a message to the core: `approval_result`, `task_request` or `dictation_start` (contract v1.2). */
     fun send(json: JSONObject): Boolean = socket?.send(json.toString()) ?: false
 
     private fun connect() {

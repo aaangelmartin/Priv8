@@ -35,7 +35,19 @@ act      Claude ─ act_input ─▶ núcleo ─ (políticas, procedencia, confi
 oracle   Claude ─ oracle_input ─▶ núcleo ─ oracle_result ─▶ Claude
 eventos  núcleo ─ audit · screen · voice · confirm_request ─▶ consola, app 8, agente
          app 8 o consola ─ approval_result ─▶ núcleo
+tarea    app 8 ─ task_request (texto) ─▶ núcleo ─ next_task() ─▶ agente (tokeniza antes de Claude)
+dictado  app 8 ─ dictation_start ─▶ núcleo ─ micro del portátil + Whisper local ─ dictation ─▶ app 8
+                                                                   └─ tarea en cola ─▶ next_task()
 ```
+
+## v1.2 (11 nov) · cambios aditivos
+
+Aditivo: un cliente v1.1 sigue validando.
+
+- **`task_request`** (cliente → núcleo): `{"type":"task_request","session":"b2c","text":"…"}`. La tarea de la persona en texto, dictada en el móvil real con el reconocedor del dispositivo o escrita. El núcleo la encola (`core.next_task`) y la auditoría guarda un `task` con sus tokens y su longitud, nunca el texto.
+- **`dictation_start`** (cliente → núcleo): el emulador no reconoce la voz, así que el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`). El audio no sale del portátil; no hay reconocedor en la nube.
+- **`dictation`** (núcleo → clientes): el texto entendido, para el subtítulo de la app 8. Lleva valores reales, así que solo viaja por el canal local y no se registra. Con `error` (`no_disponible`, `sin_voz`) el texto va vacío.
+- **Motivo de rechazo `asesoria`** (issue #43), solo en la auditoría: la persona pidió consejo de inversión («¿en qué fondo lo meto?») y 8 no lo da, porque ejecuta y no asesora (MiFID II). El bucle del agente lo detecta antes de llamar al modelo, así que la petición no sale. En el canal de eventos va primero un `voice` con la frase fija, toda en `cloud` porque no lleva datos, y después el `audit` `blocked` con `reason: asesoria`, que la app 8 pinta con la cara «no puedo» (`rechazar` en `docs/ojos.html`). No es un motivo de `act` ni de `oracle`. Ejemplos: `audit.blocked-asesoria.json`, `events.audit-asesoria.json`, `events.voice-no-puedo.json`.
 
 ## v1.1 (10 nov) · cambios aditivos
 

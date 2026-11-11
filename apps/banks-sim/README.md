@@ -53,7 +53,7 @@ Las apps son independientes: una transferencia en Alcor no suma saldo en Nimbo (
 Login → Inicio (saldos) → Movimientos → Transferencia (IBAN destino, beneficiario, importe, concepto) → Revisión → Autenticación (huella con `BiometricPrompt` o código SMS) → Resultado.
 
 - La clave es `textPassword` y el OTP `numberPassword`: los dos salen con `isPassword=true`.
-- Cada pantalla tiene una raíz `id/screen_<nombre>` y cada dato o control un `resource-id` estable. El mapa de ids a clase y tipo está en `policies/banca-alcor.yaml`.
+- Cada pantalla tiene una raíz `id/screen_<nombre>` y cada dato o control un `resource-id` estable. El mapa de ids a clase y tipo está en `policies/banca-alcor.yaml`, `policies/brezo-banco.yaml` y `policies/nimbo-broker.yaml` (las tres iguales salvo el paquete; `core/tests/test_politicas_bancos.py` lo comprueba contra los layouts y los seeds).
 - Si el dispositivo no tiene huella registrada, el botón se desactiva y queda el código SMS. Para probar la huella en el emulador: registrar una huella en Ajustes y, con el diálogo abierto, `adb -e emu finger touch 1`.
 
 ## Añadir un banco (Brezo Banco, Nimbo Bróker)
@@ -69,6 +69,6 @@ Login → Inicio (saldos) → Movimientos → Transferencia (IBAN destino, benef
 2. Crear `src/brezo/res/values/strings.xml` con `app_name`, `bank_name` y `bank_tagline`.
 3. Crear `src/brezo/res/values/colors.xml` con la paleta propia (los mismos nombres que `src/alcor/res/values/colors.xml`). Cada banco es una marca inventada con colores propios; ninguno se parece a Priv8.
 4. Crear `src/brezo/assets/seed-brezo.json` con la misma estructura que `seed-alcor.json`.
-5. Compilar con `./gradlew assembleBrezoDebug`. Los resource-ids son los mismos en todos los sabores; la política nueva (`policies/brezo-banco.yaml`) puede partir de `banca-alcor.yaml` cambiando `app`.
+5. Compilar con `./gradlew assembleBrezoDebug`. Los resource-ids son los mismos en todos los sabores; la política del banco nuevo parte de `banca-alcor.yaml` cambiando `app`, y se añade a `APPS` en `core/tests/test_politicas_bancos.py`.
 
 Cada sabor tiene su propio `applicationId`, así que los tres bancos se instalan a la vez en el emulador.

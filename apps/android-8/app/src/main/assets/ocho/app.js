@@ -16,12 +16,22 @@
   var marco = document.getElementById('ojos');
   var estado = document.getElementById('estado');
   var P8 = null, pendiente = E.REPOSO, temporizador = null, actual = null;
+  /* Voz en vivo: mientras llega el nivel del micrófono o de la salida de audio,
+     8 escucha o habla con ese nivel; la cara de los eventos (base) se guarda y
+     vuelve FIN_VIVO_MS después del último nivel. */
+  var base = E.REPOSO, vivo = null, finVivo = null, FIN_VIVO_MS = 600;
+  var CARA_VIVA = { microfono: 'escuchar', voz: 'hablar' };
   var enAndroid = !!window.OchoAndroid;
   var params = new URLSearchParams(location.search);
   var depurar = params.has('debug') || (enAndroid && window.OchoAndroid.debug && window.OchoAndroid.debug());
 
   /* ---------- cara ---------- */
   function poner(cara) {
+    base = cara;
+    if (!vivo) mostrar(cara);
+  }
+
+  function mostrar(cara) {
     actual = cara;
     if (!P8) { pendiente = cara; return; }
     if (!P8.poner(cara)) P8.poner(E.REPOSO);
@@ -53,7 +63,7 @@
     var st = d.createElement('style'); st.textContent = CSS; d.head.appendChild(st);
     var solo = d.createElement('div'); solo.id = 'p8-solo'; d.body.appendChild(solo); solo.appendChild(big);
     P8 = w.P8;
-    poner(pendiente);
+    mostrar(pendiente);
   }
   marco.addEventListener('load', prepararOjos);
 
@@ -81,6 +91,17 @@
       conexion = c;
       aplicar(E.conexion(c));
       pintarEstado();
+    },
+    /* Nivel real de la voz, de 0 a 1, unas 30 veces por segundo mientras suena:
+       fuente 'microfono' (escuchar) o 'voz' (hablar). Lo envía OjosView.kt. */
+    nivel: function (fuente, v) {
+      var cara = CARA_VIVA[fuente];
+      if (!cara || typeof v !== 'number' || !isFinite(v)) return false;
+      if (vivo !== cara) { vivo = cara; mostrar(cara); }
+      if (P8 && P8.nivel) P8.nivel(v);
+      clearTimeout(finVivo);
+      finVivo = setTimeout(function () { vivo = null; mostrar(base); }, FIN_VIVO_MS);
+      return true;
     },
     /* Para probar a mano: Ocho.cara('apartar') */
     cara: function (c) { clearTimeout(temporizador); poner(c); },

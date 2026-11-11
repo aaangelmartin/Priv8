@@ -120,15 +120,30 @@ class AuditPort(Protocol):
         ...
 
 
+@runtime_checkable
+class VoicePort(Protocol):
+    def say(self, session: str, text: str) -> JSON | None:
+        """Publish a fixed sentence with no data (one cloud segment, voice.schema.json).
+
+        Used by the agent loop only, for 8's fixed sentences (the «no puedo» of
+        agent/asesoria.py). Returns the utterance, or None if the final block held it.
+        """
+        ...
+
+
 @dataclass
 class Core:
-    """The five ports the MCP layer needs, bundled. Nothing else is reachable."""
+    """The five ports the MCP layer needs, bundled. Nothing else is reachable.
+
+    `voice` is optional and never reaches the MCP server: the fake core has none.
+    """
 
     screen: ScreenPort
     actor: ActPort
     oracle: OraclePort
     leak: LeakCheckPort
     audit: AuditPort
+    voice: VoicePort | None = None
 
 
 def tokens_in(text: str) -> list[str]:
