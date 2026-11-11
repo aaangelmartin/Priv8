@@ -11,7 +11,7 @@ from agent import core_adapter as ca
 from agent import server as server_mod
 from agent.fakes import build_fake_core
 
-ANSWER = "Registrada la factura de ‹PROVEEDOR_1·correo›."
+ANSWER = "Registrada la factura de ‹PROVEEDOR_1-correo›."
 
 
 class StopConsole(Exception):

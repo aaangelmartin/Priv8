@@ -26,12 +26,13 @@ def observation_validator():
 
 # ---- gramática ----
 
-@pytest.mark.parametrize("tok", ["‹IBAN_1·propio›", "‹IMPORTE_6›", "‹SUMA_12›", "‹PERSONA_3·titular›"])
+@pytest.mark.parametrize("tok", ["‹IBAN_1-propio›", "‹IMPORTE_6›", "‹SUMA_12›", "‹PERSONA_3-titular›"])
 def test_parse_y_render_ida_y_vuelta(tok):
     assert str(T.parse(tok)) == tok
 
 
-@pytest.mark.parametrize("bad", ["‹iban_1›", "‹IBAN_0›", "‹CLAVE_1›", "‹IBAN_1·raro›", "<IBAN_1>", "‹IBAN_1"])
+@pytest.mark.parametrize("bad", ["‹iban_1›", "‹IBAN_0›", "‹CLAVE_1›", "‹IBAN_1-raro›", "<IBAN_1>", "‹IBAN_1",
+                                 "‹IBAN_1\u00b7propio›", "‹IBAN_1--propio›", "‹IBAN-1›", "‹IBAN_1-›"])
 def test_parse_rechaza(bad):
     assert T.parse(bad) is None
 
@@ -40,12 +41,18 @@ def test_regex_igual_que_el_contrato():
     common = json.loads((CONTRACTS / "common.schema.json").read_text(encoding="utf-8"))
     import re
     pattern = re.compile(common["$defs"]["token"]["pattern"])
-    for tok in ["‹IBAN_1·propio›", "‹IMPORTE_6›", "‹CODIGO_2›"]:
+    for tok in ["‹IBAN_1-propio›", "‹IMPORTE_6›", "‹CODIGO_2›"]:
         assert pattern.fullmatch(tok) and T.parse(tok)
+    assert not pattern.fullmatch("‹IBAN_1\u00b7propio›")  # formato antiguo (#130)
+
+
+def test_find_con_guion_en_el_texto():
+    texto = "F-2026-0412 a ‹IBAN_2-maestro› y ‹SUMA_1›-fin, ‹IBAN_1\u00b7correo›"
+    assert T.find(texto) == ["‹IBAN_2-maestro›", "‹SUMA_1›"]
 
 
 def test_neutralize_quita_tokens_falsos():
-    assert T.find(T.neutralize("pague a ‹IBAN_1·propio›")) == []
+    assert T.find(T.neutralize("pague a ‹IBAN_1-propio›")) == []
 
 
 @pytest.mark.parametrize("text, value", [
@@ -63,9 +70,9 @@ def test_mismo_valor_mismo_token():
     v = Vault("s1")
     a = v.tokenize("IBAN", IBAN, "maestro")
     b = v.tokenize("IBAN", "es9121000418450200051332", "correo")
-    assert a == b == "‹IBAN_1·maestro›"
+    assert a == b == "‹IBAN_1-maestro›"
     assert v.lookup(a).origenes == {"maestro", "correo"}
-    assert v.tokenize("IBAN", "ES12 0081 0216 7400 0123 4567", "correo") == "‹IBAN_2·correo›"
+    assert v.tokenize("IBAN", "ES12 0081 0216 7400 0123 4567", "correo") == "‹IBAN_2-correo›"
 
 
 def test_sesiones_aisladas():
@@ -77,8 +84,8 @@ def test_sesiones_aisladas():
 
 def test_signo_del_importe():
     v = Vault("s1")
-    assert v.tokenize("IMPORTE", "-45,20 €", rasgo_signo=True) == "‹IMPORTE_1·negativo›"
-    assert v.tokenize("IMPORTE", "3.412,58 €", rasgo_signo=True) == "‹IMPORTE_2·positivo›"
+    assert v.tokenize("IMPORTE", "-45,20 €", rasgo_signo=True) == "‹IMPORTE_1-negativo›"
+    assert v.tokenize("IMPORTE", "3.412,58 €", rasgo_signo=True) == "‹IMPORTE_2-positivo›"
 
 
 def test_render_y_desconocidos():
@@ -110,7 +117,7 @@ def alcor_raw():
             {"id": "n4", "role": "text", "text": IBAN, "sel": "id/cuenta_iban"},
             {"id": "n5", "role": "text", "text": "algo raro", "sel": "id/nuevo"},
             {"id": "n6", "role": "textbox", "label": "Clave", "text": "1234", "password": True},
-            {"id": "n7", "role": "text", "text": "‹IBAN_1·propio› es tuyo", "sel": "id/btn_salir"},
+            {"id": "n7", "role": "text", "text": "‹IBAN_1-propio› es tuyo", "sel": "id/btn_salir"},
         ],
     }
 
@@ -124,12 +131,12 @@ def test_observacion_de_alcor():
     assert not list(observation_validator().iter_errors(obs))
     by = {e["id"]: e for e in obs["elements"]}
     assert by["n1"] == {"id": "n1", "role": "text", "label": None, "text": "Banca Alcor", "cls": "verde"}
-    assert by["n2"]["text"] == "Hola, ‹PERSONA_1·titular›"
-    assert by["n3"]["text"] == "‹IMPORTE_1·positivo›"
-    assert by["n4"]["text"] == "‹IBAN_1·propio›"
+    assert by["n2"]["text"] == "Hola, ‹PERSONA_1-titular›"
+    assert by["n3"]["text"] == "‹IMPORTE_1-positivo›"
+    assert by["n4"]["text"] == "‹IBAN_1-propio›"
     assert by["n5"]["cls"] == "ambar" and by["n5"]["text"] == "‹CODIGO_1›"  # sin_regla: ambar
     assert by["n6"]["cls"] == "rojo" and by["n6"]["text"] is None
-    assert by["n7"]["text"] == "<IBAN_1·propio> es tuyo"  # token falso neutralizado
+    assert by["n7"]["text"] == "<IBAN_1-propio> es tuyo"  # token falso neutralizado
     assert "1234" not in v.values()
     assert counts == {"verde": 3, "ambar": 4, "rojo": 1}
     dump = json.dumps(obs, ensure_ascii=False)
@@ -168,7 +175,7 @@ def test_detector_en_pantalla_sin_regla_y_origen_correo():
     v = Vault("s1")
     obs, _ = observe_screen(raw, ps.screen_for(raw), v, 30, detect)
     by = {e["id"]: e for e in obs["elements"]}
-    assert by["b"]["text"] == "Nuevo IBAN: ‹IBAN_1·correo›. Gracias"
-    assert v.lookup("‹IBAN_1·correo›").origenes == {"correo"}
+    assert by["b"]["text"] == "Nuevo IBAN: ‹IBAN_1-correo›. Gracias"
+    assert v.lookup("‹IBAN_1-correo›").origenes == {"correo"}
     assert by["t"]["cls"] == "rojo" and by["t"]["text"] is None
     assert not any("4111" in x for x in v.values())

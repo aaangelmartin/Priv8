@@ -14,7 +14,7 @@ segmenter        ├─ cloud  "Entre tus tres cuentas tienes"   → final block
 
 | File | What it does |
 |---|---|
-| `tokens.py` | Token grammar from `docs/contracts/token.md`: `‹TIPO_n·etiqueta›` |
+| `tokens.py` | Token grammar from `docs/contracts/token.md`: `‹TIPO_n-etiqueta›` |
 | `segmenter.py` | Template + render function → ordered segments in the `voice.schema.json` form |
 | `leak_check.py` | Final block for cloud sentences. `LeakCheck` port and a default `PatternLeakCheck` |
 | `verbalize.py` | Spanish spelling-out for the local voice: amounts, numbers, IBAN and codes |

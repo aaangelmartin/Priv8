@@ -32,7 +32,7 @@ function NotFound() {
         <p className="eyebrow">Error 404</p>
         <h1>Esta página <span className="soft">todavía no existe.</span></h1>
         <div className="pair nf-pair" aria-label={`La dirección ${path} no existe`}>
-          <span className="real">{path.length > 28 ? path.slice(0, 27) + '…' : path}</span><span className="arrow" /><span className="tok">‹PÁGINA_1·no existe›</span>
+          <span className="real">{path.length > 28 ? path.slice(0, 27) + '…' : path}</span><span className="arrow" /><span className="tok">‹PÁGINA_1-no existe›</span>
         </div>
         <p className="nf-sub">8 la ha buscado por todas partes. Mientras la preparamos, en el inicio está todo lo importante.</p>
         <a className="btn btn-white" href={HOME}>Volver al inicio</a>

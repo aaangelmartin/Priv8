@@ -8,7 +8,7 @@ Resumen en texto de `docs/arquitectura.html`, que tiene los diagramas, los contr
 - **Se lee estructura, no píxeles.** DOM con Playwright en web y árbol de accesibilidad en Android. Nuestra medición de OCR por escritorio remoto leyó bien 8 de 120 IBAN.
 - **Un solo proceso.** El núcleo es una librería Python que el servidor MCP importa (`from core import ...`). En el mismo proceso corren el agente, los eventos de la consola (`:8700`) y el puente Android (`:8765`). La frontera que importa es la salida a la nube, y la cierra el bloqueo final. Decidido el 10 nov con Pablo.
 - **Herramientas cerradas.** El agente solo tiene `observe`, `act` y `oracle`. Sin `eval`, sin CDP crudo, sin adb, sin helpers propios.
-- **Tokens como texto:** `‹TIPO_n·etiqueta›`, por ejemplo `‹IBAN_1·propio›` o `‹IMPORTE_3·positivo›`. Estables por sesión; la tabla vive solo en la bóveda local.
+- **Tokens como texto:** `‹TIPO_n-etiqueta›`, por ejemplo `‹IBAN_1-propio›` o `‹IMPORTE_3-positivo›`. Estables por sesión; la tabla vive solo en la bóveda local.
 - **Voz mixta.** ElevenLabs lee frases sin datos; la voz local del portátil o del móvil lee cifras y nombres.
 
 ## Zonas

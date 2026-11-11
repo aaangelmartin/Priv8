@@ -1,7 +1,7 @@
 """Token grammar of Priv8 CUA (docs/contracts/token.md, contracts v1).
 
-    token    = "‹" TIPO "_" n [ "·" etiqueta ] "›"
-    regex    = ‹([A-Z]+)_(\\d+)(?:·([a-z]+))?›
+    token    = "‹" TIPO "_" n [ "-" etiqueta ] "›"
+    regex    = ‹([A-Z]+)_(\\d+)(?:-([a-z]+))?›
 
 This module only parses tokens out of a template. It never resolves them:
 the token → value table lives in the local vault (core/), not here.
@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 # Delimiters written as escapes, as docs/contracts/token.md asks:
 # U+2039 ‹, U+00B7 ·, U+203A ›.
-TOKEN_RE = re.compile("\u2039([A-Z]+)_(\\d+)(?:\u00b7([a-z]+))?\u203a")
+TOKEN_RE = re.compile("\u2039([A-Z]+)_(\\d+)(?:-([a-z]+))?\u203a")
 
 # Any guillemet left in a cloud sentence means a token was malformed or
 # half-written. The leak check refuses it rather than guessing.

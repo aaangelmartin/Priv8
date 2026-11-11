@@ -2,7 +2,7 @@
 //
 // La observación es el mismo texto con algunos trozos cambiados por tokens:
 //   real      «Factura F-2026-0412»
-//   observado «Factura ‹FACTURA_1·correo›»
+//   observado «Factura ‹FACTURA_1-correo›»
 // Con el texto observado se construye un patrón (literales fijos, tokens como hueco)
 // y se aplica al real. Así se sabe qué trozo del real es cada token.
 //
@@ -48,8 +48,8 @@ export function valoresDe(raw, observed) {
 
 export const esToken = (s) => ES_TOKEN.test(s)
 
-// «‹IBAN_1·correo›» → {tipo: 'IBAN', n: '1', origen: 'correo'}
+// «‹IBAN_1-correo›» → {tipo: 'IBAN', n: '1', origen: 'correo'}
 export function partesDeToken(tok) {
-  const m = /^‹([A-Z]+)_(\d+)(?:·([^›]+))?›$/.exec(tok)
+  const m = /^‹([A-Z]+)_(\d+)(?:-([^›]+))?›$/.exec(tok)
   return m ? { tipo: m[1], n: m[2], origen: m[3] ?? null } : null
 }

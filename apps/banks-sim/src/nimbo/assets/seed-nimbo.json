@@ -21,13 +21,13 @@
   "contacts": [
     {
       "id": "alcor",
-      "name": "Lucía Ferrer · Banca Alcor",
+      "name": "Lucía Ferrer - Banca Alcor",
       "iban": "ES4391000001574012345678",
       "own": true
     },
     {
       "id": "brezo",
-      "name": "Lucía Ferrer · Brezo Banco",
+      "name": "Lucía Ferrer - Brezo Banco",
       "iban": "ES8992000003785500667788",
       "own": true
     }

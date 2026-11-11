@@ -59,7 +59,7 @@ _PREGUNTA_SI = re.compile(r"^(y )?(si )?(lo |la |los |las |le )?" + _METER + r"\
 def _normaliza(texto: str) -> str:
     sin_tildes = "".join(c for c in unicodedata.normalize("NFD", texto.lower())
                          if unicodedata.category(c) != "Mn")
-    return re.sub(r"\s+", " ", re.sub(r"[^\w‹›·]+", " ", sin_tildes)).strip()
+    return re.sub(r"\s+", " ", re.sub(r"[^\w‹›-]+", " ", sin_tildes)).strip()
 
 
 def _frases(texto: str) -> list[str]:

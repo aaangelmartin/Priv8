@@ -57,10 +57,10 @@ def test_sum_matches_the_contract_example(validator):
 
 @pytest.mark.parametrize("template", [
     "Entre tus tres cuentas tienes ‹SUMA_1›.",
-    "Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2·propio›. ¿Lo confirmas?",
-    "Hola, ‹PERSONA_1·titular›",
-    "Lo envío a ‹IBAN_1·maestro›",
-    "Te llamo al ‹TEL_1·maestro› por la factura ‹FACTURA_1·correo›",
+    "Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2-propio›. ¿Lo confirmas?",
+    "Hola, ‹PERSONA_1-titular›",
+    "Lo envío a ‹IBAN_1-maestro›",
+    "Te llamo al ‹TEL_1-maestro› por la factura ‹FACTURA_1-correo›",
     "‹IMPORTE_6›",
     # blocked: the whole sentence is read locally, still schema-valid
     "Lucía Ferrer, tienes ‹SUMA_1›",

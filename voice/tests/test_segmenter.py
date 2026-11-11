@@ -40,12 +40,12 @@ def test_sum_example_from_the_contract():
 
 
 def test_confirmation_example_keeps_order():
-    u = seg("Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2·propio›. ¿Lo confirmas?")
+    u = seg("Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2-propio›. ¿Lo confirmas?")
     assert [(s.voice, s.token) for s in u.segments] == [
         ("cloud", None),
         ("local", "‹IMPORTE_6›"),
         ("cloud", None),
-        ("local", "‹PROVEEDOR_2·propio›"),
+        ("local", "‹PROVEEDOR_2-propio›"),
         ("cloud", None),
     ]
     assert u.cloud_texts == ["Voy a pasar", "a tu cuenta de", "¿Lo confirmas?"]
@@ -55,7 +55,7 @@ def test_confirmation_example_keeps_order():
 
 
 def test_token_label_is_optional_for_lookup():
-    u = seg("Hola, ‹PERSONA_1·titular›")
+    u = seg("Hola, ‹PERSONA_1-titular›")
     assert u.segments[1].spoken == "Lucía Ferrer"
 
 
@@ -70,7 +70,7 @@ def test_unknown_token_is_never_guessed():
 
 
 def test_iban_is_spelled_out_locally():
-    u = seg("Lo envío a ‹IBAN_1·maestro›")
+    u = seg("Lo envío a ‹IBAN_1-maestro›")
     assert u.segments[1].say_as == "iban"
     assert u.segments[1].spoken.startswith("E S nueve uno, dos uno cero cero")
 
@@ -117,9 +117,9 @@ def test_audit_event_has_no_real_values():
 
 TEMPLATES = [
     "Entre tus tres cuentas tienes ‹SUMA_1›.",
-    "Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2·propio›. ¿Lo confirmas?",
-    "Hola, ‹PERSONA_1·titular›. Tu saldo es ‹SUMA_1›",
-    "Lo envío a ‹IBAN_1·maestro› desde la cuenta de ‹PERSONA_1›",
+    "Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2-propio›. ¿Lo confirmas?",
+    "Hola, ‹PERSONA_1-titular›. Tu saldo es ‹SUMA_1›",
+    "Lo envío a ‹IBAN_1-maestro› desde la cuenta de ‹PERSONA_1›",
     "‹PERSONA_1›, ¿pasamos ‹IMPORTE_6›?",
     "Hecho.",
     # the model misbehaves and writes data itself
