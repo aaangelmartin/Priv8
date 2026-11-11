@@ -323,3 +323,55 @@ def test_cursor_apagado_con_priv8_cursor(monkeypatch):
     assert cursor_enabled(False) is True
     monkeypatch.delenv("PRIV8_CURSOR")
     assert cursor_enabled(True) is True and cursor_enabled(False) is False
+
+
+# ---------------------------------------------------------------- pantalla real (#147)
+
+def _wait(cond, timeout=5.0):
+    end = time.monotonic() + timeout
+    while time.monotonic() < end:
+        if cond():
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def test_pantalla_real_solo_mientras_alguien_mira(web, core, monkeypatch):
+    """Con una consola mirando llegan fotogramas JPEG de la pestaña activa, con las cajas de la
+    última observación; sin nadie, no se captura nada. Nunca pasan por el registro."""
+    import base64
+
+    monkeypatch.setattr(web, "frames", True)  # otras suites ponen PRIV8_FRAMES=0 en el proceso
+    web.goto("inbox", "/reset")
+    web.goto("inbox", "/correo/9")
+    recorded = []
+    real_record = core.AUDIT.record
+    monkeypatch.setattr(core.AUDIT, "record", lambda ev: recorded.append(ev) or real_record(ev))
+    seen = []
+    obs = core.observe("b2b")
+    assert web._cast is None  # nadie mira todavía
+    unsub = core.events.subscribe_frames(seen.append)
+    try:
+        assert _wait(lambda: any(m["fresh"] and m["rects"] for m in seen))
+        fresh = next(m for m in seen if m["fresh"] and m["rects"])
+        assert fresh["app"] == "inbox" and fresh["w"] == 1100 and fresh["mime"] == "image/jpeg"
+        assert base64.b64decode(fresh["img"])[:2] == b"\xff\xd8"  # un JPEG de verdad
+        cls = {e["id"]: e["cls"] for e in obs["elements"]}
+        assert all(cls[r["id"]] == r["cls"] for r in fresh["rects"])
+        assert any(r["cls"] == "ambar" and r["token"] for r in fresh["rects"])
+        assert not any(IBAN_TRAMPA in (r.get("text") or "") for r in fresh["rects"])
+        # Mirando, leer la pantalla sigue siendo rápido.
+        t0 = time.monotonic()
+        web.snapshot()
+        assert time.monotonic() - t0 < 0.5
+        # Otra pantalla que 8 aún no ha leído: sin cajas.
+        web.goto("inbox", "/bandeja")
+        assert _wait(lambda: not seen[-1]["fresh"])
+        assert seen[-1]["rects"] == []
+    finally:
+        unsub()
+    assert _wait(lambda: web._cast is None)
+    n = len(seen)
+    time.sleep(0.6)
+    assert len(seen) == n  # sin nadie mirando no hay fotogramas
+    assert recorded and all("img" not in json.dumps(ev) for ev in recorded)
