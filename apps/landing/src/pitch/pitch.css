@@ -606,8 +606,11 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .arch .piece strong { font: 700 1cqw/1.15 var(--f-display); letter-spacing: -.01em; }
 .arch .piece small { font: 400 .78cqw/1.35 var(--f-body); color: var(--ink-2); }
 /* demos: solo los pasos y los enlaces para abrirla */
-.vid .vrow, .vid .vrow.rev { grid-template-columns: 1fr; max-width: 74cqw; }
-.vid .dlinks { grid-template-columns: 1fr 1fr; }
+.vid .vrow, .vid .vrow.rev { grid-template-columns: 1fr 1fr; gap: 5cqw; max-width: none; }
+.vid .dlinks { grid-template-columns: 1fr !important; gap: 1.2cqw; align-self: center; }
+.vid .dlinks .dl { padding: 1.6cqw 1.8cqw; }
+.vid .dlinks .dl b { font-size: 1.9cqw; }
+.vid .dlinks .dl span { font-size: 1.05cqw; }
 /* cierre: el texto pegado a 8 y todo a la izquierda */
 .cl4-izq { justify-items: start; text-align: left; gap: 1.2cqw; }
 .cierre .close4 h2 { justify-items: start; }
@@ -618,3 +621,37 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .vid .vrow { margin-top: 3cqw; align-content: start; align-items: start; }
 /* cierre: el texto pegado a 8, alineado a su borde izquierdo */
 .close4 .e-hero { margin: 0 0 -2.4cqw -1.6cqw; }
+/* cierre, rejilla final: el bloque de la izquierda mide lo mismo que el QR; 8 arriba, la dirección abajo,
+   alineados con los bordes del QR y con el borde izquierdo del texto */
+.close4 { grid-template-columns: 1fr 30cqw; gap: 7cqw; padding: 0 8cqw; }
+.cl4-izq { height: 30cqw; align-content: space-between; justify-items: start; gap: 0; }
+.close4 .e-hero { width: 15cqw; margin: var(--e8-top, 0) 0 0 var(--e8-left, 0); }
+.cierre .close4 h2 { font-size: 3.9cqw; line-height: 1.04; margin-top: auto; }
+.close4 .cl-foot { gap: .7cqw; padding-top: 1.6cqw; border-top: 1px solid rgba(255, 255, 255, .28); width: 100%; }
+.close4 .cl-url { font-size: 2.4cqw; }
+.close4 .cl4-qr svg { width: 30cqw; height: 30cqw; }
+/* el dibujo de 8 tiene aire dentro de su caja: se compensa para que su borde visible toque la rejilla */
+.close4 { --e8-left: -3.77cqw; --e8-top: -5.55cqw; }
+/* 8 y la frase juntos arriba; la dirección abajo, en el borde inferior del QR */
+.cl4-izq { display: flex; flex-direction: column; align-items: flex-start; }
+.close4 .e-hero { width: 17cqw; }
+.close4 { --e8-left: -4.27cqw; --e8-top: -6.29cqw; }
+.cierre .close4 h2 { margin-top: 1.2cqw; }
+.close4 .cl-foot { margin-top: auto; }
+
+/* cierre final: todo hacia el centro. A la izquierda 8 grande encima de la frase, en cuatro líneas grandes;
+   a la derecha el QR, algo más pequeño, con la dirección debajo */
+.close5 { position: relative; z-index: 1; height: 100%; display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 8cqw; }
+.c5-izq { display: flex; flex-direction: column; align-items: flex-start; }
+.close5 .e-hero { width: 19cqw; margin: 0 0 .4cqw -4.7cqw; }
+.cierre .close5 h2 { font-size: 5cqw; line-height: 1.02; letter-spacing: -.05em; display: grid; justify-items: start; text-align: left; }
+.close5 h2 .line { display: block; white-space: nowrap; }
+.c5-qr { display: grid; justify-items: center; gap: 1.2cqw; }
+.c5-qr svg { width: 22cqw; height: 22cqw; display: block; }
+.c5-qr .cl-url { margin-top: .6cqw; font: 700 2.6cqw/1 var(--f-display); letter-spacing: -.03em; color: #fff; }
+.c5-qr .cl-sub { font: 500 1.05cqw/1 var(--f-mono); color: var(--soft-band); }
+.close5 .e-hero { margin-bottom: -4.2cqw; }
+/* 19: más juntos, QR más grande, 8 más grande, centrado sobre la frase y con aire */
+.close5 { gap: 4.5cqw; }
+.close5 .e-hero { width: 22cqw; align-self: center; margin: 0 0 -2.2cqw 0; }
+.c5-qr svg { width: 27cqw; height: 27cqw; }

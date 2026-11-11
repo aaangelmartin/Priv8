@@ -1,0 +1,44 @@
+/* ---------- arquitectura (las dos diapositivas, sobre cobalto) ---------- */
+.arq .shead { text-align: left; }
+.arq .shead h2 { font-size: 3.6cqw; max-width: 80cqw; }
+
+/* 1: dónde vive cada cosa */
+.arq-map { flex: 1; min-height: 0; margin: 2.6cqw 0 2.2cqw; display: grid; grid-template-columns: 1.55fr 14cqw 1fr; align-items: stretch; gap: 1.4cqw; }
+.arq-zone { border-radius: 2cqw; padding: 1.6cqw; display: flex; flex-direction: column; gap: 1cqw; }
+.arq-k { font: 600 1cqw/1 var(--f-mono); color: var(--soft-band); }
+.arq-local { background: rgba(255, 255, 255, .1); border: 2px dashed rgba(196, 205, 255, .55); }
+.arq-cloud { border: 2px solid rgba(196, 205, 255, .55); justify-content: center; }
+.arq-ends { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqw; }
+.arq-ends span { padding: .9cqw 1.1cqw; border-radius: 1cqw; background: rgba(255, 255, 255, .14); font: 500 1cqw/1.25 var(--f-body); color: var(--on-band-2); display: flex; flex-direction: column; gap: .25cqw; }
+.arq-ends b { font: 700 1.3cqw/1.1 var(--f-display); letter-spacing: -.02em; color: #fff; }
+.arq-core { flex: 1; padding: 1.4cqw 1.6cqw; border-radius: 1.5cqw; background: #fff; color: var(--ink); display: flex; flex-direction: column; justify-content: center; gap: 1cqw; }
+.arq-core-h { display: flex; align-items: center; gap: 1cqw; font: 700 1.7cqw/1 var(--f-display); letter-spacing: -.03em; }
+.arq-core-h small { font: 500 1cqw/1.2 var(--f-body); letter-spacing: 0; color: var(--ink-2); }
+.e-arq { width: 3.6cqw; flex: none; }
+.arq-vault { display: grid; gap: .6cqw; }
+.arq-vrow { display: grid; grid-template-columns: minmax(0, 1fr) 2cqw 11.5cqw; align-items: center; gap: 1cqw; }
+.arq-real { font: 500 1.05cqw/1.2 var(--f-mono); padding: .65cqw .9cqw; border-radius: .8cqw; background: var(--card); border: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arq-vrow i { height: 2px; background: var(--accent); position: relative; }
+.arq-vrow i::after { content: ""; position: absolute; right: -2px; top: -.4cqw; border: .45cqw solid transparent; border-left: .6cqw solid var(--accent); border-right: 0; }
+.arq-vrow .tok { justify-self: start; font-size: 1.2cqw; background: var(--tok-bg); color: var(--tok-fg); }
+.arq-note { font: 500 .95cqw/1.2 var(--f-mono); color: var(--ink-2); }
+.arq-wire { display: flex; flex-direction: column; justify-content: center; gap: 2cqw; }
+.arq-w { display: grid; gap: .6cqw; justify-items: center; text-align: center; }
+.arq-w span { font: 600 1.15cqw/1.2 var(--f-mono); color: #fff; }
+.arq-w i { width: 100%; height: 3px; background: #fff; position: relative; display: block; }
+.arq-out i::after { content: ""; position: absolute; right: -2px; top: -.55cqw; border: .65cqw solid transparent; border-left: .9cqw solid #fff; border-right: 0; }
+.arq-in i::after { content: ""; position: absolute; left: -2px; top: -.55cqw; border: .65cqw solid transparent; border-right: .9cqw solid #fff; border-left: 0; }
+.arq-tools { display: flex; flex-direction: column; align-items: center; gap: .5cqw; }
+.arq-tools code { font: 600 1.2cqw/1 var(--f-mono); padding: .55cqw .9cqw; border-radius: .7cqw; background: #fff !important; color: var(--band) !important; }
+.arq-box { padding: 1.5cqw 1.6cqw; border-radius: 1.4cqw; background: #fff; color: var(--ink); display: grid; gap: .6cqw; }
+.arq-box b { font: 700 1.7cqw/1.1 var(--f-display); letter-spacing: -.03em; }
+.arq-box span { font: 500 1.15cqw/1.4 var(--f-body); color: var(--ink-2); }
+.arq-box .tok { font-size: 1em; }
+
+/* 2: las ocho piezas */
+.arq-pieces { list-style: none; padding: 0; flex: 1; min-height: 0; margin: 2.8cqw 0 2.6cqw; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: 1fr 1fr; gap: 1.4cqw; }
+.arq-piece { min-width: 0; padding: 1.8cqw 1.7cqw; border-radius: 1.6cqw; background: #fff; color: var(--ink); display: flex; flex-direction: column; gap: .9cqw; }
+.arq-n { width: 3cqw; height: 3cqw; border-radius: 50%; display: grid; place-items: center; background: var(--band); color: #fff; font: 700 1.35cqw/1 var(--f-display); }
+.arq-piece b { margin-top: .4cqw; font: 700 1.9cqw/1.05 var(--f-display); letter-spacing: -.035em; }
+.arq-piece p { font: 500 1.2cqw/1.4 var(--f-body); color: var(--ink-2); }
+.arq-piece .tok { font-size: .95em; }

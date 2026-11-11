@@ -6,6 +6,7 @@ import consola from './img/consola.jpg';
 import alarma from './img/alarma.jpg';
 import { QR } from './qr.js';
 import './annex.css';
+import './arch.css';
 import pablo from './img/pablo.png';
 import angel from './img/angel.png';
 import alvaro from './img/alvaro.png';
@@ -97,7 +98,7 @@ const LUMEN = [
   ['Proveedor', 'Suministros Lumen S.L.'],
   ['CIF', 'B12345674'],
   ['Factura', 'F-2026-0412'],
-  ['Importe', '1.254,30 €'],
+  ['Importe', '1.254,30 €'],
   ['IBAN', 'ES91 2100 0418 4502 0005 1332'],
 ];
 function Stat({ n, t, s, d }) {
@@ -148,7 +149,7 @@ function ProblemaB2C() {
         <Stat d={6} n="+600.000" t="firmas de «Soy mayor, no idiota»: muchas personas no saben hacer sus gestiones en la app" s="elDiario.es, 2022" />
       </div>
       <div className="col">
-        <Head eyebrow="El problema - personas"><span className="nw">Gestionar el banco cuesta.</span> <span className="soft nw">Y ningún asistente puede con todos sin verlo todo.</span></Head>
+        <Head eyebrow="El problema - personas"><span className="nw">Gestionar el banco cuesta.</span> <span className="soft nw">Y ninguna IA lo hace sin verlo todo.</span></Head>
         <div className="phones3">
           {BANKS.map(([b, a, c], i) => (
             <R d={3 + i} key={b} className="mini" style={{ '--d': 3 + i, '--bk': c }}>
@@ -200,7 +201,7 @@ const SCREEN = [
   ['Titular', 'Lucía Gómez Ruiz', '‹NOMBRE_1-titular›', 'tk', 'nombre por contexto y bóveda'],
   ['DNI', '12345678Z', '‹DNI_1›', 'tk', 'patrón y letra de control'],
   ['IBAN', 'ES91 2100 0418 4502 0005 1332', '‹IBAN_1-propio›', 'tk', 'patrón y mod-97'],
-  ['Saldo', '12.050,00 €', '‹IMPORTE_2-positivo›', 'tk', 'regla del sitio (selector)'],
+  ['Saldo', '12.050,00 €', '‹IMPORTE_2-positivo›', 'tk', 'regla del sitio (selector)'],
   ['Clave', '••••••', null, 'no', 'campo de contraseña: siempre rojo'],
   ['Botón', 'Transferir', 'Transferir', 'ok', 'interfaz, la regla lo declara legible'],
 ];
@@ -294,7 +295,7 @@ function Como2() {
           <table><tbody>
             <tr><td><Tok>‹IBAN_1-propio›</Tok></td><td>ES91 2100 0418 …</td><td>origen: ficha</td></tr>
             <tr><td><Tok>‹IBAN_2-correo›</Tok></td><td>ES76 0182 2370 …</td><td>origen: correo</td></tr>
-            <tr><td><Tok>‹IMPORTE_1›</Tok></td><td>1.254,30 €</td><td>origen: factura</td></tr>
+            <tr><td><Tok>‹IMPORTE_1›</Tok></td><td>1.254,30 €</td><td>origen: factura</td></tr>
           </tbody></table>
           <p className="cap dark">Una por sesión. Guarda dónde se vio cada valor: eso es la procedencia.</p>
         </R>
@@ -349,53 +350,63 @@ function Como4() {
   );
 }
 
-/* ---------------------------------------------------------------- 5 arquitectura */
+/* ---------------------------------------------------------------- 5 arquitectura: dónde vive cada cosa y las ocho piezas */
 const PIECES = [
-  ['Detector', 'Reglas del sitio, patrones validados (IBAN, DNI, Luhn) y nombres: decide qué es cada dato.'],
-  ['Tokens y bóveda', 'Cambia el valor por ‹TIPO_n›. La tabla token-valor solo vive en tu máquina.'],
-  ['Procedencia', 'Recuerda de dónde viene cada valor: un IBAN del correo no entra en un pago.'],
-  ['Oráculo', 'Suma y compara sin revelar, con presupuesto de preguntas y respuestas por tramos.'],
+  ['Detector', 'Decide qué es cada dato: reglas del sitio, IBAN, DNI, tarjetas y nombres.'],
+  ['Tokens y bóveda', 'Cambia cada valor por ‹TIPO_n›. La tabla solo vive en tu máquina.'],
+  ['Procedencia', 'Sabe de dónde viene cada dato: el IBAN de un correo no entra en un pago.'],
+  ['Oráculo', 'Suma y compara sin revelar la cifra, con un presupuesto de preguntas.'],
   ['Ejecutor', 'Escribe en pantalla el valor real del token que pide el modelo.'],
-  ['Tu «sí»', 'Registrar, transferir o enviar esperan tu confirmación.'],
+  ['Tu «sí»', 'Registrar, transferir, firmar o enviar esperan tu confirmación.'],
   ['Bloqueo final', 'Revisa cada petición que sale: si lleva un valor real, no sale.'],
-  ['Registro firmado', 'Qué recibió el modelo, qué se bloqueó y qué aprobaste, encadenado y firmado.'],
+  ['Registro firmado', 'Qué vio el modelo, qué se bloqueó y qué aprobaste, firmado.'],
 ];
-const ROUTES = [
-  ['observe', ['pantalla', 'regla', 'detector', 'bóveda', 'bloqueo final', 'modelo']],
-  ['act', ['modelo', 'token conocido', 'procedencia', 'tu «sí»', 'rehidratar', 'pantalla']],
-  ['oracle', ['modelo', 'presupuesto', 'bóveda', '‹SUMA_n› o tramo', 'modelo']],
-];
+const VAULT = [['ES71 9400 0007 0206 0223 3441', '‹IBAN_1-propio›'], ['Suministros Lumen', '‹NOMBRE_1›'], ['1.180,00 €', '‹IMPORTE_3›']];
 function Arquitectura() {
   return (
-    <div className="in arch">
-      <Head eyebrow="Arquitectura"><span className="nw">Ocho piezas.</span> <span className="soft nw">Ninguna depende de que el modelo obedezca.</span></Head>
-      <div className="arch-row">
-        <R d={3} className="trust">
-          <p className="zone">Tu entorno de confianza - ve valores reales</p>
-          <div className="ends"><span>Web: ERP y correo (Playwright, DOM)</span><span>Móvil (árbol de accesibilidad)</span></div>
-          <div className="core">
-            <p className="core-h"><E mode="mirar" on="paper" className="e-core" />Núcleo Priv8 - librería Python, en el mismo proceso</p>
-            <div className="pieces">
-              {PIECES.map(([p, t], i) => <span key={p} className="piece rv" style={{ '--d': 4 + i * 0.5 }}><b>{i + 1}</b><span><strong>{p}</strong><small>{t}</small></span></span>)}
+    <div className="in arq">
+      <Head eyebrow="Arquitectura - 1 de 2"><span className="nw">Dónde vive cada cosa.</span> <span className="soft nw">Al modelo solo cruzan tokens.</span></Head>
+      <div className="arq-map">
+        <R d={3} className="arq-zone arq-local">
+          <p className="arq-k">Tu máquina - ve valores reales</p>
+          <div className="arq-ends"><span><b>Web</b>ERP y correo, por DOM</span><span><b>Móvil</b>Árbol de accesibilidad</span></div>
+          <div className="arq-core">
+            <p className="arq-core-h"><E mode="mirar" on="paper" className="e-arq" />Núcleo Priv8<small>librería Python, en el mismo proceso</small></p>
+            <div className="arq-vault">
+              {VAULT.map(([v, t], i) => <R d={4 + i * 0.4} key={t} className="arq-vrow"><span className="arq-real">{v}</span><i /><Tok>{t}</Tok></R>)}
             </div>
+            <p className="arq-note">La tabla token - valor no sale de aquí.</p>
           </div>
-          <div className="ends"><span>Consola de auditoría</span><span>App 8: renderizador y voz local</span></div>
+          <div className="arq-ends"><span><b>Consola</b>Auditoría</span><span><b>App 8</b>Renderizador y voz local</span></div>
         </R>
-        <div className="wire">
-          <R d={8} className="w-out"><span>solo tokens</span><i /></R>
-          <R d={9} className="w-in"><i /><span><code>observe</code> <code>act</code> <code>oracle</code></span></R>
+        <div className="arq-wire">
+          <R d={6} className="arq-w arq-out"><span>solo tokens</span><i /></R>
+          <R d={7} className="arq-w arq-in"><i /><span>3 herramientas</span></R>
+          <R d={7.5} className="arq-tools"><code>observe</code><code>act</code><code>oracle</code></R>
         </div>
-        <R d={7} className="cloud">
-          <p className="zone">Nube - no ve valores</p>
-          <div className="cbox"><b>Cualquier modelo</b><span>3 herramientas cerradas por MCP. Sin navegador, sin sistema, sin código propio.</span></div>
-          <div className="cbox"><b>Voz en la nube</b><span>Solo frases sin datos. Cifras y nombres, con la voz local.</span></div>
+        <R d={5} className="arq-zone arq-cloud">
+          <p className="arq-k">Nube - no ve valores</p>
+          <div className="arq-box"><b>Cualquier modelo</b><span>Recibe ‹IBAN_1› y responde con tokens. Sin navegador, sin sistema, sin código propio.</span></div>
+          <div className="arq-box"><b>Voz en la nube</b><span>Solo frases sin datos. Cifras y nombres, con la voz local.</span></div>
         </R>
       </div>
-      <div className="routes">
-        {ROUTES.map(([k, st], j) => (
-          <R d={9.5 + j * 0.4} key={k} className="route"><code>{k}</code>{st.map((s, i) => <span key={i}>{s}</span>)}</R>
+      <Foot />
+    </div>
+  );
+}
+function Piezas() {
+  return (
+    <div className="in arq">
+      <Head eyebrow="Arquitectura - 2 de 2"><span className="nw">Las ocho piezas.</span> <span className="soft nw">Ninguna depende de que el modelo obedezca.</span></Head>
+      <ol className="arq-pieces">
+        {PIECES.map(([p, t], i) => (
+          <R d={3 + i * 0.35} as="li" key={p} className="arq-piece">
+            <span className="arq-n">{i + 1}</span>
+            <b>{p}</b>
+            <p>{t.split(/(‹[^›]+›)/).map((s, j) => (/^‹/.test(s) ? <Tok key={j}>{s}</Tok> : s))}</p>
+          </R>
         ))}
-      </div>
+      </ol>
       <Foot />
     </div>
   );
@@ -416,11 +427,11 @@ function Demo1() {
       <div className="in demo2 vid">
         <Head eyebrow="Demo - Priv8 en el móvil" chip="en directo"><span className="nw">«¿Cuánto tengo entre mis bancos?»</span> <span className="soft nw">8 suma sin ver la cifra.</span></Head>
         <div className="vrow rev">
+          <Links d={7} />
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Recorre tus tres bancos</strong>Banca Alcor, Brezo Banco y Nimbo Bróker, por accesibilidad.</p></R>
             <R d={5} className="scap"><b>2</b><p><strong>El modelo ve <Tok>‹SUMA_1›</Tok></strong>La cifra solo suena con la voz del móvil.</p></R>
-            <R d={6} className="scap"><b>3</b><p><strong>«Pasa 200 € al bróker»</strong>Lo prepara, mira a otro lado en tu huella y espera tu «sí».</p></R>
-            <Links d={7} />
+            <R d={6} className="scap"><b>3</b><p><strong>«Pasa 200 € al bróker»</strong>Lo prepara, mira a otro lado en tu huella y espera tu «sí».</p></R>
           </div>
         </div>
         <Foot />
@@ -441,18 +452,18 @@ function Demo1() {
         <div className="pcol">
           <Phone d={5} state="Hablando" mode="hablar">
             <p className="me">¿Cuánto tengo entre mis bancos?</p>
-            <p className="it">Entre tus tres cuentas tienes <mark>17.977,98 €</mark>.</p>
+            <p className="it">Entre tus tres cuentas tienes <mark>17.977,98 €</mark>.</p>
             <p className="sys">voz local - el modelo solo ve <Tok>‹SUMA_1›</Tok></p>
           </Phone>
           <R d={6} as="p" className="pcap"><b>2</b>La cifra solo suena en tu móvil</R>
         </div>
         <div className="pcol">
           <Phone d={7} state="Mira a otro lado" mode="apartar">
-            <p className="me">Pasa 200 € al bróker</p>
-            <div className="confirm"><b>200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?</b><span className="row2"><i className="yes">Confirmar</i><i>Cancelar</i></span></div>
+            <p className="me">Pasa 200 € al bróker</p>
+            <div className="confirm"><b>200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?</b><span className="row2"><i className="yes">Confirmar</i><i>Cancelar</i></span></div>
             <p className="sys">Huella, clave u OTP: 8 no mira</p>
           </Phone>
-          <R d={8} as="p" className="pcap"><b>3</b>«Pasa 200 € al bróker». Tu huella, 8 no la ve</R>
+          <R d={8} as="p" className="pcap"><b>3</b>«Pasa 200 € al bróker». Tu huella, 8 no la ve</R>
         </div>
       </div>
       <Foot />
@@ -479,8 +490,8 @@ function Demo2() {
             <R d={4} className="scap"><b>1</b><p><strong>Lee el correo y abre Alba Core</strong>Al modelo le llegan <Tok>‹CIF_1›</Tok> e <Tok>‹IMPORTE_1›</Tok>.</p></R>
             <R d={5} className="scap"><b>2</b><p><strong>Registra la factura</strong>El ejecutor escribe los valores reales y espera tu «sí», que queda firmado.</p></R>
             <R d={6} className="scap"><b>3</b><p><strong>«Posible fraude detectado»</strong>La cuenta nueva del correo no entra en el pago.</p></R>
-            <Links d={7} />
           </div>
+          <Links d={7} />
         </div>
         <Foot />
       </div>
@@ -554,13 +565,13 @@ function Foco() {
 const MK = [
   { tag: 'B2B - Priv8 para empresas', rows: [
     ['TAM', '7.000 M$', 'software de cuentas a pagar en el mundo, 2030', 'Grand View Research, 2024'],
-    ['SAM', '212 M€', '35.354 empresas en España con 50 o más empleados, a 6.000 € al año', 'Cifras PYME, sept. 2026; precio, estimación propia'],
+    ['SAM', '212 M€', '35.354 empresas en España con 50 o más empleados, a 6.000 € al año', 'Cifras PYME, sept. 2026; precio, estimación propia'],
     ['SOM', '0,56 M€', '60 empresas y 2 bancos o BPO en 3 años', 'estimación propia'],
   ] },
   { tag: 'B2C - Priv8 en el móvil', rows: [
     ['TAM', '27,8 M', 'personas con banca online en España (74,7 % de 16 a 74 años)', 'INE, TIC-H 2025; Eurostat'],
     ['SAM', '15,8 M', 'con cuentas en varios bancos (57 %)', 'Visa, Pecunpay y Ditrendia, 2025; cálculo propio'],
-    ['SOM', '0,6 M€', '100.000 usuarios activos de 1 o 2 bancos, a 6 € al año', 'estimación propia'],
+    ['SOM', '0,6 M€', '100.000 usuarios activos de 1 o 2 bancos, a 6 € al año', 'estimación propia'],
   ] },
 ];
 function Mercados() {
@@ -631,8 +642,8 @@ function Competencia() {
 /* ---------------------------------------------------------------- cómo llegamos */
 const GTM = [
   ['1', 'Piloto', 'semanas 1 a 4', 'Un banco o una empresa', 'Un proceso de cuentas a pagar sobre su ERP, sin tocar el ERP', 'Datos expuestos (objetivo 0), fraudes bloqueados, horas ahorradas', 'Piloto de pago, descontable de la licencia', 'Primer caso medido'],
-  ['2', 'Su back office', 'meses 2 a 12', 'El mismo cliente', 'Facturas, conciliación y altas de clientes y proveedores', 'Procesos activos, documentos al mes, coste por tarea', 'Licencia por proceso + unos 0,50 € por documento', 'Primer contrato anual'],
-  ['3', 'Priv8 en el móvil', 'años 1 y 2', 'Personas con varios bancos', 'La app para todas tus cuentas, en las tiendas', 'Usuarios activos, bancos conectados, trámites hechos', 'Suscripción de unos 6 € al año', 'App publicada'],
+  ['2', 'Su back office', 'meses 2 a 12', 'El mismo cliente', 'Facturas, conciliación y altas de clientes y proveedores', 'Procesos activos, documentos al mes, coste por tarea', 'Licencia por proceso + unos 0,50 € por documento', 'Primer contrato anual'],
+  ['3', 'Priv8 en el móvil', 'años 1 y 2', 'Personas con varios bancos', 'La app para todas tus cuentas, en las tiendas', 'Usuarios activos, bancos conectados, trámites hechos', 'Suscripción de unos 6 € al año', 'App publicada'],
   ['4', 'Más empresas', 'años 2 y 3', 'Integradores de ERP y BPO', 'El mismo núcleo en otros procesos y sectores', 'Socios, pantallas con reglas listas, clientes por socio', 'Reparto de ingresos con el socio', 'ISO 27001 y SOC 2'],
 ];
 function Mercado() {
@@ -705,43 +716,47 @@ function Cierre() {
     <div className={'in cierre' + (show ? ' live' : '')}>
       {show && <Field />}
       {show && <div className="clean" />}
-      <div className="close4">
-        <div className="cl4-izq">
+      <div className="close5">
+        <div className="c5-izq">
           <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
-          <R d={1} as="h2"><span className="line">El agente hace el trámite.</span><span className="line soft">Los datos se quedan contigo.</span></R>
-          <R d={2} className="cl-foot"><span className="cl-url">priv8.es</span><span className="cl-sub">demo.priv8.es - mcp.priv8.es</span></R>
+          <R d={1} as="h2"><span className="line">El agente</span><span className="line">hace el trámite.</span><span className="line soft">Los datos se</span><span className="line soft">quedan contigo.</span></R>
         </div>
-        <R d={3} className="qr solo cl4-qr"><Qr rows={QR.web} label="Código QR a priv8.es" azul /></R>
+        <R d={3} className="c5-qr">
+          <Qr rows={QR.web} label="Código QR a priv8.es" azul />
+          <span className="cl-url">priv8.es</span>
+          <span className="cl-sub">demo.priv8.es - mcp.priv8.es</span>
+        </R>
       </div>
     </div>
   );
 }
 
 /* ---------------------------------------------------------------- anexo */
-/* cada entrada: [pregunta, respuesta, apoyo visual]. Tipos de apoyo: nums, flow, table, toks, eight */
+/* cada entrada: [pregunta, respuesta, apoyo visual]. Tipos: nums, vs, flow, table, toks, split, eight, qr.
+   face: la cara de 8 de la esquina, [modo, color] */
 const QA1 = [
   ['¿Y si el modelo adivina la cifra a base de preguntas?', 'El oráculo calcula sin revelar: sum, compare y matches. Tiene presupuesto por sesión y por token, y responde por tramos o con una palabra, nunca con la cifra. Una búsqueda binaria no la reconstruye.',
-    { t: 'flow', steps: [['oracle(sum)', 'pide el modelo'], ['Presupuesto', 'por sesión y token'], ['‹SUMA_1›', 'y su tramo'], ['Sin presupuesto', 'denied'] ] }],
+    { t: 'flow', steps: [['oracle(sum)', 'lo pide el modelo'], ['Presupuesto', 'por sesión y por token'], ['‹SUMA_1›', 'y su tramo, nunca la cifra'], ['Sin presupuesto', 'denied']], bad: 3, face: ['pensar', 'paper'] }],
   ['¿Qué pasa con un dato en texto libre?', 'En modo estricto, el de serie, al modelo solo llega lo que cubre una regla del sitio. Además, patrones validados y la bóveda local. Si algo se escapa, el bloqueo final retiene la petición.',
-    { t: 'flow', steps: [['Reglas del sitio', 'selectores'], ['Patrones validados', 'IBAN mod-97, DNI, Luhn'], ['Bóveda local', 'valores conocidos'], ['Bloqueo final', 'la petición no sale'] ] }],
+    { t: 'flow', steps: [['Reglas del sitio', 'selectores, modo estricto'], ['Patrones validados', 'IBAN mod-97, DNI, Luhn'], ['Bóveda local', 'valores ya conocidos'], ['Bloqueo final', 'la petición no sale']], bad: 3, face: ['leer', 'paper'] }],
   ['¿Un token sigue siendo un dato personal?', 'Es seudonimización: la tabla token-valor no sale de la máquina. El RGPD sigue aplicando y el registro sirve de evidencia; no decimos que certifique nada.',
-    { t: 'table', head: ['Token', 'Valor real'], rows: [['‹IBAN_1-propio›', 'solo en local'], ['‹IMPORTE_3-positivo›', 'solo en local'], ['‹NOMBRE_2›', 'solo en local']], foot: 'La tabla vive en el entorno de confianza' }],
+    { t: 'split', rows: [['ES71 9400 0007 0206 0223 3441', '‹IBAN_1-propio›'], ['1.180,00 €', '‹IMPORTE_3-positivo›'], ['Marco Barroso', '‹NOMBRE_2›']], face: ['mirar', 'paper'] }],
   ['¿Por qué no usar la API del ERP?', 'Porque muchos no la tienen, o integrarla cuesta meses. Priv8 trabaja sobre las pantallas que ya existen, leyendo el DOM y el árbol de accesibilidad, no píxeles.',
     { t: 'nums', items: [['0', 'cambios en el ERP'], ['0', 'APIs nuevas'], ['DOM', 'y accesibilidad, no píxeles']] }],
   ['¿Y la inyección de instrucciones en un correo?', 'No dependemos de que el modelo la ignore: la procedencia impide por diseño que un dato del correo entre en un campo de pago, y la consola avisa de posible fraude.',
-    { t: 'flow', steps: [['Correo', 'IBAN nuevo'], ['Procedencia', 'origen: correo'], ['Campo de pago', 'rechazo: destino'], ['8 llama', 'al número de la ficha']], bad: 2 }],
+    { t: 'flow', steps: [['Correo', 'trae un IBAN nuevo'], ['‹IBAN_2-correo›', 'origen: correo'], ['Campo de pago', 'rechazado por procedencia'], ['8 llama', 'al número de la ficha']], bad: 2, face: ['enfado', 'paper'] }],
   ['¿Cuánto añade de latencia y de coste?', 'El núcleo corre en local, en el mismo proceso que el servidor MCP; la consola mide la latencia de cada paso. El coste es el del modelo que elija el cliente, sin llamadas extra.',
-    { t: 'nums', items: [['Local', 'mismo proceso'], ['0', 'llamadas extra al modelo'], ['Medida', 'latencia por paso en la consola']] }],
+    { t: 'nums', items: [['Local', 'en el mismo proceso'], ['0', 'llamadas extra al modelo'], ['Medida', 'latencia de cada paso']] }],
 ];
 const QA2 = [
   ['¿Funciona con cualquier modelo?', 'Sí. El modelo solo recibe tokens y tiene tres herramientas cerradas. Ni navegador, ni sistema, ni código propio: sin eval, sin CDP, sin adb.',
-    { t: 'toks', items: ['observe', 'act', 'oracle'], cap: 'Las tres únicas herramientas del agente' }],
+    { t: 'toks', items: ['observe', 'act', 'oracle'], code: true, no: ['eval', 'CDP', 'adb'], cap: 'Las tres únicas herramientas del agente' }],
   ['¿Y la autenticación del banco (PSD2)?', 'La hace siempre la persona. Mientras pone huella, clave u OTP, 8 no recibe nada y mira a otro lado.',
-    { t: 'eight', mode: 'apartar', cap: 'Mirar a otro lado: huella, clave u OTP' }],
+    { t: 'eight', mode: 'apartar', on: 'paper', cap: 'Mirar a otro lado: huella, clave u OTP' }],
   ['¿El agente da consejos de inversión?', 'No. El asesoramiento está regulado: 8 ejecuta lo que la persona elige y dice «no puedo» si le piden consejo.',
-    { t: 'eight', mode: 'rechazar', cap: 'No puedo: asesoría de inversión' }],
+    { t: 'eight', mode: 'rechazar', on: 'bad', cap: 'No puedo: asesoría de inversión' }],
   ['¿Cuánto cobraréis?', 'Licencia anual por proceso más un precio por documento. La cifra sale del coste por tarea que ya medimos y del ahorro frente a hacerlo a mano.',
-    { t: 'nums', items: [['0,50 €', 'por documento'], ['+ licencia', 'anual por proceso']] }],
+    { t: 'nums', items: [['0,50 €', 'por documento'], ['+ licencia', 'anual por proceso']] }],
   ['¿Qué os diferencia de Tsinghua?', 'Su trabajo valida la idea en un emulador. Nosotros añadimos lo que hace falta para un producto.',
     { t: 'table', head: ['', 'Tsinghua', 'Priv8'], rows: [['Tokens en pantalla', 'Sí', 'Sí'], ['Procedencia', 'No', 'Sí'], ['Oráculo con presupuesto', 'No', 'Sí'], ['Confirmación y registro firmado', 'No', 'Sí'], ['Producto', 'Investigación', 'B2B y app']] }],
   ['¿Qué haríais con un piloto?', 'Un proceso de cuentas a pagar sobre el ERP del cliente, midiendo datos expuestos, fraudes bloqueados y horas ahorradas.',
@@ -750,26 +765,26 @@ const QA2 = [
 const QA3 = [
   ['¿Cómo lo vendéis?', 'Venta directa a bancos, brókers y departamentos financieros, con un piloto de 4 semanas. Después, integradores de ERP y empresas de BPO. La app del móvil, directa a las personas.',
     { t: 'flow', steps: [['Piloto', '4 semanas'], ['Venta directa', 'bancos y finanzas'], ['Canal', 'integradores y BPO'], ['App', 'directa a personas']] }],
-  ['¿Cuánto cuesta?', 'Unos 0,50 € por documento, con una cuota mínima por proceso. Hoy una factura cuesta de media 9,84 $ en cuentas a pagar (Ardent Partners, 2025). En el móvil, unos 6 € al año. Estimación propia.',
-    { t: 'vs', a: ['9,84 $', 'por factura hoy'], b: ['0,50 €', 'por documento con Priv8'], foot: 'Móvil: unos 6 € al año' }],
+  ['¿Cuánto cuesta?', 'Unos 0,50 € por documento, con una cuota mínima por proceso. Hoy una factura cuesta de media 9,84 $ en cuentas a pagar (Ardent Partners, 2025). En el móvil, unos 6 € al año. Estimación propia.',
+    { t: 'vs', a: ['9,84 $', 'por factura hoy, a mano'], b: ['0,50 €', 'por documento con Priv8'], foot: 'Móvil: unos 6 € al año' }],
   ['¿Cuál es el modelo de negocio?', 'Suscripción en los dos: licencia por proceso para empresas y app de pago para personas. Cada proceso o banco nuevo cuesta reglas de sitio, no un producto nuevo.',
-    { t: 'table', head: ['', 'Empresas', 'Personas'], rows: [['Producto', 'Priv8 para empresas', '8 en tu móvil'], ['Cobro', 'Licencia por proceso + documento', 'Suscripción'], ['Núcleo', 'Priv8 CUA', 'Priv8 CUA']] }],
+    { t: 'table', head: ['', 'Empresas', 'Personas'], rows: [['Producto', 'Priv8 para empresas', '8 en tu móvil'], ['Cobro', 'Licencia + documento', 'Suscripción'], ['Núcleo', 'Priv8 CUA', 'Priv8 CUA']] }],
   ['¿Sale a cuenta?', 'El núcleo corre en la máquina del cliente: no tenemos coste de cómputo por tarea. El modelo lo elige y lo paga el cliente; cobramos por el proceso que ya no se hace a mano.',
-    { t: 'nums', items: [['0 €', 'de cómputo nuestro por tarea'], ['Cliente', 'elige y paga el modelo']] }],
+    { t: 'nums', items: [['0 €', 'de cómputo nuestro por tarea'], ['Cliente', 'elige y paga el modelo']] }],
   ['¿Quién decide la compra?', 'Dirección financiera y de operaciones, con el visto bueno de protección de datos y seguridad. El registro firmado es lo que les deja decir que sí.',
     { t: 'flow', steps: [['Finanzas y operaciones', 'quieren automatizar'], ['Protección de datos', 'revisa'], ['Seguridad', 'revisa'], ['Registro firmado', 'evidencia para el sí']] }],
   ['¿Qué pasa tras el piloto?', 'Medimos datos expuestos, fraudes bloqueados y horas ahorradas. Con eso se amplía a otros procesos del mismo cliente.',
-    { t: 'nums', items: [['0', 'datos expuestos'], ['Fraudes', 'bloqueados'], ['Horas', 'ahorradas']] }],
+    { t: 'nums', items: [['0', 'datos expuestos'], ['Fraudes', 'bloqueados'], ['Horas', 'ahorradas']], face: ['listo', 'paper'] }],
 ];
 const QA4 = [
   ['¿Cumple el RGPD?', 'Es seudonimización (art. 4.5): el token sigue siendo dato personal, pero la tabla token-valor no sale de tu máquina. El RGPD sigue aplicando; el registro sirve de evidencia. No certificamos nada.',
-    { t: 'toks', items: ['‹IBAN_1-propio›', '‹DNI_1›', '‹IMPORTE_3-positivo›'], cap: 'Lo que ve el modelo. El valor real se queda en local.' }],
+    { t: 'split', rows: [['ES71 9400 0007 0206 0223 3441', '‹IBAN_1-propio›'], ['12345678Z', '‹DNI_1›'], ['1.180,00 €', '‹IMPORTE_3-positivo›']] }],
   ['¿Y PSD2 o PSD3?', 'La autenticación reforzada la hace siempre la persona. 8 no recibe la clave, la huella ni el OTP, y mira a otro lado mientras se ponen.',
-    { t: 'eight', mode: 'nuncasale', cap: 'Nunca sale: clave, huella y OTP' }],
+    { t: 'eight', mode: 'nuncasale', on: 'bad', cap: 'Nunca sale: clave, huella y OTP' }],
   ['¿Y la ley europea de IA?', 'Un asistente que ejecuta lo que pide el usuario no es, en principio, de alto riesgo. Aplicamos transparencia: 8 dice siempre que es una IA.',
-    { t: 'eight', mode: 'hablar', cap: '8 dice siempre que es una IA' }],
+    { t: 'eight', mode: 'hablar', on: 'paper', cap: '8 dice siempre que es una IA' }],
   ['¿Y el secreto bancario?', 'El dato del cliente no llega al proveedor del modelo: solo tokens. Por eso un banco puede usar un modelo externo en procesos que hoy no puede.',
-    { t: 'flow', steps: [['Pantalla del banco', 'datos reales'], ['Priv8 local', 'tokeniza'], ['Modelo externo', 'solo tokens']] }],
+    { t: 'split', rows: [['ES71 9400 0007 0206 0223 3441', '‹IBAN_1-propio›'], ['3.412,58 €', '‹SALDO_1›']], left: 'Pantalla del banco', right: 'Modelo externo' }],
   ['¿Qué límites tiene la seguridad?', 'En modo estricto solo llega al modelo lo que marca una regla del sitio. La excepción es el cuerpo del correo: se tokeniza por patrones, bóveda y nombres, y un bloqueo final retiene lo que se escape.',
     { t: 'table', head: ['Fuente', 'Cómo se protege'], rows: [['Campos de pantalla', 'Regla del sitio (estricto)'], ['Cuerpo del correo', 'Patrones, bóveda y nombres'], ['Lo que se escape', 'Bloqueo final']] }],
   ['¿Cuánto cuesta integrarlo?', 'Unas reglas por pantalla (selectores) y el adaptador web o móvil que ya existe. Sin tocar el ERP ni pedir una API.',
@@ -777,19 +792,19 @@ const QA4 = [
 ];
 const QA5 = [
   ['¿Por qué ahora?', 'Los modelos ya usan pantallas y los bancos ya prueban agentes. Lo que frena es qué ven.',
-    { t: 'table', head: ['Quién', 'Qué resuelve'], rows: [['Visa TAP, Google AP2', 'Cómo paga un agente'], ['Skyflow, Basis Theory', 'Bóveda o tarjeta, sin pantallas'], ['Priv8', 'Qué ve mientras trabaja']] }],
+    { t: 'table', head: ['Quién', 'Qué resuelve'], rows: [['Visa TAP, Google AP2', 'Cómo paga un agente'], ['Skyflow, Basis Theory', 'Bóveda o tarjeta, sin pantallas'], ['Priv8', 'Qué ve mientras trabaja']], hi: 2 }],
   ['¿Qué riesgos veis?', 'Cada riesgo tiene su respuesta en el diseño o en la venta.',
     { t: 'table', head: ['Riesgo', 'Respuesta'], rows: [['Dato en texto libre', 'Modo estricto y bloqueo final'], ['El modelo falla una tarea', 'Tu «sí» antes de ejecutar'], ['Venta larga en banca', 'Piloto de 4 semanas']] }],
   ['¿Y si un gran proveedor lo hace?', 'Un proveedor de modelos no puede ser a la vez quien no ve los datos. Somos neutrales: funcionamos con cualquier modelo.',
-    { t: 'eight', mode: 'curiosidad', cap: 'Neutral: cualquier modelo' }],
+    { t: 'eight', mode: 'curiosidad', on: 'paper', cap: 'Neutral: cualquier modelo' }],
   ['¿Hoja de ruta?', 'Primer piloto, más pantallas con reglas listas, la app en las tiendas y certificaciones.',
     { t: 'flow', steps: [['Piloto', 'cuentas a pagar'], ['Reglas listas', 'ERP habituales'], ['App de 8', 'en las tiendas'], ['Certificaciones', 'ISO 27001, SOC 2']] }],
   ['¿Puede el equipo sacarlo?', 'Cuatro personas han construido en tres días el núcleo, la consola, el ERP simulado, tres bancos y la app Android, todo funcionando.',
-    { t: 'nums', items: [['4', 'personas'], ['3', 'días'], ['3', 'bancos simulados']] }],
+    { t: 'nums', items: [['4', 'personas'], ['3', 'días'], ['3', 'bancos simulados']], face: ['alegria', 'paper'] }],
   ['¿Lo podéis enseñar en directo?', 'Sí. Priv8 para empresas, entero: doble clic en Demo Priv8.command, «Preparar B2B», y 8 registra la factura en Alba Core y contesta al proveedor en vivo con Claude, mientras la consola enseña lo que ves tú y lo que ve el modelo. Priv8 en el móvil: «¿Cuánto tengo entre mis bancos?» en vivo en el emulador, con la cifra en la voz local. El resto de casos, grabados en demo.priv8.es.',
-    { t: 'flow', steps: [['Doble clic', 'Demo Priv8.command'], ['Preparar B2B', 'Alba Core, correo, consola'], ['En vivo', 'factura y respuesta'], ['Móvil', '¿Cuánto tengo?'] ] }],
+    { t: 'flow', steps: [['Doble clic', 'Demo Priv8.command'], ['Preparar B2B', 'Alba Core, correo y consola'], ['En vivo', 'factura y respuesta'], ['Móvil', '¿Cuánto tengo?']], qr: ['demo', 'demo.priv8.es'], face: ['alegria', 'paper'] }],
   ['¿Funciona hoy?', 'Sí. Las grabaciones reales están publicadas y el servidor MCP lo conecta a tu asistente, con tu modelo y tu clave.',
-    { t: 'toks', items: ['demo.priv8.es', 'mcp.priv8.es'], cap: 'Grabaciones reales y servidor MCP' }],
+    { t: 'qr', items: [['demo', 'demo.priv8.es', 'Grabaciones reales'], ['mcp', 'mcp.priv8.es', 'Servidor MCP'], ['repo', 'github.com/aaangelmartin/Priv8', 'El código']], face: ['listo', 'paper'] }],
 ];
 const GROUPS = [
   ['Negocio', QA3],
@@ -798,55 +813,71 @@ const GROUPS = [
   ['Producto y regulación', QA2],
   ['Mercado, riesgos y equipo', QA5],
 ];
-const QS = GROUPS.flatMap(([g, qa]) => qa.map(([q, a, v]) => ({ g, q, a, v })));
+const QS = GROUPS.flatMap(([g, qa], gi) => qa.map(([q, a, v]) => ({ g, gi, q, a, v })));
 /* el anexo va justo después de las diapositivas principales: índice y luego una pregunta por diapositiva */
 const ANNEX_AT = () => SLIDES.findIndex((x) => x.annex) + 1;
 const qHref = (i) => `#${ANNEX_AT() + 1 + i}`;
+const two = (n) => String(n).padStart(2, '0');
 function Indice() {
   let k = -1;
   return (
-    <div className="in qa">
-      <Head eyebrow="Anexo - Preguntas del jurado"><span className="nw">Preguntas</span> <span className="soft nw">y respuestas.</span></Head>
-      <div className="qindex">
+    <div className="in qx-index">
+      <Head eyebrow={`Anexo - ${QS.length} preguntas del jurado`}><span className="nw">Preguntas</span> <span className="soft nw">y respuestas.</span></Head>
+      <div className="qi-grid">
         {GROUPS.map(([g, qa], j) => (
-          <R d={3 + j * 0.5} key={g} className="qgroup">
+          <R d={3 + j * 0.4} key={g} className="qi-group">
+            <p className="qi-gk">{two(j + 1)}</p>
             <h3>{g}</h3>
-            <ol>{qa.map(([q]) => { k += 1; return <li key={q}><a href={qHref(k)}>{q}</a></li>; })}</ol>
+            <ol>{qa.map(([q]) => { k += 1; return <li key={q}><a href={qHref(k)}><span>{two(k + 1)}</span>{q}</a></li>; })}</ol>
           </R>
         ))}
       </div>
+      <E mode="duda" on="paper" className="e-qi rv" />
       <Foot />
     </div>
   );
 }
 /* texto con tokens ‹…›: los pinta como chip */
 const TokText = ({ s }) => (/^‹.*›$/.test(s) ? <Tok>{s}</Tok> : s);
+function QrCard({ k, url, t }) {
+  return (
+    <a className="qv-qr" href={'https://' + url} target="_blank" rel="noreferrer">
+      <Qr rows={QR[k]} label={'Código QR a ' + url} />
+      <b>{url}</b>{t && <span>{t}</span>}
+    </a>
+  );
+}
 function Visual({ v }) {
   if (!v) return null;
   if (v.t === 'nums') {
     return (
-      <div className="qv qv-nums">
-        {v.items.map(([n, t]) => <div key={n + t} className="qv-num"><b>{n}</b><span>{t}</span></div>)}
+      <div className={'qv qv-nums n' + v.items.length}>
+        {v.items.map(([n, t], j) => <R d={4 + j * 0.3} key={n + t} className="qv-num"><b>{n}</b><span>{t}</span></R>)}
       </div>
     );
   }
   if (v.t === 'vs') {
     return (
       <div className="qv qv-vs">
-        <div className="qv-num was"><b>{v.a[0]}</b><span>{v.a[1]}</span></div>
+        <R d={4} className="qv-num was"><span className="qv-tag">Hoy</span><b>{v.a[0]}</b><span>{v.a[1]}</span></R>
         <i className="qv-arrow" />
-        <div className="qv-num now"><b>{v.b[0]}</b><span>{v.b[1]}</span></div>
+        <R d={5} className="qv-num now"><span className="qv-tag">Con Priv8</span><b>{v.b[0]}</b><span>{v.b[1]}</span></R>
         {v.foot && <p className="qv-foot">{v.foot}</p>}
       </div>
     );
   }
   if (v.t === 'flow') {
     return (
-      <ol className="qv qv-flow">
-        {v.steps.map(([h, t], j) => (
-          <li key={h} className={j === v.bad ? 'bad' : ''}><b><TokText s={h} /></b><span>{t}</span></li>
-        ))}
-      </ol>
+      <div className={'qv qv-flowwrap' + (v.qr ? ' has-qr' : '')}>
+        <ol className="qv-flow">
+          {v.steps.map(([h, t], j) => (
+            <R d={4 + j * 0.3} as="li" key={h} className={j === v.bad ? 'bad' : j === v.steps.length - 1 && v.bad == null ? 'end' : ''}>
+              <span className="qv-n">{j + 1}</span><b><TokText s={h} /></b><span>{t}</span>
+            </R>
+          ))}
+        </ol>
+        {v.qr && <QrCard k={v.qr[0]} url={v.qr[1]} />}
+      </div>
     );
   }
   if (v.t === 'table') {
@@ -854,7 +885,7 @@ function Visual({ v }) {
       <div className="qv qv-table">
         <table>
           <thead><tr>{v.head.map((h, j) => <th key={j}>{h}</th>)}</tr></thead>
-          <tbody>{v.rows.map((r) => <tr key={r[0]}>{r.map((c, j) => <td key={j} className={c === 'Sí' ? 'yes' : c === 'No' ? 'no' : ''}><TokText s={c} /></td>)}</tr>)}</tbody>
+          <tbody>{v.rows.map((r, ri) => <tr key={r[0]} className={ri === v.hi ? 'hi' : ''}>{r.map((c, j) => <td key={j}>{c === 'Sí' ? <span className="qv-yes">Sí</span> : c === 'No' ? <span className="qv-no">No</span> : <TokText s={c} />}</td>)}</tr>)}</tbody>
         </table>
         {v.foot && <p className="qv-foot">{v.foot}</p>}
       </div>
@@ -863,32 +894,50 @@ function Visual({ v }) {
   if (v.t === 'toks') {
     return (
       <div className="qv qv-toks">
-        <div>{v.items.map((x) => <Tok key={x}>{x}</Tok>)}</div>
+        <div className="qv-tokrow">{v.items.map((x, j) => <R d={4 + j * 0.3} as="span" key={x} className="tok">{x}</R>)}</div>
+        {v.no && <div className="qv-norow">{v.no.map((x) => <span key={x}>{x}</span>)}</div>}
         {v.cap && <p className="qv-foot">{v.cap}</p>}
+      </div>
+    );
+  }
+  if (v.t === 'split') {
+    return (
+      <div className="qv qv-split">
+        <div className="qv-sh"><span>{v.left || 'Tu máquina'}</span><span>{v.right || 'Lo que ve el modelo'}</span></div>
+        {v.rows.map(([a, b], j) => (
+          <R d={4 + j * 0.35} key={b} className="qv-srow"><span className="qv-real">{a}</span><i className="qv-arrow" /><Tok>{b}</Tok></R>
+        ))}
+        <p className="qv-foot">La tabla token - valor no sale de tu máquina</p>
       </div>
     );
   }
   if (v.t === 'eight') {
     return (
-      <div className="qv qv-eight">
-        <E mode={v.mode} on="paper" className="e-qv" />
-        {v.cap && <p className="qv-foot">{v.cap}</p>}
+      <div className={'qv qv-eight on-' + v.on}>
+        <E mode={v.mode} on={v.on} className="e-qv" />
+        {v.cap && <p className="qv-cap">{v.cap}</p>}
       </div>
     );
+  }
+  if (v.t === 'qr') {
+    return <div className="qv qv-qrs">{v.items.map(([k, url, t]) => <QrCard key={k} k={k} url={url} t={t} />)}</div>;
   }
   return null;
 }
 function Pregunta({ i }) {
-  const { g, q, a, v } = QS[i];
+  const { g, gi, q, a, v } = QS[i];
+  const face = v.face || ['duda', 'paper'];
   return (
-    <div className={'in qa qone' + (v ? ' qhas' : '')}>
-      <Head eyebrow={`${g} - Pregunta ${i + 1} de ${QS.length}`}>{q}</Head>
-      <div className="qbody">
-        <R d={3} as="p" className="qans">{a}</R>
-        <R d={4} className="qvis"><Visual v={v} /></R>
+    <div className="in qx">
+      <Head eyebrow={`${two(gi + 1)} ${g} - Pregunta ${i + 1} de ${QS.length}`}>{q}</Head>
+      <div className={'qx-body t-' + v.t}>
+        <div className="qx-side">
+          <R d={3} as="p" className="qx-ans">{a}</R>
+          <R d={5} as="a" className="qback" href={`#${ANNEX_AT()}`}>Volver al índice</R>
+        </div>
+        <R d={3.5} className="qx-stage"><Visual v={v} /></R>
       </div>
-      <R d={5} as="a" className="qback" href={`#${ANNEX_AT()}`}>Volver al índice de preguntas</R>
-      {(!v || v.t !== 'eight') && <E mode="duda" on="paper" className="e-qa rv" />}
+      {v.t !== 'eight' && <E mode={face[0]} on={face[1]} className="e-qx rv" />}
       <Foot />
     </div>
   );
@@ -906,6 +955,7 @@ export const SLIDES = [
   { id: 'como-3', tone: 'band', C: Como3 },
   { id: 'como-4', tone: 'band', C: Como4 },
   { id: 'arquitectura', tone: 'band', C: Arquitectura },
+  { id: 'piezas', tone: 'band', C: Piezas },
   { id: 'verticales', tone: 'paper', C: Verticales },
   { id: 'demo-empresas', tone: 'paper', C: Demo2 },
   { id: 'demo-movil', tone: 'paper', C: Demo1 },
