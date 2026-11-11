@@ -72,7 +72,7 @@ function Hero() {
 /* ---------------------------------------------------------------- confianza y preguntas */
 const FAQ = [
   ['¿Tengo que integrar algo en mis sistemas?', 'No. 8 trabaja sobre las pantallas que ya usas: el navegador para tu ERP o tu CRM y el móvil para las apps. Lee la estructura de la pantalla, no los píxeles.'],
-  ['¿Qué recibe exactamente el proveedor del modelo?', 'Tokens como ‹IBAN_1·propio› y la interfaz. La tabla que traduce cada token a su valor real se queda en tu máquina o en el móvil. El TJUE admitió en 2025 que datos seudonimizados pueden no ser personales para quien no puede reidentificarlos; tu empresa sigue siendo responsable de los suyos.'],
+  ['¿Qué recibe exactamente el proveedor del modelo?', 'Tokens como ‹IBAN_1-propio› y la interfaz. La tabla que traduce cada token a su valor real se queda en tu máquina o en el móvil. El TJUE admitió en 2025 que datos seudonimizados pueden no ser personales para quien no puede reidentificarlos; tu empresa sigue siendo responsable de los suyos.'],
   ['¿Y si un dato sensible se escapa sin tokenizar?', 'El bloqueo final revisa cada petición que sale hacia la nube. Si encuentra un patrón sensible, como un IBAN válido o un DNI, la petición no sale y queda registrado.'],
   ['¿Quién aprueba los pagos?', 'Siempre una persona. Pagar, firmar o enviar quedan retenidos hasta que alguien dice que sí, y la autenticación del banco la hace siempre el usuario.'],
   ['¿Queda constancia de lo que hizo?', 'Sí. Un registro firmado y encadenado guarda qué recibió el modelo, qué se bloqueó y quién aprobó cada paso.'],

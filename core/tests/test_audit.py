@@ -26,9 +26,9 @@ def validator(ref):
 def fill(audit, n=5):
     for i in range(n):
         audit.record({"session": "s1", "kind": "observe_sent", "model_saw": f"observe {i}",
-                      "tokens": ["‹IBAN_1·maestro›"], "counts": {"verde": 1, "ambar": 1, "rojo": 0}})
+                      "tokens": ["‹IBAN_1-maestro›"], "counts": {"verde": 1, "ambar": 1, "rojo": 0}})
     audit.record({"session": "s1", "kind": "blocked", "reason": "destino",
-                  "model_saw": "act type e7 ‹IBAN_2·correo›", "tokens": ["‹IBAN_2·correo›"]})
+                  "model_saw": "act type e7 ‹IBAN_2-correo›", "tokens": ["‹IBAN_2-correo›"]})
 
 
 def test_jsonl_firmado_valida_y_verifica(tmp_path):

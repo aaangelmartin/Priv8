@@ -94,7 +94,7 @@ def test_local_segments_are_refused(client):
 def test_stream_utterance_only_sends_cloud_segments(client):
     vault = {"‹IMPORTE_6›": "200 €", "‹PROVEEDOR_2›": "Nimbo Bróker"}
     check = PatternLeakCheck(known_values=vault.values())
-    u = segment("Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2·propio›. ¿Lo confirmas?",
+    u = segment("Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2-propio›. ¿Lo confirmas?",
                 VaultRenderer(vault), utterance="u1", session="s1", leak_check=check)
     out = list(voice(client, leak_check=check).stream_utterance(u))
     assert {i for i, _ in out} == {0, 2, 4}

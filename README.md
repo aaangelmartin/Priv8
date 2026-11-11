@@ -1,6 +1,6 @@
 # Priv8
 
-**Priv8 CUA** es un protocolo para que un agente de IA use pantallas sin ver los datos. Cada dato sensible de la pantalla se cambia por un token (`‹IBAN_1·maestro›`, `‹IMPORTE_3·positivo›`) antes de llegar al modelo, y solo vuelve a su valor real en local, al ejecutar. El agente hace el trámite; la cifra, el IBAN o el nombre no salen del entorno de confianza.
+**Priv8 CUA** es un protocolo para que un agente de IA use pantallas sin ver los datos. Cada dato sensible de la pantalla se cambia por un token (`‹IBAN_1-maestro›`, `‹IMPORTE_3-positivo›`) antes de llegar al modelo, y solo vuelve a su valor real en local, al ejecutar. El agente hace el trámite; la cifra, el IBAN o el nombre no salen del entorno de confianza.
 
 > Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja.
 
@@ -94,7 +94,7 @@ Corre las dos escenas con el **núcleo real** y respuestas del modelo grabadas (
 - la comprobación del registro firmado `audit/replay.jsonl`.
 
 Lo que hay que ver en la escena B2B:
-- `act type e9 ‹IBAN_1·correo›` devuelve `denied: destino`: el IBAN del correo no entra en el pago.
+- `act type e9 ‹IBAN_1-correo›` devuelve `denied: destino`: el IBAN del correo no entra en el pago.
 - La llamada al teléfono del correo se rechaza; la del teléfono de la ficha pide confirmación.
 - Registrar y Enviar quedan retenidos hasta que la persona confirma.
 

@@ -5,9 +5,9 @@
   "description": "Definiciones compartidas por el resto de contratos. Versión 1.",
   "$defs": {
     "token": {
-      "description": "Un token completo, por ejemplo ‹IBAN_1·propio›. Gramática en token.md.",
+      "description": "Un token completo, por ejemplo ‹IBAN_1-propio›. Gramática en token.md.",
       "type": "string",
-      "pattern": "^‹(IBAN|DNI|NIE|CIF|PERSONA|PROVEEDOR|IMPORTE|SUMA|FACTURA|TEL|EMAIL|MOVIMIENTO|RESPUESTA|CODIGO)_[1-9][0-9]*(·(propio|maestro|correo|tercero|titular|positivo|negativo))?›$"
+      "pattern": "^‹(IBAN|DNI|NIE|CIF|PERSONA|PROVEEDOR|IMPORTE|SUMA|FACTURA|TEL|EMAIL|MOVIMIENTO|RESPUESTA|CODIGO)_[1-9][0-9]*(-(propio|maestro|correo|tercero|titular|positivo|negativo))?›$"
     },
     "session": {
       "description": "Identificador de sesión. Los tokens son estables dentro de una sesión.",

@@ -11,7 +11,7 @@ class AnsweredCacheTest {
     private var now = 1_000L
     private val cache = AnsweredCache(max = 4) { now }
 
-    private fun msg(id: String = "c1", session: String = "demo", amount: String = "‹IMPORTE_1·positivo›", target: String = "e7") =
+    private fun msg(id: String = "c1", session: String = "demo", amount: String = "‹IMPORTE_1-positivo›", target: String = "e7") =
         JSONObject(
             """
             {"type":"confirm_request","id":"$id","session":"$session","kind":"transferir",
@@ -34,7 +34,7 @@ class AnsweredCacheTest {
         src.keys().asSequence().toList().reversed().forEach { reordered.put(it, src.get(it)) }
         assertEquals(a.fingerprint, req(reordered).fingerprint)
         assertNotEquals(a.fingerprint, req(msg(target = "e8")).fingerprint) // action is covered too
-        assertNotEquals(a.fingerprint, req(msg(amount = "‹IMPORTE_2·positivo›")).fingerprint)
+        assertNotEquals(a.fingerprint, req(msg(amount = "‹IMPORTE_2-positivo›")).fingerprint)
     }
 
     @Test fun exactResendGetsTheSameAnswer() {
@@ -49,7 +49,7 @@ class AnsweredCacheTest {
     @Test fun sameIdDifferentContentIsNew() {
         cache.put(req(msg()), approved(), delivered = false)
         // A restarted core counts from c1 again: same session and id, different request.
-        assertNull(cache.lookup(req(msg(amount = "‹IMPORTE_9·positivo›"))))
+        assertNull(cache.lookup(req(msg(amount = "‹IMPORTE_9-positivo›"))))
         // The stale answer is gone: not even the old request matches now.
         assertNull(cache.lookup(req(msg())))
         assertEquals(0, cache.size)

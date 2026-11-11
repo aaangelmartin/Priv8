@@ -37,9 +37,9 @@ screens:
 | `cls` | regla | `verde`, `ambar` o `rojo` |
 | `tipo` | regla ámbar | Tipo del token (`token.md`). Obligatorio en ámbar |
 | `origen` | regla ámbar, pantalla | `propio`, `maestro`, `correo`, `tercero`, `titular`. Es la procedencia del dato y la usa #10 |
-| `rasgo_signo` | regla ámbar | En importes, añade `·positivo` o `·negativo` al token |
-| `extract` | regla ámbar | Regex con un grupo: solo el grupo se tokeniza (`"^Hola, (.+)$"` → `Hola, ‹PERSONA_1·titular›`) |
-| `campo`, `acepta` | regla | Campo de destino y orígenes que pueden escribirse en él. `‹IBAN_2·correo›` en un campo que solo acepta `maestro` da `denied: destino` |
+| `rasgo_signo` | regla ámbar | En importes, añade `-positivo` o `-negativo` al token |
+| `extract` | regla ámbar | Regex con un grupo: solo el grupo se tokeniza (`"^Hola, (.+)$"` → `Hola, ‹PERSONA_1-titular›`) |
+| `campo`, `acepta` | regla | Campo de destino y orígenes que pueden escribirse en él. `‹IBAN_2-correo›` en un campo que solo acepta `maestro` da `denied: destino` |
 | `critica` | regla | `transferir`, `invertir`, `firmar`, `enviar` o `llamar`: tocar este elemento queda retenido hasta la confirmación |
 | `resumen` | regla crítica | `sel` de los datos que se leen en la petición de confirmación |
 | `solo_persona` | regla | El agente no puede tocarlo (entrar, huella, confirmar OTP): `act` devuelve `denied: rojo` |

@@ -57,10 +57,10 @@ async def _replay_world():
         result = await run_agent(client, model, core, "registrar factura")
         # A few more shapes: denied, sum, matches, held without approval.
         extra = [
-            ("act", {"session": "s1", "op": "type", "target": "e10", "text": "‹IBAN_2·correo›"}),
-            ("act", {"session": "s1", "op": "type", "target": "e6", "text": "‹PROVEEDOR_9·correo›"}),
-            ("oracle", {"session": "s1", "op": "sum", "args": ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"]}),
-            ("oracle", {"session": "s1", "op": "matches", "args": ["‹IBAN_1·maestro›", "‹IBAN_2·correo›"]}),
+            ("act", {"session": "s1", "op": "type", "target": "e10", "text": "‹IBAN_2-correo›"}),
+            ("act", {"session": "s1", "op": "type", "target": "e6", "text": "‹PROVEEDOR_9-correo›"}),
+            ("oracle", {"session": "s1", "op": "sum", "args": ["‹IMPORTE_1-positivo›", "‹IMPORTE_2-positivo›"]}),
+            ("oracle", {"session": "s1", "op": "matches", "args": ["‹IBAN_1-maestro›", "‹IBAN_2-correo›"]}),
             ("act", {"session": "s1", "op": "scroll", "direction": "down"}),
         ]
         for name, args in extra:
