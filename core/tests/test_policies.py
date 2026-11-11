@@ -16,9 +16,10 @@ def ex(name):
     return data
 
 
-def test_las_tres_politicas_cargan_y_validan():
+def test_las_politicas_cargan_y_validan():
     ps = load_policies()
-    assert {"alba-core", "inbox", "es.priv8.banks.alcor"} <= set(ps.apps)
+    assert {"alba-core", "inbox", "es.priv8.banks.alcor", "es.priv8.banks.brezo",
+            "es.priv8.banks.nimbo"} <= set(ps.apps)
 
 
 def test_pantalla_web_por_url():
