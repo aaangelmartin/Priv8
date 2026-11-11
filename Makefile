@@ -1,6 +1,6 @@
 # Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
 
-.PHONY: agent agent-web agent-android agent-android-replay web web-install replay replay-fake demo test metrics events dictado dictado-install llamada-banco linea-alcor
+.PHONY: agent agent-web web web-install replay replay-fake demo test metrics events dictado dictado-install llamada-banco linea-alcor
 
 # MCP server (streamable HTTP on :8701) and the agent loop, live against the Claude API.
 # Needs ANTHROPIC_API_KEY (see .env.example).
@@ -17,6 +17,7 @@ agent-web:
 # are spoken and approved on the phone, and 8 says the answer there. TASK="..." runs one task;
 # without TASK, 8 waits for tasks dictated on the phone (core.next_task, #47). Needs
 # ANTHROPIC_API_KEY; RECORD=FILE saves a replay.
+.PHONY: agent-android agent-android-replay
 agent-android:
 	uv run python -m agent.agent --android $${TASK:+--task "$$TASK"} $${RECORD:+--record "$$RECORD"}
 
