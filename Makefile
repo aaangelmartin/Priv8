@@ -43,6 +43,7 @@ test:
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
 	node apps/console/src/alertas.test.mjs
+	node apps/console/src/tokens.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
 metrics:
