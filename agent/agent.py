@@ -223,6 +223,15 @@ async def load_tools(client: Client) -> list[JSON]:
             for t in listed.tools]
 
 
+def _modo(core: Any) -> str:
+    """El modo por defecto de las políticas para el inicio del encargo en el registro (#177),
+    p. ej. « - modo estricto». Cada observe_sent lleva además el de su app."""
+    modo = getattr(core, "modo", None)  # solo el núcleo real (agent/core_adapter.py)
+    try:
+        return f" - modo {modo(None)}" if callable(modo) else ""
+    except Exception:  # noqa: BLE001 - el núcleo de prueba no tiene políticas
+        return ""
+
 async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *,
                     session: str = "s1", max_steps: int = DEFAULT_MAX_STEPS,
                     log: Any = None) -> AgentResult:
@@ -238,7 +247,8 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
 
     # Audit events follow audit.schema.json: the loop's own data goes in detail.
     audit({"session": session, "kind": "task", "model_saw": prompt if core.leak.check(prompt).ok else None,
-           "detail": f"inicio - {MODEL} - máx {max_steps} pasos - {', '.join(sorted(t['name'] for t in tools))}"})
+           "detail": f"inicio - {MODEL} - máx {max_steps} pasos - {', '.join(sorted(t['name'] for t in tools))}"
+                     + _modo(core)})
 
     task_spent = 0.0
     for step in range(1, max_steps + 1):

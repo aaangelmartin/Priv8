@@ -152,6 +152,7 @@ def build_real_core(module: str = CORE_MODULE) -> Core:
         leak=_LeakCheck(mod.check),
         audit=_Audit(mod.record),
         voice=_Voice(mod.say) if callable(getattr(mod, "say", None)) else None,
+        modo=mod.modo if callable(getattr(mod, "modo", None)) else None,
     )
 
 
