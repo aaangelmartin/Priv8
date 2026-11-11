@@ -139,7 +139,7 @@
   }
 }
 
-/* Token tal como se muestra en la app y la consola: ‹IBAN_1·propio› */
+/* Token tal como se muestra en la app y la consola: ‹IBAN_1-propio› */
 .p8-token {
   font-family: var(--p8-font-mono);
   font-weight: 600;

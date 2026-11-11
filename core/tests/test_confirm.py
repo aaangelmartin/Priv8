@@ -25,7 +25,7 @@ def revision():
             "focus": None, "system_dialog": None, "elements": [
                 {"id": "r0", "role": "other", "sel": "id/screen_revision"},
                 {"id": "r1", "role": "text", "text": "200,00 €", "sel": "id/rev_importe"},
-                {"id": "r2", "role": "text", "text": "Lucía Ferrer · Nimbo Bróker", "sel": "id/rev_beneficiario"},
+                {"id": "r2", "role": "text", "text": "Lucía Ferrer - Nimbo Bróker", "sel": "id/rev_beneficiario"},
                 {"id": "r3", "role": "text", "text": "ES08 9300 0001 0522 0033 4455", "sel": "id/rev_iban_destino"},
                 {"id": "r4", "role": "button", "label": "Enviar", "sel": "id/btn_enviar", "actions": ["tap"]}]}
 

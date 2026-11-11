@@ -4,7 +4,7 @@
   "tools": [
     {
       "name": "observe",
-      "description": "Devuelve la pantalla actual ya tokenizada. Los datos sensibles llegan como tokens ‹TIPO_n·etiqueta› (por ejemplo ‹IBAN_1·maestro›), estables en la sesión. Los elementos con cls \"rojo\" llegan con text null: no se leen ni se escriben. Si \"paused\" no es null (autenticacion, dialogo_sistema, confirmacion), la persona está haciendo un paso que no te corresponde: espera y vuelve a observar.",
+      "description": "Devuelve la pantalla actual ya tokenizada. Los datos sensibles llegan como tokens ‹TIPO_n-etiqueta› (por ejemplo ‹IBAN_1-maestro›), estables en la sesión. Los elementos con cls \"rojo\" llegan con text null: no se leen ni se escriben. Si \"paused\" no es null (autenticacion, dialogo_sistema, confirmacion), la persona está haciendo un paso que no te corresponde: espera y vuelve a observar.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -49,7 +49,7 @@
           "op": {"type": "string", "enum": ["sum", "compare", "matches"]},
           "args": {
             "type": "array",
-            "items": {"type": "string", "pattern": "^‹(IBAN|DNI|NIE|CIF|PERSONA|PROVEEDOR|IMPORTE|SUMA|FACTURA|TEL|EMAIL|MOVIMIENTO|RESPUESTA|CODIGO)_[1-9][0-9]*(·(propio|maestro|correo|tercero|titular|positivo|negativo))?›$"},
+            "items": {"type": "string", "pattern": "^‹(IBAN|DNI|NIE|CIF|PERSONA|PROVEEDOR|IMPORTE|SUMA|FACTURA|TEL|EMAIL|MOVIMIENTO|RESPUESTA|CODIGO)_[1-9][0-9]*(-(propio|maestro|correo|tercero|titular|positivo|negativo))?›$"},
             "minItems": 2,
             "description": "Tokens. compare y matches usan exactamente dos."
           }

@@ -111,8 +111,8 @@ def test_correo_trampa_en_la_bandeja_sale_tokenizado():
     obs, _ = observe_screen(raw, screen, v, 30, FinanceDetector(vault=v))
     text = obs["elements"][0]["text"]
     assert "ES42" not in text and "Marta" not in text and "612" not in text
-    assert "‹IBAN_1·correo›" in text
-    assert v.lookup("‹IBAN_1·correo›").origenes == {"correo"}
+    assert "‹IBAN_1-correo›" in text
+    assert v.lookup("‹IBAN_1-correo›").origenes == {"correo"}
 
 
 # ---- 0 falsos negativos sobre el seed ----

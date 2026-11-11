@@ -18,7 +18,7 @@ Todo lo que cruza de la zona de confianza a la nube pasa por el **bloqueo final*
 | Clase | Qué es | Qué recibe el modelo |
 |---|---|---|
 | **Rojo** · nunca sale | Contraseñas, PIN, usuario de acceso, códigos de un solo uso, tarjeta completa | `"text": null`. No entra en la bóveda |
-| **Ámbar** · se tokeniza | IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos | Un token: `‹IBAN_1·maestro›` |
+| **Ámbar** · se tokeniza | IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos | Un token: `‹IBAN_1-maestro›` |
 | **Verde** · libre | Botones, etiquetas, títulos, menús | El texto tal cual |
 
 Un campo de contraseña es rojo siempre, diga lo que diga la política.
@@ -26,8 +26,8 @@ Un campo de contraseña es rojo siempre, diga lo que diga la política.
 ## 3. Tokens
 
 ```
-‹TIPO_n·etiqueta›      ‹IBAN_1·propio›   ‹IMPORTE_3·positivo›   ‹SUMA_1›
-regex: ‹([A-Z]+)_(\d+)(?:·([a-z]+))?›
+‹TIPO_n-etiqueta›      ‹IBAN_1-propio›   ‹IMPORTE_3-positivo›   ‹SUMA_1›
+regex: ‹([A-Z]+)_(\d+)(?:-([a-z]+))?›
 ```
 
 - Mismo valor (normalizado) y misma sesión, mismo token. `n` cuenta por tipo desde 1.

@@ -27,13 +27,13 @@
   "contacts": [
     {
       "id": "nimbo",
-      "name": "Lucía Ferrer · Nimbo Bróker",
+      "name": "Lucía Ferrer - Nimbo Bróker",
       "iban": "ES0893000001052200334455",
       "own": true
     },
     {
       "id": "brezo",
-      "name": "Lucía Ferrer · Brezo Banco",
+      "name": "Lucía Ferrer - Brezo Banco",
       "iban": "ES8992000003785500667788",
       "own": true
     },

@@ -22,8 +22,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol, runtime_checkable
 
-# docs/contracts/token.md: ‹TIPO_n·etiqueta›
-TOKEN_RE = re.compile(r"‹([A-Z]+)_(\d+)(?:·([a-z]+))?›")
+# docs/contracts/token.md: ‹TIPO_n-etiqueta›
+TOKEN_RE = re.compile(r"‹([A-Z]+)_(\d+)(?:-([a-z]+))?›")
 
 ActOp = Literal["tap", "type", "key", "scroll", "open_app", "back", "send", "call"]
 OracleOp = Literal["sum", "compare", "matches"]

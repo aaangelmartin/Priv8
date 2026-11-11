@@ -337,7 +337,7 @@ class Session:
         """Pushes a confirmation like the core would and waits for the person's answer."""
         # Unique across connections: confirms outlives each Session.
         cid, session = f"c{len(self.confirms) + 1}", "s1"
-        importe, destino = "‹IMPORTE_1›", "‹PROVEEDOR_1·propio›"
+        importe, destino = "‹IMPORTE_1›", "‹PROVEEDOR_1-propio›"
         values = {"type": "render_values", "session": session, "values": {importe: amount, destino: name}}
         request = {
             "type": "confirm_request",

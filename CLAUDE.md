@@ -14,7 +14,7 @@ Proyecto del equipo para la hackathon de finanzas de la Madrid Engineering Week 
 
 ## Las seis piezas del protocolo
 
-1. **Tokens** tipados y estables por sesión: `‹IBAN_1·propio›`, `‹IMPORTE_3·positivo›`. La tabla token → valor vive solo en el entorno de confianza.
+1. **Tokens** tipados y estables por sesión: `‹IBAN_1-propio›`, `‹IMPORTE_3-positivo›`. La tabla token → valor vive solo en el entorno de confianza.
 2. **Clases de dato:**
    - **Rojo, nunca sale:** contraseñas, PIN, logins, OTP, tarjeta completa.
    - **Ámbar, se tokeniza:** IBAN, DNI, nombres, importes, movimientos.

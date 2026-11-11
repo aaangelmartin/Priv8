@@ -65,7 +65,7 @@ class FinanceDetector:
         vals = list(self._known)
         if self.vault is not None:
             vals += [(e.tipo, e.value) for e in self.vault.entries() if e.tipo != "SUMA"]
-        # Más largos primero: "Lucía Ferrer · Nimbo Bróker" antes que "Lucía Ferrer".
+        # Más largos primero: "Lucía Ferrer - Nimbo Bróker" antes que "Lucía Ferrer".
         return sorted(vals, key=lambda tv: -len(tv[1]))
 
     def __call__(self, text: str) -> list[Span]:

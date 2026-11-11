@@ -23,7 +23,7 @@ def claude_request(text):
 
 
 def test_solo_tokens_sale(lc):
-    r = lc.check(claude_request("Entre tus cuentas tienes ‹SUMA_1›. ‹IBAN_1·propio› es de ‹PERSONA_1·titular›."))
+    r = lc.check(claude_request("Entre tus cuentas tienes ‹SUMA_1›. ‹IBAN_1-propio› es de ‹PERSONA_1-titular›."))
     assert r == {"allowed": True, "findings": []}
 
 

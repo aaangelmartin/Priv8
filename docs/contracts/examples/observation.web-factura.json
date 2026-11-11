@@ -16,17 +16,17 @@
       "id": "e4",
       "role": "textbox",
       "label": "Proveedor",
-      "text": "‹PROVEEDOR_1·maestro›",
+      "text": "‹PROVEEDOR_1-maestro›",
       "cls": "ambar",
       "tokens": [
-        "‹PROVEEDOR_1·maestro›"
+        "‹PROVEEDOR_1-maestro›"
       ]
     },
     {
       "id": "e5",
       "role": "textbox",
       "label": "Importe",
-      "text": "‹IMPORTE_1·positivo›",
+      "text": "‹IMPORTE_1-positivo›",
       "cls": "ambar",
       "actions": [
         "type"
@@ -36,7 +36,7 @@
       "id": "e7",
       "role": "textbox",
       "label": "IBAN de pago",
-      "text": "‹IBAN_1·maestro›",
+      "text": "‹IBAN_1-maestro›",
       "cls": "ambar",
       "actions": [
         "type"

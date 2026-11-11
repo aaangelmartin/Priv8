@@ -35,7 +35,7 @@ Uno de los movimientos de la cuenta nómina («Tienda Arcén», 5 nov) lleva en 
 
 ## Datos de prueba (Brezo Banco y Nimbo Bróker)
 
-Salen de `src/brezo/assets/seed-brezo.json` y `src/nimbo/assets/seed-nimbo.json`. Usuario, clave, OTP, cuenta, IBAN y saldo son los de `data/seed.json` (`bancos.brezo` y `bancos.nimbo`). Los IBAN son los que Alcor ya tiene como contactos propios, así que la transferencia de Alcor a «Lucía Ferrer · Nimbo Bróker» va a la cuenta de Nimbo.
+Salen de `src/brezo/assets/seed-brezo.json` y `src/nimbo/assets/seed-nimbo.json`. Usuario, clave, OTP, cuenta, IBAN y saldo son los de `data/seed.json` (`bancos.brezo` y `bancos.nimbo`). Los IBAN son los que Alcor ya tiene como contactos propios, así que la transferencia de Alcor a «Lucía Ferrer - Nimbo Bróker» va a la cuenta de Nimbo.
 
 | | Brezo Banco | Nimbo Bróker |
 |---|---|---|

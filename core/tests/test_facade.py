@@ -74,7 +74,7 @@ def test_act_rehidrata_en_local(core):
 
 
 @pytest.mark.parametrize("args, reason", [
-    (("type", "e7", "‹IBAN_9·correo›"), "token_desconocido"),
+    (("type", "e7", "‹IBAN_9-correo›"), "token_desconocido"),
     (("type", "e8", "hola"), "rojo"),
     (("tap", "zz"), "sin_regla"),
     (("type", "e7"), "sin_regla"),
@@ -107,8 +107,8 @@ def test_orden_de_voz_se_tokeniza(core):
     core.connect("s3", FakeWeb())
     t = core.tokenize_text("s3", "Pasa 200 € al bróker")
     assert "200" not in t
-    assert t.startswith("Pasa ‹IMPORTE_1·positivo› al")
-    assert core.SESSIONS.get("s3").vault.lookup("‹IMPORTE_1·positivo›").origenes == {"titular"}
+    assert t.startswith("Pasa ‹IMPORTE_1-positivo› al")
+    assert core.SESSIONS.get("s3").vault.lookup("‹IMPORTE_1-positivo›").origenes == {"titular"}
     assert core.check(t)["allowed"]
 
 

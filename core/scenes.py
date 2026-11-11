@@ -30,7 +30,7 @@ CORREO_PROVEEDOR = "facturacion@lumen.example"
 TITULAR = "Lucía Ferrer"
 CUENTAS = [("nomina", "Cuenta nómina", "ES43 9100 0001 5740 1234 5678", "3.412,58 €"),
            ("ahorro", "Cuenta ahorro", "ES66 9100 0001 5140 8765 4321", "12.050,00 €")]
-NIMBO = ("Lucía Ferrer · Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
+NIMBO = ("Lucía Ferrer - Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
 MARTA = ("Marta Ruiz Gil", "ES48 9100 0004 9633 0099 8877")
 # Los otros dos bancos de Lucía (apps/banks-sim, data/seed.json): paquete → banco, cuenta, IBAN, saldo.
 # Con Alcor suman 3.412,58 + 12.050,00 + 1.875,40 + 640,00 = 17.977,98 €.
