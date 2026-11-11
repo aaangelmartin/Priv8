@@ -81,8 +81,8 @@ function fechaCorta(iso) {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
-// El seed separa con punto medio; en pantalla se usa un guion.
-const nombreVisible = (s) => (s || '').replace(/\s*·\s*/g, ' - ')
+// El seed separa con punto medio (U+00B7, escapado); en pantalla se usa un guion.
+const nombreVisible = (s) => (s || '').replace(/\s*\u00b7\s*/g, ' - ')
 
 function iniciales(nombre) {
   const p = nombreVisible(nombre).split(' - ')[0].split(/\s+/).filter(Boolean)

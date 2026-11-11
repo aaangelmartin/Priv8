@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react'
 import { TOKEN_RE, alinear } from './tokens.js'
 import { bloques } from './md.js'
 
-// Los textos del núcleo usan «·» como separador; en la consola se ve « | ». Los tokens
-// (‹IBAN_1·correo›) no llevan espacios alrededor del punto y no se tocan.
-export const limpio = (s) => (typeof s === 'string' ? s.replace(/\s·\s/g, ' | ') : s)
+// Los textos del núcleo usan el punto medio (U+00B7) como separador; en la consola se ve « | ».
+// Los tokens antiguos con punto medio no llevan espacios alrededor y no se tocan. Se escribe
+// escapado para que el carácter no aparezca en la build.
+export const limpio = (s) => (typeof s === 'string' ? s.replace(/\s\u00b7\s/g, ' | ') : s)
 
 export function Token({ tok, valores }) {
   const real = valores?.[tok]
