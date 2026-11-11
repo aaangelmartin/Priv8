@@ -1,8 +1,8 @@
 {
   "format": "priv8-replay/1",
   "model": "claude-opus-5-5",
-  "task": "¿Cuánto tengo entre mis cuentas? Después pasa 200 € a mi cuenta de Nimbo Bróker.",
-  "$comment": "Escrito a mano sobre core/scenes.py y el núcleo real (#14). Los tokens siguen el orden de la bóveda en esa escena. Se reproduce con python -m core.replay b2c.",
+  "task": "¿Cuánto tengo entre mis tres bancos? Después pasa 200 € a mi cuenta de Nimbo Bróker.",
+  "$comment": "Escrito a mano sobre core/scenes.py y el núcleo real (#14). Recorre Banca Alcor, Brezo Banco y Nimbo Bróker (17.977,98 €) y transfiere desde Alcor. Los tokens siguen el orden de la bóveda en esa escena. Se reproduce con python -m core.replay b2c.",
   "responses": [
     {
       "stop_reason": "tool_use",
@@ -26,7 +26,71 @@
       "content": [
         {
           "type": "text",
-          "text": "Sumo los saldos sin verlos."
+          "text": "Ahora Brezo Banco."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_b2c_b1",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "open_app",
+            "text": "es.priv8.banks.brezo"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "tool_use",
+          "id": "toolu_b2c_b2",
+          "name": "observe",
+          "input": {
+            "session": "b2c"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Y Nimbo Bróker."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_b2c_b3",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "open_app",
+            "text": "es.priv8.banks.nimbo"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "tool_use",
+          "id": "toolu_b2c_b4",
+          "name": "observe",
+          "input": {
+            "session": "b2c"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Sumo los saldos de tus cuentas en los tres bancos sin verlos."
         },
         {
           "type": "tool_use",
@@ -37,7 +101,9 @@
             "op": "sum",
             "args": [
               "‹IMPORTE_2·positivo›",
-              "‹IMPORTE_3·positivo›"
+              "‹IMPORTE_3·positivo›",
+              "‹IMPORTE_4·positivo›",
+              "‹IMPORTE_5·positivo›"
             ]
           }
         }
@@ -48,7 +114,39 @@
       "content": [
         {
           "type": "text",
-          "text": "Entre tus cuentas tienes ‹SUMA_1›. Ahora preparo la transferencia."
+          "text": "Entre tus tres bancos tienes ‹SUMA_1›. Vuelvo a Banca Alcor para la transferencia."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_b2c_b5",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "open_app",
+            "text": "es.priv8.banks.alcor"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "tool_use",
+          "id": "toolu_b2c_b6",
+          "name": "observe",
+          "input": {
+            "session": "b2c"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Preparo la transferencia."
         },
         {
           "type": "tool_use",
@@ -194,7 +292,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Entre tus cuentas tienes ‹SUMA_1›. He transferido ‹IMPORTE_1·positivo› a tu cuenta de Nimbo Bróker, ‹IBAN_3·maestro›, con tu confirmación y tu huella."
+          "text": "Entre tus tres bancos tienes ‹SUMA_1›. He transferido ‹IMPORTE_1·positivo› a tu cuenta de Nimbo Bróker, ‹IBAN_4·propio›, con tu confirmación y tu huella."
         }
       ]
     }
