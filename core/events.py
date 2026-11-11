@@ -38,6 +38,12 @@ def publish(msg: dict[str, Any]) -> None:
             pass
 
 
+def count() -> int:
+    """Suscriptores conectados (el puente espera a que la app 8 se conecte antes de hablar)."""
+    with _lock:
+        return len(_listeners)
+
+
 def clear() -> None:
     with _lock:
         _listeners.clear()

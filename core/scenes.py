@@ -32,6 +32,12 @@ CUENTAS = [("nomina", "Cuenta nómina", "ES43 9100 0001 5740 1234 5678", "3.412,
            ("ahorro", "Cuenta ahorro", "ES66 9100 0001 5140 8765 4321", "12.050,00 €")]
 NIMBO = ("Lucía Ferrer · Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
 MARTA = ("Marta Ruiz Gil", "ES48 9100 0004 9633 0099 8877")
+# Los otros dos bancos de Lucía (apps/banks-sim, data/seed.json): paquete → banco, cuenta, IBAN, saldo.
+# Con Alcor suman 3.412,58 + 12.050,00 + 1.875,40 + 640,00 = 17.977,98 €.
+OTROS_BANCOS = {
+    "es.priv8.banks.brezo": ("Brezo Banco", "Cuenta online", "ES89 9200 0003 7855 0066 7788", "1.875,40 €"),
+    "es.priv8.banks.nimbo": ("Nimbo Bróker", "Efectivo del bróker", NIMBO[1], "640,00 €"),
+}
 
 
 def _el(i: str, role: str, sel: str | None = None, text: str | None = None, label: str | None = None,
@@ -189,19 +195,31 @@ class FacturaProveedor(Scene):
 # ---------------------------------------------------------------- B2C
 
 class TransferenciaAlcor(Scene):
-    """Banca Alcor: saldo entre cuentas y transferencia a Nimbo con huella."""
+    """Saldo entre los tres bancos (Alcor, Brezo, Nimbo) y transferencia de Alcor a Nimbo con huella.
+
+    Brezo Banco y Nimbo Bróker solo enseñan su inicio, con la sesión ya abierta por la persona."""
 
     source = "android"
     APP = "es.priv8.banks.alcor"
 
     def __init__(self) -> None:
         super().__init__()
+        self.app = self.APP
         self.page = "inicio"  # inicio | transferencia | revision | autenticacion | resultado
         self.form = {"iban": "", "beneficiario": "", "importe": "", "concepto": ""}
         self.huella_pendiente = False
 
     def screen(self) -> dict[str, Any]:
         root = lambda name: _el("n0", "other", f"id/screen_{name}")  # noqa: E731
+        if self.app in OTROS_BANCOS:
+            banco, alias, iban, saldo = OTROS_BANCOS[self.app]
+            return {"app": self.app, "elements": [
+                root("inicio"), _el("b1", "text", "id/banco_nombre", banco),
+                _el("b2", "text", "id/saludo", f"Hola, {TITULAR}"),
+                _el("b3", "listitem", "id/cuenta", None, f"Ver movimientos de {alias}", ["tap"]),
+                _el("b4", "text", "id/cuenta_alias", alias, parent="b3"),
+                _el("b5", "text", "id/cuenta_iban", iban, parent="b3"),
+                _el("b6", "text", "id/cuenta_saldo", saldo, parent="b3")]}
         if self.page == "inicio":
             els = [root("inicio"), _el("n1", "text", "id/banco_nombre", "Banca Alcor"),
                    _el("n2", "text", "id/saludo", f"Hola, {TITULAR}")]
@@ -260,6 +278,13 @@ class TransferenciaAlcor(Scene):
 
     def on_perform(self, a: dict[str, Any]) -> bool:
         op, t, text = a["op"], a.get("target"), a.get("text", "")
+        if op == "open_app":
+            if text != self.APP and text not in OTROS_BANCOS:
+                return False
+            self.app = text
+            return True
+        if self.app != self.APP:
+            return False  # en los otros bancos solo se lee
         if self.page == "inicio" and op == "tap" and t == "n9":
             self.page = "transferencia"
             return True

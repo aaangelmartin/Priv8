@@ -13,7 +13,7 @@ Y para quien monta el proceso:
     connect(session, adapter)       adaptador (web o puente Android) de la sesión
     tokenize_text(session, text)    orden de la persona → texto con tokens
     trust([(tipo, valor), ...])     valores de confianza (seed) que se buscan siempre
-    say(session, text)              frase fija sin datos al canal de eventos (voz cloud)
+    say(session, text)              lo que dice 8 (tokens), en voz mixta, al canal de eventos y al móvil
 
 Tareas que llegan mientras el agente corre (#47: app 8 o dictado con Whisper):
 
@@ -143,16 +143,25 @@ _utterances = 0
 
 
 def say(session: str, text: str) -> dict[str, Any] | None:
-    """Frase fija sin datos (voice.schema.json, un solo segmento cloud) al canal de eventos.
+    """Lo que dice 8 (texto con tokens, nunca valores) como frase de voz mixta (voice.schema.json)
+    al canal de eventos. Compatible con la frase fija de #43: sin tokens sale un solo segmento cloud.
 
-    Pasa el bloqueo final: si llevara un patrón sensible no se publica y devuelve None.
-    """
+    Pasa el bloqueo final: si el texto lleva un dato sin tokenizar, no se publica y devuelve None.
+    Las frases sin datos van a la voz de la nube y cada token a la voz local; si una frase de la
+    nube lleva un patrón (una cifra escrita), la frase entera se lee en local. El puente Android
+    manda antes render_values con los valores de los tokens (adapters/android/bridge.py), y su
+    voice.done queda en la auditoría como voice_out."""
     global _utterances
-    if not check(text)["allowed"]:
+    from voice.segmenter import segment
+
+    text = (text or "").strip()
+    if not text or not check(text)["allowed"]:
         return None
     _utterances += 1
-    utterance = {"utterance": f"u{_utterances}", "session": session,
-                 "segments": [{"voice": "cloud", "text": text}]}
+    utt = segment(text, lambda tok, how: "", utterance=f"u{_utterances}", session=session)
+    if not utt.segments:
+        return None
+    utterance = utt.to_contract()
     events.publish({"type": "voice", "utterance": utterance})
     return utterance
 

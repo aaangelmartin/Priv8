@@ -12,6 +12,20 @@ agent:
 agent-web:
 	uv run python -m agent.agent --web --task "$${TASK:-registrar factura}"
 
+# Live agent on the Android emulator (B2C). First `scripts/movil.sh` (AVD, APKs, adb reverse
+# 8765 and 8700). The core serves the bridge on :8765 and the events on :8700; held actions
+# are spoken and approved on the phone, and 8 says the answer there. TASK="..." runs one task;
+# without TASK, 8 waits for tasks dictated on the phone (core.next_task, #47). Needs
+# ANTHROPIC_API_KEY; RECORD=FILE saves a replay.
+.PHONY: agent-android agent-android-replay
+agent-android:
+	uv run python -m agent.agent --android $${TASK:+--task "$$TASK"} $${RECORD:+--record "$$RECORD"}
+
+# Same on the emulator with recorded model responses: no API key. The person still logs in,
+# confirms and types the code on the phone.
+agent-android-replay:
+	uv run python -m agent.agent --android --replay $${REPLAY:-agent/replays/b2c_android.json}
+
 # Alba Core (:5173), the mailbox (:5174) and the audit console (:5175). First time: make web-install.
 web:
 	(cd apps/erp-sim && pnpm dev) & (cd apps/inbox-sim && pnpm dev) & (cd apps/console && pnpm dev) & wait
@@ -39,7 +53,7 @@ demo:
 
 # Every test suite and the contract examples.
 test:
-	uv run pytest agent/tests core/tests voice/tests adapters/web/tests metrics
+	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
 	node apps/console/src/alertas.test.mjs

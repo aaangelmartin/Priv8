@@ -91,6 +91,12 @@ class Confirmations:
         self._publish(req)
         return {"held": {"confirm": cid}}
 
+    def number_from(self, first: int) -> None:
+        """Next ids start at c<first>. The phone remembers the ids it already answered, so a
+        core that serves the bridge numbers each run apart (agent/core_adapter.py)."""
+        with self._lock:
+            self._count = max(self._count, first - 1)
+
     def _summary(self, sess: Session, kind: str, rule: Rule | None, text: str | None) -> list[dict]:
         toks: list[str] = []
         if rule and rule.resumen and sess.last_screen is not None:
