@@ -285,3 +285,7 @@ Los `.html` se abren directamente en el navegador.
 ## Equipo
 
 Pablo Rojo (núcleo), Álvaro (empresa: ERP, bandeja, consola, telefonía), Ángel (agente, Android, voz y diseño) y Marco (app 8 y bancos).
+
+## Licencia
+
+Apache 2.0. Ver `LICENSE` y `NOTICE`.
