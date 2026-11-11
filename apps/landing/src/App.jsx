@@ -179,7 +179,7 @@ export default function App() {
     window.addEventListener('keydown', keys);
     const release = () => { window.removeEventListener('wheel', block); window.removeEventListener('touchmove', block); window.removeEventListener('keydown', keys); };
     const end = () => { release(); window.scrollTo(0, 0); root.classList.remove('intro'); root.classList.add('landed'); setIntro(false); };
-    const t = setTimeout(end, 2050);
+    const t = setTimeout(end, 2650);
     return () => { clearTimeout(t); release(); };
   }, []);
   /* sección visible, para la barra */

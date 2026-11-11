@@ -83,7 +83,7 @@ export function HowArch() {
         </div>
         <div className={'tmap' + (narrow ? ' tmap-m' : '')}>
           <div className="tz tz-local"><span>Tu máquina · los datos reales viven aquí</span></div>
-          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models">{MODELS.map((m) => <i key={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' ? 'evenodd' : undefined} /></svg>{m}</i>)}</div></div>
+          <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models" role="list" aria-label="Funciona con cualquier modelo">{MODELS.map((m) => <i key={m} role="listitem" title={m} aria-label={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' ? 'evenodd' : undefined} /></svg></i>)}</div></div>
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             {narrow
@@ -91,7 +91,7 @@ export function HowArch() {
               : <><path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" /></>}
           </svg>
           {Object.keys(NODES).map((k) => [k, at(k)]).map(([k, v]) => (
-            <div key={k} className={'tn tn-' + k + (st.at === k ? ' on' : '')} style={{ left: v.x + '%', top: v.y + '%' }}>
+            <div key={k} className={'tn tn-' + k + (st.at === k ? ' on' : '')} style={{ left: v.x + '%', top: v.y + '%' }} onClick={() => pick(TRIP.findIndex((x) => x.at === k))}>
               <b>{v.h}</b><small>{v.s}</small>
             </div>
           ))}
@@ -100,7 +100,6 @@ export function HowArch() {
         <div className="tcap">
           <div className="tcap-tx" key={i}><p className="tcap-n">{i + 1} de {TRIP.length}</p><h3>{st.h}</h3><p>{st.t}</p></div>
           <div className="tcap-r">
-            <div className="d-dots">{TRIP.map((x, k) => <button key={k} type="button" aria-label={x.h} className={k === i ? 'on' : ''} onClick={() => pick(k)} />)}</div>
             <a className="more" href="protocolo/">El protocolo en detalle</a>
           </div>
         </div>

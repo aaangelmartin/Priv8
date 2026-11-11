@@ -276,7 +276,9 @@ export function createEngine(){
     var hide=(m==='nove'), clT=0;
     /* mirada que sigue al puntero */
     var follow=(m==='mirar'||m==='ve'||m==='alegria');
-    if(follow && POINTER && now-LASTP<3500){
+    /* mirada dirigida desde fuera (la bienvenida): manda sobre el puntero y los gestos de reposo */
+    if(this.forced && (follow||m==='hablar')){ s.tx=this.forced[0]; s.ty=this.forced[1]; this.idle=null; this.nextIdle=now+4000; }
+    else if(follow && POINTER && now-LASTP<3500){
       var r=this.el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2, dx=POINTER.x-cx, dy=POINTER.y-cy, dd=Math.sqrt(dx*dx+dy*dy)||1, kk=Math.min(1,dd/(Math.max(r.width,120)*0.75));
       s.tx=dx/dd*kk; s.ty=dy/dd*kk;
     } else if(follow||m==='hablar'){
@@ -322,6 +324,7 @@ export function createEngine(){
       case 'duda': { s.tx=0.45+Math.sin(t*1.1)*0.12; s.ty=-0.55; lid=left0?[0.42,0]:[0,0.42]; ang=left0?[-6,0]:[0,-6]; tilt=9+Math.sin(t*1.4)*2; size=[0.95,1.04]; break; }
       /* ---------------- flujo */
       case 'mirar': {
+        if(this.forced){ tilt=this.forced[2]||0; break; }
         /* pequeños gestos de reposo para que no se repita: mirar alrededor, bostezo, saltito */
         if(this.cfg.idle!==false){
           if(!this.idle && now>this.nextIdle){ var acts=['look','yawn','hop','look']; this.idle={k:acts[Math.floor(Math.random()*acts.length)],t0:now}; }

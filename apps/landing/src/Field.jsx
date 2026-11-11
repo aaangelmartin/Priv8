@@ -19,6 +19,12 @@ export default function Field() {
     let still = false;
     try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
     let W = 0, H = 0, dpr = 1, items = [], raf = 0, ptr = null, lastPtr = -1e9, visible = true;
+    /* bienvenida: cuando 8 mira a un lado, ese lado se censura solo, del centro hacia fuera */
+    const root = document.documentElement;
+    const seen = { '-1': 0, 1: 0 };
+    let landedAt = 0;
+    const onLook = (e) => { if (e.detail === -1 || e.detail === 1) seen[e.detail] = performance.now(); };
+    window.addEventListener('p8look', onLook);
     const ROW = 34;
     const build = () => {
       const r = cv.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -44,6 +50,10 @@ export default function Field() {
       ctx.clearRect(0, 0, W, H);
       const drift = still ? 0 : (now / 1000) * 9;
       const auto = now - lastPtr > 2500;
+      const intro = root.classList.contains('intro');
+      if (!intro && !landedAt && (seen['-1'] || seen[1])) landedAt = now;
+      /* lo censurado en la bienvenida se queda un momento y luego vuelve poco a poco a la lente normal */
+      const holding = intro || (landedAt && now - landedAt < 1400);
       /* sin cursor, la lente da vueltas alrededor de 8, como si mirase a su alrededor */
       const an = document.getElementById('hero-anchor'); const ar = an ? an.getBoundingClientRect() : null; const cr = cv.getBoundingClientRect();
       const ax = ar ? ar.left - cr.left + ar.width / 2 : W / 2, ay = ar ? ar.top - cr.top + ar.height / 2 : H * 0.3;
@@ -56,10 +66,15 @@ export default function Field() {
         let y = it.y - (drift % (ROW * 2));
         if (y < -ROW) y += Math.ceil((H + ROW * 2) / ROW) * ROW;
         const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly, near = Math.sqrt(dx * dx + dy * dy) < R;
-        it.t += ((near ? 1 : 0) - it.t) * 0.12;
         const off = Math.abs(cx - W / 2) / (W / 2);
+        let want = near ? 1 : 0;
+        if (holding) {
+          const side = cx < W / 2 ? '-1' : 1, t0 = seen[side];
+          want = t0 && now > t0 + off * 650 ? 1 : 0;
+        }
+        it.t += (want - it.t) * (holding ? 0.18 : 0.12);
         /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo */
-        const narrow = W < 700 ? 0.35 : 1;
+        const narrow = W < 700 && !holding ? 0.35 : 1;
         const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90) * narrow;
         if (it.t > 0.5) {
           ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`;
@@ -78,7 +93,7 @@ export default function Field() {
     window.addEventListener('pointermove', onMove, { passive: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
     raf = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', build); window.removeEventListener('pointermove', onMove); };
+    return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', build); window.removeEventListener('pointermove', onMove); window.removeEventListener('p8look', onLook); };
   }, []);
   return <canvas ref={ref} className="field" aria-hidden="true" />;
 }

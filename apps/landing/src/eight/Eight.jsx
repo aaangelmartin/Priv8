@@ -24,15 +24,19 @@ function waitFonts() {
 
 /* 8 vivo. mode: estado del juego cerrado (mirar, ve, nove, nuncasale, apartar, hablar, …).
    fg: color de los ojos; cut: color del fondo que hay detrás. */
-export default function Eight({ mode = 'mirar', fg, cut, className, label = '8, el agente de Priv8', onClick }) {
+/* look: [x, y, inclinación] para dirigir la mirada (de -1 a 1), o null para que mire solo */
+export default function Eight({ mode = 'mirar', look = null, fg, cut, className, label = '8, el agente de Priv8', onClick }) {
   const ref = useRef(null);
   const inst = useRef(null);
+  const lookRef = useRef(look);
+  lookRef.current = look;
 
   useEffect(() => {
     let alive = true;
     waitFonts().then(() => {
       if (!alive || !ref.current) return;
       inst.current = getEngine().mount(ref.current, { mode, col: { fg, cut } });
+      inst.current.forced = lookRef.current;
       const svg = ref.current.querySelector('svg');
       if (svg) svg.setAttribute('aria-label', label);
     });
@@ -49,6 +53,10 @@ export default function Eight({ mode = 'mirar', fg, cut, className, label = '8, 
   useEffect(() => {
     if (inst.current && inst.current.mode !== mode) inst.current.setMode(mode);
   }, [mode]);
+
+  useEffect(() => {
+    if (inst.current) inst.current.forced = look;
+  }, [look && look.join(',')]);
 
   return <div ref={ref} className={className} onClick={onClick} />;
 }

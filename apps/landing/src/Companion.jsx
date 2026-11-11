@@ -72,6 +72,7 @@ export default function Companion({ pal, intro }) {
   const [bg, setBg] = useState(null);
   const [spot, setSpot] = useState({ mode: 'mirar', say: '', id: '' });
   const [bubble, setBubble] = useState({ text: '', show: false });
+  const [look, setLook] = useState(null);
   const box = useRef(null);
   const flyReq = useRef(false);
   const lastSpot = useRef(null);
@@ -83,9 +84,14 @@ export default function Companion({ pal, intro }) {
   useEffect(() => {
     if (stage !== 'wake') return undefined;
     const h = setTimeout(() => setBubble({ text: '¡Hola, soy 8!', show: true, big: true, side: 'left' }), 350);
-    const f = setTimeout(() => { setBubble((b) => ({ ...b, show: false })); setStage('fly'); }, 1950);
-    const b = setTimeout(() => setStage('done'), 3050);
-    return () => { clearTimeout(h); clearTimeout(f); clearTimeout(b); };
+    /* mira a un lado y al otro: lo que mira se censura solo (el campo de datos escucha «p8look») */
+    const glance = (side, look) => () => { setLook(look); window.dispatchEvent(new CustomEvent('p8look', { detail: side })); };
+    const g1 = setTimeout(glance(-1, [-0.95, 0.05, -6]), 800);
+    const g2 = setTimeout(glance(1, [0.95, 0.05, 6]), 1550);
+    const g3 = setTimeout(() => setLook(null), 2250);
+    const f = setTimeout(() => { setBubble((b) => ({ ...b, show: false })); setStage('fly'); }, 2550);
+    const b = setTimeout(() => setStage('done'), 3650);
+    return () => { [h, g1, g2, g3, f, b].forEach(clearTimeout); };
   }, []);
 
   useEffect(() => {
@@ -223,7 +229,7 @@ export default function Companion({ pal, intro }) {
   return (
     <div className="layer8">
       <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => { if (stage === 'done' && spot.say) say(spot.say, spot.side); }} role="img" aria-label="8, el agente de Priv8">
-        <Eight className="companion-eight" mode={mode} fg={col.fg} cut={col.cut} label="8" />
+        <Eight className="companion-eight" mode={mode} look={look} fg={col.fg} cut={col.cut} label="8" />
       </div>
       <Bubble text={bubble.text} show={bubble.show} big={bubble.big} side={bubble.side} eight={box} />
     </div>
