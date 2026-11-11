@@ -11,6 +11,8 @@ const DATA = [
   ['4111 1111 1111 1111', 'nunca sale'], ['X1234567L', '‹NIE_1›'], ['ES08 9300 0001 0522 0033 4455', '‹IBAN_3›'],
 ];
 
+const sstep = (v) => { const x = Math.min(1, Math.max(0, v)); return x * x * (3 - 2 * x); };
+
 export default function Field() {
   const ref = useRef(null);
   useEffect(() => {
@@ -22,8 +24,8 @@ export default function Field() {
     /* bienvenida: 8 mira a un lado y solo lo que mira se censura, como una mirada que pasa por encima de los datos.
        Cuando deja de mirar, esos datos vuelven a verse. */
     const root = document.documentElement;
-    let gaze = 0, gx = null, gy = null;
-    const onLook = (e) => { const d = e.detail; gaze = d === -1 || d === 1 ? d : 0; gx = null; };
+    let gaze = 0, gx = null, gy = null, gw = 0, ik = root.classList.contains('intro') ? 1 : 0, lastNow = 0;
+    const onLook = (e) => { const d = e.detail; gaze = d === -1 || d === 1 ? d : 0; };
     window.addEventListener('p8look', onLook);
     const ROW = 34;
     const build = () => {
@@ -57,18 +59,26 @@ export default function Field() {
       const ly = auto ? ay + Math.sin(now / 2600) * Math.min(H * 0.22, 180) : ptr.y;
       const R = Math.min(220, Math.max(140, W * 0.13));
       const intro = root.classList.contains('intro');
-      /* la mirada de 8 en la bienvenida: un óvalo junto a 8, hacia donde mira, que sale de sus ojos y se mueve un poco */
-      let look = null;
+      /* paso de la bienvenida al hero sin saltos: ik va de 1 a 0 en algo más de un segundo, y con él el brillo
+         parejo de la bienvenida se convierte en el del hero y la lente normal entra poco a poco */
+      const dt = Math.min(3, (now - (lastNow || now)) / 16.667); lastNow = now;
+      ik += ((intro ? 1 : 0) - ik) * (1 - Math.pow(1 - 0.045, dt));
+      if (ik < 0.002) ik = 0;
+      /* la mirada de 8 en la bienvenida: un óvalo junto a 8, hacia donde mira, que sale de sus ojos y se mueve un poco.
+         Al cambiar de lado viaja por detrás de 8; al apartar la vista se apaga. */
+      const e8 = intro ? document.querySelector('.companion') : null;
+      const r8 = e8 ? e8.getBoundingClientRect() : null;
+      const D = r8 ? r8.width * 46 / 64 : W * 0.3, c8x = r8 ? r8.left - cr.left + r8.width / 2 : W / 2, c8y = r8 ? r8.top - cr.top + r8.height / 2 : H / 2;
+      const GR = W < 700 ? 100 : Math.min(240, Math.max(150, W * 0.13));
       if (intro && gaze) {
-        const e8 = document.querySelector('.companion');
-        const r8 = e8 ? e8.getBoundingClientRect() : null;
-        const D = r8 ? r8.width * 46 / 64 : W * 0.3, c8x = r8 ? r8.left - cr.left + r8.width / 2 : W / 2, c8y = r8 ? r8.top - cr.top + r8.height / 2 : H / 2;
-        const GR = W < 700 ? 100 : Math.min(240, Math.max(150, W * 0.13));
-        const tx = c8x + gaze * (D * 0.5 + GR * (W < 700 ? 0.7 : 1.15)), ty = c8y - D * 0.06 + Math.sin(now / 520) * GR * 0.28;
-        if (gx === null) { gx = c8x + gaze * D * 0.3; gy = c8y; }
-        gx += (tx - gx) * 0.1; gy += (ty - gy) * 0.1;
-        look = { x: gx, y: gy, rx: GR * 1.25, ry: GR * (W < 700 ? 1.15 : 0.8) };
+        const tx = c8x + gaze * (D * 0.5 + GR * (W < 700 ? 0.7 : 1.15)), ty = c8y - D * 0.06 + Math.sin(now / 900) * GR * 0.22;
+        if (gx === null) { gx = c8x; gy = c8y - D * 0.06; }
+        const k = 1 - Math.pow(1 - 0.06, dt);
+        gx += (tx - gx) * k; gy += (ty - gy) * k;
       }
+      gw += ((intro && gaze ? 1 : 0) - gw) * (1 - Math.pow(1 - 0.08, dt));
+      const look = gx === null ? null : { x: gx, y: gy, rx: GR * 1.25, ry: GR * (W < 700 ? 1.15 : 0.8) };
+      const tk = 1 - Math.pow(1 - 0.075, dt);
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
       ctx.textBaseline = 'middle';
       for (const it of items) {
@@ -76,27 +86,30 @@ export default function Field() {
         if (y < -ROW) y += Math.ceil((H + ROW * 2) / ROW) * ROW;
         const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly;
         const off = Math.abs(cx - W / 2) / (W / 2);
-        let want;
-        if (intro) {
-          want = look && ((cx - look.x) / look.rx) ** 2 + ((y - look.y) / look.ry) ** 2 < 1 ? 1 : 0;
-        } else want = Math.sqrt(dx * dx + dy * dy) < R ? 1 : 0;
-        it.t += (want - it.t) * (intro ? 0.2 : 0.12);
-        /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo
-           (en la bienvenida no hay texto: se ve entero) */
-        const narrow = W < 700 && !intro ? 0.35 : 1;
-        /* en la bienvenida no hay texto que proteger: el campo se ve parejo, también junto a 8 */
-        const fade = (intro ? 0.9 : Math.min(1, Math.max(0.1, (off - 0.22) * 2.4))) * Math.min(1, y / 90) * narrow;
-        if (it.t > 0.5) {
-          ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`;
-          /* el token se escribe centrado donde estaba el dato: se tokeniza en su sitio, sin moverse */
-          ctx.textAlign = 'center';
-          ctx.fillText(it.tok, it.x + it.w / 2, y);
+        /* bordes suaves: dentro del todo, token; cerca del borde, a medias; fuera, el dato */
+        const wLens = sstep((R * 1.08 - Math.sqrt(dx * dx + dy * dy)) / (R * 0.3));
+        const wLook = look ? sstep((1.12 - Math.sqrt(((cx - look.x) / look.rx) ** 2 + ((y - look.y) / look.ry) ** 2)) / 0.32) * gw : 0;
+        const want = wLook * ik + wLens * (1 - ik);
+        it.t += (want - it.t) * tk;
+        /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo.
+           En la bienvenida no hay texto que proteger: el campo se ve parejo, también junto a 8. */
+        const narrow = W < 700 ? 0.35 + 0.65 * ik : 1;
+        const base = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4));
+        const fade = (base + (0.9 - base) * ik) * Math.min(1, y / 90) * narrow;
+        /* el dato se apaga y en su sitio aparece el token, sin que se monten los dos */
+        const t = it.t, aReal = 1 - sstep(t * 2), aTok = sstep(t * 2 - 1);
+        if (aReal > 0.01) {
+          ctx.fillStyle = `rgba(215,223,255,${0.32 * fade * aReal})`;
           ctx.textAlign = 'left';
-        } else {
-          ctx.fillStyle = `rgba(215,223,255,${0.32 * fade})`;
           ctx.fillText(it.real, it.x, y);
         }
+        if (aTok > 0.01) {
+          ctx.fillStyle = `rgba(255,255,255,${0.95 * fade * aTok})`;
+          ctx.textAlign = 'center';
+          ctx.fillText(it.tok, cx, y + (1 - aTok) * 3);
+        }
       }
+      ctx.textAlign = 'left';
     };
     build();
     window.addEventListener('resize', build);
