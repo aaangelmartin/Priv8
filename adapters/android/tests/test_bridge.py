@@ -30,7 +30,8 @@ from agent import core_adapter as ca  # noqa: E402
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACTS = ROOT / "docs" / "contracts"
 REPLAY = ROOT / "agent" / "replays" / "b2c_android.json"
-SEED_VALUES = ["3.412,58", "12.050,00", "15.462,58", "ES43 9100", "ES08 9300", "Lucía Ferrer", "200 €", "200,00"]
+SEED_VALUES = ["3.412,58", "12.050,00", "15.462,58", "1.875,40", "640,00", "17.977,98", "ES43 9100", "ES08 9300",
+               "ES89 9200", "Lucía Ferrer", "200 €", "200,00"]
 
 _n = iter(range(10_000))
 
@@ -224,22 +225,24 @@ def test_agent_android_replay_end_to_end(monkeypatch, capsys):
         # approved on the phone, then sent: the bank asks the person for the code
         assert phone.page in ("autenticacion", "resultado")
         assert phone.form["importe"] == "200 €" and phone.form["iban"].startswith("ES08 9300")
+        opened = [p["text"] for p in phone.performed if p["op"] == "open_app"]
+        assert opened[:3] == ["es.priv8.banks.brezo", "es.priv8.banks.nimbo", ALCOR]  # the agent visits the three banks
         order = kinds(phone)
         assert "confirm_request" in order and "voice" in order
         assert order[order.index("confirm_request") - 1] == "render_values"
         assert order[order.index("voice") - 1] == "render_values"
         voice = next(m for m in phone.received if m["type"] == "voice")["utterance"]
         assert {"voice": "local", "token": "‹SUMA_1›", "say_as": "currency"} in voice["segments"]
-        assert phone.values["‹SUMA_1›"] == "15.462,58 €"
+        assert phone.values["‹SUMA_1›"] == "17.977,98 €"  # Alcor (2), Brezo and Nimbo
         assert phone.invalid == [] and bridge.failures == 0
         # nothing that went to the model carried a real value
-        assert len(models[0].requests) == 12
+        assert len(models[0].requests) == 18
         for req in models[0].requests:
             sent = json.dumps(req, ensure_ascii=False)
             assert core.check(sent)["allowed"], sent[:200]
             assert not any(v in sent for v in SEED_VALUES)
         out = capsys.readouterr().out
-        assert "‹SUMA_1›" in out and "15.462" not in out  # stdout keeps the tokens
+        assert "‹SUMA_1›" in out and "17.977" not in out  # stdout keeps the tokens
     finally:
         if got:
             got["phone"].stop()

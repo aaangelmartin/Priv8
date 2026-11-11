@@ -27,7 +27,14 @@ from adapters.android.bridge_dev_server import load_validator
 CONTRACTS = Path(__file__).resolve().parents[2] / "docs" / "contracts"
 ALCOR = "es.priv8.banks.alcor"
 OCHO = "es.priv8.ocho"
+BREZO = "es.priv8.banks.brezo"
+NIMBO_APP = "es.priv8.banks.nimbo"
 LAUNCHER = "com.google.android.apps.nexuslauncher"
+# The other two banks, already logged in (inicio only): name, account, IBAN, balance.
+OTHER_BANKS = {
+    BREZO: ("Brezo Banco", "Cuenta online", "ES89 9200 0003 7855 0066 7788", "1.875,40 €"),
+    NIMBO_APP: ("Nimbo Bróker", "Efectivo del bróker", "ES08 9300 0001 0522 0033 4455", "640,00 €"),
+}
 NIMBO = ("Lucía Ferrer · Nimbo Bróker", "ES08 9300 0001 0522 0033 4455")
 
 
@@ -179,6 +186,10 @@ class FakePhone:
         if self.app == OCHO:
             self.ids = set()
             return {**base, "app": OCHO, "screen": None, "elements": []}
+        if self.app in OTHER_BANKS:
+            els = self._otro_banco(*OTHER_BANKS[self.app])
+            self.ids = {e["id"] for e in els}
+            return {**base, "app": self.app, "screen": "inicio", "elements": els}
         if self.app != ALCOR:
             self.ids = set()
             return {**base, "app": self.app, "screen": None, "elements": []}
@@ -196,12 +207,14 @@ class FakePhone:
         if self.confirming or self.app == OCHO and op != "open_app":
             return False, "no_permitido"
         if op == "open_app":
-            if text not in (ALCOR, OCHO):
+            if text not in (ALCOR, OCHO, *OTHER_BANKS):
                 return False, "target_no_encontrado"
             self.app = text
             return True, None
         if t is not None and t not in self.ids:
             return False, "target_no_encontrado"
+        if self.app != ALCOR:
+            return False, "no_permitido"  # only reading in the other banks
         p = self.page
         if p == "inicio" and op == "tap" and t == "n17":
             self.page = "transferencia"
@@ -253,6 +266,23 @@ class FakePhone:
                 _el(16, "text", "id/cuenta_iban", "ES66 9100 0001 5140 8765 4321", parent=13),
                 _el(17, "button", "id/btn_transferir", "Hacer una transferencia", actions=["tap"]),
                 _el(18, "button", "id/btn_movimientos", "Ver movimientos", actions=["tap"])]
+
+    def _otro_banco(self, nombre: str, alias: str, iban: str, saldo: str) -> list[dict[str, Any]]:
+        """Inicio of Brezo Banco or Nimbo Bróker on the AVD: one account."""
+        return [_el(1, "other", "id/screen_inicio", parent=None),
+                _el(2, "heading", "id/banco_nombre", nombre),
+                _el(3, "button", "id/btn_salir", "Salir", "Cerrar la sesión", actions=["tap"]),
+                _el(4, "heading", "id/saludo", "Hola, Lucía Ferrer"),
+                _el(5, "text", "id/saldo_total_label", "Saldo total"),
+                _el(6, "text", "id/saldo_total", saldo),
+                _el(7, "heading", "id/cuentas_titulo", "Tus cuentas"),
+                _el(8, "other", "id/lista_cuentas"),
+                _el(9, "button", "id/cuenta", None, f"Ver movimientos de {alias}", 8, ["tap"]),
+                _el(10, "text", "id/cuenta_alias", alias, parent=9),
+                _el(11, "text", "id/cuenta_saldo", saldo, parent=9),
+                _el(12, "text", "id/cuenta_iban", iban, parent=9),
+                _el(13, "button", "id/btn_transferir", "Hacer una transferencia", actions=["tap"]),
+                _el(14, "button", "id/btn_movimientos", "Ver movimientos", actions=["tap"])]
 
     def _transferencia(self) -> list[dict[str, Any]]:
         """Before scrolling: the origin account and the fields down to Importe. After one

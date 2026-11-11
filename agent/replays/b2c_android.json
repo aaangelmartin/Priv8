@@ -1,8 +1,8 @@
 {
   "format": "priv8-replay/1",
   "model": "claude-opus-5-5",
-  "task": "¿Cuánto tengo entre mis cuentas? Después pasa 200 € a mi cuenta de Nimbo Bróker.",
-  "$comment": "Escrito a mano sobre las pantallas reales de Banca Alcor en el AVD priv8 (ids n1… del servicio de accesibilidad, capturadas el 11 nov con bridge_dev_server.py) y el núcleo real. Sin clave: make agent-android REPLAY=agent/replays/b2c_android.json, contra el emulador o contra adapters/android/fake_phone.py en los tests.",
+  "task": "¿Cuánto tengo entre mis tres bancos? Después pasa 200 € a mi cuenta de Nimbo Bróker.",
+  "$comment": "Escrito a mano sobre las pantallas reales de Banca Alcor, Brezo Banco y Nimbo Bróker en el AVD priv8 (la persona ya ha entrado en los tres) (ids n1… del servicio de accesibilidad, capturadas el 11 nov con bridge_dev_server.py) y el núcleo real. Sin clave: make agent-android REPLAY=agent/replays/b2c_android.json, contra el emulador o contra adapters/android/fake_phone.py en los tests.",
   "responses": [
     {
       "stop_reason": "tool_use",
@@ -26,38 +26,16 @@
       "content": [
         {
           "type": "text",
-          "text": "Sumo los saldos de tus dos cuentas sin verlos."
+          "text": "Ahora Brezo Banco."
         },
         {
           "type": "tool_use",
           "id": "toolu_and_02",
-          "name": "oracle",
-          "input": {
-            "session": "b2c",
-            "op": "sum",
-            "args": [
-              "‹IMPORTE_3·positivo›",
-              "‹IMPORTE_4·positivo›"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "stop_reason": "tool_use",
-      "content": [
-        {
-          "type": "text",
-          "text": "Entre tus cuentas tienes ‹SUMA_1›. Ahora preparo la transferencia."
-        },
-        {
-          "type": "tool_use",
-          "id": "toolu_and_03",
           "name": "act",
           "input": {
             "session": "b2c",
-            "op": "tap",
-            "target": "n17"
+            "op": "open_app",
+            "text": "es.priv8.banks.brezo"
           }
         }
       ]
@@ -66,12 +44,8 @@
       "stop_reason": "tool_use",
       "content": [
         {
-          "type": "text",
-          "text": "Miro la pantalla de transferencia."
-        },
-        {
           "type": "tool_use",
-          "id": "toolu_and_04",
+          "id": "toolu_and_03",
           "name": "observe",
           "input": {
             "session": "b2c"
@@ -84,38 +58,29 @@
       "content": [
         {
           "type": "text",
-          "text": "Elijo tu cuenta de Nimbo Bróker de tus contactos guardados, pongo el importe que has dicho y bajo hasta Continuar."
+          "text": "Y Nimbo Bróker."
         },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_04",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "open_app",
+            "text": "es.priv8.banks.nimbo"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
         {
           "type": "tool_use",
           "id": "toolu_and_05",
-          "name": "act",
+          "name": "observe",
           "input": {
-            "session": "b2c",
-            "op": "tap",
-            "target": "n12"
-          }
-        },
-        {
-          "type": "tool_use",
-          "id": "toolu_and_06",
-          "name": "act",
-          "input": {
-            "session": "b2c",
-            "op": "type",
-            "target": "n26",
-            "text": "‹IMPORTE_1·positivo›"
-          }
-        },
-        {
-          "type": "tool_use",
-          "id": "toolu_and_07",
-          "name": "act",
-          "input": {
-            "session": "b2c",
-            "op": "scroll",
-            "target": "n4",
-            "direction": "down"
+            "session": "b2c"
           }
         }
       ]
@@ -125,8 +90,47 @@
       "content": [
         {
           "type": "text",
-          "text": "Compruebo los datos y continúo."
+          "text": "Sumo los saldos de tus cuentas en los tres bancos sin verlos."
         },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_06",
+          "name": "oracle",
+          "input": {
+            "session": "b2c",
+            "op": "sum",
+            "args": [
+              "‹IMPORTE_3·positivo›",
+              "‹IMPORTE_4·positivo›",
+              "‹IMPORTE_5·positivo›",
+              "‹IMPORTE_6·positivo›"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Entre tus tres bancos tienes ‹SUMA_1›. Vuelvo a Banca Alcor para la transferencia."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_07",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "open_app",
+            "text": "es.priv8.banks.alcor"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
         {
           "type": "tool_use",
           "id": "toolu_and_08",
@@ -147,7 +151,7 @@
           "input": {
             "session": "b2c",
             "op": "tap",
-            "target": "n25"
+            "target": "n17"
           }
         }
       ]
@@ -157,7 +161,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Reviso antes de enviar."
+          "text": "Miro la pantalla de transferencia."
         },
         {
           "type": "tool_use",
@@ -174,11 +178,101 @@
       "content": [
         {
           "type": "text",
-          "text": "Importe, beneficiario e IBAN cuadran. Pulso Enviar; te pediré confirmación en el móvil."
+          "text": "Elijo tu cuenta de Nimbo Bróker de tus contactos guardados, pongo el importe que has dicho y bajo hasta Continuar."
         },
         {
           "type": "tool_use",
           "id": "toolu_and_11",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "tap",
+            "target": "n12"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_12",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "type",
+            "target": "n26",
+            "text": "‹IMPORTE_1·positivo›"
+          }
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_13",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "scroll",
+            "target": "n4",
+            "direction": "down"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Compruebo los datos y continúo."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_14",
+          "name": "observe",
+          "input": {
+            "session": "b2c"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "tool_use",
+          "id": "toolu_and_15",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "tap",
+            "target": "n25"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Reviso antes de enviar."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_16",
+          "name": "observe",
+          "input": {
+            "session": "b2c"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Importe, beneficiario e IBAN cuadran. Pulso Enviar; te pediré confirmación en el móvil."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_17",
           "name": "act",
           "input": {
             "session": "b2c",
@@ -197,7 +291,7 @@
         },
         {
           "type": "tool_use",
-          "id": "toolu_and_12",
+          "id": "toolu_and_18",
           "name": "observe",
           "input": {
             "session": "b2c"
@@ -214,7 +308,7 @@
         },
         {
           "type": "tool_use",
-          "id": "toolu_and_13",
+          "id": "toolu_and_19",
           "name": "observe",
           "input": {
             "session": "b2c"
@@ -227,7 +321,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Entre tus cuentas de Banca Alcor tienes ‹SUMA_1›. He preparado la transferencia de ‹IMPORTE_1·positivo› a tu cuenta de Nimbo Bróker y te he pedido que la confirmes."
+          "text": "Entre tus tres bancos tienes ‹SUMA_1›. Te he preparado la transferencia de ‹IMPORTE_1·positivo› a tu cuenta de Nimbo Bróker; se envía cuando la confirmas y pones tu código."
         }
       ]
     }
