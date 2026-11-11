@@ -661,3 +661,22 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .close5 .c5-ocho { width: 17cqw; margin: 0; align-self: center; }
 .c5-izq { justify-content: center; }
 .close5 .c5-ocho { transform: translateX(-.31cqw); }
+
+/* 19 definitiva: 8 centrado arriba, sobre las dos columnas; debajo la frase (a media altura) y el QR con su dirección */
+.close5 { grid-template-columns: auto auto; column-gap: 7cqw; row-gap: 1.5cqw; align-content: center; align-items: center; }
+.close5 .c5-ocho { grid-column: 1 / -1; justify-self: center; width: 15cqw; transform: none; }
+.close5 .c5-ocho { width: 14cqw; margin-bottom: -2.6cqw; }
+.c5-qr svg { width: 21cqw; height: 21cqw; }
+.cierre .close5 h2 { font-size: 4.4cqw; }
+/* todo pegado a 8: menos aire bajo sus ojos y entre las dos columnas */
+.close5 { column-gap: 4cqw; row-gap: 0; }
+.close5 .c5-ocho { width: 14cqw; margin-bottom: -3.2cqw; }
+.c5-qr svg { width: 22cqw; height: 22cqw; }
+.cierre .close5 h2 { font-size: 4.5cqw; }
+.close5 { padding-bottom: 5cqw; }
+/* QR del mismo alto que la frase y centrados entre sí; la dirección cuelga debajo, centrada, sin mover el QR */
+.c5-qr { position: relative; display: block; }
+.c5-qr svg { width: var(--alto-frase, 18.4cqw); height: var(--alto-frase, 18.4cqw); }
+.c5-qr .cl-url { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 1.4cqw; white-space: nowrap; }
+.close5 .c5-ocho { width: 18cqw; margin-bottom: -3.6cqw; }
+.close5 { padding-bottom: 10.5cqw; } .close5 .c5-ocho { transform: translateX(-.28cqw); }
