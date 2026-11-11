@@ -79,6 +79,13 @@ def cursor_enabled(default: bool) -> bool:
     return v.strip().lower() not in ("0", "off", "false", "no")
 
 
+def headless_enabled(env: dict[str, str] | None = None) -> bool:
+    """PRIV8_WEB_HEADLESS=1|on: Chromium sin ventana (las grabaciones de la demo, que no deben
+    abrir ventanas en el ordenador de quien graba). Sin la variable, con ventana."""
+    v = (os.environ if env is None else env).get("PRIV8_WEB_HEADLESS", "").strip().lower()
+    return v in ("1", "on", "true", "yes", "si", "sí")
+
+
 # Vista de 8 (#147, #154, #187): pares por segundo como mucho y calidad JPEG.
 PAR_FPS = 6
 FRAME_QUALITY = 70

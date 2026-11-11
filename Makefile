@@ -128,7 +128,7 @@ video-con-protocolo: sin-protocolo
 videos: video-sin-protocolo video-con-protocolo
 
 # Una sesión B2B real grabada para la web de la demo (#170): el stack real en puertos libres
-# (5193, 5194, 8792; nunca los de la demo en directo), Chromium con ventana y el agente con el
+# (5193, 5194, 8792; nunca los de la demo en directo), Chromium sin ventana y el agente con el
 # .env (gasta API: dos encargos con PRIV8_MODEL). Escribe apps/console/public/sesion-b2b.json y
 # apps/console/public/sesion-b2b/; se abre con ?feed=sesion-b2b. ENV_FILE=ruta para otro .env.
 .PHONY: grabar-sesion
@@ -137,7 +137,7 @@ grabar-sesion:
 
 # Los casos preparados de la demo (#187, data/casos.json), uno por grabación, para demo.priv8.es y la
 # consola (?feed=sesion-<caso>). grabar-casos graba todos de una vez: B2B con grabar_sesion.py --caso
-# (Chromium con ventana, puertos libres) y B2C en el emulador con grabar_movil.py (scripts/movil.sh antes;
+# (Chromium sin ventana, puertos libres) y B2C en el emulador con grabar_movil.py (scripts/movil.sh antes;
 # 8700 y 8765 libres). Usa las respuestas grabadas que haya (sin API) y el .env para las demás.
 # SOLO=b2b o SOLO=b2c graba solo una parte. casos-provisionales hace, sin emulador, API ni ventanas, las
 # grabaciones provisionales de los casos que aún no tienen una real (núcleo real, escenas y móvil falso).

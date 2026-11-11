@@ -59,3 +59,28 @@ def test_the_rule_is_in_the_prompt_and_the_mcp_instructions():
     rule = "Haz una sola acción act por turno y vuelve a observar"
     assert rule in SYSTEM and rule in host_instructions("b2b", "web")
     assert "act open_app" in SYSTEM and "alba-core o inbox" in host_instructions("b2b", "web")
+
+
+async def test_a_held_act_waits_for_the_person_before_the_next_request(world, tmp_path):
+    """--web (wait_held): after a held act the loop waits for the person, then tells the model."""
+    core, _ = world
+    path = tmp_path / "r.json"
+    write_replay(path, "registrar factura", [
+        {"stop_reason": "tool_use", "content": [_use(0, "observe")]},
+        {"stop_reason": "tool_use", "content": [_use(1, "act", op="tap", target="e13")]},
+        {"stop_reason": "end_turn", "content": [{"type": "text", "text": "Registrada."}]},
+    ])
+    model = ReplayModel(path)
+    waited: list[tuple[str, list[str]]] = []
+
+    def wait_held(session: str, ids: list[str]) -> str:
+        waited.append((session, ids))
+        return f"La persona ya ha respondido a {', '.join(ids)}."
+
+    async with Client(build_server(core)) as client:
+        result = await run_agent(client, model, core, model.task, wait_held=wait_held)
+    assert result.status == "done"
+    assert waited == [("s1", ["c1"])]
+    last = model.requests[2]["messages"][-1]["content"]
+    assert last[-1] == {"type": "text", "text": "La persona ya ha respondido a c1."}
+    assert last[0]["type"] == "tool_result"
