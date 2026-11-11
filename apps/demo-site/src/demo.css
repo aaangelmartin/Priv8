@@ -49,7 +49,10 @@
 .ct-t { font: 700 1.15rem/1.2 var(--f-display); letter-spacing: -.03em; }
 .ct-l { color: var(--ink-2); font-size: .92rem; line-height: 1.5; }
 .ct-nota { font: 500 .78rem/1.4 var(--f-mono); color: var(--accent); }
-.ct-ver { margin-top: auto; padding-top: 6px; }
+/* el botón de cada caso: la píldora de la landing, con el mismo relleno arriba y abajo y la flecha a su distancia */
+.ct-ver { margin-top: auto; padding: 14px 22px; gap: 10px; font: 600 1rem/1 var(--f-body); letter-spacing: -.005em; box-shadow: 0 8px 22px rgba(45, 69, 214, .22); }
+.ct:hover .ct-ver { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(45, 69, 214, .3); }
+.ct:hover .ct-ver::after { transform: translateX(3px); }
 .ct.activa .ct-ver { background: var(--night); }
 .ct.activa .ct-ver::after { content: none; }
 @media (max-width: 520px) {
