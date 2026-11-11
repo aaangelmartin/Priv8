@@ -17,9 +17,10 @@
 .dhero h1 .soft { color: #c4cdff; }
 .dhero-sub { margin-top: 22px; font-size: clamp(1.02rem, .96rem + .35vw, 1.2rem); line-height: 1.6; color: #dbe1ff; max-width: 60ch; text-wrap: balance; }
 .dhero .cta { justify-content: center; margin-top: 32px; }
-.dorder { list-style: none; margin: 32px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; color: #dbe1ff; font: 500 .86rem/1.4 var(--f-mono); }
-.dorder li { display: inline-flex; align-items: center; gap: 8px; }
-.dorder b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 999px; background: rgba(255, 255, 255, .16); color: #fff; font-size: .74rem; }
+.dindex { margin-top: 28px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.dindex a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 8px; border-radius: 999px; background: rgba(255, 255, 255, .12); color: #fff; text-decoration: none; font: 500 .9rem/1 var(--f-body); transition: background .2s ease; }
+.dindex a:hover { background: rgba(255, 255, 255, .22); }
+.dindex b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 999px; background: #fff; color: #1f33b0; font: 600 .74rem/1 var(--f-mono); }
 
 /* ---------- bloques ---------- */
 .dblock { position: relative; background: var(--paper); color: var(--ink); padding-block: clamp(72px, 9vw, 120px); }

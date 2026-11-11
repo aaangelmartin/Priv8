@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from './by-laaabs.svg';
-import { VER, VIDEOS, LEER, APKS, INSTALAR, VIVO, EQUIPO, REPO } from './contenido.js';
+import { VER, VIDEOS, LEER, APKS, INSTALAR, VIVO, EQUIPO } from './contenido.js';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 const SECCIONES = [['ver', 'Míralo'], ['leer', 'Léelo'], ['instalar', 'Instálalo'], ['vivo', 'En vivo'], ['equipo', 'Equipo']];
@@ -32,9 +32,18 @@ function Nav() {
       raf = 0;
       const nav = document.querySelector('.nav'); if (!nav) return;
       const r = nav.getBoundingClientRect();
-      const zone = document.elementsFromPoint(document.documentElement.clientWidth / 2, r.top + r.height / 2)
-        .find((el) => !nav.contains(el) && el.closest('[data-tone]'));
-      setOnWhite(!!zone && zone.closest('[data-tone]').dataset.tone === 'paper');
+      const y = r.top + r.height / 2;
+      /* como en la web: el color depende de la sección de debajo; en una transición, de la mitad que toca */
+      const el = document.elementsFromPoint(document.documentElement.clientWidth / 2, y)
+        .find((e) => !nav.contains(e) && e.closest('[data-tone], .blend'));
+      if (!el) return setOnWhite(false);
+      const blend = el.closest('.blend');
+      if (blend) {
+        const br = blend.getBoundingClientRect();
+        const side = (y - br.top) / Math.max(1, br.height) < 0.5 ? blend.dataset.from : blend.dataset.to;
+        return setOnWhite(side === '--paper' || side === '--mist');
+      }
+      setOnWhite(el.closest('[data-tone]').dataset.tone === 'paper');
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(check); };
     ask(); window.addEventListener('scroll', ask, { passive: true }); window.addEventListener('resize', ask);
@@ -45,13 +54,12 @@ function Nav() {
       <a className="brand" href="#inicio" aria-label="Priv8 demo, inicio">
         <Eight className="nav-eight" mode="mirar" fg={onWhite ? '#FFFFFF' : '#2D45D6'} cut={onWhite ? '#2D45D6' : '#FFFFFF'} label="8" />
         <span className="word">Priv8</span>
-        <span className="d-badge">demo</span>
+        <span className="d-badge">Demo</span>
       </a>
       <ul className="links">
         {SECCIONES.map(([id, label]) => <li key={id}><a href={`#${id}`}>{label}</a></li>)}
       </ul>
       <div className="tools">
-        <a className="pill" href="/consola/?feed=con-protocolo">Abre la consola</a>
         <button type="button" className="menu-btn" aria-expanded={open} aria-controls="nav-menu" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen((o) => !o)}>
           <span /><span />
         </button>
@@ -86,18 +94,15 @@ function Card({ c, archivos }) {
       )}
       {c.cmd && <pre className="dcmd"><code>{c.cmd}</code></pre>}
       {c.needs && <p className="dcard-needs">Necesita {c.needs}.</p>}
-      {c.note && <p className="dcard-needs">{c.note}</p>}
       <footer className="dcard-act">
         <Ext className="dbtn" href={c.href} ext={c.ext || /^https?:/.test(c.href)} disabled={!s.ok}>{c.cta || 'Ver en el README'}</Ext>
-        {c.alt && <Ext className="dlink" href={c.alt[1]} ext={/^https?:/.test(c.alt[1])}>{c.alt[0]}</Ext>}
         {s.label && <span className={'dsize' + (s.ok ? '' : ' off')}>{s.label}</span>}
       </footer>
     </article>
   );
 }
 
-function Video({ v, archivos }) {
-  const s = size(archivos, v.file);
+function Video({ v }) {
   return (
     <article className="dcard dvideo">
       <div className="dvideo-frame">
@@ -113,10 +118,6 @@ function Video({ v, archivos }) {
       </header>
       <h3>{v.title}</h3>
       <p>{v.what}</p>
-      <footer className="dcard-act">
-        <a className="dlink" href={`${v.base}.mp4`} download>Descargar MP4</a>
-        {s.label && <span className="dsize">{s.label}</span>}
-      </footer>
     </article>
   );
 }
@@ -140,19 +141,13 @@ function Hero() {
         <div className="dhero-eight"><Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8, el agente de Priv8" /></div>
         <p className="eyebrow">Hackathon de finanzas, Madrid Engineering Week</p>
         <h1 id="h-hero">Todo lo de la demo, <span className="soft">en un sitio.</span></h1>
-        <p className="dhero-sub">
-          La consola con y sin protocolo, los vídeos, los documentos y las apps para el emulador. Cada tarjeta dice qué
-          enseña y cuánto se tarda. Nada de esta página llama a un modelo: es todo estático.
-        </p>
+        <p className="dhero-sub">Las reproducciones de la consola, los vídeos, los documentos y las apps del móvil. Todo estático, sin claves.</p>
         <div className="cta">
-          <a className="btn btn-white" href="/consola/?feed=sin-protocolo">Empieza sin protocolo</a>
-          <a className="btn btn-ghost" href="/docs/entregables/priv8-una-cara.pdf">Lee la página</a>
+          <a className="btn btn-white" href="/consola/?feed=sin-protocolo">Empieza por la consola</a>
         </div>
-        <ol className="dorder" aria-label="Orden recomendado">
-          <li><b>1</b>Sin protocolo, 35 s</li>
-          <li><b>2</b>Con protocolo, 37 s</li>
-          <li><b>3</b>La presentación, 5 min</li>
-        </ol>
+        <nav className="dindex" aria-label="Secciones">
+          {SECCIONES.map(([id, label], i) => <a key={id} href={`#${id}`}><b>{i + 1}</b>{label}</a>)}
+        </nav>
       </div>
     </section>
   );
@@ -163,9 +158,9 @@ function Ver({ archivos }) {
     <section id="ver" className="dblock" data-tone="paper" aria-labelledby="h-ver">
       <div className="wrap">
         <Head eyebrow="Míralo" title="El mismo trámite," soft="con y sin Priv8."
-          lead="Las reproducciones son la consola de auditoría real con los mensajes grabados del núcleo. Funcionan sin núcleo, sin claves y sin red." />
+          lead="La consola de auditoría real, con los mensajes grabados del núcleo." />
         <div className="dgrid g3">{VER.map((c) => <Card key={c.href} c={c} archivos={archivos} />)}</div>
-        <div className="dgrid g2 dgap">{VIDEOS.map((v) => <Video key={v.base} v={v} archivos={archivos} />)}</div>
+        <div className="dgrid g2 dgap">{VIDEOS.map((v) => <Video key={v.base} v={v} />)}</div>
       </div>
     </section>
   );
@@ -187,7 +182,7 @@ function Instalar({ archivos }) {
     <section id="instalar" className="dblock" data-tone="paper" aria-labelledby="h-instalar">
       <div className="wrap">
         <Head eyebrow="Instálalo" title="Las apps del móvil," soft="para el emulador."
-          lead="Builds de depuración para Android 8.0 o superior. No van a Google Play: se instalan con adb en un emulador de Android Studio." />
+          lead="Builds de depuración para un emulador de Android Studio. Los datos de acceso son inventados." />
         <div className="dgrid g4">
           {APKS.map((a) => {
             const s = size(archivos, a.file);
@@ -215,15 +210,10 @@ function Instalar({ archivos }) {
         <div className="dsplit">
           <div>
             <h3>Instalar y activar a 8</h3>
-            <p>Con el emulador en marcha y las cuatro APK en la carpeta actual. La última orden activa el servicio de accesibilidad de 8, el que lee la pantalla.</p>
-            <p className="dmuted">Los datos de acceso son inventados. En depuración cada banco abre ya dentro; la huella o el código de cada transferencia los pone siempre la persona, y 8 mira a otro lado mientras tanto.</p>
+            <p>Con el emulador en marcha y las cuatro APK en la carpeta actual. Para que 8 maneje los bancos hace falta además el núcleo en el portátil: es la demo B2C en vivo.</p>
           </div>
           <pre className="dcmd big"><code>{INSTALAR}</code></pre>
         </div>
-        <p className="dnote">
-          Los bancos funcionan solos. Para que 8 los maneje y hable, el núcleo tiene que estar corriendo en el portátil,
-          unido al emulador por <code>adb reverse</code>: es la demo B2C en vivo, más abajo.
-        </p>
       </div>
     </section>
   );
@@ -234,11 +224,8 @@ function Vivo() {
     <section id="vivo" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-vivo">
       <div className="wrap">
         <Head eyebrow="En vivo" title="Con el agente de verdad," soft="en tu máquina."
-          lead="Las demos en vivo usan Claude con una clave de API. Por eso no hay un agente alojado en esta página: corren en el Mac de quien presenta, o en el tuyo con tu clave." />
+          lead="Usan Claude con una clave de API, así que no hay un agente alojado aquí: corren en el Mac de quien presenta, o en el tuyo." />
         <div className="dgrid g4">{VIVO.map((c) => <Card key={c.title} c={c} />)}</div>
-        <p className="dnote on-dark">
-          Lo que el modelo ve en todas: <Tok>‹IBAN_1-propio›</Tok> <Tok>‹IMPORTE_3-positivo›</Tok>. La tabla que traduce cada token se queda en local.
-        </p>
       </div>
     </section>
   );
@@ -274,11 +261,6 @@ function Footer() {
             </a>
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
-          <nav className="foot-cols" aria-label="Pie">
-            <div><b>Demo</b><a href="#ver">Míralo</a><a href="#leer">Léelo</a><a href="#instalar">Instálalo</a><a href="#vivo">En vivo</a></div>
-            <div><b>Consola</b><a href="/consola/?feed=sin-protocolo">Sin protocolo</a><a href="/consola/?feed=con-protocolo">Con protocolo</a><a href="/consola/?demo">Ensayo</a></div>
-            <div><b>Fuera</b><a href="https://priv8.es">priv8.es</a><a href="https://mcp.priv8.es">mcp.priv8.es</a><a href={REPO}>GitHub</a></div>
-          </nav>
         </div>
         <div className="foot-word" aria-hidden="true">
           <Eight className="foot-word-eight" mode="mirar" fg="#2D45D6" cut="#FFFFFF" label="8" />
@@ -299,9 +281,11 @@ export default function App() {
       <Nav />
       <main>
         <Hero />
-        <Blend from="--band" to="--paper" seed={1} />
+        <Blend from="--band" to="--paper" seed={1} overlay />
         <Ver archivos={archivos} />
+        <Blend from="--paper" to="--mist" seed={2} />
         <Leer archivos={archivos} />
+        <Blend from="--mist" to="--paper" seed={4} />
         <Instalar archivos={archivos} />
         <Blend from="--paper" to="--band" seed={3} />
         <Vivo />
