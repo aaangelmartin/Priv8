@@ -13,9 +13,14 @@ import { cerrarSesion, entrarComo, sesionInicial, trasReset } from './sesion.js'
 const ERP = seed.erp
 const KEY = 'alba-core'
 // Sesión ya abierta de la demo (make demo-b2b, solo en desarrollo): ver sesion.js. Una build
-// solo la lleva si se pide a propósito con VITE_ALBA_SESION_BUILD=1 (el paquete priv8-mcp, #157).
-const CON_SESION = import.meta.env.DEV || import.meta.env.VITE_ALBA_SESION_BUILD === '1'
+// solo la lleva si se pide a propósito: VITE_ALBA_SESION_BUILD=1 (el paquete priv8-mcp, #157) o
+// VITE_ALBA_DEMO=1 (la copia de demo.priv8.es).
+const CON_SESION = import.meta.env.DEV || import.meta.env.VITE_ALBA_SESION_BUILD === '1' || import.meta.env.VITE_ALBA_DEMO === '1'
 const SESION_DEMO = (CON_SESION && import.meta.env.VITE_ALBA_SESION) || ''
+// Las rutas de la app son siempre /facturas, /login...; BASE es '' en la raíz y '/erp' en demo.priv8.es (BASE_PATH).
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
+const enBase = (to) => BASE + to
+const sinBase = (p) => (BASE && p.startsWith(BASE) ? p.slice(BASE.length) || '/' : p)
 
 function load() {
   try {
@@ -33,14 +38,14 @@ function save(state) {
 }
 
 function usePath() {
-  const [path, setPath] = useState(location.pathname)
+  const [path, setPath] = useState(sinBase(location.pathname))
   useEffect(() => {
-    const on = () => setPath(location.pathname)
+    const on = () => setPath(sinBase(location.pathname))
     addEventListener('popstate', on)
     return () => removeEventListener('popstate', on)
   }, [])
   const go = (to) => {
-    history.pushState(null, '', to)
+    history.pushState(null, '', enBase(to))
     setPath(to)
   }
   return [path, go]
@@ -50,7 +55,7 @@ function Link({ id, to, go, children, p8 = 'link' }) {
   return (
     <a
       id={id}
-      href={to}
+      href={enBase(to)}
       data-p8={p8}
       onClick={(e) => {
         e.preventDefault()
@@ -73,11 +78,11 @@ export default function App() {
 
   if (path === '/reset') {
     save({})
-    location.replace(trasReset(SESION_DEMO))
+    location.replace(enBase(trasReset(SESION_DEMO)))
     return null
   }
   if (!state.usuario && path !== '/login') {
-    history.replaceState(null, '', '/login')
+    history.replaceState(null, '', enBase('/login'))
     return <Login onLogin={(u) => update(entrarComo(u))} go={go} />
   }
 
