@@ -680,3 +680,11 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .c5-qr .cl-url { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 1.4cqw; white-space: nowrap; }
 .close5 .c5-ocho { width: 18cqw; margin-bottom: -3.6cqw; }
 .close5 { padding-bottom: 10.5cqw; } .close5 .c5-ocho { transform: translateX(-.28cqw); }
+/* QR más grande (centrado con la frase); priv8.es abajo, centrado en la diapositiva; 8 algo más arriba */
+.c5-qr { position: static; }
+.c5-qr svg { width: 23cqw; height: 23cqw; }
+.c5-qr .cl-url { position: absolute; left: 50%; top: auto; bottom: 4.6cqw; transform: translateX(-50%); margin: 0; font-size: 2.4cqw; }
+.close5 .c5-ocho { margin-bottom: -1.6cqw; }
+.close5 { padding-bottom: var(--c5-pb, 0); }
+.close5 .c5-url { position: absolute; left: 50%; bottom: 4.6cqw; transform: translateX(-50%); font: 700 2.4cqw/1 var(--f-display); letter-spacing: -.03em; color: #fff; white-space: nowrap; }
+.close5 { --c5-pb: 6.4cqw; }

@@ -721,9 +721,9 @@ function Cierre() {
         <div className="c5-izq">
           <R d={1} as="h2"><span className="line">El agente</span><span className="line">hace el trámite.</span><span className="line soft">Los datos se</span><span className="line soft">quedan contigo.</span></R>
         </div>
+        <span className="cl-url c5-url">priv8.es</span>
         <R d={3} className="c5-qr">
           <Qr rows={QR.web} label="Código QR a priv8.es" azul />
-          <span className="cl-url">priv8.es</span>
         </R>
       </div>
     </div>
