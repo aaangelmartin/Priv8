@@ -6,7 +6,8 @@
 # Selectores: "id/<nombre>" es el resource-id "<app>:id/<nombre>" sin el paquete. Las filas
 # repetidas (cuentas, movimientos, contactos) comparten id: la regla se aplica a cada una.
 # Todas las pantallas tienen una raíz id/screen_<nombre>: así se reconoce la pantalla.
-# Elemento sin regla en una pantalla conocida: ámbar entero (sin_regla: ambar).
+# Elemento sin regla en una pantalla conocida: ámbar entero (sin_regla: ambar). Los títulos y
+# etiquetas fijas del layout (titulo, *_label, *_titulo) y los contenedores (lista_*) son verdes.
 # Cualquier nodo con isPassword es rojo aunque no tenga regla.
 # Los contactos guardados por la persona tienen origen maestro (la ficha de confianza).
 
@@ -25,7 +26,7 @@ screens:
       - {match: {sel: id/usuario}, cls: rojo}
       - {match: {sel: id/clave}, cls: rojo}
       - {match: {sel: id/btn_entrar}, cls: verde, solo_persona: true}  # la autenticación la hace la persona
-      - {match: {sel_re: '^id/(banco_nombre|banco_lema|login_titulo|login_error)$'}, cls: verde}
+      - {match: {sel_re: '^id/(banco_nombre|banco_lema|login_titulo|usuario_label|clave_label|login_error)$'}, cls: verde}
 
   - id: inicio
     when: [{sel: id/screen_inicio}]
@@ -36,8 +37,7 @@ screens:
       - {match: {sel: id/cuenta_iban}, cls: ambar, tipo: IBAN, origen: propio}
       - {match: {sel: id/cuenta_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}
       # cuenta: fila tocable, content-desc "Ver movimientos de <alias>"; alias: "Cuenta nómina"
-      - {match: {sel_re: '^id/(banco_nombre|btn_salir|cuenta|cuenta_alias|btn_transferir|btn_movimientos)$'}, cls: verde}
-      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
+      - {match: {sel_re: '^id/(banco_nombre|btn_salir|saldo_total_label|cuentas_titulo|lista_cuentas|cuenta|cuenta_alias|btn_transferir|btn_movimientos)$'}, cls: verde}
 
   - id: movimientos
     when: [{sel: id/screen_movimientos}]
@@ -50,8 +50,7 @@ screens:
       # El concepto lo escribe un tercero: texto no fiable. Un movimiento del seed lleva una
       # inyección de instrucciones con un IBAN; por su origen nunca llega a un campo de pago.
       - {match: {sel: id/mov_concepto}, cls: ambar, tipo: MOVIMIENTO, origen: tercero}
-      - {match: {sel_re: '^id/(btn_volver|mov_cuenta_alias|btn_otra_cuenta|mov_vacio|mov_fecha)$'}, cls: verde}
-      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
+      - {match: {sel_re: '^id/(btn_volver|titulo|mov_cuenta_alias|mov_cuenta_saldo_label|btn_otra_cuenta|mov_vacio|lista_movimientos|movimiento|mov_fecha)$'}, cls: verde}
 
   - id: transferencia
     when: [{sel: id/screen_transferencia}]
@@ -67,8 +66,7 @@ screens:
       - {match: {sel: id/importe}, cls: ambar, tipo: IMPORTE, campo: transferencia.importe, acepta: [propio, titular]}
       - {match: {sel: id/concepto}, cls: ambar, tipo: MOVIMIENTO, campo: transferencia.concepto, acepta: [propio, titular]}
       # contacto: fila tocable que rellena IBAN y beneficiario
-      - {match: {sel_re: '^id/(btn_volver|origen_alias|btn_cambiar_origen|contacto|transfer_error|btn_continuar)$'}, cls: verde}
-      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
+      - {match: {sel_re: '^id/(btn_volver|titulo|origen_titulo|origen_alias|btn_cambiar_origen|contactos_titulo|lista_contactos|contacto|iban_destino_label|beneficiario_label|importe_label|concepto_label|transfer_error|btn_continuar)$'}, cls: verde}
 
   - id: revision
     when: [{sel: id/screen_revision}]
@@ -84,8 +82,7 @@ screens:
         cls: verde
         critica: transferir
         resumen: [id/rev_importe, id/rev_beneficiario, id/rev_iban_destino]
-      - {match: {sel_re: '^id/(btn_volver|rev_origen_alias|rev_comision|btn_cancelar)$'}, cls: verde}
-      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
+      - {match: {sel_re: '^id/(btn_volver|titulo|rev_importe_label|rev_beneficiario_label|rev_iban_destino_label|rev_origen_label|rev_origen_alias|rev_concepto_label|rev_comision_label|rev_comision|btn_cancelar)$'}, cls: verde}
 
   - id: autenticacion
     when: [{sel: id/screen_autenticacion}]
@@ -98,8 +95,7 @@ screens:
       - {match: {sel: id/otp}, cls: rojo}  # numberPassword, isPassword=true
       - {match: {sel: id/btn_huella}, cls: verde, solo_persona: true}  # abre BiometricPrompt
       - {match: {sel: id/btn_confirmar_otp}, cls: verde, solo_persona: true}
-      - {match: {sel_re: '^id/(auth_texto|huella_estado|otp_error|btn_cancelar)$'}, cls: verde}
-      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
+      - {match: {sel_re: '^id/(titulo|auth_texto|auth_importe_label|huella_estado|otp_label|otp_error|btn_cancelar)$'}, cls: verde}
 
   - id: resultado
     when: [{sel: id/screen_resultado}]
@@ -109,5 +105,4 @@ screens:
       - {match: {sel: id/res_beneficiario}, cls: ambar, tipo: PERSONA, extract: '^(.+?)(?: · .+)?$'}
       - {match: {sel: id/res_iban_destino}, cls: ambar, tipo: IBAN}
       - {match: {sel: id/res_referencia}, cls: ambar, tipo: CODIGO}
-      - {match: {sel_re: '^id/(res_texto|res_fecha|btn_inicio)$'}, cls: verde}
-      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
+      - {match: {sel_re: '^id/(titulo|res_texto|res_importe_label|res_beneficiario_label|res_iban_destino_label|res_referencia_label|res_fecha_label|res_fecha|btn_inicio)$'}, cls: verde}

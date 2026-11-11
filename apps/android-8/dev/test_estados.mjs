@@ -19,7 +19,7 @@ const audit = (kind, extra = {}) => ({ type: 'audit', event: { kind, ...extra } 
 
 t('every face used exists in docs/ojos.html', () => {
   const kinds = ['task', 'observe_sent', 'act', 'oracle', 'held', 'approval', 'paused', 'call'];
-  const reasons = ['fuga', 'destino', 'rojo', 'presupuesto', 'sin_regla', 'token_desconocido', 'caducado', 'cancelado'];
+  const reasons = ['fuga', 'destino', 'rojo', 'presupuesto', 'sin_regla', 'token_desconocido', 'caducado', 'cancelado', 'adaptador', 'asesoria'];
   const plans = [
     ...kinds.map((k) => E.decidir(audit(k))),
     ...reasons.map((r) => E.decidir(audit('blocked', { reason: r }))),
@@ -45,6 +45,13 @@ t('a screen with tokens: reads, then asterisks', () => {
 t('blocked by red data closes the eyes; IBAN from an email gets angry', () => {
   assert.deepEqual(caras(E.decidir(audit('blocked', { reason: 'rojo' }))), ['nuncasale']);
   assert.deepEqual(caras(E.decidir(ex('events.audit.json'))), ['enfado']); // example: reason destino
+});
+
+t('asked for investment advice: the «no puedo» face (#43)', () => {
+  assert.deepEqual(caras(E.decidir(ex('events.audit-asesoria.json'))), ['rechazar']);
+  assert.match(ojos, /k:'rechazar',[^\n]*n:'No puedo'/);
+  // The fixed sentence comes first as a voice message, all cloud: 8 speaks, then the face stays.
+  assert.deepEqual(caras(E.decidir(ex('events.voice-no-puedo.json'))), ['hablar']);
 });
 
 t('confirmation: calls you, then waits; yes nods, no shakes', () => {

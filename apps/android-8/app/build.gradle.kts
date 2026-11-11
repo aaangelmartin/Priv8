@@ -20,6 +20,12 @@ android {
         // Core's event channel (docs/contracts/events.schema.json), through `adb reverse tcp:8700 tcp:8700`.
         val eventsUrl = (project.findProperty("priv8.eventsUrl") as String?) ?: "ws://127.0.0.1:8700/events"
         buildConfigField("String", "EVENTS_URL", "\"$eventsUrl\"")
+        // Session of the B2C demo, for task_request and dictation_start (#47).
+        val session = (project.findProperty("priv8.session") as String?) ?: "b2c"
+        buildConfigField("String", "SESSION", "\"$session\"")
+        // Who dictates (#47): auto (emulator → laptop's Whisper, phone → on-device), movil or portatil.
+        val dictado = (project.findProperty("priv8.dictado") as String?) ?: "auto"
+        buildConfigField("String", "DICTADO", "\"$dictado\"")
         // Raw node-tree dump to logcat, with screen content. Off unless asked for.
         val dump = (project.findProperty("priv8.a11yDump") as String?)?.toBoolean() ?: false
         buildConfigField("boolean", "A11Y_DUMP", dump.toString())

@@ -25,7 +25,9 @@ import java.io.File
  * App 8: the eyes full screen, moved by the core's events (issue #39).
  * The app screens (conversation, "no puedo") come with the design of issue #36;
  * spoken confirmations are ConfirmActivity. Touching the eyes dictates a
- * task (#47), on the device only.
+ * task (#47): on a real phone with its on-device recognizer, then
+ * `task_request`; on the emulator with the laptop's Whisper (`dictation_start`).
+ * The audio never leaves the phone or the laptop.
  */
 class MainActivity : Activity() {
 
@@ -35,10 +37,17 @@ class MainActivity : Activity() {
     private lateinit var dictador: Dictador
 
     /**
-     * The last dictated task, ready to send. Not sent yet: no message carries
-     * a task from the phone to the core (issue #47, contract pending).
+     * A task dictated on the phone that could not be sent yet (no connection
+     * to the core). It goes out as `task_request` when the channel comes back.
      */
     private var tareaLista: String? = null
+
+    /** Who dictates (#47): the phone's on-device recognizer, or the laptop's Whisper. */
+    private var via = Via.MOVIL
+
+    /** Waiting for the laptop's `dictation` after a `dictation_start`. */
+    private var esperandoPortatil = false
+    private val finEspera = Runnable { esperandoPortatil = false }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,25 +63,35 @@ class MainActivity : Activity() {
         events = EventsClient(
             url = BuildConfig.EVENTS_URL,
             onEvent = { type, json ->
-                ojos.evento(json)
-                // What 8 says, with the values rendered on the device (#40).
-                if (type == "voice") Frase.parse(JSONObject(json))?.let(subtitulo::mostrar)
+                if (type == "dictation") {
+                    // The task in clear: subtitle only, never the eyes' WebView.
+                    dictadoDelPortatil(JSONObject(json))
+                } else {
+                    ojos.evento(json)
+                    // What 8 says, with the values rendered on the device (#40).
+                    if (type == "voice") Frase.parse(JSONObject(json))?.let(subtitulo::mostrar)
+                }
             },
-            onConnection = { ojos.conexion(it) },
+            onConnection = { conectado ->
+                ojos.conexion(conectado)
+                if (conectado) tareaLista?.let(::enviarTarea)
+            },
         )
+        via = Tareas.via(BuildConfig.DICTADO, emulador())
+        Log.i(TAG_DICTADO, "dictado via ${via.name.lowercase()}")
         dictador = Dictador(
             context = this,
             onParcial = { subtitulo.mostrarTexto(it) },
             onTarea = { tarea ->
-                tareaLista = tarea
                 subtitulo.mostrarTexto("«$tarea»")
-                Log.i(TAG_DICTADO, "task ready, not sent: no task message in the contract yet (#47)")
+                enviarTarea(tarea)
             },
             onAviso = { subtitulo.mostrarTexto(it, AVISO_MS) },
+            alPortatil = ::dictarEnPortatil,
         )
         val toque = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onSingleTapUp(e: MotionEvent): Boolean {
-                if (dictador.escuchando) dictador.parar() else dictador.escuchar()
+                dictar()
                 return false
             }
         })
@@ -95,6 +114,8 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        // A dictation still listening would compete with the spoken confirmation's recognizer.
+        dictador.parar()
         events.stop()
         super.onStop()
     }
@@ -104,14 +125,74 @@ class MainActivity : Activity() {
         dictarSiSePide(intent)
     }
 
-    /** For the emulator: `adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true`. */
+    /**
+     * For the emulator: `adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true`.
+     * `--es dictado movil|portatil` chooses who dictates from then on.
+     */
     private fun dictarSiSePide(intent: Intent?) {
+        // Debug only: in a release build no other app can make 8 start listening or change who dictates.
+        if (!BuildConfig.DEBUG) return
+        intent?.getStringExtra(EXTRA_VIA)?.let {
+            via = Tareas.via(it, emulador())
+            Log.i(TAG_DICTADO, "dictado via ${via.name.lowercase()}")
+        }
         if (intent?.getBooleanExtra(EXTRA_DICTAR, false) != true) return
         // Debug only: `--es audio prueba.pcm` reads files/prueba.pcm instead of the microphone.
         val audio = intent.getStringExtra("audio")?.takeIf { BuildConfig.DEBUG }
             ?.let { File(getExternalFilesDir(null), File(it).name) }?.takeIf { it.isFile }
-        window.decorView.post { dictador.escuchar(audio) }
+        window.decorView.post { dictar(audio) }
     }
+
+    /** A tap on the eyes: listen (or stop) on the phone, or ask the laptop to listen. */
+    private fun dictar(audio: File? = null) {
+        when {
+            esperandoPortatil -> Unit // the laptop is already listening; it stops on silence
+            dictador.escuchando -> dictador.parar()
+            via == Via.PORTATIL && audio == null -> {
+                if (!dictarEnPortatil()) subtitulo.mostrarTexto("Sin conexión con el portátil. Escribe la tarea.", AVISO_MS)
+            }
+            else -> dictador.escuchar(audio)
+        }
+    }
+
+    /** `dictation_start`: the core records the laptop microphone and transcribes it with Whisper, locally. */
+    private fun dictarEnPortatil(): Boolean {
+        if (!events.send(Tareas.dictationStart(SESSION))) {
+            Log.i(TAG_DICTADO, "dictado: no events channel for dictation_start")
+            return false
+        }
+        esperandoPortatil = true
+        Log.i(TAG_DICTADO, "dictado: listening on the laptop")
+        subtitulo.mostrarTexto("Te escucho…", PORTATIL_MS)
+        window.decorView.removeCallbacks(finEspera)
+        window.decorView.postDelayed(finEspera, PORTATIL_MS)
+        return true
+    }
+
+    /** The laptop's answer. The core already queued the task: nothing is sent back. */
+    private fun dictadoDelPortatil(msg: JSONObject) {
+        val r = Tareas.dictation(msg, SESSION) ?: return
+        esperandoPortatil = false
+        if (r.tarea != null) {
+            Log.i(TAG_DICTADO, "dictado: laptop task (${r.tarea.length} chars)")
+            subtitulo.mostrarTexto("«${r.tarea}»")
+        } else {
+            subtitulo.mostrarTexto(r.aviso ?: return, AVISO_MS)
+        }
+    }
+
+    /** `task_request` to the core, which tokenizes the task before it reaches the model. */
+    private fun enviarTarea(tarea: String) {
+        if (events.send(Tareas.taskRequest(SESSION, tarea))) {
+            tareaLista = null
+            Log.i(TAG_DICTADO, "task sent (${tarea.length} chars)")
+        } else {
+            tareaLista = tarea
+            Log.i(TAG_DICTADO, "task kept until the events channel is back (${tarea.length} chars)")
+        }
+    }
+
+    private fun emulador() = Tareas.esEmulador(Build.FINGERPRINT, Build.MODEL, Build.PRODUCT, Build.HARDWARE)
 
     override fun onDestroy() {
         dictador.destroy()
@@ -158,6 +239,10 @@ class MainActivity : Activity() {
         const val REQUEST_MIC = 1
         const val TAG_DICTADO = "Priv8Dictado"
         const val EXTRA_DICTAR = "dictar"
+        const val EXTRA_VIA = "dictado"
         const val AVISO_MS = 4_000L
+        /** The laptop listens up to 7 s and Whisper takes a few more. */
+        const val PORTATIL_MS = 15_000L
+        val SESSION: String = BuildConfig.SESSION
     }
 }

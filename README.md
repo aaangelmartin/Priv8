@@ -119,6 +119,15 @@ Abre la consola en http://127.0.0.1:5175. Entra en Alba Core con `admin.alba` / 
 
 Métricas con y sin protocolo, sin claves: `make metrics`.
 
+### Llamar al banco por ti, sin claves
+
+```bash
+make llamada-banco                                   # «Quiero hablar con un gestor»
+make llamada-banco OBJETIVO="Bloquea mi tarjeta, me la han robado" VOZ=texto
+```
+
+8 llama a la línea simulada de Banca Alcor (datos inventados), dice primero que es un asistente de IA que llama en nombre de un cliente, pasa el menú por tonos, espera y, cuando contesta un gestor, le pasa la llamada a la persona y se retira. Si la línea pide PIN, código, clave, tarjeta o DNI, cede la llamada en ese momento: la identificación la hace siempre la persona. La terminal muestra lo que dice la línea, lo que ve 8 (con tokens) y la auditoría sin valores. Detalles en `voice/README.md`.
+
 ### Comprobar un registro de auditoría
 
 ```bash

@@ -174,7 +174,7 @@ def test_say_sends_render_values_then_the_utterance(rig, session):
     assert phone.app == OCHO  # 8 came to the front to say it
     assert wait_until(lambda: utt["utterance"] in bridge.voice_done)
     outs = [e for e in core.AUDIT.events if e["session"] == session and e["kind"] == "voice_out"]
-    assert len(outs) == 2 and "sonó en el móvil" in outs[-1]["detail"]
+    assert len(outs) == 1 and "sonó en el móvil" in outs[0]["detail"]
     assert not any(v in json.dumps(outs, ensure_ascii=False) for v in SEED_VALUES)
     validator = load_validator(CONTRACTS)
     assert all(validator.is_valid(m) for m in phone.received)

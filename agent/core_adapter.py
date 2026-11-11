@@ -102,6 +102,15 @@ class _LeakCheck:
                            matched=tuple(str(f) for f in findings))
 
 
+class _Voice:
+    def __init__(self, fn: Any) -> None:
+        self._say = fn
+
+    def say(self, session: str, text: str) -> JSON | None:
+        out = self._say(session, text)
+        return None if out is None else dict(out)
+
+
 class _Audit:
     def __init__(self, fn: Any) -> None:
         self._record = fn
@@ -142,6 +151,7 @@ def build_real_core(module: str = CORE_MODULE) -> Core:
         oracle=_Oracle(mod.oracle),
         leak=_LeakCheck(mod.check),
         audit=_Audit(mod.record),
+        voice=_Voice(mod.say) if callable(getattr(mod, "say", None)) else None,
     )
 
 
@@ -194,7 +204,7 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     from voice.call import make_on_call  # llamada de verificación al teléfono de la ficha (#23)
 
     web = WebAdapter(start=start, on_call=make_on_call(session))
-    print("priv8: entra en Alba Core en la ventana de Chromium (admin.alba / Alba-2026!)", file=sys.stderr)
+    print("priv8: entra en Alba Core en la ventana de Chromium (usuario y clave de prueba en data/seed.json)", file=sys.stderr)
     if not web.wait_until_logged_in("alba-core"):
         raise TimeoutError("nadie entró en Alba Core en 5 minutos")
     mod.connect(session, web)
