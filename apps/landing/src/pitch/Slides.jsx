@@ -95,7 +95,11 @@ function Portada() {
     if (!el || fase === 'fin') return;
     const hero = el.querySelector('.e-hero');
     if (!hero) return;
+    /* se mide su sitio real, sin la transformación de la intro puesta */
+    const prev = hero.style.transform;
+    hero.style.transition = 'none'; hero.style.transform = 'none';
     const r = hero.getBoundingClientRect(), s = el.getBoundingClientRect();
+    hero.style.transform = prev; hero.style.transition = '';
     el.style.setProperty('--ix', `${s.left + s.width / 2 - (r.left + r.width / 2)}px`);
     el.style.setProperty('--iy', `${s.top + s.height / 2 - (r.top + r.height / 2)}px`);
   }, [fase]);
@@ -106,7 +110,7 @@ function Portada() {
       <div className="top"><span className="brand">Priv8</span><span>priv8.es</span></div>
       {fase === 'hola' && <p className="hola" aria-hidden="true">¡Hola, soy 8!</p>}
       <div className="center">
-        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" look={look} />
+        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" look={look} mode={fase === 'hola' ? 'saludar' : 'mirar'} />
         <R d={1} as="h1"><span className="line">8 hace el trámite.</span><span className="line soft">Sin ver tus datos.</span></R>
         <R d={3} as="p" className="who">Ángel Martín, Álvaro Carpintero, Marco Barroso y Pablo Rojo</R>
         <R d={4} as="p" className="event">Hackfinance | Madrid Engineering Week | 12 nov 2026</R>

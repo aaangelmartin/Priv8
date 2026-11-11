@@ -228,7 +228,7 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .hero-panel .hero-stage { padding-top: clamp(110px, 16vh, 150px); padding-bottom: 24px; }
 .hero-panel .hero-anchor { width: clamp(100px, 16vw, 200px); }
 .block-demos { padding-block: clamp(40px, 6vw, 80px) clamp(64px, 8vw, 110px); }
-.demos { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 1040px; }
+.demos { list-style: none; margin: 0 auto; padding: 0; display: grid; align-items: start; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 1040px; }
 @media (max-width: 900px) { .demos { grid-template-columns: minmax(0, 1fr); max-width: 640px; } }
 .demo { background: var(--card); border-radius: var(--r); padding: clamp(22px, 2.6vw, 32px); display: grid; gap: 18px; align-content: start; min-width: 0; transition: box-shadow .3s ease, background .3s ease; }
 .demo-listo { background: #fff; box-shadow: var(--shadow); outline: 1px solid var(--line); }
@@ -259,11 +259,21 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .links { display: flex; flex-wrap: wrap; gap: 10px; }
 .links .btn { padding: 14px 20px; font-size: .95rem; }
 .donde { color: var(--ink-2); font-size: .95rem; }
-.pedidos { display: grid; gap: 8px; }
-.pedido { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 16px; padding: 12px 14px; cursor: pointer; font: 500 .95rem/1.4 var(--f-body); color: var(--ink); transition: border-color .2s ease; }
-.pedido:hover { border-color: var(--band); }
-.pedido i { font: 600 .78rem/1 var(--f-mono); font-style: normal; color: var(--accent); flex: none; }
-.pedido-ok i { color: var(--ok-text); }
+.casos-wrap { display: grid; gap: 10px; }
+.casos-h { font: 600 .78rem/1 var(--f-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-2); }
+.casos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.caso { display: grid; gap: 12px; border: 1px solid var(--line); background: var(--card); border-radius: 18px; padding: 14px 16px; transition: border-color .2s ease, background .2s ease; }
+.caso:hover { border-color: #b9c4f2; }
+.caso-ok { border-color: #bfe3cf; background: var(--ok-soft); }
+.caso-t { font-size: 1rem; }
+.caso-pedido { margin-top: 4px; font: 500 .95rem/1.45 var(--f-body); color: var(--accent); }
+.caso-que { margin-top: 8px; color: var(--ink-2); font-size: .9rem; line-height: 1.5; }
+.caso-nota { margin-top: 8px; color: #8a5200; background: var(--warn-soft); border-radius: 10px; padding: 6px 10px; font-size: .86rem; }
+.caso-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn-sm { padding: 11px 16px; font-size: .9rem; }
+.caso-ok .btn-band { background: var(--ok); box-shadow: none; }
+.caso-aparte { color: var(--ink-2); font-size: .88rem; }
+.caso-aparte a { font-weight: 600; }
 .motivo { color: var(--bad-text); background: var(--bad-soft); border-radius: 14px; padding: 12px 14px; font-size: .92rem; }
 .alerta { max-width: 1040px; margin: 0 auto 16px; background: var(--warn-soft); color: #8a5200; border-radius: 16px; padding: 14px 18px; font-size: .95rem; }
 .link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; font-weight: 600; cursor: pointer; }
@@ -272,4 +282,4 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .registro summary { cursor: pointer; padding: 16px 0; font: 600 .95rem/1 var(--f-display); }
 .registro pre { margin: 0 0 18px; max-height: 280px; overflow: auto; font: 400 .78rem/1.5 var(--f-mono); color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .foot-small { padding-top: 24px; }
-@media (prefers-reduced-motion: reduce) { .demo-preparando .piezas li:not(.on) .dot, .listo { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .demo-preparando .piezas li:not(.on) .dot, .listo { animation: none; } .caso { transition: none; } }

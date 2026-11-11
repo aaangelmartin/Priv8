@@ -13,6 +13,13 @@
 //                  los tokens ‹…› van en su chip. Uno cada vez: el nuevo sustituye al anterior.
 //   done()  hide()  velo({titulo, texto} | null)  aviso(texto | null)
 //
+// Pares de fotogramas (#187): la vista de 8 no anima su propio cursor. En cada captura el
+// adaptador congela el de la pestaña real (congelar: pausa sus animaciones y fija los ojos en
+// una copia quieta), le pide su estado, lo copia tal cual en la vista de 8 (fijar) y fotografía
+// las dos; luego lo suelta (soltar). El estado nunca lleva texto de la pestaña real: del
+// bocadillo solo dice de dónde salió (el id que le puso el adaptador, o el verbo y el elemento
+// de un go) y cuánto lleva escrito; la vista de 8 pone su propio texto, con tokens.
+//
 // Vive en un shadow root colgado de <html>, fuera de #root, con data-p8-ignore y aria-hidden:
 // el snapshot no entra en él y la vista de 8 lo quita de la copia. Sin eventos de puntero.
 (createEngine, FONTS) => {
@@ -21,7 +28,8 @@
   const NIEBLA = '#EEF2F8'
   const MODOS = new Set(['mirar', 'leer', 'pensar', 'hablar', 'esperar', 'enfado', 'listo', 'apartar', 'asentir', 'negar',
     'cargando', 'saludar', 'atencion', 'duda', 'sorpresa', 'tristeza', 'disculpa', 'alegria', 'curiosidad', 'rechazar'])
-  const st = { pos: null, modo: 'mirar', bt: 0, tt: 0, quita: 0, eng: null, ojos: null, velo: null }
+  const st = { pos: null, modo: 'mirar', bt: 0, tt: 0, quita: 0, eng: null, ojos: null, velo: null,
+    fuente: null, bi: 0, bn: 0, congelado: false, esclavo: false }
   let host = null
   let sh = null
   let fuentes = null
@@ -115,7 +123,7 @@
     cargarFuentes().then(() => {
       try {
         if (!st.eng) st.eng = createEngine()
-        if (!st.ojos) {
+        if (!st.ojos && !st.esclavo) {
           st.ojos = st.eng.mount(sh.querySelector('.ojos'), { mode: st.modo, col: { fg: COB, cut: '#FFFFFF' } })
           st.ojos.forced = [-0.3, 0.35, 0]
         }
@@ -182,12 +190,18 @@
     const full = String(a.texto || '')
     const paso = Math.max(1, Math.ceil(full.length / 60))
     let i = 0
+    // De dónde sale el texto, para que la vista de 8 ponga el suyo (con tokens) en el mismo punto.
+    st.fuente = a.id != null ? { id: a.id } : (a.fuente || null)
+    st.bi = 0
+    st.bn = full.length
     const fant = document.createElement('span')
     fant.className = 'fant'
     const pon = () => { fant.textContent = full.slice(i); tx.replaceChildren(full.slice(0, i), fant) }
     pon()
     st.tt = setInterval(() => {
+      if (st.congelado) return
       i += paso
+      st.bi = Math.min(i, full.length)
       if (i >= full.length) { clearInterval(st.tt); pintar(tx, full); return }
       pon()
     }, 20)
@@ -228,7 +242,7 @@
     const ring = q('.ring')
     ring.classList.remove('on')
     mostrar()
-    if (a.verb) di({ texto: nombre ? `${a.verb} «${nombre}»` : a.verb, ms: a.op === 'type' ? 3200 : 2400 })
+    if (a.verb) di({ texto: nombre ? `${a.verb} «${nombre}»` : a.verb, ms: a.op === 'type' ? 3200 : 2400, fuente: { ref: a.ref || null, verb: a.verb } })
     else if (a.label) di({ texto: a.label, ms: 2400 })
     modo(a.op === 'type' ? 'hablar' : 'mirar')
 
@@ -248,7 +262,8 @@
             { transform: at(from[0] + dx * 0.6, from[1] + dy * 0.6, tilt), offset: 0.6 },
             { transform: at(x, y) }],
           { duration: dur, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' })
-        await Promise.race([anim.finished.catch(() => {}), wait(dur + 120)])
+        // Las capturas la pausan un momento (congelar): el plazo de reserva va holgado.
+        await Promise.race([anim.finished.catch(() => {}), wait(dur * 3 + 600)])
         anim.cancel()
       }
       cur.style.transform = at(x, y)
@@ -281,7 +296,7 @@
       }
       return [x, y]
     }
-    if (a.nowait) { llegar(); return [x, y] }
+    if (a.nowait) { llegar(); return [x, y, dur] }
     return llegar()
   }
 
@@ -319,8 +334,128 @@
     return true
   }
 
+  // ---- pares de fotogramas (#187) ----
+  const cs = (el) => getComputedStyle(el)
+  // Pestaña real: congela la capa (animaciones en pausa, los ojos en una copia quieta encima de
+  // los vivos) y devuelve su estado, sin ningún texto suyo. Hasta soltar() no se mueve nada.
+  const congelar = () => {
+    crear()
+    st.congelado = true
+    // Solo las que están en marcha: una ya terminada (fill: forwards) volvería a empezar al soltarla.
+    st.pausadas = sh.getAnimations().filter((an) => an.playState === 'running')
+    for (const an of st.pausadas) { try { an.pause() } catch { /* nada */ } }
+    const caja = q('.ojos')
+    caja.querySelectorAll('.p8-fijo').forEach((n) => n.remove())
+    const vivo = caja.querySelector('svg')
+    let ojos = ''
+    if (vivo) {
+      ojos = vivo.outerHTML
+      const t = document.createElement('template')
+      t.innerHTML = ojos
+      const fijo = t.content.firstElementChild
+      if (fijo) {
+        fijo.classList.add('p8-fijo')
+        fijo.style.cssText = 'position:absolute;inset:0'
+        vivo.style.visibility = 'hidden'
+        caja.append(fijo)
+      }
+    }
+    const cur = q('.cur')
+    const ring = q('.ring')
+    const b = q('.bub')
+    return {
+      cur: { cls: cur.className, transform: cs(cur).transform, opacity: cs(cur).opacity },
+      ojos,
+      ring: { cls: ring.className, opacity: cs(ring).opacity, left: ring.style.left, top: ring.style.top,
+        width: ring.style.width, height: ring.style.height },
+      bub: { cls: b.className, opacity: cs(b).opacity, transform: cs(b).transform, fuente: st.fuente, i: st.bi, n: st.bn },
+      rips: [...sh.querySelectorAll('.rip')].map((r) => ({ left: r.style.left, top: r.style.top,
+        transform: cs(r).transform, opacity: cs(r).opacity })),
+    }
+  }
+  const soltar = () => {
+    if (!sh) return true
+    const caja = q('.ojos')
+    caja.querySelectorAll('.p8-fijo').forEach((n) => n.remove())
+    const vivo = caja.querySelector('svg')
+    if (vivo) vivo.style.visibility = ''
+    for (const an of st.pausadas || []) {
+      try {
+        if (an.playState !== 'paused') continue
+        // Pausada justo en su final: play() la rebobinaría y volvería a empezar; se termina.
+        const fin = an.effect ? an.effect.getComputedTiming().endTime : Infinity
+        if (an.currentTime != null && an.currentTime >= fin) an.finish()
+        else an.play()
+      } catch { /* nada */ }
+    }
+    st.pausadas = []
+    st.congelado = false
+    return true
+  }
+  // Vista de 8: pone la capa exactamente como la de la pestaña real (e, de congelar), sin
+  // animaciones propias. e.texto es el texto del bocadillo con tokens (lo da el adaptador); si
+  // el bocadillo salió de un go, el nombre del elemento es el de esta copia, ya censurada.
+  const fijar = (e) => {
+    crear()
+    st.esclavo = true
+    if (st.ojos && st.eng) { try { st.eng.unmount(st.ojos) } catch { /* nada */ } st.ojos = null }
+    clearInterval(st.tt)
+    clearTimeout(st.bt)
+    clearTimeout(st.quita)
+    for (const an of sh.getAnimations()) { try { an.cancel() } catch { /* nada */ } }
+    sh.querySelectorAll('.rip').forEach((r) => r.remove())
+    const cur = q('.cur')
+    const ring = q('.ring')
+    const b = q('.bub')
+    const quieto = (el, est) => { el.style.transition = 'none'; el.style.animation = 'none'; Object.assign(el.style, est) }
+    if (!e) {
+      quieto(cur, { opacity: '0' })
+      quieto(ring, { opacity: '0' })
+      quieto(b, { opacity: '0' })
+      return true
+    }
+    cur.className = e.cur.cls
+    quieto(cur, { transform: e.cur.transform === 'none' ? '' : e.cur.transform, opacity: e.cur.opacity })
+    q('.ojos').innerHTML = e.ojos || ''
+    ring.className = e.ring.cls
+    quieto(ring, { opacity: e.ring.opacity, left: e.ring.left, top: e.ring.top, width: e.ring.width, height: e.ring.height })
+    b.className = e.bub.cls
+    quieto(b, { opacity: e.bub.opacity, transform: e.bub.transform === 'none' ? 'none' : e.bub.transform })
+    let texto = e.texto
+    const f = e.bub.fuente
+    if (texto == null && f && f.verb) {
+      const el = f.ref ? document.querySelector(`[data-p8-ref="${window.CSS.escape(f.ref)}"]`) : null
+      const nombre = el ? nombreDe(el) : ''
+      texto = nombre ? `${f.verb} «${nombre}»` : f.verb
+    }
+    const tx = q('.tx')
+    q('.eb').textContent = ''
+    if (texto == null) { tx.replaceChildren(); quieto(b, { opacity: '0' }) } else {
+      const s = String(texto)
+      const n = Math.max(1, e.bub.n || 0)
+      if ((e.bub.i || 0) >= n) pintar(tx, s)
+      else {
+        // El mismo punto del tecleo, en proporción; sin partir un token por la mitad.
+        let k = Math.round(s.length * Math.max(0, e.bub.i || 0) / n)
+        const abre = s.lastIndexOf('‹', k - 1)
+        if (abre >= 0 && s.indexOf('›', abre) >= k) k = abre
+        const fant = document.createElement('span')
+        fant.className = 'fant'
+        fant.textContent = s.slice(k)
+        tx.replaceChildren(s.slice(0, k), fant)
+      }
+    }
+    for (const r of e.rips || []) {
+      const d = document.createElement('div')
+      d.className = 'rip'
+      Object.assign(d.style, { left: r.left, top: r.top, transform: r.transform === 'none' ? '' : r.transform, opacity: r.opacity })
+      sh.appendChild(d)
+    }
+    return true
+  }
+
   Object.defineProperty(window, '__p8ocho', {
-    value: { go, modo, di, done, hide, velo, aviso, pos: () => st.pos },
+    value: { go, modo, di, done, hide, velo, aviso, congelar, soltar, fijar, pos: () => st.pos },
     configurable: true,
   })
   return true

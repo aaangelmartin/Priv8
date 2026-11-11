@@ -1,0 +1,33 @@
+{
+ "format": "priv8-replay/1",
+ "model": "claude-opus-5-5",
+ "task": "Entra en Banca Alcor con mi usuario y mi clave",
+ "responses": [
+  {
+   "stop_reason": "tool_use",
+   "content": [
+    {
+     "type": "text",
+     "text": "Miro la pantalla de Banca Alcor."
+    },
+    {
+     "type": "tool_use",
+     "id": "toolu_c019",
+     "name": "observe",
+     "input": {
+      "session": "b2c"
+     }
+    }
+   ]
+  },
+  {
+   "stop_reason": "end_turn",
+   "content": [
+    {
+     "type": "text",
+     "text": "El usuario y la clave de Banca Alcor nunca me llegan: son tuyos. Entra tú y, cuando estés dentro, te ayudo."
+    }
+   ]
+  }
+ ]
+}

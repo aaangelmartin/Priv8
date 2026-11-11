@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Pruebalo, { useTick } from './Asistentes.jsx';
 import Eight from './eight/Eight.jsx';
 import Nav from './Nav.jsx';
 import Companion from './Companion.jsx';
@@ -17,7 +18,7 @@ const Tok = ({ children }) => <span className="tok">{children}</span>;
 /* alternan empresa y persona: lo que 8 hace en un ERP y lo que hace en tu móvil. Todas caben en una línea a 360 px. */
 const TASKS = ['registra facturas.', 'suma tus cuentas.', 'paga a proveedores.', 'llama a tu banco.', 'frena estafas.', 'contesta correos.', 'prepara tus pagos.'];
 function Rotator() {
-  const [i, setI] = useState(0);
+  const i = useTick() % TASKS.length;
   const box = useRef(null);
   /* el hueco se ajusta al ancho de la tarea que se ve, así el titular queda siempre centrado */
   useEffect(() => {
@@ -31,13 +32,6 @@ function Rotator() {
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(on);
     return () => window.removeEventListener('resize', on);
   });
-  useEffect(() => {
-    let still = false;
-    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
-    if (still) return undefined;
-    const t = setInterval(() => setI((v) => (v + 1) % TASKS.length), 2200);
-    return () => clearInterval(t);
-  }, []);
   return (
     <span className="rotator" ref={box} aria-live="polite">
       {TASKS.map((t, k) => (
@@ -62,6 +56,7 @@ function Hero() {
         </p>
         <div className="cta in-4">
           <a className="btn btn-white" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a>
+          <Pruebalo />
         </div>
       </div>
     </section>
@@ -104,9 +99,9 @@ function Cierre() {
       <div className="wrap close-grid">
         <div className="block-head">
           <Spot className="spot-inline" mode="alegria" say="¿Me ves trabajar?" />
-          <h2 id="h-close">Mírala en marcha. <span className="soft">Sin que la IA vea un dato.</span></h2>
-          <p className="lead">Los dos trámites de principio a fin: lo que ves tú y lo que ve el modelo.</p>
-          <div className="cta"><a className="btn btn-white" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a></div>
+          <h2 id="h-close">Mírala en marcha. <span className="soft">O pruébala tú.</span></h2>
+          <p className="lead">Los dos trámites de principio a fin, lo que ves tú junto a lo que ve el modelo. O instala Priv8 en tu ordenador con un comando y úsalo desde tu asistente.</p>
+          <div className="cta"><a className="btn btn-white" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a><Pruebalo /></div>
         </div>
       </div>
     </section>
@@ -128,12 +123,12 @@ function Footer({ pal }) {
           <nav className="foot-cols" aria-label="Pie">
             <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">Priv8 en el móvil</a><a href="#integrar">Integración</a></div>
             <div><b>Confianza</b><a href="#garantias">Garantías</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
-            <div><b>Empezar</b><a href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a><a href="#comparar">Por qué Priv8</a><a href="pitch/">Presentación</a></div>
+            <div><b>Empezar</b><a href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a><a href="https://mcp.priv8.es" target="_blank" rel="noopener">Pruébalo en tu ordenador</a><a href="#comparar">Por qué Priv8</a><a href="pitch/">Presentación</a></div>
           </nav>
         </div>
         {/* firma de quien lo hace, como en open2agents.com: el vector de laaabs, centrado y discreto */}
         <div className="foot-by-row">
-          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
+          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url("${byLaaabs}")` }} />
         </div>
         {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
         <div className="foot-word">

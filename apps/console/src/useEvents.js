@@ -3,7 +3,7 @@ import { alertaDeBloqueo, alertasDePantalla } from './alertas.js'
 import { valoresDe } from './tokens.js'
 import { textoDeSegmentos } from './directo.js'
 import { conFotogramas, urlsDe } from './frame.js'
-import { esSesion, proximos, reloj, tramo, valida } from './reproductor.js'
+import { delPar, esSesion, migrar, proximos, reloj, tramo, valida } from './reproductor.js'
 
 // ?ws=ws://127.0.0.1:8790/events escucha otro núcleo (PRIV8_EVENTS_PORT) sin tocar la demo.
 const URLS = urlsDe(window.location.search)
@@ -27,6 +27,14 @@ export const SESION = esSesion(FEED)
 // BASE_URL es '/' en local y '/consola/' en demo.priv8.es (BASE_PATH al compilar).
 export const BASE = import.meta.env.BASE_URL
 
+// La hora de la consola: en una sesión grabada, el reloj de la reproducción (ms), para que el tiempo
+// del encargo y la cuenta atrás de las confirmaciones sigan la pausa, la velocidad y los saltos.
+export const ahoraMs = () => (SESION ? reloj.t * 1000 : Date.now())
+// La hora de llegada de un mensaje: en una sesión grabada, su segundo en la grabación (aunque llegue
+// de golpe tras un salto), así el tiempo de cada paso y de cada confirmación es el de entonces.
+let selloSesion = null
+const sello = () => (SESION && selloSesion != null ? selloSesion * 1000 : ahoraMs())
+
 const MAX_AUDIT = 500
 const MAX_CHAT = 200
 const MAX_LINEA = 300
@@ -43,6 +51,20 @@ const SIS_BLOQUEO = {
 }
 // model_saw de un paso con herramientas («act {...}»), que no es una respuesta de 8.
 const ES_LLAMADA = /^(observe|act|oracle)\b|\{"/
+
+// Los momentos clave de una grabación, para marcarlos en la barra de la reproducción: el oráculo, los
+// bloqueos, las confirmaciones y su respuesta.
+const MARCA = { oracle: 'oraculo', blocked: 'bloqueo', held: 'espera' }
+export function marcasDe(d) {
+  const out = []
+  for (const e of d?.eventos ?? []) {
+    const ev = e.msg?.type === 'audit' ? e.msg.event : null
+    if (!ev) continue
+    if (MARCA[ev.kind]) out.push({ at: e.at, tipo: MARCA[ev.kind] })
+    else if (ev.kind === 'approval') out.push({ at: e.at, tipo: ev.approved_by ? 'aprobado' : 'rechazado' })
+  }
+  return out
+}
 
 export function useEvents() {
   const [status, setStatus] = useState(DEMO ? 'demo' : 'conectando')
@@ -67,6 +89,10 @@ export function useEvents() {
   // Lo que ves tú (#170): el último fotograma de la pestaña real que maneja 8. En directo, solo por
   // el canal local; en una sesión grabada, de la grabación (datos ficticios del seed).
   const [real, setReal] = useState(null)
+  // Sesión grabada (#187): lo último que ha dicho 8, para los subtítulos, y los datos de la grabación
+  // (caso, vertical, provisional).
+  const [subtitulo, setSubtitulo] = useState(null)
+  const [meta, setMeta] = useState(null)
   const wsRef = useRef(null)
   const sendRef = useRef(null)
   const sessionRef = useRef('b2b')
@@ -151,9 +177,23 @@ export function useEvents() {
       if (m.type === 'frame') {
         // En vivo trae los píxeles (img); en una sesión grabada, la ruta del JPEG (src).
         if (!((typeof m.img === 'string' || typeof m.src === 'string') && m.w > 0 && m.h > 0)) return
-        // vista 'real': la pestaña que maneja 8, lo que ves tú (#170); si no, la vista de 8.
-        if (m.vista === 'real') setReal({ ...m, recibido: Date.now() })
-        else setFrame({ ...m, recibido: Date.now() })
+        // Una pestaña real suelta, sin su vista de 8, no se pinta: las dos van siempre en par (#187).
+        if (m.vista === 'real') return
+        const recibido = Date.now()
+        const { real: r, ...vista } = m
+        setFrame({ ...vista, recibido })
+        // Web: el par trae la pestaña real del mismo instante (lo que ves tú, #170). Las dos se
+        // ponen a la vez, en el mismo render, con el mismo id de par.
+        if (m.vista === '8') {
+          const okReal = r && (typeof r.img === 'string' || typeof r.src === 'string') && r.w > 0 && r.h > 0
+          setReal(okReal ? { ...r, vista: 'real', par: m.par, recibido } : null)
+        }
+        return
+      }
+      if (m.type === 'render_values') {
+        // Solo en las sesiones grabadas: los valores locales de tokens que no salen en ninguna pantalla
+        // (la suma del oráculo), como los recibe el móvil para la voz local. Datos ficticios del seed.
+        if (SESION && m.values && typeof m.values === 'object') setValores((v) => ({ ...v, ...m.values }))
         return
       }
       if (m.type === 'task_request') {
@@ -180,14 +220,14 @@ export function useEvents() {
       } else if (m.type === 'audit') {
         // En los feeds, la hora es la de la reproducción (las grabadas son todas del mismo segundo).
         if (FEED) m = { ...m, event: { ...m.event, ts: new Date().toISOString() } }
-        const ev = { ...m.event, _rx: Date.now() } // _rx: hora local de llegada, para el tiempo del encargo
+        const ev = { ...m.event, _rx: sello() } // _rx: hora local de llegada, para el tiempo del encargo
         usarSesion(ev.session)
         setAudit((a) => [...a, ev].slice(-MAX_AUDIT))
         alaLinea({ k: 'audit', ev })
         addAlerts([alertaDeBloqueo(ev)])
         alChat(ev)
       } else if (m.type === 'confirm_request') {
-        const req = { ...m, recibida: Date.now() }
+        const req = { ...m, recibida: sello() }
         usarSesion(m.session)
         setPending((p) => (p.some((x) => x.id === m.id) ? p : [...p, req]))
         setConfirmaciones((c) => (c[m.id] ? c : { ...c, [m.id]: { ...req, estado: 'pendiente' } }))
@@ -207,6 +247,7 @@ export function useEvents() {
         respuesta = null
         usarSesion(u.session)
         post({ k: '8', segmentos: u.segments })
+        if (SESION) setSubtitulo({ segmentos: u.segments, n: (nMsg += 1), t: sello() / 1000 })
       }
     }
 
@@ -225,17 +266,26 @@ export function useEvents() {
       let sesion = null
       let i = 0
       let j = 0
+      let k = 0
       let antes = performance.now()
       const tick = () => {
         const ahora = performance.now()
         const t = reloj.avanzar((ahora - antes) / 1000)
         antes = ahora
         if (!sesion) return
-        const r = tramo(sesion, i, j, t)
+        const r = tramo(sesion, i, j, t, k)
         i = r.i
         j = r.j
-        r.msgs.forEach(handle)
-        if (r.real) setReal(r.real)
+        k = r.k
+        r.msgs.forEach((m, n) => { selloSesion = r.ats[n]; handle(m) })
+        selloSesion = null
+        if (r.real) setReal(r.real) // Android: la pantalla del móvil
+        if (r.par) {
+          // Las dos pantallas del mismo par, a la vez; sin par nuevo, siguen las del anterior.
+          const p = delPar(r.par)
+          setFrame(p.frame)
+          setReal(p.real)
+        }
         precargar(proximos(sesion, t))
         if (reloj.estado.terminado) window.__p8FeedFin = true
       }
@@ -244,7 +294,10 @@ export function useEvents() {
         .then((d) => {
           if (closed) return
           if (!valida(d)) { setStatus('sin demo'); return }
+          d = migrar(d) // grabaciones anteriores: los fotogramas sueltos, en pares
           sesion = d
+          setMeta({ caso: d.caso ?? null, vertical: d.vertical ?? (d.nombre?.includes('b2c') ? 'b2c' : 'b2b'), titulo: d.titulo ?? null,
+            provisional: d.provisional === true, encargos: d.encargos ?? [], marcas: marcasDe(d) })
           reloj.cargar(d.duracion)
           precargar(proximos(d, -1))
         })
@@ -329,5 +382,5 @@ export function useEvents() {
     setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
   }, [])
 
-  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real }
+  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real, subtitulo, meta }
 }

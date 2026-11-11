@@ -26,5 +26,5 @@ export default defineConfig({
     alias: { '@landing': fileURLToPath(new URL('../landing/src', import.meta.url)) },
     dedupe: ['react', 'react-dom'],
   },
-  server: { fs: { allow: ['.', '../landing/src'] } },
+  server: { fs: { allow: ['.', '../landing/src', '../console/src/iconos.jsx', '../../data/casos.json'] } },
 });

@@ -4,7 +4,11 @@ Sirve apps/panel/dist en http://127.0.0.1:5170 y abre el navegador. Desde ahí, 
 (scripts/demo_b2b.sh) y otro B2C (scripts/movil.sh y el agente en el emulador). Las dos usan el puerto
 8700, así que preparar una para la otra. Ctrl-C (o cerrar la ventana del Terminal) lo para todo.
 
-Uso: doble clic en «Demo Priv8.command», o make panel. Solo la biblioteca estándar.
+Los casos preparados (data/casos.json, #187) se piden con un clic: POST /api/caso manda el pedido a 8
+como task_request por el canal de eventos (ws://127.0.0.1:8700/events), igual que la consola o la app.
+
+Uso: doble clic en «Demo Priv8.command», o make panel. Biblioteca estándar y, para /api/caso,
+el paquete websockets del proyecto (se ejecuta con uv run).
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "apps" / "panel" / "dist"
+CASOS = ROOT / "data" / "casos.json"
 PORT = int(os.environ.get("PRIV8_PANEL_PORT", "5170"))
 ANDROID_HOME = Path(os.environ.get("ANDROID_HOME", Path.home() / "Library/Android/sdk"))
 ADB = ANDROID_HOME / "platform-tools" / "adb"
@@ -209,6 +214,61 @@ def ve_movil() -> None:
     osa('tell application "System Events" to set frontmost of (first process whose name is "qemu-system-aarch64") to true')
 
 
+def casos() -> list[dict]:
+    return json.loads(CASOS.read_text())["casos"]
+
+
+def busca_caso(cid: object, lista: list[dict] | None = None) -> dict | None:
+    """El caso con ese id, solo si es un pedido (los que tienen pedido null, como el de sin protocolo,
+    no se le piden a 8)."""
+    if not isinstance(cid, str):
+        return None
+    for c in casos() if lista is None else lista:
+        if c.get("id") == cid and isinstance(c.get("pedido"), str) and c.get("vertical") in ("b2b", "b2c"):
+            return c
+    return None
+
+
+def valida_caso(cid: object, modo: str | None, agente: bool, lista: list[dict] | None = None) -> tuple[dict | None, str]:
+    """(caso, "") si se puede pedir ahora; (None, motivo en español) si no."""
+    caso = busca_caso(cid, lista)
+    if not caso:
+        return None, "Ese caso no existe o no es un pedido para 8."
+    v = caso["vertical"]
+    if modo != v:
+        return None, f"«{caso['titulo']}» es de {v.upper()}: prepara {v.upper()} primero."
+    if not agente:
+        return None, "8 no está escuchando en el puerto 8700. Espera a que la demo esté lista."
+    return caso, ""
+
+
+def mensaje_caso(caso: dict) -> dict:
+    return {"type": "task_request", "session": caso["vertical"], "text": caso["pedido"]}
+
+
+def envia_tarea(msg: dict, port: int | None = None) -> None:
+    """Un task_request por el canal de eventos del núcleo. Un cliente nativo no manda Origin, así que
+    el núcleo lo acepta como el de la app 8."""
+    from websockets.sync.client import connect
+
+    with connect(f"ws://127.0.0.1:{port or PUERTOS['agente']}/events", open_timeout=3, close_timeout=1) as ws:
+        ws.send(json.dumps(msg, ensure_ascii=False))
+
+
+def pide_caso(cid: object) -> str:
+    """Manda el caso a 8. Devuelve "" si salió, o el motivo si no."""
+    caso, motivo = valida_caso(cid, estado["modo"], escucha(PUERTOS["agente"]))
+    if not caso:
+        return motivo
+    try:
+        envia_tarea(mensaje_caso(caso))
+    except Exception as e:  # noqa: BLE001 - cualquier fallo del canal es el mismo aviso
+        apunta(f"no se pudo enviar el pedido: {e}")
+        return "No se pudo hablar con 8 por el puerto 8700. Mira «Lo que va pasando»."
+    apunta(f"pedido enviado: {caso['titulo']}")
+    return ""
+
+
 ENFOCA = {"consola": abre_consola, "pantallas": ve_pantallas, "movil": ve_movil}
 
 
@@ -263,7 +323,16 @@ class Handler(SimpleHTTPRequestHandler):
         if origin and origin not in (f"http://127.0.0.1:{PORT}", f"http://localhost:{PORT}", "http://127.0.0.1:5171"):
             return self._json({"error": "origen"}, 403)
         accion = self.path.removeprefix("/api/")
-        if accion in ("b2b", "b2c"):
+        if accion == "caso":
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+                cid = json.loads(self.rfile.read(min(n, 4096)) or b"{}").get("id")
+            except (ValueError, AttributeError):
+                cid = None
+            motivo = pide_caso(cid)
+            if motivo:
+                return self._json({"error": motivo}, 409)
+        elif accion in ("b2b", "b2c"):
             threading.Thread(target=prepara, args=(accion,), daemon=True).start()
             time.sleep(0.2)
         elif accion == "parar":

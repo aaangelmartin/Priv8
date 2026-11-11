@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import { VIDEO_B2C, VIDEOS_B2B, CONSOLA_B2B, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
+import Icono from '../../console/src/iconos.jsx';
+import { CASOS, VERTICALES, PASOS, MAS, APKS, INSTALAR, ENLACES, REPO } from './contenido.js';
 
-const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['enlaces', 'Enlaces'], ['equipo', 'Equipo']];
+const SECCIONES = [['casos', 'Casos'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
 
 /* Tamaños de lo que copió scripts/assemble.mjs. En `pnpm dev` no existe: no se enseñan tamaños ni avisos. */
@@ -82,34 +83,6 @@ function Head({ eyebrow, title, soft, lead }) {
   );
 }
 
-function Video({ title, time, what, base }) {
-  return (
-    <figure className="dvid">
-      <div className="dvideo-frame">
-        {/* #t= pide un fotograma con contenido como portada, sin imagen aparte */}
-        <video controls preload="metadata" playsInline aria-label={`Vídeo: ${title}`}>
-          <source src={`${base}.webm#t=1`} type="video/webm" />
-          <source src={`${base}.mp4#t=1`} type="video/mp4" />
-        </video>
-      </div>
-      <figcaption><b>{title}</b><span>{what}</span><i>{time}</i></figcaption>
-    </figure>
-  );
-}
-
-/* Una fila: título, una línea y una sola acción (toda la fila es el enlace). */
-function Row({ title, what, href, label, download, off }) {
-  if (off) return <li className="drow is-off"><div><b>{title}</b><span>{label}</span></div></li>;
-  return (
-    <li>
-      <a className="drow" href={href} {...(download ? { download: '' } : ext(href))}>
-        <div><b>{title}</b><span>{what}</span></div>
-        <em>{label}</em>
-      </a>
-    </li>
-  );
-}
-
 /* ---------------------------------------------------------------- secciones */
 function Hero() {
   /* la portada de la web, con sus mismas clases y medidas (apps/landing .hero): mismo alto, márgenes, titular y 8 */
@@ -119,95 +92,166 @@ function Hero() {
       <div className="wrap hero-stage">
         <div className="hero-anchor dhero-eight"><Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8, el agente de Priv8" /></div>
         <h1 id="h-hero"><span className="line">Toda la demo.</span></h1>
-        <p className="hero-sub">Los vídeos, las pantallas para probarlo y los enlaces del proyecto.</p>
+        <p className="hero-sub">Cada caso, grabado en la consola real. Y cómo correrlo en tu máquina.</p>
         <div className="cta">
-          <a className="btn btn-white" href="#videos">Ver los vídeos</a>
+          <a className="btn btn-white" href="#casos">Ver los casos</a>
+          <a className="btn btn-ghost" href="#correlo">Córrelo tú</a>
         </div>
       </div>
     </section>
   );
 }
 
-function Videos() {
+/* El dato de cada caso: el valor real tachado, la flecha y el token que recibe el modelo; o el valor en rojo si le
+   llega tal cual, o «nunca sale». */
+function Dato({ d }) {
+  if (!d) return <span className="cdato"><span className="cdato-nada"><Icono n="rechazado" />El modelo no recibe nada</span></span>;
+  if (d.claro) return <span className="cdato"><span className="cdato-claro">{d.real}</span><i className="cdato-flecha mala" aria-hidden="true" /><span className="cdato-al">al modelo</span></span>;
+  if (d.nunca) return <span className="cdato"><span className="cdato-real">{d.real}</span><i className="cdato-flecha" aria-hidden="true" /><span className="cdato-nunca">nunca sale</span></span>;
+  return <span className="cdato"><span className="cdato-real">{d.real}</span><i className="cdato-flecha" aria-hidden="true" /><span className="tok">{d.tok}</span></span>;
+}
+
+/* Un caso: arriba la escena (lo que pides en un bocadillo, la cara de 8 y el camino que recorre), abajo el título,
+   el dato y cómo acaba. Toda la tarjeta abre la consola reproduciéndolo, en otra pestaña. */
+function Caso({ c }) {
+  const v = c.visual;
+  const [encima, setEncima] = useState(false);
   return (
-    <section id="videos" className="dblock" data-tone="paper" aria-labelledby="h-videos">
+    <li>
+      <a className={`caso${c.id.includes('sin-protocolo') ? ' es-sin' : ''}`} href={c.href} target="_blank" rel="noopener" title={c.que}
+        onMouseEnter={() => setEncima(true)} onMouseLeave={() => setEncima(false)} onFocus={() => setEncima(true)} onBlur={() => setEncima(false)}>
+        <div className="caso-escena" aria-hidden="true">
+          <div className="caso-pide">
+            {c.pedido
+              ? <p className="caso-bocadillo">{c.pedido}</p>
+              : <p className="caso-bocadillo sin"><Icono n="real" />Sin Priv8 CUA</p>}
+          </div>
+          <div className="caso-ocho"><Eight mode={encima ? 'alegria' : v.cara} fg="#FFFFFF" cut="#2D45D6" label="8" /></div>
+          <ol className="caso-camino">
+            {v.camino.map((ico, i) => <li key={i} className={`n-${ico}`}><Icono n={ico} /></li>)}
+            {v.fin && <li className={`caso-fin t-${v.fin.tono}`}><Icono n={v.fin.ico} /></li>}
+          </ol>
+        </div>
+        <div className="caso-pie">
+          <h4>{c.titulo}</h4>
+          <Dato d={v.dato} />
+          <div className="caso-acaba">
+            {v.fin && <span className={`caso-chip t-${v.fin.tono}`}>{v.fin.txt}</span>}
+            <span className="caso-abrir">Ver en la consola<Icono n="sale" /></span>
+          </div>
+        </div>
+      </a>
+    </li>
+  );
+}
+
+/* Casos grabados: dos columnas, B2B y B2C; cada caso abre la consola real reproduciéndolo, en otra pestaña. */
+function Casos() {
+  return (
+    <section id="casos" className="dblock" data-tone="paper" aria-labelledby="h-casos">
       <div className="wrap">
-        <Head eyebrow="Vídeos" title="La demo," soft="en dos minutos." />
-        <div className="prod-grid">
-          <article className="prod">
-            <p className="eyebrow">B2B</p>
-            <h3>Priv8 para empresas</h3>
-            <p>La factura de un proveedor, registrada en el ERP sin que el modelo vea los datos.</p>
-            <div className="dvids">{VIDEOS_B2B.map((v) => <Video key={v.base} {...v} />)}</div>
-          </article>
-          <article className="prod">
-            <p className="eyebrow">B2C</p>
-            <h3>8 en tu móvil</h3>
-            <p>«¿Cuánto tengo entre mis bancos?» y «Pasa 200 € al bróker», por voz.</p>
-            {VIDEO_B2C
-              ? <div className="dvids"><Video title="Vídeo B2C" time="" what="8 en el emulador." base={VIDEO_B2C} /></div>
-              : <div className="dslot" role="note"><b>Vídeo B2C</b><span>Pendiente de grabar.</span></div>}
-          </article>
+        <Head eyebrow="Casos grabados" title="Elige un caso." soft="Míralo en la consola." />
+        <div className="casos">
+          {VERTICALES.map((v) => (
+            <div key={v.id} className={`casos-col v-${v.id}`}>
+              <h3 className="casos-cab">
+                <span className="casos-ico"><Icono n={v.ico} /></span>
+                <span><b>{v.title}</b><span>{v.what}</span></span>
+                <span className="casos-tag">{v.id.toUpperCase()}</span>
+              </h3>
+              <ul>{CASOS.filter((c) => c.vertical === v.id).map((c) => <Caso key={c.id} c={c} />)}</ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-function Prueba({ archivos }) {
+function Correlo({ archivos }) {
   return (
-    <section id="prueba" className="dblock" data-tone="paper" aria-labelledby="h-prueba">
+    <section id="correlo" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-correlo">
       <div className="wrap">
-        <Head eyebrow="Pruébalo tú" title="Las mismas pantallas," soft="para usarlas a mano." />
-        <div className="prod-grid">
-          <article className="prod">
-            <p className="eyebrow">B2B</p>
-            <h3>Priv8 para empresas</h3>
-            <p>Una sesión real de 8, grabada y reproducida en la consola: lo que ves tú junto a lo que ve el modelo, el razonamiento, el chat y la confirmación.</p>
-            <div className="dcta"><a className="btn btn-cobalt" href={CONSOLA_B2B.href}>Abrir la consola</a></div>
-          </article>
-          <article className="prod">
-            <p className="eyebrow">B2C</p>
-            <h3>8 en tu móvil</h3>
-            <p>Las cuatro apps para un emulador de Android Studio. Usuarios y claves inventados.</p>
-            <ul className="drows">
-              {APKS.map((a) => {
-                const s = size(archivos, a.file);
-                return <Row key={a.href} {...a} download off={!s.ok} label={s.ok ? (s.label ? `Descargar, ${s.label}` : 'Descargar') : s.label} />;
-              })}
-            </ul>
+        <Head eyebrow="Córrelo en tu máquina" title="Cuatro pasos," soft="en tu portátil." />
+        <ol className="flujo">
+          {PASOS.map((p) => (
+            <li key={p.n} className="flujo-paso">
+              <span className="flujo-ico" aria-hidden="true"><Icono n={p.ico} /><b>{p.n}</b></span>
+              <h3>{p.title}</h3>
+              <pre className="dcmd"><code>{p.cmd}</code></pre>
+              <a className="dlink" href={p.link.href} target="_blank" rel="noopener">{p.link.label}<Icono n="sale" /></a>
+            </li>
+          ))}
+        </ol>
+        <ul className="mas">
+          {MAS.map((l) => (
+            <li key={l.title}>
+              <a className="mas-tile" href={l.href} target="_blank" rel="noopener" title={l.what}>
+                <span className="mas-ico"><Icono n={l.ico} /></span>
+                <span className="mas-txt"><b>{l.title}</b><span>{l.tag}</span></span>
+                <Icono n="sale" className="ico mas-sale" />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="apks">
+          <div className="apks-cab">
+            <span className="mas-ico"><Icono n="movil" /></span>
+            <h3>Las apps para el emulador <span>Android 14, datos inventados</span></h3>
+          </div>
+          <ul className="apks-lista">
+            {APKS.map((a) => {
+              const t = size(archivos, a.file);
+              const cuerpo = (
+                <>
+                  <span className="apk-icono" style={a.color ? { background: a.color } : undefined}>
+                    {a.ocho ? <Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8" /> : <b>{a.title.charAt(0)}</b>}
+                  </span>
+                  <b className="apk-nombre">{a.title}</b>
+                  {a.acceso
+                    ? <span className="apk-acceso"><span title="Usuario"><Icono n="persona" />{a.acceso[0]}</span><span title="Clave"><Icono n="llave" />{a.acceso[1]}</span><span title="Código SMS"><Icono n="movil" />{a.acceso[2]}</span></span>
+                    : <span className="apk-acceso"><span>{a.what}</span></span>}
+                  <span className={`apk-baja${t.ok ? '' : ' off'}`}><Icono n="descarga" />{t.ok ? (t.label ?? 'APK') : 'No incluida'}</span>
+                </>
+              );
+              return <li key={a.href}>{t.ok ? <a className="apk" href={a.href} download="">{cuerpo}</a> : <div className="apk is-off">{cuerpo}</div>}</li>;
+            })}
+          </ul>
+          <details className="dinstalar">
+            <summary>Instalarlas a mano con adb</summary>
             <pre className="dcmd"><code>{INSTALAR}</code></pre>
-          </article>
+          </details>
         </div>
       </div>
     </section>
   );
 }
-
-const Flecha = ({ out }) => (
-  <svg className="dl-arrow" viewBox="0 0 24 24" aria-hidden="true">
-    <path d={out ? 'M8 16 16 8M9 8h7v7' : 'M5 12h13M13 6l6 6-6 6'} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 function Enlaces() {
   return (
-    <section id="enlaces" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-enlaces">
+    <section id="enlaces" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-enlaces">
       <div className="wrap">
-        <Head eyebrow="Enlaces" title="Todo," soft="en una lista." />
-        <div className="dlinks">
+        <Head eyebrow="Enlaces" title="Todo," soft="a un clic." />
+        <div className="tiles-grupos">
           {ENLACES.map((g) => (
-            <div key={g.group} className="dl-group">
+            <div key={g.group} className="tiles-grupo">
               <h3>{g.group}</h3>
-              <ul>
+              <ul className="tiles">
                 {g.items.map((l) => {
                   const out = !!l.href && /^https?:/.test(l.href);
-                  const body = (<><span className="dl-tag">{l.tag}</span><span className="dl-txt"><b>{l.title}</b><span>{l.what}</span></span></>);
+                  const body = (
+                    <>
+                      <span className="tile-ico"><Icono n={l.ico} /></span>
+                      <span className="tile-tag">{l.tag}</span>
+                      <b className="tile-t">{l.title}</b>
+                      {l.href ? <Icono n={out ? 'sale' : 'flecha'} className="ico tile-flecha" /> : <span className="tile-pronto">Próximamente</span>}
+                    </>
+                  );
                   return (
                     <li key={l.title}>
                       {l.href
-                        ? <a className="dl-row" href={l.href} {...ext(l.href)}>{body}<Flecha out={out} /></a>
-                        : <div className="dl-row is-off">{body}<span className="dl-soon">Próximamente</span></div>}
+                        ? <a className="tile" href={l.href} title={l.what} {...ext(l.href)}>{body}</a>
+                        : <div className="tile is-off" title={l.what}>{body}</div>}
                     </li>
                   );
                 })}
@@ -220,30 +264,6 @@ function Enlaces() {
   );
 }
 
-function Equipo({ archivos }) {
-  return (
-    <section id="equipo" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-equipo">
-      <div className="wrap">
-        <Head eyebrow="Equipo" title="Cuatro personas," soft="cuatro caminos." />
-        <ul className="dteam">
-          {EQUIPO.map((p) => {
-            const foto = archivos && archivos[`equipo/${p.user}.png`];
-            return (
-              <li key={p.user}>
-                {foto
-                  ? <img className="dface" src={`/equipo/${p.user}.png`} alt="" width="56" height="56" />
-                  : <span className="dface dinit" aria-hidden="true">{p.name.split(' ').map((w) => w[0]).join('')}</span>}
-                <div><b>{p.name}</b><span>{p.role}</span><a href={`https://github.com/${p.user}`} target="_blank" rel="noopener">@{p.user}</a></div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* El pie de la web, igual: logo y frase, columnas, la firma de laaabs y el nombre grande con 8. */
 function Footer() {
   return (
     <footer className="foot" data-tone="paper">
@@ -257,8 +277,7 @@ function Footer() {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Demo</b><a href="#videos">Vídeos</a><a href="#prueba">Pruébalo tú</a><a href="#enlaces">Enlaces</a></div>
-            <div><b>Más</b><a href="#equipo">Equipo</a></div>
+            <div><b>Demo</b><a href="#casos">Casos</a><a href="#correlo">Córrelo tú</a><a href="#enlaces">Enlaces</a></div>
             <div><b>Fuera</b><a href="https://priv8.es">priv8.es</a><a href={REPO} target="_blank" rel="noopener">GitHub</a></div>
           </nav>
         </div>
@@ -282,12 +301,11 @@ export default function App() {
       <main>
         <Hero />
         <Blend from="--band" to="--paper" seed={1} overlay />
-        <Videos />
-        <Prueba archivos={archivos} />
+        <Casos />
         <Blend from="--paper" to="--mist" seed={2} />
-        <Enlaces />
+        <Correlo archivos={archivos} />
         <Blend from="--mist" to="--band" seed={3} />
-        <Equipo archivos={archivos} />
+        <Enlaces />
         <Blend from="--band" to="--paper" seed={5} />
       </main>
       <Footer />

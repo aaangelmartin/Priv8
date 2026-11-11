@@ -3,7 +3,8 @@
 // (pantallas con valores reales, solo en local, y eventos de auditoría con tokens).
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Eight from './eight/Eight.jsx'
-import { EnClaro, Md, Real, Tokens } from './piezas.jsx'
+import { EnClaro, Md, Ojos, Real, Tokens } from './piezas.jsx'
+import Icono, { iconoDeLinea } from './iconos.jsx'
 import { nombreApp, nombrePantalla } from './directo.js'
 import { duracion, esMovil, focoDe, lineaDe, piensaTras, textoPlano } from './vivo.js'
 
@@ -59,11 +60,14 @@ export function useReproduccion(linea, valores) {
     const items = lineaRef.current
     const i = items.findIndex((x) => x.n >= r.next)
     if (i < 0) { r.busy = false; return }
-    const item = items[i]
+    let k = i
+    // Muy atrasada (un salto en la reproducción grabada, #187): lo viejo se aplica de golpe, sin animar.
+    while (items.length - 1 - k > 10) { aplicar(items[k]); k += 1 }
+    const item = items[k]
     r.next = item.n + 1
     r.busy = true
     aplicar(item)
-    const atraso = items.length - 1 - i
+    const atraso = items.length - 1 - k
     const d = duracion(item, valRef.current)
     r.timer = setTimeout(paso, atraso > 10 ? 30 : atraso > 4 ? d / 2.5 : d)
   }, [aplicar])
@@ -208,7 +212,7 @@ export function PantallaDe8({ rep, modo, valores, sin }) {
             </div>
           )}
           {obs?.paused && <p className="pausa-ventana">8 mira a otro lado: {obs.paused}</p>}
-          {els.map((el) => (
+          {els.filter((el) => !(el.role === 'other' && el.text == null && !el.label && el.cls !== 'rojo')).map((el) => (
             <Elemento key={el.id} el={el} r={reales.get(el.id) ?? {}} modo={modo} valores={valores} sin={sin}
               escrito={escrito[el.id]} marca={foco?.id === el.id ? foco.gesto : null} />
           ))}
@@ -275,6 +279,11 @@ function Aparece({ texto, valores, mostrar, vivo, alCrecer }) {
   return <Tokens text={partes.slice(0, k).join('')} valores={valores} mostrar={mostrar} />
 }
 
+// Las líneas en las que habla o piensa 8 llevan su cara; las demás, el icono de lo que hace.
+const OJOS = { piensa: 'pensar', dice: 'abiertos', pausa: 'cerrados' }
+// El encargo lo pide la persona, no 8: va con la misma figura que «Lo que ves tú».
+const PERSONA = <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="currentColor" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="currentColor" /></svg>
+
 // Lo que ve 8: los tokens tal cual, sin el valor local ni siquiera al pasar por encima.
 export function Razonamiento({ rep }) {
   const { lineas, pensando } = rep
@@ -310,10 +319,13 @@ export function Razonamiento({ rep }) {
         {lineas.length === 0 && <li className="ln vacia">Aquí verás cada paso de 8: lo que lee, lo que decide, dónde pulsa y qué escribe.</li>}
         {lineas.map((l) => {
           const largo = l.tipo === 'encargo'
+          const ico = iconoDeLinea(l)
           return (
             <li key={l.n} className={`ln t-${l.tono} k-${l.tipo}`}>
               <span className="ln-t">{l.t != null ? mmssMs(l.t) : ''}</span>
-              <i className="ln-p" aria-hidden="true" />
+              <i className="ln-p" aria-hidden="true">
+                {l.tipo === 'encargo' ? PERSONA : OJOS[l.tipo] ? <Ojos cara={OJOS[l.tipo]} /> : ico ? <Icono n={ico} /> : null}
+              </i>
               <div className="ln-c">
                 <b>{l.titulo}</b>
                 {l.texto && (largo
@@ -329,7 +341,7 @@ export function Razonamiento({ rep }) {
         {pensando && (
           <li className="ln pensando" key="pensando">
             <span className="ln-t" />
-            <i className="ln-p" aria-hidden="true" />
+            <i className="ln-p" aria-hidden="true"><Ojos cara="pensar" /></i>
             <div className="ln-c"><b>pensando<span className="puntitos"><i /><i /><i /></span></b></div>
           </li>
         )}

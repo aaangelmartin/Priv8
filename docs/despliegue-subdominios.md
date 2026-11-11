@@ -4,7 +4,7 @@
 |---|---|---|
 | `priv8.es` | La web (`apps/landing`) | GitHub Pages, desde este repositorio (`.github/workflows/landing-pages.yml`) |
 | `demo.priv8.es` | Todo lo de la demo en un sitio (`apps/demo-site`), con contraseña | Cloudflare Pages, subida directa con Wrangler |
-| `mcp.priv8.es` | «Pruébalo con tu Claude Code» | Cloudflare Pages, más abajo |
+| `mcp.priv8.es` | «Prueba Priv8 con tu asistente» (Claude Code, Codex, Gemini CLI, Grok CLI, Cursor, opencode) | Cloudflare Pages, más abajo |
 
 El DNS de `priv8.es` está en Cloudflare.
 
