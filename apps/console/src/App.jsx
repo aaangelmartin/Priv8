@@ -4,7 +4,8 @@ import { VELOCIDADES, reloj } from './reproductor.js'
 import { comentarioDe8 } from './alertas.js'
 import { partesDeToken } from './tokens.js'
 import { estadoDe8, mmss, nombreApp, nombrePantalla, tareaActual } from './directo.js'
-import { EnClaro, Md, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
+import { EnClaro, Md, Ojos, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
+import Icono from './iconos.jsx'
 import { Razonamiento, useReproduccion } from './Vivo.jsx'
 import { DosPantallas, PantallaViva, VistaWeb } from './Vista8.jsx'
 import { esVista8 } from './frame.js'
@@ -181,27 +182,159 @@ function Barra8({ st, pct }) {
   )
 }
 
-function Controles() {
+// Los momentos clave sobre la barra: un icono en su segundo; pulsarlo salta justo antes.
+const NOMBRE_MARCA = { oraculo: 'Oráculo', bloqueo: 'Bloqueado', espera: 'Pide confirmación', aprobado: 'Aprobado', rechazado: 'Rechazado' }
+const ICONO_MARCA = { oraculo: 'oraculo', bloqueo: 'bloqueo', espera: 'espera', aprobado: 'aprobado', rechazado: 'rechazado' }
+
+function Controles({ marcas = [] }) {
   const st = useReloj()
   const pct = st.duracion ? Math.min(100, (st.t / st.duracion) * 100) : 0
   return (
     <div className="controles" role="group" aria-label="Reproducción de la sesión grabada">
-      <button className="ctl" onClick={() => reloj.alternar()} aria-label={st.enMarcha ? 'Pausar' : 'Reproducir'} title={st.enMarcha ? 'Pausar' : st.terminado ? 'Volver a empezar' : 'Reproducir'}>
+      <button className="ctl play" onClick={() => reloj.alternar()} aria-label={st.enMarcha ? 'Pausar' : 'Reproducir'} title={st.enMarcha ? 'Pausar' : st.terminado ? 'Volver a empezar' : 'Reproducir'}>
         {st.enMarcha
-          ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
-          : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" /></svg>}
+          ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" /></svg>
+          : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4.5l12 7.5-12 7.5z" fill="currentColor" /></svg>}
       </button>
       <button className="ctl" onClick={() => reloj.reiniciar()} aria-label="Reiniciar" title="Reiniciar">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
+      <span className="tiempo"><b>{mmss(Math.floor(st.t))}</b></span>
+      <div className="pista">
+        {st.duracion > 0 && marcas.map((m, i) => (
+          <button key={i} className={`marca m-${m.tipo} ${st.t >= m.at ? 'pasada' : ''}`} style={{ left: `${Math.min(100, (m.at / st.duracion) * 100)}%` }}
+            onClick={() => reloj.saltar(Math.max(0, m.at - 0.6))} title={`${NOMBRE_MARCA[m.tipo]} en ${mmss(Math.floor(m.at))}`} aria-label={`Ir a: ${NOMBRE_MARCA[m.tipo]}, ${mmss(Math.floor(m.at))}`}>
+            <Icono n={ICONO_MARCA[m.tipo]} />
+          </button>
+        ))}
+        <Barra8 st={st} pct={pct} />
+      </div>
+      <span className="tiempo total">{mmss(Math.round(st.duracion))}</span>
       <span className="velocidades" role="radiogroup" aria-label="Velocidad">
         {VELOCIDADES.map((v) => (
           <button key={v} role="radio" aria-checked={st.velocidad === v} onClick={() => reloj.velocidad(v)}>{v}x</button>
         ))}
       </span>
-      <Barra8 st={st} pct={pct} />
-      <span className="tiempo">{mmss(Math.floor(st.t))} / {mmss(Math.round(st.duracion))}</span>
     </div>
+  )
+}
+
+// Las cifras que importan, grandes: lo que ha recibido el modelo en claro, lo tapado, los bloqueos
+// y lo que espera tu confirmación.
+const TOKEN_G = /‹[^›\s]+›/g
+function tokensDistintos(audit) {
+  const s = new Set()
+  for (const e of audit) for (const t of `${e.model_saw ?? ''} ${e.detail ?? ''}`.match(TOKEN_G) ?? []) s.add(t)
+  return s.size
+}
+
+function Cifra({ n, icono, texto, tono = '' }) {
+  return (
+    <span className={`cifra-g ${tono}`}>
+      <span className="cifra-ico"><Icono n={icono} /></span>
+      <b key={n}>{n}</b>
+      <span className="cifra-txt">{texto}</span>
+    </span>
+  )
+}
+
+function Cifras({ enClaro, tapados, bloqueos, porConfirmar }) {
+  if (SIN_PROTOCOLO) {
+    return (
+      <div className="cifras" aria-label="Cifras del encargo">
+        <Cifra n={enClaro} icono="real" texto="datos reales al modelo" tono="mala" />
+      </div>
+    )
+  }
+  return (
+    <div className="cifras" aria-label="Cifras del encargo">
+      <Cifra n={enClaro} icono="escudo" texto="datos reales al modelo" tono={enClaro ? 'mala' : 'buena'} />
+      <Cifra n={tapados} icono="token" texto="datos con token" />
+      <Cifra n={bloqueos} icono="bloqueo" texto={bloqueos === 1 ? 'bloqueo' : 'bloqueos'} tono={bloqueos ? 'roja' : ''} />
+      <Cifra n={porConfirmar} icono="espera" texto="por confirmar" tono={porConfirmar ? 'ambar' : ''} />
+    </div>
+  )
+}
+
+// La confirmación retenida, en grande sobre las pantallas: la frase con los valores, de dónde viene
+// cada dato y Aprobar o Rechazar. Al resolverse se queda unos segundos en verde o gris.
+function ConfirmacionGrande({ c, resolve, valores, ahora }) {
+  const [error, setError] = useState(false)
+  if (!c) return null
+  const total = c.expires_s ?? 300
+  const quedan = Math.max(0, Math.round(total - (ahora - c.recibida) / 1000))
+  const abierta = c.estado === 'pendiente' && quedan > 0
+  const tokens = [...new Set((c.summary ?? []).filter((s) => s.token).map((s) => s.token))]
+  const decidir = (ok) => setError(!resolve(c.id, ok))
+  const ico = abierta ? 'espera' : c.estado === 'aprobada' ? 'aprobado' : 'rechazado'
+  const frac = Math.max(0, Math.min(1, quedan / total))
+  return (
+    <article className={`conf-g e-${abierta ? 'pendiente' : c.estado}`} aria-live="assertive" aria-label="Confirmación">
+      <div className="conf-g-ico">
+        <svg className="anillo" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" />
+          {abierta && <circle className="queda" cx="22" cy="22" r="19" style={{ strokeDashoffset: 119.4 * (1 - frac) }} />}
+        </svg>
+        <Icono n={ico} />
+      </div>
+      <div className="conf-g-cuerpo">
+        <p className="conf-g-eti">
+          {abierta ? 'Necesita tu confirmación' : c.estado === 'aprobada' ? 'Aprobada por la persona' : c.estado === 'rechazada' ? 'Rechazada' : 'Caducada'}
+          {abierta && <span className="conf-g-t">{mmss(quedan)}</span>}
+        </p>
+        <p className="conf-g-frase">
+          {(c.summary ?? []).map((s, i) => (s.token ? <Valor key={i} tok={s.token} valores={valores} /> : <span key={i}>{s.text} </span>))}
+        </p>
+        {abierta && tokens.length > 0 && (
+          <ul className="conf-g-orig" aria-label="De dónde viene cada dato">
+            {tokens.map((t) => {
+              const o = partesDeToken(t)?.origen
+              return <li key={t} className={o === 'correo' ? 'ojo' : ''}><Icono n={o === 'correo' ? 'alarma' : o === 'maestro' ? 'ficha' : 'token'} />{ORIGEN[o] ?? o ?? 'sin origen'}</li>
+            })}
+          </ul>
+        )}
+      </div>
+      {abierta && (
+        <div className="conf-g-acc">
+          <button className="btn primario grande" onClick={() => decidir(true)} disabled={SESION} title={SESION ? 'En la grabación la aprueba la persona' : undefined}><Icono n="aprobado" />Aprobar</button>
+          <button className="btn no grande" onClick={() => decidir(false)} disabled={SESION}>Rechazar</button>
+          {error && <span className="nota mala">Sin conexión con el núcleo.</span>}
+        </div>
+      )}
+    </article>
+  )
+}
+
+// La alarma de posible fraude, en rojo abajo sobre las pantallas. A los pocos segundos (o si hay una
+// confirmación en grande) se recoge en una píldora arriba; las dos llevan a la pestaña Alarmas.
+function AlarmaFlotante({ alerts, ir, recogida: forzada = false }) {
+  const activas = alerts.filter((a) => !a.revisada)
+  const primera = activas[activas.length - 1] // la más antigua: la que la ha hecho saltar
+  const [recogida, setRecogida] = useState(null)
+  const clave = primera?.clave
+  useEffect(() => {
+    if (!clave) return undefined
+    const id = setTimeout(() => setRecogida(clave), 7000)
+    return () => clearTimeout(id)
+  }, [clave])
+  if (!primera) return null
+  const titulo = primera.titulo.replace(/^Posible fraude:\s*/i, '').replace(/^Bloqueado:\s*/i, '')
+  if (forzada || recogida === clave) {
+    return (
+      <button className="alarma-pildora" onClick={() => ir('alarmas')} aria-label={`${activas.length} alarmas sin revisar`}>
+        <Icono n="alarma" />Posible fraude<b>{activas.length}</b>
+      </button>
+    )
+  }
+  return (
+    <aside className="alarma-flot" role="alert">
+      <span className="alarma-flot-ico"><Icono n="alarma" /></span>
+      <div>
+        <p className="alarma-flot-eti">Posible fraude{activas.length > 1 ? ` | ${activas.length} alarmas` : ''}</p>
+        <b>{titulo.charAt(0).toUpperCase() + titulo.slice(1)}</b>
+      </div>
+      <button className="btn blanco" onClick={() => ir('alarmas')}>Ver</button>
+    </aside>
   )
 }
 
@@ -233,7 +366,7 @@ function Subtitulo({ sub, valores }) {
   )
 }
 
-function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame, real, valores, subtitulo, meta }) {
+function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame, real, valores, subtitulo, meta, alerts, confirmaciones, resolve, ir }) {
   const leido = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
   // La pantalla en pausa (clave, código del banco): 8 mira a otro lado hasta que lee otra.
   const crudo = rep?.pantalla?.observed?.paused && !rep.terminado && pending.length === 0
@@ -241,34 +374,41 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
     : leido
   const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}`)
   const t = useMemo(() => tareaActual(audit), [audit])
+  const tapados = useMemo(() => tokensDistintos(audit), [audit])
   const bloqueos = audit.filter((x) => x.kind === 'blocked').length
   const segundos = t ? Math.max(0, Math.round(((t.terminada ? t.fin : ahora) - t.inicio) / 1000)) : 0
   const fondo = SIN_PROTOCOLO ? NOCHE : COBALTO
+  // La confirmación en grande: la que espera o, unos segundos, la que se acaba de resolver.
+  const ultima = audit[audit.length - 1]
+  const recien = ultima?.kind === 'approval' && ahora - (ultima._rx ?? 0) < 4000 ? confirmaciones[ultima.confirm] : null
+  const conf = pending.length ? confirmaciones[pending[0].id] ?? null : recien
 
   return (
     <section className={`directo ${FEED ? `modo ${SIN_PROTOCOLO ? 'sin' : 'con'}` : ''}`} aria-label="Lo que ve 8, en directo">
       <header className="directo-cab" aria-live="polite">
         <Eight className="directo-eight" mode={e.modo} fg={BLANCO} cut={fondo} label={`8: ${e.titulo}`} />
         <div className="directo-texto">
-          {SESION
-            ? <p className="eyebrow modo-texto">{meta?.titulo ?? (meta?.provisional ? 'Reproducción grabada' : 'Sesión real grabada')} <span className="clave">el modelo solo recibe tokens</span></p>
-            : FEED
-            ? <p className="eyebrow modo-texto">{SIN_PROTOCOLO ? <>Sin protocolo <span className="clave">el modelo recibe los datos reales</span></> : <>Con Priv8 <span className="clave">el modelo solo recibe tokens</span></>}</p>
-            : <p className="eyebrow"><i className="vivo" aria-hidden="true" />Lo que ve 8, en directo</p>}
+          <p className="eyebrow modo-texto">
+            {SESION
+              ? <>{meta?.titulo ?? 'Sesión grabada'} <span className="clave"><Icono n="token" />solo tokens al modelo</span></>
+              : FEED
+              ? (SIN_PROTOCOLO ? <>Sin protocolo <span className="clave"><Icono n="real" />datos reales al modelo</span></> : <>Con Priv8 <span className="clave"><Icono n="token" />solo tokens al modelo</span></>)
+              : <><i className="vivo" aria-hidden="true" />En directo</>}
+          </p>
           <h2 title={e.titulo}><Titular texto={e.titulo} /></h2>
+          {t && (
+            <p className="tarea" aria-label="Encargo actual">
+              <span className={t.terminada ? 'hecha' : 'curso'}>{t.terminada ? <Icono n="aprobado" /> : <i className="vivo" aria-hidden="true" />}{t.terminada ? 'Terminado' : 'En curso'}</span>
+              <span><Icono n="pasos" />{t.pasos} {t.pasos === 1 ? 'paso' : 'pasos'}</span>
+              <span><Icono n="tiempo" />{mmss(segundos)}</span>
+            </p>
+          )}
         </div>
         <span className="sp" />
-        {t && (
-          <span className="tarea" aria-label="Encargo actual">
-            <span>{t.terminada ? 'Terminado' : 'En curso'}</span>
-            <span>Paso {t.pasos}</span>
-            <span>{mmss(segundos)}</span>
-          </span>
-        )}
+        <Cifras enClaro={enClaro} tapados={tapados} bloqueos={bloqueos} porConfirmar={pending.length} />
         {!DEMO && (
-          <a className="abrir" href={urlVista8()} target="_blank" rel="noopener noreferrer" title="Abre lo que ve 8 en otra pestaña, a pantalla completa">
+          <a className="abrir" href={urlVista8()} target="_blank" rel="noopener noreferrer" title="Abre lo que ve 8 en otra pestaña, a pantalla completa" aria-label="Pantalla completa">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            Pantalla completa
           </a>
         )}
       </header>
@@ -277,18 +417,13 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
         {dosPantallas(real)
           ? <DosPantallas frame={frame} real={real} nota={NOTA_REAL} rep={rep} valores={valores} />
           : <PantallaViva frame={frame} rep={rep} demo={DEMO && !SESION} sin={SIN_PROTOCOLO} />}
-        {SESION && <Subtitulo sub={subtitulo} valores={valores} />}
+        {SESION && !conf && <Subtitulo sub={subtitulo} valores={valores} />}
+        {!SIN_PROTOCOLO && <AlarmaFlotante alerts={alerts} ir={ir} recogida={!!conf} />}
+        {conf && <div className="conf-g-capa"><ConfirmacionGrande key={conf.id} c={conf} resolve={resolve} valores={valores} ahora={ahora} /></div>}
       </div>
 
-      {FEED && (
-        <footer className="directo-pie">
-          <span className={`cifra ${SIN_PROTOCOLO ? 'mala' : ''}`}><b>{enClaro}</b> valores reales enviados al modelo</span>
-          {!SIN_PROTOCOLO && <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'acción bloqueada' : 'acciones bloqueadas'}</span>}
-          {!SIN_PROTOCOLO && <span className="cifra"><b>{pending.length}</b> por confirmar</span>}
-          {fin && SIN_PROTOCOLO && <span className="cifra fin">Ningún bloqueo, ninguna confirmación</span>}
-          {SESION && <Controles />}
-        </footer>
-      )}
+      {SESION && <footer className="directo-pie"><Controles marcas={meta?.marcas} /></footer>}
+      {FEED && !SESION && fin && SIN_PROTOCOLO && <footer className="directo-pie"><span className="cifra fin">Ningún bloqueo, ninguna confirmación</span></footer>}
     </section>
   )
 }
@@ -478,38 +613,45 @@ function Chat({ chat, confirmaciones, resolve, pedir, status, session, valores, 
 
 const ETIQUETA = { cuenta: 'Cambio de cuenta', instruccion: 'Órdenes a la IA', bloqueo: 'Bloqueo del núcleo' }
 
+const ICONO_ALARMA = { cuenta: 'ficha', instruccion: 'encargo', bloqueo: 'bloqueo' }
+
 // compacta: una línea por alarma (en los feeds, para que la pantalla quepa en el vídeo).
 function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
   if (alerts.length === 0) return null
   const activas = alerts.filter((a) => !a.revisada).length
   return (
     <section className={`alarmas ${activas ? 'activas' : ''} ${compacta ? 'compacta' : ''}`} role="alert" aria-live="assertive">
-      <header className="sec-cab">
+      <header className="alarmas-cab">
+        <span className="alarmas-ico"><Icono n="alarma" /></span>
         <div>
           <p className="eyebrow">Detectado en local, sin enseñar los datos a la IA</p>
-          <h2>{activas ? <>Posible fraude <span className="suave">| {activas} sin revisar</span></> : 'Alarmas revisadas'}</h2>
+          <h2>{activas ? <>Posible fraude <span className="suave">{activas} sin revisar</span></> : 'Alarmas revisadas'}</h2>
         </div>
+        <span className="sp" />
+        <span className="alarmas-n" aria-hidden="true">{activas || alerts.length}</span>
       </header>
       <ul>
         {alerts.map((a) => (
           <li key={a.clave} className={`alarma t-${a.tipo} ${a.revisada ? 'revisada' : ''}`}>
-            <div className="fila-cab">
-              <span className="chip">{ETIQUETA[a.tipo]}</span>
-              <b className="titulo">{a.titulo}</b>
-              <span className="sp" />
-              <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` | ${nombrePantalla(a.pantalla)}` : ''} | {hora(a.ts)}</span>
+            <span className="alarma-ico"><Icono n={ICONO_ALARMA[a.tipo] ?? 'alarma'} /></span>
+            <div className="alarma-c">
+              <div className="fila-cab">
+                <span className="chip">{ETIQUETA[a.tipo]}</span>
+                <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` | ${nombrePantalla(a.pantalla)}` : ''} | {hora(a.ts)}</span>
+              </div>
+              <b className="titulo">{a.titulo.replace(/^(Posible fraude|Bloqueado):\s*/i, '').replace(/^./, (c) => c.toUpperCase())}</b>
+              {!compacta && <p><Tokens text={a.detalle} valores={valores} mostrar="ambos" /></p>}
+              {!compacta && a.evidencia && <blockquote><Tokens text={a.evidencia} valores={valores} /></blockquote>}
             </div>
-            {!compacta && <p><Tokens text={a.detalle} valores={valores} mostrar="ambos" /></p>}
-            {!compacta && a.evidencia && <blockquote><Tokens text={a.evidencia} valores={valores} /></blockquote>}
             {compacta ? null : a.revisada
-              ? <span className="hecho">Revisada</span>
+              ? <span className="hecho"><Icono n="aprobado" />Revisada</span>
               : <button className="btn sec" onClick={() => review(a.clave)}>Marcar como revisada</button>}
           </li>
         ))}
       </ul>
       {comentario && !compacta && (
         <div className="dice8">
-          <span className="chip c-cobalto">Lo que dice 8</span>
+          <span className="dice8-cara"><Ojos /></span>
           <p><Tokens text={comentario} valores={valores} mostrar="ambos" /></p>
         </div>
       )}
@@ -563,9 +705,9 @@ function Pantalla({ screen, status, valores, frame, real, rep }) {
         {obs.paused && <span className="p8-estado p8-estado--aviso">En pausa: {obs.paused}</span>}
         {!SIN_PROTOCOLO && (
           <span className="cuentas">
-            <span className="p8-estado p8-estado--seguro">{c.verde} lo ve 8</span>
-            <span className="p8-estado p8-estado--aviso">{c.ambar} tokenizados</span>
-            <span className="p8-estado p8-estado--bloqueo">{c.rojo} nunca salen</span>
+            <span className="cuenta-g c-verde"><Ojos cara="abiertos" /><b>{c.verde}</b><span>lo ve 8</span></span>
+            <span className="cuenta-g c-ambar"><Ojos cara="asteriscos" /><b>{c.ambar}</b><span>con token</span></span>
+            <span className="cuenta-g c-rojo"><Ojos cara="cerrados" /><b>{c.rojo}</b><span>nunca salen</span></span>
           </span>
         )}
       </header>
@@ -605,6 +747,21 @@ function Pantalla({ screen, status, valores, frame, real, rep }) {
 
 const OP = { tap: 'Pulsa', type: 'Escribe', open_app: 'Abre', send: 'Envía', scroll: 'Desplaza', back: 'Vuelve', key: 'Tecla', call: 'Llama' }
 const ES_LLAMADA = /^(observe|act|oracle)\b|\{"/
+
+const ICONO_OP = { tap: 'pulsa', type: 'escribe', open_app: 'abre', send: 'envia', scroll: 'desplaza', back: 'vuelve', key: 'tecla', call: 'llama' }
+function iconoDeEvento(e, d) {
+  switch (e.kind) {
+    case 'observe_sent': return 'ojo'
+    case 'act': return ICONO_OP[(e.model_saw ?? '').split(' ')[1]] ?? 'pulsa'
+    case 'blocked': return 'bloqueo'
+    case 'held': return 'espera'
+    case 'approval': return e.approved_by ? 'aprobado' : 'rechazado'
+    case 'paused': return 'apartar'
+    case 'oracle': return 'oraculo'
+    case 'task': return d.tono === 'seguro' ? 'fin' : /^Decide/.test(d.titulo) ? 'piensa' : 'encargo'
+    default: return 'registro'
+  }
+}
 
 function describir(e, etiquetas) {
   const lugar = (id) => etiquetas[`${e.app}|${e.screen}|${id}`]
@@ -670,6 +827,13 @@ function Actividad({ audit, etiquetas, valores }) {
         <span className="sp" />
         <Verificar />
       </header>
+      <div className="reg-cifras">
+        <span className="cuenta-g"><Icono n="registro" /><b>{audit.length}</b><span>eventos firmados</span></span>
+        <span className="cuenta-g c-ojo"><Icono n="ojo" /><b>{audit.filter((e) => e.kind === 'observe_sent').length}</b><span>pantallas leídas</span></span>
+        <span className="cuenta-g c-cob"><Icono n="pulsa" /><b>{audit.filter((e) => e.kind === 'act').length}</b><span>acciones</span></span>
+        <span className={`cuenta-g ${n.bloqueos ? 'c-rojo' : ''}`}><Icono n="bloqueo" /><b>{n.bloqueos}</b><span>bloqueos</span></span>
+        <span className={`cuenta-g ${n.decisiones ? 'c-ambar' : ''}`}><Icono n="espera" /><b>{n.decisiones}</b><span>confirmaciones</span></span>
+      </div>
       <div className="filtros" role="tablist" aria-label="Filtrar actividad">
         {FILTROS.map(([k, t]) => (
           <button key={k} role="tab" aria-selected={filtro === k} onClick={() => setFiltro(k)}>
@@ -685,7 +849,7 @@ function Actividad({ audit, etiquetas, valores }) {
           const ms = (e.ms?.core ?? 0) + (e.ms?.adapter ?? 0) + (e.ms?.model ?? 0)
           return (
             <li key={e.seq} className={`evento t-${d.tono}`}>
-              <i className="punto" aria-hidden="true" />
+              <i className="punto" aria-hidden="true"><Icono n={iconoDeEvento(e, d)} /></i>
               <div className="cuerpo">
                 <div className="linea1">
                   <b>{d.titulo}</b>
@@ -700,9 +864,18 @@ function Actividad({ audit, etiquetas, valores }) {
           )
         })}
       </ol>
-      <footer className="latencia">
-        <span>Media por paso</span>
-        {lat.map(([k, v]) => <span key={k}><em>{k}</em> {v == null ? 'sin datos' : `${v} ms`}</span>)}
+      <footer className="latencia" aria-label="Media por paso">
+        <span className="lat-t"><Icono n="tiempo" />Media por paso</span>
+        {lat.map(([k, v]) => {
+          const max = Math.max(1, ...lat.map(([, x]) => x ?? 0))
+          return (
+            <span key={k} className="lat">
+              <em>{k}</em>
+              <span className="lat-barra"><i style={{ width: `${v == null ? 0 : Math.max(4, (v / max) * 100)}%` }} /></span>
+              <b>{v == null ? 'sin datos' : `${v} ms`}</b>
+            </span>
+          )
+        })}
       </footer>
     </section>
   )
@@ -735,7 +908,7 @@ export default function App() {
       <Barra status={status} vista={vista} ir={ir} avisos={avisos} />
       {vista === 'directo' && (
         <div className="vista-directo">
-          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} real={real} valores={valores} subtitulo={subtitulo} meta={meta} />
+          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} real={real} valores={valores} subtitulo={subtitulo} meta={meta} alerts={alerts} confirmaciones={confirmaciones} resolve={resolve} ir={ir} />
           <aside className="lado" aria-label="Razonamiento y chat">
             <Razonamiento rep={rep} />
             <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />

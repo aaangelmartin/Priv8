@@ -3,7 +3,8 @@
 // (pantallas con valores reales, solo en local, y eventos de auditoría con tokens).
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Eight from './eight/Eight.jsx'
-import { EnClaro, Md, Real, Tokens } from './piezas.jsx'
+import { EnClaro, Md, Ojos, Real, Tokens } from './piezas.jsx'
+import Icono, { iconoDeLinea } from './iconos.jsx'
 import { nombreApp, nombrePantalla } from './directo.js'
 import { duracion, esMovil, focoDe, lineaDe, piensaTras, textoPlano } from './vivo.js'
 
@@ -278,6 +279,9 @@ function Aparece({ texto, valores, mostrar, vivo, alCrecer }) {
   return <Tokens text={partes.slice(0, k).join('')} valores={valores} mostrar={mostrar} />
 }
 
+// Las líneas en las que habla o piensa 8 llevan su cara; las demás, el icono de lo que hace.
+const OJOS = { piensa: 'pensar', dice: 'abiertos', encargo: 'abiertos', pausa: 'cerrados' }
+
 // Lo que ve 8: los tokens tal cual, sin el valor local ni siquiera al pasar por encima.
 export function Razonamiento({ rep }) {
   const { lineas, pensando } = rep
@@ -313,10 +317,13 @@ export function Razonamiento({ rep }) {
         {lineas.length === 0 && <li className="ln vacia">Aquí verás cada paso de 8: lo que lee, lo que decide, dónde pulsa y qué escribe.</li>}
         {lineas.map((l) => {
           const largo = l.tipo === 'encargo'
+          const ico = iconoDeLinea(l)
           return (
             <li key={l.n} className={`ln t-${l.tono} k-${l.tipo}`}>
               <span className="ln-t">{l.t != null ? mmssMs(l.t) : ''}</span>
-              <i className="ln-p" aria-hidden="true" />
+              <i className="ln-p" aria-hidden="true">
+                {OJOS[l.tipo] ? <Ojos cara={OJOS[l.tipo]} /> : ico ? <Icono n={ico} /> : null}
+              </i>
               <div className="ln-c">
                 <b>{l.titulo}</b>
                 {l.texto && (largo
@@ -332,7 +339,7 @@ export function Razonamiento({ rep }) {
         {pensando && (
           <li className="ln pensando" key="pensando">
             <span className="ln-t" />
-            <i className="ln-p" aria-hidden="true" />
+            <i className="ln-p" aria-hidden="true"><Ojos cara="pensar" /></i>
             <div className="ln-c"><b>pensando<span className="puntitos"><i /><i /><i /></span></b></div>
           </li>
         )}

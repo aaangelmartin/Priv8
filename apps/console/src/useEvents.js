@@ -52,6 +52,20 @@ const SIS_BLOQUEO = {
 // model_saw de un paso con herramientas («act {...}»), que no es una respuesta de 8.
 const ES_LLAMADA = /^(observe|act|oracle)\b|\{"/
 
+// Los momentos clave de una grabación, para marcarlos en la barra de la reproducción: el oráculo, los
+// bloqueos, las confirmaciones y su respuesta.
+const MARCA = { oracle: 'oraculo', blocked: 'bloqueo', held: 'espera' }
+export function marcasDe(d) {
+  const out = []
+  for (const e of d?.eventos ?? []) {
+    const ev = e.msg?.type === 'audit' ? e.msg.event : null
+    if (!ev) continue
+    if (MARCA[ev.kind]) out.push({ at: e.at, tipo: MARCA[ev.kind] })
+    else if (ev.kind === 'approval') out.push({ at: e.at, tipo: ev.approved_by ? 'aprobado' : 'rechazado' })
+  }
+  return out
+}
+
 export function useEvents() {
   const [status, setStatus] = useState(DEMO ? 'demo' : 'conectando')
   const [screen, setScreen] = useState(null)
@@ -283,7 +297,7 @@ export function useEvents() {
           d = migrar(d) // grabaciones anteriores: los fotogramas sueltos, en pares
           sesion = d
           setMeta({ caso: d.caso ?? null, vertical: d.vertical ?? (d.nombre?.includes('b2c') ? 'b2c' : 'b2b'), titulo: d.titulo ?? null,
-            provisional: d.provisional === true, encargos: d.encargos ?? [] })
+            provisional: d.provisional === true, encargos: d.encargos ?? [], marcas: marcasDe(d) })
           reloj.cargar(d.duracion)
           precargar(proximos(d, -1))
         })

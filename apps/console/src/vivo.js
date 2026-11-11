@@ -131,7 +131,7 @@ export function lineaDe(ev, screen) {
     case 'act': {
       const a = leerAccion(ev.model_saw)
       const texto = a && (a.op === 'type' || a.op === 'call') ? a.text : null
-      return { tipo: 'accion', tono: 'neutro', titulo: may(fraseAccion(a, screen)), texto }
+      return { tipo: 'accion', tono: 'neutro', titulo: may(fraseAccion(a, screen)), texto, op: a?.op ?? null }
     }
     case 'oracle': {
       const q = String(ev.model_saw ?? '').replace(/^oracle\s+/, '')
@@ -152,7 +152,7 @@ export function lineaDe(ev, screen) {
     case 'paused':
       return { tipo: 'pausa', tono: 'aviso', titulo: 'Mira a otro lado', texto: null, sub: 'la pantalla tiene datos que no debe leer' }
     case 'call':
-      return { tipo: 'accion', tono: 'neutro', titulo: 'Al teléfono', texto: null }
+      return { tipo: 'accion', tono: 'neutro', titulo: 'Al teléfono', texto: null, op: 'call' }
     default:
       return null
   }

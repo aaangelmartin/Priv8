@@ -731,3 +731,245 @@ mark.dato.escrito { background: var(--accent-soft); color: var(--ink) }
 .progreso.buscable:hover .tirador, .progreso.buscable:focus-visible .tirador, .progreso.buscable.arrastrando .tirador { transform: scale(1); opacity: 1 }
 .progreso.buscable:focus-visible { box-shadow: 0 0 0 3px rgba(255, 255, 255, .45) }
 .subtitulo > span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden }
+
+/* ============================================================ más visual (#201)
+   Menos texto y más imagen: la cabecera de En directo con 8 grande y las cifras que importan en grande, la
+   confirmación y la alarma como tarjetas sobre las pantallas, iconos en cada paso y una barra de reproducción
+   con los momentos clave marcados. */
+.ico { width: 1em; height: 1em; display: block; flex: none }
+.ojos { width: 1.2em; height: auto; display: block; flex: none; overflow: visible }
+
+/* cabecera: 8 grande, estado en Sora y las cifras a la derecha */
+.directo-cab { gap: 16px; align-items: center }
+.directo-cab .directo-texto { flex: 1 1 auto }
+.directo-cab > .sp { display: none }
+.directo-eight { width: 92px }
+.directo h2 { font-size: clamp(1.2rem, .9rem + .7vw, 1.75rem) }
+.directo .modo-texto { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden }
+.modo-texto .clave { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; padding: 4px 10px 4px 8px }
+.modo-texto .clave .ico { font-size: .95rem }
+.directo .tarea { display: flex; gap: 6px; margin: 4px 0 0; justify-content: flex-start; flex-wrap: nowrap }
+.directo .tarea span { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 8px; font: 600 .74rem/1 var(--f-mono); background: rgba(255, 255, 255, .12) }
+.directo .tarea span:first-child { background: rgba(255, 255, 255, .22) }
+.directo .tarea span.hecha { background: rgba(127, 224, 168, .22); color: #c9f5da }
+.directo .tarea .ico { font-size: .95rem }
+.directo .tarea .vivo { width: 7px; height: 7px }
+.abrir { width: 40px; height: 40px; padding: 0; justify-content: center }
+.abrir svg { width: 18px; height: 18px }
+
+.cifras { display: flex; gap: 8px; flex: none }
+.cifra-g { position: relative; display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; justify-content: start;
+  min-width: 0; padding: 8px 14px 8px 8px; border-radius: 20px; background: rgba(255, 255, 255, .12); color: #fff }
+.cifra-ico { grid-row: 1 / 3; width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; background: rgba(255, 255, 255, .16); font-size: 1.15rem }
+.cifra-g b { font: 700 1.75rem/.95 var(--f-display); letter-spacing: -.04em; font-variant-numeric: tabular-nums; animation: cifra-pop .5s var(--ease) both }
+.cifra-txt { font: 500 .68rem/1.2 var(--f-mono); color: var(--on-band-soft); white-space: nowrap }
+.cifra-g.buena { background: #fff; color: var(--ink) }
+.cifra-g.buena .cifra-ico { background: var(--ok-soft); color: var(--ok-text) }
+.cifra-g.buena b { color: var(--ok-text) }
+.cifra-g.buena .cifra-txt { color: var(--ink-2) }
+.cifra-g.mala { background: #ff9a8f; color: #4d0f09 }
+.cifra-g.mala .cifra-ico { background: rgba(255, 255, 255, .45) }
+.cifra-g.mala .cifra-txt { color: #5b130c }
+.cifra-g.roja .cifra-ico { background: #ff9a8f; color: #5b130c }
+.cifra-g.roja b { color: #ffd2cc }
+.cifra-g.ambar { box-shadow: inset 0 0 0 2px #ffcf7a }
+.cifra-g.ambar .cifra-ico { background: #ffcf7a; color: #4d2e00; animation: latido 1.2s ease-in-out infinite }
+@keyframes cifra-pop { 0% { transform: scale(.6); opacity: 0 } 60% { transform: scale(1.12) } 100% { transform: none; opacity: 1 } }
+@media (max-width: 1640px) { .cifra-g:nth-child(2) { display: none } }
+@media (max-width: 1300px) { .cifra-txt { white-space: normal; max-width: 10ch } }
+
+/* la barra de reproducción: play grande, el tiempo, la pista con los momentos clave y la velocidad */
+.directo-pie { justify-content: stretch }
+.controles { flex: 1; margin: 0; display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 999px; background: rgba(11, 27, 51, .22) }
+.controles .ctl { width: 36px; height: 36px }
+.controles .ctl.play { width: 44px; height: 44px; background: #fff; color: var(--band); box-shadow: 0 6px 18px rgba(11, 27, 51, .25) }
+.controles .ctl.play:hover { background: #fff; transform: scale(1.05) }
+.controles .ctl.play svg { width: 18px; height: 18px }
+.controles .tiempo { font: 500 .8rem/1 var(--f-mono); color: var(--on-band-soft); min-width: 3.4em; text-align: center }
+.controles .tiempo b { color: #fff; font-weight: 600 }
+.pista { position: relative; flex: 1; min-width: 80px; height: 44px; display: flex; align-items: center }
+.pista .progreso.buscable { width: 100%; height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .22) }
+.pista .progreso.buscable i { border-radius: 99px; background: linear-gradient(90deg, #c4cdff, #fff) }
+.pista .progreso.buscable .tirador { width: 18px; height: 18px; margin: -9px 0 0 -9px; transform: scale(1); opacity: 1; box-shadow: 0 0 0 4px rgba(255, 255, 255, .25), 0 2px 8px rgba(11, 27, 51, .35) }
+.marca { position: absolute; top: -3px; z-index: 2; width: 24px; height: 24px; margin-left: -12px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; font-size: 14px; color: #fff; background: rgba(255, 255, 255, .25); transition: transform .2s var(--ease), background .2s ease }
+.marca::after { content: ""; position: absolute; left: 50%; top: 100%; width: 2px; height: 6px; margin-left: -1px; background: inherit }
+.marca:hover { transform: translateY(-2px) scale(1.12) }
+.marca.pasada.m-oraculo { background: #8fa2ff }
+.marca.pasada.m-bloqueo { background: #ff6f61 }
+.marca.pasada.m-espera { background: #ffcf7a; color: #4d2e00 }
+.marca.pasada.m-aprobado { background: #4cc98a }
+.marca.pasada.m-rechazado { background: #ff6f61 }
+.marca:focus-visible { outline: 2px solid #fff; outline-offset: 2px }
+
+/* la confirmación retenida, grande sobre las pantallas */
+.conf-g-capa { position: absolute; inset: 0; z-index: 6; display: flex; align-items: flex-end; justify-content: center; padding: 18px;
+  background: linear-gradient(180deg, rgba(11, 27, 51, 0) 35%, rgba(11, 27, 51, .55)); border-radius: 24px; pointer-events: none; animation: dentra-capa .35s ease both }
+.conf-g { pointer-events: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; width: min(860px, 100%);
+  padding: 20px 22px; border-radius: 28px; background: #fff; color: var(--ink); box-shadow: 0 24px 60px rgba(11, 27, 51, .35), inset 0 0 0 3px #ffcf7a;
+  animation: conf-entra .5s var(--ease) both }
+.conf-g.e-aprobada { box-shadow: 0 24px 60px rgba(11, 27, 51, .3), inset 0 0 0 3px #7fe0a8 }
+.conf-g.e-rechazada, .conf-g.e-caducada { box-shadow: 0 24px 60px rgba(11, 27, 51, .3), inset 0 0 0 3px var(--line) }
+.conf-g-ico { position: relative; width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: var(--warn-soft); color: var(--warn-text); font-size: 30px }
+.e-aprobada .conf-g-ico { background: var(--ok-soft); color: var(--ok-text); animation: cifra-pop .5s var(--ease) both }
+.e-rechazada .conf-g-ico, .e-caducada .conf-g-ico { background: var(--mist); color: var(--ink-2) }
+.conf-g-ico .anillo { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); transform: rotate(-90deg) }
+.anillo circle { fill: none; stroke: transparent; stroke-width: 3 }
+.anillo .queda { stroke: var(--warn); stroke-linecap: round; stroke-dasharray: 119.4; transition: stroke-dashoffset 1s linear }
+.conf-g-cuerpo { display: grid; gap: 8px; min-width: 0 }
+.conf-g-eti { display: flex; align-items: center; gap: 10px; font: 600 .8rem/1 var(--f-mono); color: var(--warn-text) }
+.e-aprobada .conf-g-eti { color: var(--ok-text) }
+.e-rechazada .conf-g-eti, .e-caducada .conf-g-eti { color: var(--ink-2) }
+.conf-g-t { padding: 4px 8px; border-radius: 999px; background: var(--warn-soft); font-variant-numeric: tabular-nums }
+.conf-g-frase { font: 600 clamp(1.05rem, .85rem + .5vw, 1.35rem)/1.4 var(--f-display); letter-spacing: -.02em; text-wrap: pretty }
+.conf-g-frase .valor { gap: 4px; margin-right: 2px }
+.conf-g-frase .valor b { font-weight: 700; color: var(--band) }
+.conf-g-frase .valor .tok { font: 600 10.5px/1.5 var(--f-mono); letter-spacing: 0 }
+.conf-g-orig { list-style: none; margin: 0; padding: 0; display: flex; gap: 6px; flex-wrap: wrap }
+.conf-g-orig li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 8px; border-radius: 999px; background: var(--mist); font: 600 .72rem/1 var(--f-mono); color: var(--ink-2) }
+.conf-g-orig li.ojo { background: var(--warn-soft); color: var(--warn-text) }
+.conf-g-orig .ico { font-size: .9rem }
+.conf-g-acc { display: grid; gap: 8px; justify-items: stretch }
+.btn.grande { padding: 14px 24px; font-size: 1rem }
+.btn.grande .ico { font-size: 1.1rem }
+@keyframes conf-entra { from { opacity: 0; transform: translateY(24px) scale(.96) } to { opacity: 1; transform: none } }
+@keyframes dentra-capa { from { opacity: 0 } to { opacity: 1 } }
+
+/* la alarma de posible fraude, en rojo sobre las pantallas */
+.alarma-flot { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 7; display: flex; align-items: center; gap: 14px;
+  width: min(560px, 92%); padding: 10px 10px 10px 10px; border-radius: 22px; background: #c23a2e; color: #fff;
+  box-shadow: 0 20px 50px rgba(120, 20, 10, .4); animation: alarma-entra .55s var(--ease) both }
+.alarma-flot > div { flex: 1; min-width: 0; display: grid; gap: 3px }
+.alarma-flot b { font: 700 1.1rem/1.25 var(--f-display); letter-spacing: -.02em }
+.alarma-flot-eti { font: 600 .74rem/1 var(--f-mono); color: #ffd2cc }
+.alarma-flot-ico { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: #fff; color: #c23a2e; font-size: 28px; animation: latido-rojo 1.4s ease-in-out infinite }
+.btn.blanco { background: #fff; color: #a83228; flex: none }
+.alarma-pildora { position: absolute; top: 0; right: 0; z-index: 7; display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 10px 8px 12px; border: 0; border-radius: 999px; background: #c23a2e; color: #fff; font: 600 .84rem/1 var(--f-body); cursor: pointer;
+  box-shadow: 0 10px 26px rgba(120, 20, 10, .35); animation: dentra-capa .3s ease both }
+.alarma-pildora .ico { font-size: 1.05rem }
+.alarma-pildora b { min-width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center; background: #fff; color: #a83228; font: 700 .76rem/1 var(--f-mono) }
+@keyframes alarma-entra { 0% { opacity: 0; transform: translate(-50%, 16px) scale(.92) } 60% { transform: translate(-50%, -2px) scale(1.02) } 100% { opacity: 1; transform: translate(-50%, 0) } }
+@keyframes latido-rojo { 50% { box-shadow: 0 0 0 8px rgba(255, 255, 255, .22) } }
+
+/* razonamiento: una línea de tiempo con el icono de cada paso y la cara de 8 cuando piensa o habla */
+.razon-lista { position: relative }
+.ln { grid-template-columns: 34px 26px minmax(0, 1fr); gap: 8px; position: relative }
+.ln-p { width: 26px; height: 26px; margin-top: -3px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; color: #fff; position: relative; z-index: 1 }
+.ln-p .ojos { width: 17px }
+.lado .ln-p { background: #fff; color: var(--band); box-shadow: inset 0 0 0 1.5px var(--line) }
+.lado .ln.k-accion .ln-p { background: var(--band); color: #fff; box-shadow: none }
+.lado .ln.k-observa .ln-p { background: var(--tok-bg); color: var(--tok-fg); box-shadow: none }
+.lado .ln.k-piensa .ln-p, .lado .ln.k-dice .ln-p, .lado .ln.k-encargo .ln-p, .lado .ln.pensando .ln-p { background: var(--band); color: #fff; box-shadow: none }
+.lado .ln.k-oraculo .ln-p { background: #8fa2ff; color: #0b1b33; box-shadow: none }
+.lado .ln.t-seguro .ln-p { background: var(--ok); color: #fff; box-shadow: none }
+.lado .ln.t-aviso .ln-p { background: var(--warn); color: #fff; box-shadow: none }
+.lado .ln.t-bloqueo .ln-p { background: var(--bad); color: #fff; box-shadow: none }
+.lado .ln.k-pausa .ln-p { background: var(--night); color: #fff }
+.lado .ln.pensando .ln-p { animation: latido 1.1s ease-in-out infinite }
+.lado .ln:not(.k-paso) + .ln::before, .lado .ln.k-paso + .ln::before { content: ""; position: absolute; left: 54px; top: -10px; height: 14px; width: 2px; background: var(--line) }
+.lado .ln.k-paso { grid-template-columns: 34px minmax(0, 1fr); padding: 10px 2px 2px }
+.lado .ln.k-paso .ln-p { display: none }
+.lado .ln.k-paso .ln-c { display: flex; align-items: center; gap: 8px }
+.lado .ln.k-paso .ln-c::after { content: ""; flex: 1; height: 1px; background: var(--line) }
+.lado .ln.k-paso b { padding: 3px 8px; border-radius: 999px; background: var(--mist); font: 600 .7rem/1.2 var(--f-mono); color: var(--ink-2) }
+.lado .ln.k-paso .ln-s { display: none }
+.lado .ln.t-bloqueo, .lado .ln.t-aviso, .lado .ln.k-aprobado { border-radius: 14px; padding: 9px 6px }
+.lado .ln.k-aprobado { background: var(--ok-soft) }
+.lado .ln.t-bloqueo b, .lado .ln.t-aviso b, .lado .ln.k-aprobado b { font-family: var(--f-display); font-size: .95rem; letter-spacing: -.01em }
+.lado .ln.k-fin b { color: var(--ok-text) }
+.lado .ln-x { -webkit-line-clamp: 2 }
+.lado .ln-md { -webkit-line-clamp: 3; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden }
+
+/* alarmas: cabecera roja con el icono y el número grandes, una tarjeta por alarma */
+.alarmas-cab { display: flex; align-items: center; gap: 16px; margin-bottom: 18px }
+.alarmas-cab .eyebrow { margin-bottom: 6px }
+.alarmas-cab h2 { font-size: clamp(1.6rem, 1.1rem + 1.2vw, 2.3rem); letter-spacing: -.04em }
+.alarmas-cab h2 .suave { display: block; font-size: .5em; letter-spacing: -.01em; margin-top: 4px }
+.alarmas-ico { flex: none; width: 68px; height: 68px; border-radius: 22px; display: grid; place-items: center; background: var(--bad); color: #fff; font-size: 34px }
+.alarmas:not(.activas) .alarmas-ico { background: var(--ok); }
+.alarmas-n { font: 700 clamp(3rem, 2rem + 3vw, 5rem)/.9 var(--f-display); letter-spacing: -.06em; color: var(--bad); opacity: .9 }
+.alarmas:not(.activas) .alarmas-n { color: var(--ink-2); opacity: .4 }
+.alarmas ul { gap: 10px }
+.alarma { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 16px; padding: 18px 20px; border-radius: 22px }
+.alarma-ico { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: var(--bad-soft); color: var(--bad); font-size: 24px }
+.alarma.t-instruccion .alarma-ico { background: var(--warn-soft); color: var(--warn) }
+.alarma.revisada .alarma-ico { background: var(--mist); color: var(--ink-2) }
+.alarma-c { display: grid; gap: 8px; min-width: 0 }
+.alarma .titulo { font: 700 1.15rem/1.25 var(--f-display); letter-spacing: -.02em }
+.alarma p { color: var(--ink-2); font-size: .92rem }
+.alarma blockquote { -webkit-line-clamp: 2; border-left: 3px solid var(--bad); border-radius: 4px 12px 12px 4px }
+.alarma .btn.sec { align-self: center }
+.alarma .hecho { align-self: center; display: inline-flex; gap: 6px; align-items: center }
+.dice8 { grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 14px }
+.dice8-cara { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: var(--band); color: #fff }
+.dice8-cara .ojos { width: 30px }
+@media (max-width: 760px) { .alarma { grid-template-columns: auto minmax(0, 1fr) } .alarma .btn.sec, .alarma .hecho { grid-column: 2; justify-self: start } .alarmas-n { display: none } }
+
+/* cuentas grandes: pantalla actual y registro */
+.cuentas, .reg-cifras { display: flex; gap: 8px; flex-wrap: wrap }
+.reg-cifras { margin-bottom: 16px }
+.cuenta-g { display: grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 10px 16px 10px 12px;
+  border-radius: 18px; background: #fff; min-width: 120px }
+.cuenta-g > .ico, .cuenta-g > .ojos { grid-row: 1 / 3; width: 38px; height: 38px; padding: 9px; border-radius: 12px; background: var(--mist); color: var(--band); box-sizing: border-box }
+.cuenta-g > .ojos { padding: 10px 7px }
+.cuenta-g b { font: 700 1.6rem/1 var(--f-display); letter-spacing: -.04em; font-variant-numeric: tabular-nums }
+.cuenta-g span { font: 500 .72rem/1.2 var(--f-mono); color: var(--ink-2) }
+.cuenta-g.c-verde > .ojos { background: var(--ok-soft); color: var(--ok-text) }
+.cuenta-g.c-ambar > .ojos, .cuenta-g.c-ambar > .ico { background: var(--warn-soft); color: var(--warn-text) }
+.cuenta-g.c-rojo > .ojos, .cuenta-g.c-rojo > .ico { background: var(--bad-soft); color: var(--bad-text) }
+.cuenta-g.c-rojo b { color: var(--bad-text) }
+.cuenta-g.c-ojo > .ico { background: var(--tok-bg); color: var(--tok-fg) }
+.cuenta-g.c-cob > .ico { background: var(--band); color: #fff }
+
+/* registro: icono en cada evento y la latencia en barras */
+.evento { grid-template-columns: 30px minmax(0, 1fr); align-items: start }
+.evento .punto { width: 30px; height: 30px; margin-top: -3px; display: grid; place-items: center; font-size: 15px; background: var(--mist); color: var(--band); box-shadow: none }
+.evento.t-bloqueo .punto { background: var(--bad); color: #fff; box-shadow: none }
+.evento.t-aviso .punto { background: var(--warn); color: #fff; box-shadow: none }
+.evento.t-seguro .punto { background: var(--ok); color: #fff; box-shadow: none }
+.evento.t-cobalto .punto { background: var(--band); color: #fff; box-shadow: none }
+.evento .linea1 b { font-size: 14px }
+.latencia { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 18px; font-family: var(--f-body) }
+.latencia > .lat-t { grid-column: 1 / -1; display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--ink-2) }
+.lat { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: center }
+.lat em { font: 500 .74rem/1 var(--f-mono) }
+.lat b { grid-column: 1 / -1; font: 700 1.05rem/1 var(--f-display); font-variant-numeric: tabular-nums }
+.lat-barra { height: 8px; border-radius: 99px; background: #fff; overflow: hidden }
+.lat-barra i { display: block; height: 100%; border-radius: 99px; background: var(--band) }
+
+@media (max-width: 760px) {
+  .cifras { width: 100%; overflow-x: auto }
+  .cifra-g:nth-child(2) { display: grid }
+  .conf-g { grid-template-columns: auto minmax(0, 1fr) }
+  .conf-g-acc { grid-column: 1 / -1; grid-auto-flow: column }
+  .conf-g-ico { width: 52px; height: 52px; font-size: 22px }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cifra-g b, .conf-g, .conf-g-capa, .alarma-flot, .alarma-flot-ico, .cifra-g.ambar .cifra-ico { animation: none }
+}
+
+/* con la alarma en grande abajo, el subtítulo sube encima */
+.directo-pantalla:has(.alarma-flot) .subtitulo { bottom: 104px }
+/* la pestaña Pantalla: el título de las dos miradas, sobre cobalto */
+.pantalla-dos .miradas-titulo { color: #fff }
+.pantalla-dos .miradas-titulo span { color: #c4cdff }
+/* en el móvil, la confirmación va solo en el chat y la alarma, más pequeña */
+@media (max-width: 760px) {
+  .conf-g-capa { display: none }
+  .alarma-flot { left: 8px; right: 8px; bottom: 8px; width: auto; transform: none; padding: 8px; gap: 10px; animation: dentra-capa .3s ease both }
+  .alarma-flot b { font-size: .95rem }
+  .alarma-flot-ico { width: 38px; height: 38px; font-size: 20px }
+  .directo-cab { flex-wrap: wrap; gap: 10px }
+  .directo-eight { width: 64px }
+  .controles { gap: 6px; padding-right: 8px }
+  .controles .tiempo.total, .velocidades button:not([aria-checked="true"]) { display: none }
+}
+@media (max-width: 760px) {
+  .directo { height: 720px }
+  .cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; overflow: visible }
+  .cifra-g { grid-template-columns: 1fr; padding: 8px 8px 9px; border-radius: 16px }
+  .cifra-ico { display: none }
+  .cifra-g b { font-size: 1.45rem }
+  .cifra-txt { white-space: normal; max-width: none; font-size: .6rem }
+}
