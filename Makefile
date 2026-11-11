@@ -88,6 +88,7 @@ test:
 	node apps/console/src/tokens.test.mjs
 	node apps/console/src/frame.test.mjs
 	node apps/console/src/md.test.mjs
+	node apps/console/src/reproductor.test.mjs
 	node apps/erp-sim/src/sesion.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
@@ -110,6 +111,14 @@ video-con-protocolo: sin-protocolo
 	uv run python scripts/grabar_consola.py con-protocolo
 
 videos: video-sin-protocolo video-con-protocolo
+
+# Una sesión B2B real grabada para la web de la demo (#170): el stack real en puertos libres
+# (5193, 5194, 8792; nunca los de la demo en directo), Chromium con ventana y el agente con el
+# .env (gasta API: dos encargos con PRIV8_MODEL). Escribe apps/console/public/sesion-b2b.json y
+# apps/console/public/sesion-b2b/; se abre con ?feed=sesion-b2b. ENV_FILE=ruta para otro .env.
+.PHONY: grabar-sesion
+grabar-sesion:
+	uv run python scripts/grabar_sesion.py --env-file $${ENV_FILE:-.env}
 
 # 8 calls the simulated Banca Alcor line (#24): AI disclosure first, menu by DTMF, then it
 # hands the call to the person. No keys. OBJETIVO="bloquear la tarjeta", VOZ=texto|local|elevenlabs.
