@@ -11,6 +11,8 @@ Proyecto para Hackfinance (Madrid Engineering Week 2026). Sobre el mismo núcleo
 
 Todos los datos, bancos y empresas son inventados.
 
+Web: https://aaangelmartin.github.io/Priv8/ (código en `apps/landing/`).
+
 ## Cómo funciona
 
 ```
@@ -33,6 +35,7 @@ El agente solo tiene tres herramientas: `observe`, `act` y `oracle` (calcula sin
 | ERP Alba Core, bandeja de correo y factura en PDF | `apps/erp-sim/`, `apps/inbox-sim/` | Funciona |
 | Adaptador web (Playwright) | `adapters/web/` | Funciona, con tests |
 | Consola de auditoría | `apps/console/` | Funciona |
+| Web de Priv8 (landing) | `apps/landing/` | Funciona; se publica en GitHub Pages con `.github/workflows/landing-pages.yml` |
 | Llamada de verificación | `voice/call.py` | Simulada; la llamada real con ElevenLabs y Twilio está sin probar |
 | Métricas B2B con y sin protocolo | `metrics/` | Funciona (el caso sin protocolo es un modelo, no una ejecución) |
 | Datos inventados | `data/seed.json` | Validados con `data/check_seed.py` |
