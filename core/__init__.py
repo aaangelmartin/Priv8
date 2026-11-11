@@ -14,12 +14,23 @@ Y para quien monta el proceso:
     tokenize_text(session, text)    orden de la persona → texto con tokens
     trust([(tipo, valor), ...])     valores de confianza (seed) que se buscan siempre
 
+Tareas que llegan mientras el agente corre (#47: app 8 o dictado con Whisper):
+
+    submit_task(session, text, via)            la encola (lo llama core.server)
+    next_task(session, timeout=None) -> str | None
+                                               bloquea hasta la siguiente tarea de la
+                                               sesión y devuelve su texto real; None si
+                                               vence timeout. Quien la pase a Claude la
+                                               tokeniza antes con tokenize_text.
+
 El estado vive en este proceso y no se persiste.
 """
 
 from __future__ import annotations
 
 import json
+import queue
+import threading
 import time
 from typing import Any
 
@@ -76,6 +87,42 @@ def tokenize_text(session: str, text: str, origen: str = "titular") -> str:
     vault = SESSIONS.get(session).vault
     out, red = _replace_spans(text, _detector(session)(text), vault, origen)
     return out if not red else "[la persona dijo un dato que nunca sale]"
+
+
+# ---- tareas de la persona (#47) ----
+
+TASK_MAX = 500  # una orden hablada o escrita; más larga no es una tarea
+_tasks: dict[str, queue.Queue[str]] = {}
+_tasks_lock = threading.Lock()
+
+
+def _task_queue(session: str) -> queue.Queue[str]:
+    with _tasks_lock:
+        return _tasks.setdefault(session, queue.Queue())
+
+
+def submit_task(session: str, text: str, via: str = "app") -> dict[str, Any]:
+    """Encola una tarea de la persona (task_request de la app 8 o dictado del portátil).
+
+    El texto real solo se queda en la cola, en este proceso. La auditoría guarda los
+    tokens que salen de tokenizarlo y su longitud, nunca el texto."""
+    text = " ".join(str(text).split())[:TASK_MAX]
+    if not text:
+        return {"ok": False, "detail": "tarea vacía"}
+    toks = T.find(tokenize_text(session, text))
+    _task_queue(session).put(text)
+    record({"session": session, "kind": "task", "model_saw": None, "tokens": toks,
+            "detail": f"tarea recibida · {via} · {len(text)} caracteres"})
+    return {"ok": True}
+
+
+def next_task(session: str, timeout: float | None = None) -> str | None:
+    """Siguiente tarea de la sesión, con su texto real. Bloquea hasta que llega una;
+    con timeout (segundos) devuelve None si no llega. Seguro entre hilos."""
+    try:
+        return _task_queue(session).get(timeout=timeout)
+    except queue.Empty:
+        return None
 
 
 # ---- las cinco funciones ----
