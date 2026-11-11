@@ -213,7 +213,7 @@ def main() -> None:
     ap.add_argument("--port", type=int, default=PORT)
     args = ap.parse_args()
     srv = serve(args.port)
-    print(f"Banca Alcor · línea simulada {NUMERO} en http://127.0.0.1:{args.port}")
+    print(f"Banca Alcor - línea simulada {NUMERO} en http://127.0.0.1:{args.port}")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:

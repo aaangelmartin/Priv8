@@ -1,9 +1,9 @@
-/* Priv8 · variables de marca
-   Guía completa: docs/marca.html · Personaje 8: docs/ojos.html · Logos: brand/logo/
+/* Priv8 - variables de marca
+   Guía completa: docs/marca.html - Personaje 8: docs/ojos.html - Logos: brand/logo/
    Fuentes (Google Fonts): Sora 600/700, IBM Plex Sans 400/500/600, IBM Plex Mono 400/600
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap"> */
 :root {
-  /* Color · paleta fija (no cambia con el tema) */
+  /* Color - paleta fija (no cambia con el tema) */
   --p8-noche: #0B1B33;          /* seriedad: textos y fondos oscuros */
   --p8-cobalto: #2D45D6;        /* marca, acciones, enlaces */
   --p8-cobalto-claro: #8FA2FF;  /* cobalto sobre fondo oscuro */
@@ -17,17 +17,17 @@
   --p8-token-fg: #2236B5;
 
   /* Estados de los datos: color base para puntos, bordes e iconos (contraste no textual >= 3:1) */
-  --p8-seguro: #1F8A5B;         /* verde · libre, 8 lo ve */
-  --p8-aviso: #A86400;          /* ámbar · tokenizado */
-  --p8-bloqueo: #C23A2E;        /* rojo · nunca sale */
+  --p8-seguro: #1F8A5B;         /* verde - libre, 8 lo ve */
+  --p8-aviso: #A86400;          /* ámbar - tokenizado */
+  --p8-bloqueo: #C23A2E;        /* rojo - nunca sale */
   /* Fondo suave de cada estado (chips, filas, avisos) */
   --p8-seguro-suave: #DFF2E7;
   --p8-aviso-suave: #FCEFD9;
   --p8-bloqueo-suave: #FBE5E3;
   /* Texto de estado: más oscuro para pasar AA (>= 4.5:1) sobre su fondo suave y sobre blanco */
-  --p8-seguro-texto: #18734C;   /* 5.0:1 sobre suave · 5.8:1 sobre blanco */
-  --p8-aviso-texto: #8A5200;    /* 5.6:1 sobre suave · 6.4:1 sobre blanco */
-  --p8-bloqueo-texto: #A83228;  /* 5.5:1 sobre suave · 6.7:1 sobre blanco */
+  --p8-seguro-texto: #18734C;   /* 5.0:1 sobre suave - 5.8:1 sobre blanco */
+  --p8-aviso-texto: #8A5200;    /* 5.6:1 sobre suave - 6.4:1 sobre blanco */
+  --p8-bloqueo-texto: #A83228;  /* 5.5:1 sobre suave - 6.7:1 sobre blanco */
 
   /* Superficies semánticas (cambian con el tema; ver modo oscuro abajo) */
   --p8-fondo: #F6F8FB;
@@ -44,14 +44,14 @@
   --p8-font-body: "IBM Plex Sans", system-ui, sans-serif;
   --p8-font-mono: "IBM Plex Mono", ui-monospace, monospace;
   /* Escala (rem sobre 16 px) */
-  --p8-text-display: 3rem;      /* 48 · Sora 700, -0.02em */
-  --p8-text-h1: 2.25rem;        /* 36 · Sora 700 */
-  --p8-text-h2: 1.75rem;        /* 28 · Sora 700 */
-  --p8-text-h3: 1.125rem;       /* 18 · Sora 600 */
-  --p8-text-body: 1rem;         /* 16 · Plex Sans 400, interlineado 1.55 */
-  --p8-text-small: 0.875rem;    /* 14 · Plex Sans 400/500 */
-  --p8-text-token: 0.875rem;    /* 14 · Plex Mono 600 */
-  --p8-text-label: 0.75rem;     /* 12 · Plex Mono 600, mayúsculas, +0.12em */
+  --p8-text-display: 3rem;      /* 48 - Sora 700, -0.02em */
+  --p8-text-h1: 2.25rem;        /* 36 - Sora 700 */
+  --p8-text-h2: 1.75rem;        /* 28 - Sora 700 */
+  --p8-text-h3: 1.125rem;       /* 18 - Sora 600 */
+  --p8-text-body: 1rem;         /* 16 - Plex Sans 400, interlineado 1.55 */
+  --p8-text-small: 0.875rem;    /* 14 - Plex Sans 400/500 */
+  --p8-text-token: 0.875rem;    /* 14 - Plex Mono 600 */
+  --p8-text-label: 0.75rem;     /* 12 - Plex Mono 600, mayúsculas, +0.12em */
 
   /* Espacio (base 4 px) */
   --p8-space-1: 4px;
@@ -83,8 +83,8 @@
   --p8-ease-out: cubic-bezier(0.215, 0.61, 0.355, 1);  /* easeOut cúbico de 8 */
   --p8-ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);   /* rebote corto (back, c = 1.7) */
   --p8-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  /* Muelles de 8 (por fotograma a 60 fps): mirada k 0.2 · amortiguación 0.62;
-     cabeza k 0.06 · 0.78 (sigue a la mirada con retraso); párpados k 0.3 · 0.45.
+  /* Muelles de 8 (por fotograma a 60 fps): mirada k 0.2 - amortiguación 0.62;
+     cabeza k 0.06 - 0.78 (sigue a la mirada con retraso); párpados k 0.3 - 0.45.
      El parpadeo no es un muelle: sigue la curva de tiempos de --p8-dur-parpadeo-*. */
 }
 

@@ -93,11 +93,11 @@ _NUMBER_WORDS = (
     r"setenta|ochenta|noventa|cien|ciento|\w+cientos|quinientos|mil|millón|millones"
 )
 _AMOUNT_RES = [
-    # 1.234,56 € · 200€ · 3.412,58 EUR · 50 euros
+    # 1.234,56 € - 200€ - 3.412,58 EUR - 50 euros
     re.compile(r"\d[\d.,\s ]*\s*(?:€|eur\b|euros?\b|céntimos?\b)", re.IGNORECASE),
     # € 200
     re.compile(r"€\s*\d"),
-    # Spanish-formatted figures even without a currency: 1.234,56 · 3.412 · 12,50
+    # Spanish-formatted figures even without a currency: 1.234,56 - 3.412 - 12,50
     re.compile(r"\b\d{1,3}(?:\.\d{3})+(?:,\d+)?\b|\b\d+,\d{2}\b"),
     # spelled-out money: "doscientos euros", "mil quinientos euros"
     re.compile(rf"\b(?:(?:{_NUMBER_WORDS})\b[\s,y]*)+(?:de\s+)?(?:euros?|céntimos?)\b",

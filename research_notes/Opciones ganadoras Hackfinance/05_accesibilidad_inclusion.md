@@ -120,7 +120,7 @@ Rúbrica: Innovación 30 %, IA de frontera y audio 15 %, UX y accesibilidad 15 %
 6. **IA y audio:** Claude (uso de ordenador y razonamiento sobre el DOM) más la conversión de voz a texto y de texto a voz de ElevenLabs. **Métricas para la demo:** tiempo para hacer una transferencia o un traspaso con lector de pantalla (VoiceOver) frente a Recorrido Hablado; número de pasos o pulsaciones; tasa de completado; fallos WCAG 2.2 detectados por recorrido; latencia de voz de extremo a extremo en milisegundos.
 7. **Demo (3 min):** el usuario, con los ojos tapados, dice "traspasa mi fondo X a MyInvestor". El agente recorre un banco simulado (HTML con fallos reales de accesibilidad) y verbaliza la SCA. Se ve en pantalla el cronómetro frente al vídeo con VoiceOver. Al final, un informe "recorrido 7/7 completado, 4 barreras WCAG encontradas, expediente firmado". **Viable en 1-3 días:** sí, el núcleo ya existe. Se simula el banco; ElevenLabs y Claude son reales.
 8. **Patrocinadores:** MyInvestor (traspaso accesible como captación), GPTadvisor (asesor accesible), Claude (uso de ordenador), ElevenLabs (voz y conversión de voz a texto).
-9. **Puntuación:** Innovación 4,5 · IA y audio 5 · UX 5 · Técnica 3,5 (los flujos reales con SCA son frágiles) · Presentación 5 → **4,40**
+9. **Puntuación:** Innovación 4,5 - IA y audio 5 - UX 5 - Técnica 3,5 (los flujos reales con SCA son frágiles) - Presentación 5 → **4,40**
 10. **Riesgos:** si una operación se ejecuta mal, el daño es real (mitigado con retención humana). El banco puede ver el agente como un bot. "Cumplir" depende de una evaluación humana: no prometerlo (lección de la FTC).
 
 ### Concepto B: **Prueba B2** (Claro y Fiel): "Reescribe cualquier documento bancario a B2 o lectura fácil, lo lee en voz alta y demuestra que no cambió ni una cifra"
@@ -132,7 +132,7 @@ Rúbrica: Innovación 30 %, IA de frontera y audio 15 %, UX y accesibilidad 15 %
 6. **IA y audio:** **métricas** de nivel de lectura (índice Fernández-Huerta o INFLESZ, longitud media de frase, porcentaje de palabras raras) antes y después, nivel del Marco Común Europeo estimado, cifras conservadas 100 % (por ejemplo, 37/37) y acierto en la prueba oral de comprensión con el original frente a la versión simplificada (con 3-5 compañeros en la demo).
 7. **Demo (3 min):** se sube el KID real de un fondo de MyInvestor y un contrato de tarjeta revolving. Sale la versión B2, la versión en lectura fácil y el audio. Una tabla de fidelidad marca 37/37 en verde, y una cifra alterada a propósito aparece en rojo. **Viable:** muy alta en 1-2 días (los PDF son públicos).
 8. **Patrocinadores:** MyInvestor y GPTadvisor (KID de fondos), Claude, ElevenLabs.
-9. **Puntuación:** Innovación 4 · IA y audio 4,5 · UX 4 · Técnica 4,5 · Presentación 4 → **4,23**
+9. **Puntuación:** Innovación 4 - IA y audio 4,5 - UX 4 - Técnica 4,5 - Presentación 4 → **4,23**
 10. **Riesgos:** la lectura fácil "oficial" sigue necesitando validación humana: venderlo como un preparador que reduce las sesiones, no como un sustituto. El método para medir la B2 no está estandarizado.
 
 ### Concepto C: **Pase Humano** (Ley 10/2025 en una caja): "Agente de voz que atiende, da prioridad a mayores de 65 años y pasa a una persona con el caso resuelto, dejando la prueba lista para el auditor ENAC"
@@ -144,7 +144,7 @@ Rúbrica: Innovación 30 %, IA de frontera y audio 15 %, UX y accesibilidad 15 %
 6. **IA y audio:** **métricas:** porcentaje de llamadas atendidas en menos de 3 minutos (simulado), tiempo hasta el traspaso, preguntas repetidas tras el traspaso (objetivo 0), latencia de voz y precisión de la detección de la lengua cooficial.
 7. **Demo (3 min):** llamada en catalán de una persona de 70 años. El agente detecta la prioridad, ofrece pasar a una persona, el "humano" recibe la ficha y el panel muestra el 95 % y el registro firmado. **Viable:** alta con el agente conversacional de ElevenLabs y la API de Claude; la cola de agentes humanos se simula.
 8. **Patrocinadores:** ElevenLabs (muy fuerte), Claude; MyInvestor y GPTadvisor solo de forma indirecta (atención al cliente).
-9. **Puntuación:** Innovación 3,5 (sector de centros de llamadas saturado) · IA y audio 5 · UX 4 · Técnica 4 · Presentación 5 (urgencia legal) → **4,10**
+9. **Puntuación:** Innovación 3,5 (sector de centros de llamadas saturado) - IA y audio 5 - UX 4 - Técnica 4 - Presentación 5 (urgencia legal) → **4,10**
 10. **Riesgos:** la Ley 44/2002 prevalece en banca y hay excepciones financieras sin leer (Clifford Chance). Mucha competencia en IA para atención telefónica. Se aleja del valor diferencial de Priv8.
 
 ### Concepto D: **Cuenta Básica en tu idioma**: "Abre por voz y en tu lengua la cuenta de pago básica que la ley te garantiza, y si te la deniegan, sales con la reclamación hecha"
@@ -156,7 +156,7 @@ Rúbrica: Innovación 30 %, IA de frontera y audio 15 %, UX y accesibilidad 15 %
 6. **IA y audio:** **métricas:** tiempo para completar la solicitud en la lengua materna frente al formulario en español; porcentaje de solicitudes completas; comprensión de las condiciones (prueba oral en la lengua del usuario); número de lenguas soportadas en la demo.
 7. **Demo (3 min):** una persona habla en árabe o ucraniano, el agente comprueba sus documentos, rellena el alta en un banco simulado, el banco deniega y se genera la reclamación al BdE en español y en su lengua. **Viable:** alta; la web del banco se simula.
 8. **Patrocinadores:** ElevenLabs (multilingüe), Claude; MyInvestor como segundo paso (de la cuenta a la inversión) es débil.
-9. **Puntuación:** Innovación 4 · IA y audio 4,5 · UX 4,5 · Técnica 4 · Presentación 4 → **4,15**
+9. **Puntuación:** Innovación 4 - IA y audio 4,5 - UX 4,5 - Técnica 4 - Presentación 4 → **4,15**
 10. **Riesgos:** el modelo B2B es menos claro (puede acabar en "app social"). Datos de identidad sensibles. La calidad de la voz en darija o wolof no está verificada.
 
 ### Concepto E: **Remesa Clara**: "Antes de enviar dinero a casa, dices cuánto y a quién; el agente calcula en tu idioma el coste real, comisión más margen del tipo de cambio, y ejecuta con el más barato"
@@ -168,7 +168,7 @@ Rúbrica: Innovación 30 %, IA de frontera y audio 15 %, UX y accesibilidad 15 %
 6. **IA y audio:** métricas de euros ahorrados por envío y tiempo de la operación por voz.
 7. **Demo:** 200 € a República Dominicana, ahorro mostrado en pantalla. Viable en 1-2 días.
 8. **Patrocinadores:** ElevenLabs y Claude; poco encaje con MyInvestor y GPTadvisor.
-9. **Puntuación:** Innovación 3 · IA y audio 4 · UX 4 · Técnica 4 · Presentación 3,5 → **3,65**
+9. **Puntuación:** Innovación 3 - IA y audio 4 - UX 4 - Técnica 4 - Presentación 3,5 → **3,65**
 10. **Riesgos:** los precios de los operadores cambian y no hay API públicas fiables; queda lejos de inversión.
 
 ### Inferences (síntesis)

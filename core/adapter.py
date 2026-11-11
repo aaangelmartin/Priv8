@@ -1,4 +1,4 @@
-"""Interfaz de adaptador · contrato v1 (docs/contracts/README.md).
+"""Interfaz de adaptador - contrato v1 (docs/contracts/README.md).
 
 El adaptador web (Camino 2) la implementa en Python con Playwright. El de
 Android (Camino 3) vive al otro lado del puente WebSocket

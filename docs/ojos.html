@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>8 · Priv8</title>
+<title>8 - Priv8</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -94,7 +94,7 @@ code{font-family:var(--f-mono);font-size:.85em}
 
   <header class="hero">
     <div>
-      <span class="k">Priv8 · 8, el agente</span>
+      <span class="k">Priv8 - 8, el agente</span>
       <h1>8 mira, piensa, escucha y no ve.</h1>
       <p>8 (se lee Ocho o Eight) es el agente de Priv8: el 8 de Sora, tumbado, son sus ojos. Tiene emociones y una cara para cada momento del trámite. Pulsa una para verla en grande o reproduce la demo. En reposo, 8 sigue el puntero.</p>
       <div class="chips" id="chips"></div>
@@ -120,9 +120,9 @@ code{font-family:var(--f-mono);font-size:.85em}
   <section class="panel">
     <div><span class="eyebrow">Datos</span><h2>Ve, tokenizado o nunca sale</h2><p class="lead">La cara cuenta lo que 8 puede hacer con el dato. Con un token lo tiene, pero tapado: sus ojos son asteriscos. Lo que nunca sale ni lo mira: cierra los ojos. La interfaz lo acompaña con el chip <span class="tok">‹IBAN_1›</span> o la etiqueta "nunca sale".</p></div>
     <div class="states three">
-      <div class="stt ok"><span class="ico"><div id="s-ok"></div></span><span class="lvl">Verde · 8 lo ve</span><h3>Ve</h3><p>Interfaz: menús, botones, textos.</p></div>
-      <div class="stt no"><span class="ico"><div id="s-no"></div></span><span class="lvl">Ámbar · tokenizado</span><h3>Tokenizado</h3><p>Lo tiene, pero tapado: trabaja con <span class="tok">‹SALDO_1›</span> sin ver la cifra.</p></div>
-      <div class="stt bad"><span class="ico"><div id="s-nunca"></div></span><span class="lvl">Rojo · nunca sale</span><h3>Nunca sale</h3><p>Ni lo mira: contraseñas, PIN y códigos del banco los pone el usuario.</p></div>
+      <div class="stt ok"><span class="ico"><div id="s-ok"></div></span><span class="lvl">Verde - 8 lo ve</span><h3>Ve</h3><p>Interfaz: menús, botones, textos.</p></div>
+      <div class="stt no"><span class="ico"><div id="s-no"></div></span><span class="lvl">Ámbar - tokenizado</span><h3>Tokenizado</h3><p>Lo tiene, pero tapado: trabaja con <span class="tok">‹SALDO_1›</span> sin ver la cifra.</p></div>
+      <div class="stt bad"><span class="ico"><div id="s-nunca"></div></span><span class="lvl">Rojo - nunca sale</span><h3>Nunca sale</h3><p>Ni lo mira: contraseñas, PIN y códigos del banco los pone el usuario.</p></div>
     </div>
   </section>
 
@@ -211,7 +211,7 @@ code{font-family:var(--f-mono);font-size:.85em}
 
 
   /* ======================================================================
-     8 · ESTADOS
+     8 - ESTADOS
      Emociones: lo que siente. Flujo: lo que hace en cada paso del trámite.
      Todo sale de los mismos ojos: pupilas, párpados (con ángulo para el ceño
      y la tristeza), párpado inferior (sonrisa), tamaño e inclinación.
@@ -654,7 +654,7 @@ code{font-family:var(--f-mono);font-size:.85em}
     function apply(o,fromJson){
       var r=definir(o); prev.setMode(r.expresion.id);
       if(!fromJson){ var clean=JSON.parse(JSON.stringify(o)); q('#tl-json').value=JSON.stringify(clean,null,2); }
-      q('#tl-warn').textContent=r.avisos.length?('Avisos: '+r.avisos.join(' · ')):'Válida.';
+      q('#tl-warn').textContent=r.avisos.length?('Avisos: '+r.avisos.join(' - ')):'Válida.';
       return r;
     }
     box.addEventListener('input',function(ev){ if(ev.target.id==='tl-json'){ try{ var o=JSON.parse(ev.target.value); var r=apply(o,true); toUI(r.expresion); }catch(e){ q('#tl-warn').textContent='JSON no válido: '+e.message; } return; } apply(fromUI()); });

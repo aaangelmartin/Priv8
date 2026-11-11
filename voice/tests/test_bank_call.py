@@ -1,4 +1,4 @@
-"""#24 · Llamar al banco por ti: menú, aviso primero, cesión ante datos rojos y nada del seed al modelo."""
+"""#24 - Llamar al banco por ti: menú, aviso primero, cesión ante datos rojos y nada del seed al modelo."""
 
 import json
 import threading

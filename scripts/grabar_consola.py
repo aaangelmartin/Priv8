@@ -108,7 +108,7 @@ def main() -> int:
     finally:
         server.terminate()
     for f in salidas:
-        print(f"{f.relative_to(ROOT)} · {f.stat().st_size / 1e6:.1f} MB")
+        print(f"{f.relative_to(ROOT)} - {f.stat().st_size / 1e6:.1f} MB")
     return 0
 
 

@@ -1,6 +1,32 @@
-# Consola de auditoría (#21)
+<img alt="Consola de auditoría" src="../../brand/banner/cabeceras/apps-console.png" width="100%">
 
-App React + Vite que escucha `ws://127.0.0.1:8700/events` y muestra, en local. Usa la marca de `brand/` (tokens, logos, caras de 8) y las fuentes van empaquetadas, así que funciona sin red. Tiene el diseño de la web (`apps/landing`), solo en claro.
+Lo que ve 8, en directo y en local: escucha `ws://127.0.0.1:8700/events`. React y Vite, con el diseño de la web y las fuentes empaquetadas, así que funciona sin red.
+
+| Pestaña | Qué enseña |
+|---|---|
+| En directo | 8 animado, lo que ve 8 (la vista censurada del adaptador), su razonamiento y el chat **Pide a 8** con las confirmaciones |
+| Alarmas | Posible fraude: cambio de cuenta por correo, órdenes a la IA, bloqueos |
+| Pantalla | Cada elemento: lo que ves y lo que ve la IA, en ámbar o rojo |
+| Registro | La actividad, la latencia por paso y **Verificar registro** |
+
+```sh
+python -m core.server        # núcleo en :8700 (desde la raíz del repo)
+cd apps/console
+pnpm install
+pnpm dev                     # http://127.0.0.1:5175
+pnpm build
+for t in alertas tokens directo vivo frame; do node src/$t.test.mjs; done   # pruebas sin dependencias
+```
+
+| Sin núcleo ni IA | |
+|---|---|
+| `?demo` | Reproduce `public/demo.json`, la factura con la trampa del IBAN |
+| `?feed=sin-protocolo` / `?feed=con-protocolo` | El mismo trámite con 6 y con 0 valores reales al modelo (`make sin-protocolo`, `make videos`) |
+
+El mensaje `screen` lleva valores reales: abre la consola solo en la máquina del núcleo.
+
+<details>
+<summary><b>Detalles</b></summary>
 
 La vista principal son dos cosas: 8 en directo y el chat. Lo demás va en pestañas de la barra cobalto (**En directo**, **Alarmas**, **Pantalla**, **Registro**), con insignias para lo que espera: confirmaciones pendientes, alarmas sin revisar y bloqueos. La pestaña va en la URL (`#alarmas`, `#pantalla`, `#registro`).
 
@@ -18,15 +44,6 @@ Se reconecta sola si el núcleo se cae. La vista En directo cabe en la ventana (
 
 **Otro núcleo sin tocar la demo:** `PRIV8_EVENTS_PORT=8790 PRIV8_EVENTS_ORIGINS=http://127.0.0.1:5199` en el núcleo y `?ws=ws://127.0.0.1:8790/events` en la consola (solo se aceptan 127.0.0.1 y localhost).
 
-```sh
-python -m core.server        # núcleo en :8700 (desde la raíz del repo)
-cd apps/console
-pnpm install
-pnpm dev                     # http://127.0.0.1:5175
-pnpm build
-for t in alertas tokens directo vivo frame md reproductor; do node src/$t.test.mjs; done   # pruebas sin dependencias
-```
-
 **Demo sin núcleo ni IA:** abre `http://127.0.0.1:5175/?demo`. Reproduce `public/demo.json`, los mensajes reales del núcleo en el flujo de la factura con la trampa del IBAN (datos ficticios del seed), capturados sin llamar a la API.
 
 El mensaje `screen` lleva valores reales: la consola solo debe abrirse en la máquina del núcleo.
@@ -43,3 +60,5 @@ En la reproducción (`src/reproductor.js`) todo va como en directo: las pantalla
 **Lo que ves tú y lo que ve el modelo (#170):** en web, el adaptador manda también la pestaña real que maneja 8 (`frame` con `vista: "real"`, solo por el canal local). La consola enseña las dos a la vez, en En directo y arriba de la pestaña Pantalla: **Lo que ves tú** (la ventana real, con los valores) y **Lo que ve el modelo** (la vista de 8). Lado a lado si hay sitio a lo ancho, una encima de otra en pantallas estrechas (`DosPantallas` en `src/Vista8.jsx`). En Android y en los feeds sin pantalla real sigue solo lo que ve 8.
 
 `make videos` (o `make video-sin-protocolo` y `make video-con-protocolo`) graba los dos con Playwright a 1440×900 en `docs/entregables/video/` (`.webm` y, con ffmpeg, `.mp4`). `scripts/grabar_consola.py --frames DIR` guarda además capturas para revisar la grabación.
+
+</details>

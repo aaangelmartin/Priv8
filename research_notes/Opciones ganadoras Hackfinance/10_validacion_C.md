@@ -2,7 +2,7 @@
 
 Fecha: 10 nov 2026. Validador C. Fuentes de partida: `05_accesibilidad_inclusion.md`, `06_regtech_b2b.md`, `07_consumidor_tramites.md`, `01_yc_aceleradoras.md` (Renta Probada) y `reports/Producto ganador Hackfinance.md` (Albacea). Se hicieron unas 16 búsquedas y lecturas nuevas: el texto consolidado de la Ley 10/2025 en el BOE, el análisis de Gómez-Acebo & Pombo extraído del PDF, la competencia en pruebas de voicebots, analítica de voz MiFID, cancelaciones, herencias, ayudas y la cartera EUDI. Las puntuaciones son juicio del validador.
 
-Escala 1-5. Ponderada = 0,30·Innovación + 0,15·IA/audio + 0,15·UX + 0,30·Implementación + 0,10·Presentación.
+Escala 1-5. Ponderada = 0,30-Innovación + 0,15-IA/audio + 0,15-UX + 0,30-Implementación + 0,10-Presentación.
 
 ---
 
@@ -29,7 +29,7 @@ Escala 1-5. Ponderada = 0,30·Innovación + 0,15·IA/audio + 0,15·UX + 0,30·Im
 
 **Veredicto: KEEP WITH CHANGES.** De los seis, es el que mejor encaja con la rúbrica (15 % de UX y accesibilidad más 15 % de audio) y con los patrocinadores (MyInvestor, por el traspaso y el KID). Pero hay que quitarle el "nadie hace la operación por voz" y apoyar la novedad en la **prueba de fidelidad** y en la **privacidad**, no en la voz.
 
-**Puntuación corregida:** Innovación 3,5 · IA 4,5 · UX 4,5 · Implementación 4 · Presentación 4 → **4,00** (antes 4,40 y 4,23).
+**Puntuación corregida:** Innovación 3,5 - IA 4,5 - UX 4,5 - Implementación 4 - Presentación 4 → **4,00** (antes 4,40 y 4,23).
 
 **Hechos verificados**
 - La Directiva 2019/882, Anexo I, Sección IV, exige para banca de consumo que la identificación, la firma electrónica, la seguridad y los pagos sean perceptibles, operables, comprensibles y robustos. La información no puede superar el nivel B2 del MCER — [EUR-Lex 32019L0882](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32019L0882).
@@ -61,7 +61,7 @@ Escala 1-5. Ponderada = 0,30·Innovación + 0,15·IA/audio + 0,15·UX + 0,30·Im
 
 **Veredicto: DROP** como producto principal. Como mucho, un módulo de "autoauditoría del art. 50" para el propio voicebot de 8.
 
-**Puntuación corregida:** Innovación 2,5 · IA 4,5 · UX 3,5 · Implementación 4 · Presentación 4 → **3,55** (antes 4,40).
+**Puntuación corregida:** Innovación 2,5 - IA 4,5 - UX 3,5 - Implementación 4 - Presentación 4 → **3,55** (antes 4,40).
 
 **Hechos verificados (BOE, texto consolidado)**
 - Art. 2.1.e: los servicios financieros "se regirán por su normativa sectorial de aplicación". Art. 2.5: la ley es supletoria para ellos y no se les aplican el art. 13.8 ni los arts. 18, 19, 21, 22 y 23 (calidad, auditoría ENAC, sanciones) — [BOE Ley 10/2025](https://www.boe.es/eli/es/l/2025/12/26/10/con).
@@ -97,7 +97,7 @@ Ninguno vende "mapeo artículo a artículo de la ley española con expediente fi
 
 **Veredicto: DROP.**
 
-**Puntuación corregida:** Innovación 2,5 · IA 3,5 · UX 3 · Implementación 4 · Presentación 3 → **3,23** (antes 4,15).
+**Puntuación corregida:** Innovación 2,5 - IA 3,5 - UX 3 - Implementación 4 - Presentación 3 → **3,23** (antes 4,15).
 
 **Hechos verificados**
 - La obligación de grabar las comunicaciones relativas a órdenes (art. 16.7 MiFID II) y conservarlas 5-7 años es correcta (ESMA Q&A, nota 06).
@@ -119,7 +119,7 @@ Ninguno vende "mapeo artículo a artículo de la ley española con expediente fi
 
 **Veredicto: KEEP WITH CHANGES.** Es la mejor demo de audio del lote (una llamada en directo contra un agente de retención). Pero hay que (a) quitar "válido como MASC", (b) apoyarse en el TRLGDCU y no en los 3 minutos, y (c) darle forma financiera para el jurado: "cancela este cargo recurrente desde tu banco" y bajas de seguros vinculados.
 
-**Puntuación corregida:** Innovación 3,5 · IA 5 · UX 4 · Implementación 4 · Presentación 4,5 → **4,05** (antes 4,25).
+**Puntuación corregida:** Innovación 3,5 - IA 5 - UX 4 - Implementación 4 - Presentación 4,5 → **4,05** (antes 4,25).
 
 **Hechos verificados**
 - Ley 10/2025: la baja cuenta como "incidencia" (art. 3.4); hay que admitir el mismo canal por el que se contrató (art. 7.1); la respuesta llega por el mismo canal o el que elija el cliente (art. 13.5) — [BOE](https://www.boe.es/eli/es/l/2025/12/26/10/con). Esto solo obliga a las empresas del ámbito de la ley (servicios básicos y empresas de 250 o más trabajadores con más de 50 M€ de facturación). **Muchos gimnasios y servicios pequeños quedan fuera.**
@@ -153,7 +153,7 @@ Ninguno vende "mapeo artículo a artículo de la ley española con expediente fi
 
 **Veredicto: DROP como producto de la hackathon.** Tiene la mejor historia, pero la llamada no aporta lo que promete y la demo es casi toda simulada. Se puede usar como segundo caso de uso de "Mandato 8" o "Prueba de Baja" en la diapositiva de mercado.
 
-**Puntuación corregida:** Innovación 3,5 · IA 3,5 · UX 4 · Implementación 2,5 · Presentación 4,5 → **3,38** (antes 4,10 y 4,25).
+**Puntuación corregida:** Innovación 3,5 - IA 3,5 - UX 4 - Implementación 2,5 - Presentación 4,5 → **3,38** (antes 4,10 y 4,25).
 
 **Hechos verificados**
 - Para actuar, los bancos piden el certificado de defunción, el de últimas voluntades y el testamento o la declaración de herederos. Las cuentas del fallecido se consultan en la Agencia Tributaria o en el procedimiento de Sucesiones — [BdE Portal Cliente Bancario](https://clientebancario.bde.es/pcb/es/blog/que-ocurre-con-una-caja-de-seguridad-cuando-fallece-su-titular.html); [Consumer](https://www.consumer.es/economia-domestica/familia/como-saber-si-un-familiar-fallecido-dejo-testamento-o-seguro-de-vida.html).
@@ -184,7 +184,7 @@ Ninguno vende "mapeo artículo a artículo de la ley española con expediente fi
 
 **Veredicto: DROP** como producto. El **oráculo sí/no sobre ingresos** sí es una escena excelente para enseñar el núcleo de Priv8: se puede pasar a la demo principal ("¿cubre el saldo el traspaso?", "¿ingresos por debajo del umbral?").
 
-**Puntuación corregida:** Innovación 3 · IA 3 · UX 4 · Implementación 3 · Presentación 4 → **3,25** (antes 3,95 y 4,08).
+**Puntuación corregida:** Innovación 3 - IA 3 - UX 4 - Implementación 3 - Presentación 4 → **3,25** (antes 3,95 y 4,08).
 
 **Hechos verificados**
 - Cuarta opinión de la AIReF sobre el IMV (julio 2025): non take-up del **55 % en el IMV y del 72 % en el CAPI**, similar a años anteriores. En Baleares y Cataluña pasa del 65 % — [El Salto](https://www.elsaltodiario.com/renta-basica/55percent-hogares-podrian-recibir-imv-no-lo-han-solicitado-segun-airef); [Menorca.info](https://www.menorca.info/actualidad/nacional/2024/07/10/2201195/ingreso-minimo-vital-mas-mitad-hogares-solicitan.html). Corrige el 56 % de la nota 07, que es la cifra de 2023. No se encontró una opinión de 2026.
