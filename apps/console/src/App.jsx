@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, useEvents } from './useEvents.js'
 import { comentarioDe8 } from './alertas.js'
 import { TOKEN_RE, alinear, partesDeToken } from './tokens.js'
-import logoClaro from '../../../brand/logo/priv8-cua-claro.svg'
-import logoOscuro from '../../../brand/logo/priv8-cua-oscuro.svg'
+import logoClaro from '../../../brand/logo/priv8-claro.svg'
+import logoOscuro from '../../../brand/logo/priv8-oscuro.svg'
 import ochoReposo from '../../../brand/logo/8-reposo-cobalto.svg'
 import ochoNuncaSale from '../../../brand/logo/8-nuncasale-cobalto.svg'
 
@@ -66,11 +66,11 @@ function useAhora(ms = 1000) {
 
 function useTema() {
   const [tema, setTema] = useState(() => {
-    try { return localStorage.getItem('p8-consola-tema') || 'dark' } catch { return 'dark' }
+    try { return localStorage.getItem('p8-consola-tema-2') || 'light' } catch { return 'light' }
   })
   useEffect(() => {
     document.documentElement.dataset.theme = tema
-    try { localStorage.setItem('p8-consola-tema', tema) } catch { /* sin almacenamiento */ }
+    try { localStorage.setItem('p8-consola-tema-2', tema) } catch { /* sin almacenamiento */ }
   }, [tema])
   return [tema, setTema]
 }
@@ -107,8 +107,8 @@ function Cabecera({ status, tema, setTema }) {
   return (
     <header className="top">
       <div className="marca">
-        <img className="logo logo-claro" src={logoClaro} alt="Priv8 CUA" />
-        <img className="logo logo-oscuro" src={logoOscuro} alt="Priv8 CUA" />
+        <img className="logo logo-claro" src={logoClaro} alt="Priv8" />
+        <img className="logo logo-oscuro" src={logoOscuro} alt="Priv8" />
         <span className="producto">Consola de auditoría</span>
       </div>
       <span className={`conexion t-${tono}`}><i aria-hidden="true" />{texto}</span>
@@ -137,8 +137,8 @@ function Modo({ enClaro, audit, fin }) {
     return (
       <section className="modo sin" role="status" aria-live="polite">
         <div className="texto">
-          <p className="eyebrow">El mismo trámite, sin Priv8 CUA</p>
-          <h1>Sin protocolo: el modelo recibe esto</h1>
+          <p className="eyebrow">El mismo trámite, sin Priv8</p>
+          <h1>Sin protocolo: <span className="soft">el modelo recibe esto.</span></h1>
           <p className="sub">
             {fin
               ? `Trámite terminado: ${fin.valores_al_modelo} valores reales han llegado al modelo, ${fin.bloqueos} bloqueos, ninguna confirmación.`
@@ -156,8 +156,8 @@ function Modo({ enClaro, audit, fin }) {
     <section className="modo con" role="status" aria-live="polite">
       <img className="ocho" src={ochoReposo} alt="" />
       <div className="texto">
-        <p className="eyebrow">El mismo trámite, con Priv8 CUA</p>
-        <h1>Con protocolo: el modelo recibe tokens</h1>
+        <p className="eyebrow">El mismo trámite, con Priv8</p>
+        <h1>Con protocolo: <span className="soft">el modelo recibe tokens.</span></h1>
         <p className="sub">
           {fin
             ? `Trámite terminado: ${fin.valores_al_modelo} valores reales han llegado al modelo y se han bloqueado ${fin.bloqueos} acciones con datos del correo.`

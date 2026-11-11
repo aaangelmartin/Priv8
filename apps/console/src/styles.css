@@ -310,3 +310,99 @@ mark.fuga {
   }
   .panel, .alarmas, .pendiente { padding: var(--p8-space-4) }
 }
+
+/* ============================================================ marca v2, la misma de la web
+   Fondo blanco, bandas cobalto con el fondo de datos, tarjetas en niebla sin bordes, botones en píldora,
+   titulares en Sora con la segunda parte en cobalto suave. En oscuro, el azul noche teñido de cobalto. */
+:root, :root[data-theme="light"] {
+  --p8-fondo: #ffffff;
+  --p8-superficie: #f4f6fd;
+  --p8-borde: #dde3f3;
+  --p8-texto: #0b1b33;
+  --p8-texto-2: #4e5a72;
+  --c-sutil: #eef2fb;
+  --c-tarjeta-in: #ffffff;
+  --c-banda: #2d45d6;
+  --c-sombra: none;
+  --c-nav: rgba(255, 255, 255, .92);
+  --c-nav-sombra: 0 1px 2px rgba(11, 27, 51, .05), 0 18px 40px rgba(11, 27, 51, .1);
+}
+:root[data-theme="dark"] {
+  --p8-fondo: #071029;
+  --p8-superficie: #0d1a3d;
+  --p8-borde: #1d2c5c;
+  --p8-texto: #eef2ff;
+  --p8-texto-2: #a9b4d6;
+  --c-sutil: #13224b;
+  --c-tarjeta-in: #0a1534;
+  --c-banda: #2d45d6;
+  --c-nav: rgba(13, 26, 61, .92);
+  --c-nav-sombra: 0 0 0 1px rgba(143, 162, 255, .1), 0 18px 40px rgba(0, 0, 0, .35);
+}
+body { background: var(--p8-fondo); font-size: 14px; }
+h1, h2, h3 { font-weight: 700; letter-spacing: -.03em; }
+.soft { color: #9fb0ff; }
+.app { gap: 20px; padding-top: 18px; }
+
+/* cabecera: la barra suelta en píldora de la web */
+.top { position: sticky; top: 12px; z-index: 10; padding: 10px 12px 10px 22px; border-radius: 999px; background: var(--c-nav); box-shadow: var(--c-nav-sombra); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.logo { height: 24px; }
+.producto { text-transform: none; letter-spacing: .01em; font-weight: 500; font-size: 13px; border-left-color: var(--p8-borde); }
+.btn { border-radius: 999px; padding: 10px 18px; }
+.btn.sec { background: var(--c-sutil); border-color: transparent; }
+.btn.sec:hover:not(:disabled) { border-color: transparent; background: var(--p8-borde); }
+.tema { border: 0; background: var(--c-sutil); border-radius: 999px; padding: 3px; }
+.tema button { border-radius: 999px; padding: 7px 12px; }
+.tema button[aria-pressed="true"] { background: var(--c-banda); color: #fff; }
+
+/* etiquetas como en la web: mono, sin mayúsculas, en cobalto */
+.eyebrow { text-transform: none; letter-spacing: .01em; font-weight: 500; font-size: 12.5px; color: var(--c-cobalto-texto); }
+
+/* tarjetas: niebla, sin borde, esquinas grandes */
+.panel, .alarmas, .resumen, .pendiente { border: 0; border-radius: 24px; background: var(--p8-superficie); box-shadow: none; }
+.resumen { padding: 14px 22px; }
+.sec-cab h2 { font-size: 1.25rem; }
+.fila { border-top-color: var(--p8-borde); border-radius: 12px; }
+.fila:hover { background: var(--c-tarjeta-in); }
+.tabla { background: var(--c-tarjeta-in); border-radius: 18px; padding: 8px 10px; }
+.filtros { border-radius: 999px; }
+.filtros button { border-radius: 999px; }
+.filtros button[aria-selected="true"] { background: var(--c-banda); color: #fff; box-shadow: none; }
+.filtros button[aria-selected="true"] .cuenta { color: #dbe1ff; }
+.chip, .p8-estado { border-radius: 999px; }
+.tok { border-radius: 8px; padding: .12em .5em; }
+
+/* el modo de la demo: una banda cobalto con el fondo de datos, como las zonas azules de la web */
+.modo { position: relative; overflow: hidden; border: 0; border-radius: 28px; padding: 30px 34px; color: #fff; background: var(--c-banda) var(--c-textura) repeat 0 0 / 2200px auto; }
+.modo::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 70% 120% at 30% 50%, var(--c-banda) 40%, rgba(45, 69, 214, 0) 95%); }
+.modo > * { position: relative; }
+.modo h1 { font-size: clamp(24px, 1rem + 1.4vw, 34px); line-height: 1.08; color: #fff !important; }
+.modo .soft { color: #c4cdff; }
+.modo .eyebrow { color: #c4cdff !important; }
+.modo .sub { color: #dbe1ff !important; }
+.modo .ocho { width: 64px; border-radius: 0; }
+.modo .contador { border-left-color: rgba(255, 255, 255, .22) !important; }
+.modo .contador b { font-size: 56px; color: #fff !important; }
+.modo .contador span { color: #dbe1ff !important; }
+.modo.con, .modo.sin { box-shadow: none; }
+.modo.con .contador:not(.bloq) b { color: #fff !important; }
+.modo.con .contador.bloq b { color: #ffd0cb !important; }
+/* sin protocolo: la misma banda en azul noche, con la cifra de lo filtrado en rojo */
+.modo.sin { background-color: #0b1b33; }
+.modo.sin::before { background: radial-gradient(ellipse 70% 120% at 30% 50%, #0b1b33 40%, rgba(11, 27, 51, 0) 95%); }
+.modo.sin .contador b { color: #ff8a7d !important; }
+.modo.sin .soft { color: #ff8a7d; }
+
+/* alarmas y confirmaciones: el color solo en lo que importa */
+.alarmas.activas { background: var(--p8-bloqueo-suave); box-shadow: none; }
+:root[data-theme="dark"] .alarmas.activas { background: #2a1420; }
+.alarma { border-radius: 16px; background: var(--c-tarjeta-in); }
+.alarma.t-instruccion { background: var(--c-tarjeta-in); box-shadow: inset 3px 0 0 var(--p8-aviso); }
+.alarma:not(.t-instruccion):not(.revisada) { box-shadow: inset 3px 0 0 var(--p8-bloqueo); }
+.pendiente { background: var(--p8-aviso-suave); }
+:root[data-theme="dark"] .pendiente { background: #2a2010; }
+.btn.ok { border-radius: 999px; }
+/* la banda deja ver los datos solo en los bordes, nunca detrás del texto ni de las cifras */
+.modo::before { background: radial-gradient(ellipse 88% 150% at 50% 50%, var(--c-banda) 58%, rgba(45, 69, 214, 0) 100%); }
+.modo.sin::before { background: radial-gradient(ellipse 88% 150% at 50% 50%, #0b1b33 58%, rgba(11, 27, 51, 0) 100%); }
+.logo { height: 28px; }
