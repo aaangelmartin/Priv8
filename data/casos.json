@@ -51,15 +51,6 @@
       }
     },
     {
-      "id": "b2b-sin-protocolo",
-      "vertical": "b2b",
-      "titulo": "El mismo trámite sin protocolo",
-      "que": "La factura sin Priv8 CUA: el modelo recibe los datos reales. Para comparar.",
-      "pedido": null,
-      "feed": "sin-protocolo",
-      "fuente": "make sin-protocolo"
-    },
-    {
       "id": "b2c-saldo",
       "vertical": "b2c",
       "titulo": "¿Cuánto tengo?",
