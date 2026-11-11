@@ -173,3 +173,29 @@ def test_el_espejo_solo_recibe_la_copia(pw, doc):
         assert v.call("di", {"texto": "Pulso «Registrar»"}) is True
     finally:
         v.close()
+
+
+def test_un_token_nunca_se_sale_de_su_caja(pw):
+    """En una caja pequeña (un avatar redondo) el token se recorta con puntos suspensivos."""
+    page = (
+        '<!doctype html><html><head><style>.avatar { display: inline-grid; place-items: center; width: 36px;'
+        ' height: 36px; border-radius: 50%; background: #7a5bc4; color: #fff; font: 14px sans-serif }</style></head>'
+        '<body><span class="avatar" data-p8="text" data-p8-ref="e1">SL</span>'
+        '<p><b data-p8="text" data-p8-ref="e2" style="display:inline-block;width:60px">x</b></p></body></html>')
+    obs = {"e1": {"cls": "ambar", "text": "‹CODIGO_2-correo›", "label": None},
+           "e2": {"cls": "rojo", "text": None, "label": None}}
+    browser = pw.chromium.launch(headless=True)
+    p = browser.new_page()
+    p.set_content(page)
+    doc = p.evaluate(CENSOR_JS, {"fase": "copia", "obs": obs, "sel": {}, "over": {}, "mascaras": {}})
+    browser.close()
+    v = Vista8(pw, {"width": 400, "height": 200}, scale=1)
+    try:
+        assert v.write(doc, [])
+        cajas = v.page.evaluate("""() => [...document.querySelectorAll('.p8-tok, .p8-nunca')].map((t) => {
+            const a = t.getBoundingClientRect(), b = t.parentElement.getBoundingClientRect()
+            return [a.left >= b.left - 0.5 && a.right <= b.right + 0.5, getComputedStyle(t).textOverflow]
+        })""")
+        assert cajas == [[True, "ellipsis"], [True, "ellipsis"]]
+    finally:
+        v.close()

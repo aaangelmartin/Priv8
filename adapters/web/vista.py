@@ -67,12 +67,17 @@ VISTA_CSS = """
 <style id="p8-vista">
   .p8-tok { font: 600 .86em/1.35 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace !important;
             background: #E4E9FD !important; color: #2236B5 !important; border-radius: 6px; padding: .06em .42em;
-            white-space: nowrap; letter-spacing: 0 !important; text-transform: none !important }
+            white-space: nowrap; letter-spacing: 0 !important; text-transform: none !important;
+            /* nunca se sale de su caja: en una pequeña (un avatar) se recorta con puntos suspensivos */
+            display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
+            box-sizing: border-box }
+  .p8-nunca { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
+              box-sizing: border-box }
   .p8-nunca { font: 600 .82em/1.35 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace !important;
               color: #A83228 !important; background: repeating-linear-gradient(135deg, #FBE5E3 0 6px, #F7D7D3 6px 12px) !important;
               border-radius: 6px; padding: .08em .5em; white-space: nowrap; text-transform: none !important }
   /* un dato tapado: una barra suave del color del texto, del mismo tamaño que el texto */
-  .p8-x { position: relative; display: inline-block; vertical-align: baseline; line-height: inherit; white-space: nowrap;
+  .p8-x { position: relative; display: inline-block; vertical-align: baseline; line-height: inherit; white-space: nowrap; max-width: 100%; overflow: hidden;
           color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important;
           background: none !important; user-select: none; letter-spacing: -.02em }
   .p8-x::after { content: ""; position: absolute; left: 1px; right: 1px; top: 50%; height: .9em; transform: translateY(-46%);

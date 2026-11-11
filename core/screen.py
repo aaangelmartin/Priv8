@@ -16,6 +16,9 @@ from .policies import Rule, Screen
 from .vault import Vault
 
 
+INICIALES = re.compile(r"[A-ZÁÉÍÓÚÑÜ]{1,3}")  # texto suelto de 1 a 3 mayúsculas: iniciales, verde
+
+
 @dataclass(frozen=True)
 class Span:
     """Un dato encontrado por el detector en un texto."""
@@ -90,7 +93,9 @@ def transform_element(el: dict[str, Any], screen: Screen, vault: Vault,
         # Texto suelto de la página (#154): sin regla, siempre el detector, sea cual sea la
         # pantalla. Lo que encuentra va con su token (ámbar) o no sale (rojo); lo demás, verde.
         cls = "verde"
-        if text:
+        if text and INICIALES.fullmatch(text.strip()):
+            pass  # las iniciales de un avatar («SL», «CP») no son un dato
+        elif text:
             text, red = _replace_spans(text, detect(text), vault, screen.origen)
             if red:
                 cls, text = "rojo", None
