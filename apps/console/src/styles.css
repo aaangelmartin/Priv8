@@ -640,3 +640,40 @@ mark.dato.escrito { background: var(--accent-soft); color: var(--ink) }
 /* las líneas de sistema del chat, alineadas con los mensajes de 8 y sin fondo: que no hagan ruido */
 .msg.linea { align-self: stretch; justify-content: flex-start; text-align: left; padding: 0 0 0 40px; background: none }
 .msg.linea.t-alarma { background: none; padding: 0 0 0 40px; border-radius: 0 }
+
+/* ------------------------------------------------------------ lo que ves tú y lo que ve el modelo (#170) */
+.dos-pantallas { flex: 1; min-width: 0; min-height: 0; display: grid; gap: 12px }
+.dos-pantallas.en-fila { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) }
+.dos-pantallas.en-columna { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) }
+.dos-pantallas > .escenario { min-width: 0; min-height: 0 }
+.dos-pantallas .vista-ventana .ventana-cab { gap: 8px; padding: 0 10px }
+.dos-pantallas .ventana-app { font-size: .84rem }
+.dos-pantallas .ventana-pantalla, .dos-pantallas .vista-chip { display: none }
+.rotulo { flex: none; font: 600 .74rem/1 var(--f-sans); padding: 6px 10px; border-radius: 999px; white-space: nowrap }
+.rotulo.r-real { color: var(--warn-text); background: var(--warn-soft) }
+.rotulo.r-ocho { color: #1f33b0; background: var(--tok-bg) }
+.real-espera { align-items: center; justify-content: center; text-align: center; padding: 16px; border-radius: 20px; border: 1.5px dashed rgba(255, 255, 255, .35); color: var(--on-band); font-size: .9rem }
+.pantalla-dos { height: min(56vh, 560px); display: flex; padding: 14px; margin-bottom: 16px; border-radius: 20px; background: var(--accent) }
+.pantalla-dos .real-espera { color: #fff }
+@media (min-width: 1500px) { .dos-pantallas .vista-chip { display: inline-flex } }
+
+/* ------------------------------------------------------------ sesión real grabada (?feed=sesion-b2b, #170) */
+.controles button:focus-visible { outline: 2px solid #fff; outline-offset: 2px }
+.controles { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; min-width: 0 }
+.controles .ctl {
+  width: 32px; height: 32px; flex: none; display: grid; place-items: center; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(255, 255, 255, .16); color: #fff; transition: background .2s ease;
+}
+.controles .ctl:hover { background: rgba(255, 255, 255, .28) }
+.controles .ctl svg { width: 15px; height: 15px }
+.velocidades { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: rgba(255, 255, 255, .12) }
+.velocidades button {
+  border: 0; cursor: pointer; padding: 6px 9px; border-radius: 999px; background: transparent; color: var(--on-band);
+  font: 600 .74rem/1 var(--f-mono);
+}
+.velocidades button[aria-checked="true"] { background: #fff; color: var(--accent) }
+.progreso { width: clamp(60px, 9vw, 160px); height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .2); overflow: hidden }
+.progreso i { display: block; height: 100%; background: #fff; border-radius: 4px }
+.tiempo { font: 500 .76rem/1 var(--f-mono); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap }
+.confirmacion .acciones .nota { font-size: .8rem; color: var(--muted, #5A6478) }
+@media (max-width: 1360px) { .en-feed .directo .tarea span:nth-child(2) { display: none } }

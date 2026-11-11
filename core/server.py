@@ -105,12 +105,13 @@ async def events_ws(ws: WebSocket) -> None:
         while True:
             await send(await queue.get())
 
-    # Fotogramas: un hueco por sesión. Mientras se envía uno, el siguiente pisa al anterior.
+    # Fotogramas: un hueco por sesión y vista (la de 8 y la real, #170). Mientras se envía uno,
+    # el siguiente pisa al anterior.
     latest: dict[str, dict] = {}
     ready = asyncio.Event()
 
     def put_frame(msg: dict) -> None:
-        latest[str(msg.get("session"))] = msg
+        latest[f'{msg.get("session")}|{msg.get("vista") or ""}'] = msg
         ready.set()
 
     async def pump_frames() -> None:

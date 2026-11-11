@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, WS_URL, useEvents } from './useEvents.js'
+import { DEMO, FEED, SESION, SIN_PROTOCOLO, VERIFY_URL, WS_URL, useEvents } from './useEvents.js'
+import { VELOCIDADES, reloj } from './reproductor.js'
 import { comentarioDe8 } from './alertas.js'
 import { partesDeToken } from './tokens.js'
 import { estadoDe8, mmss, nombreApp, nombrePantalla, tareaActual } from './directo.js'
 import { EnClaro, Md, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
 import { Razonamiento, useReproduccion } from './Vivo.jsx'
-import { PantallaViva, VistaWeb } from './Vista8.jsx'
+import { DosPantallas, PantallaViva, VistaWeb } from './Vista8.jsx'
 import { esVista8 } from './frame.js'
 import Eight from './eight/Eight.jsx'
 import ochoAvatar from '../../../brand/logo/8-reposo-cobalto.svg'
@@ -31,7 +32,7 @@ const CONEXION = {
   conectado: ['seguro', 'Conectado al núcleo'],
   conectando: ['aviso', 'Conectando…'],
   reconectando: ['aviso', 'Reconectando…'],
-  demo: FEED ? ['cobalto', 'Reproducción B2B'] : ['cobalto', 'Demo grabada'],
+  demo: SESION ? ['cobalto', 'Sesión real grabada'] : FEED ? ['cobalto', 'Reproducción B2B'] : ['cobalto', 'Demo grabada'],
   'sin demo': ['bloqueo', 'Falta demo.json'],
 }
 
@@ -125,7 +126,49 @@ export function urlVista8() {
   return `${window.location.pathname}?${p.toString()}`
 }
 
-function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame }) {
+// Sesión grabada: el reloj de la reproducción, al día (unas veces por segundo).
+function useReloj() {
+  const [st, setSt] = useState(reloj.estado)
+  useEffect(() => {
+    let ultimo = ''
+    return reloj.suscribir((e) => {
+      const clave = `${Math.floor(e.t * 4)}|${e.enMarcha}|${e.velocidad}|${e.terminado}|${e.duracion}`
+      if (clave !== ultimo) { ultimo = clave; setSt(e) }
+    })
+  }, [])
+  return st
+}
+
+function Controles() {
+  const st = useReloj()
+  const pct = st.duracion ? Math.min(100, (st.t / st.duracion) * 100) : 0
+  return (
+    <div className="controles" role="group" aria-label="Reproducción de la sesión grabada">
+      <button className="ctl" onClick={() => reloj.alternar()} aria-label={st.enMarcha ? 'Pausar' : 'Reproducir'} title={st.enMarcha ? 'Pausar' : st.terminado ? 'Volver a empezar' : 'Reproducir'}>
+        {st.enMarcha
+          ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" strokeWidth="3" strokeLinecap="round" /></svg>
+          : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" /></svg>}
+      </button>
+      <button className="ctl" onClick={() => reloj.reiniciar()} aria-label="Reiniciar" title="Reiniciar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      <span className="velocidades" role="radiogroup" aria-label="Velocidad">
+        {VELOCIDADES.map((v) => (
+          <button key={v} role="radio" aria-checked={st.velocidad === v} onClick={() => reloj.velocidad(v)}>{v}x</button>
+        ))}
+      </span>
+      <span className="progreso" aria-hidden="true"><i style={{ width: `${pct}%` }} /></span>
+      <span className="tiempo">{mmss(Math.floor(st.t))} / {mmss(Math.round(st.duracion))}</span>
+    </div>
+  )
+}
+
+// Lo que ves tú junto a lo que ve el modelo: en la sesión grabada y en directo cuando el
+// adaptador web manda la pestaña real (#170). Sin ella (Android, feeds), solo lo que ve 8.
+const NOTA_REAL = SESION ? 'Datos ficticios de la demo' : 'Solo en este ordenador'
+const dosPantallas = (real) => SESION || !!real
+
+function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame, real }) {
   const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
   const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}`)
   const t = useMemo(() => tareaActual(audit), [audit])
@@ -138,7 +181,9 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
       <header className="directo-cab" aria-live="polite">
         <Eight className="directo-eight" mode={e.modo} fg={BLANCO} cut={fondo} label={`8: ${e.titulo}`} />
         <div className="directo-texto">
-          {FEED
+          {SESION
+            ? <p className="eyebrow modo-texto">Sesión real grabada <span className="clave">el modelo solo recibe tokens</span></p>
+            : FEED
             ? <p className="eyebrow modo-texto">{SIN_PROTOCOLO ? <>Sin protocolo <span className="clave">el modelo recibe los datos reales</span></> : <>Con Priv8 <span className="clave">el modelo solo recibe tokens</span></>}</p>
             : <p className="eyebrow"><i className="vivo" aria-hidden="true" />Lo que ve 8, en directo</p>}
           <h2 title={e.titulo}><Titular texto={e.titulo} /></h2>
@@ -160,7 +205,9 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
       </header>
 
       <div className="directo-pantalla">
-        <PantallaViva frame={frame} rep={rep} demo={DEMO} sin={SIN_PROTOCOLO} />
+        {dosPantallas(real)
+          ? <DosPantallas frame={frame} real={real} nota={NOTA_REAL} />
+          : <PantallaViva frame={frame} rep={rep} demo={DEMO && !SESION} sin={SIN_PROTOCOLO} />}
       </div>
 
       {FEED && (
@@ -169,6 +216,7 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
           {!SIN_PROTOCOLO && <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'acción bloqueada' : 'acciones bloqueadas'}</span>}
           {!SIN_PROTOCOLO && <span className="cifra"><b>{pending.length}</b> por confirmar</span>}
           {fin && SIN_PROTOCOLO && <span className="cifra fin">Ningún bloqueo, ninguna confirmación</span>}
+          {SESION && <Controles />}
         </footer>
       )}
     </section>
@@ -246,8 +294,9 @@ function Confirmacion({ c, resolve, valores, ahora }) {
       {abierta && <div className="barra" aria-hidden="true"><i style={{ width: `${(quedan / total) * 100}%` }} /></div>}
       {abierta && (
         <div className="acciones">
-          <button className="btn primario" onClick={() => decidir(true)}>Aprobar</button>
-          <button className="btn no" onClick={() => decidir(false)}>Rechazar</button>
+          <button className="btn primario" onClick={() => decidir(true)} disabled={SESION} title={SESION ? 'En la grabación la aprueba la persona' : undefined}>Aprobar</button>
+          <button className="btn no" onClick={() => decidir(false)} disabled={SESION}>Rechazar</button>
+          {SESION && <span className="nota">En la grabación la aprueba la persona.</span>}
           {error && <span className="nota mala">No se ha enviado: sin conexión con el núcleo.</span>}
         </div>
       )}
@@ -329,11 +378,13 @@ function Chat({ chat, confirmaciones, resolve, pedir, status, session, valores, 
         )}
         {orden.map((m) => <Mensaje key={m.id} m={m} confirmaciones={confirmaciones} resolve={resolve} valores={valores} ahora={ahora} />)}
       </ol>
-      <div className="sugerencias" aria-label="Sugerencias">
-        {SUGERENCIAS.map((s) => (
-          <button key={s} className="chip-sug" disabled={!activo} onClick={() => enviar(s)}>{s}</button>
-        ))}
-      </div>
+      {!SESION && (
+        <div className="sugerencias" aria-label="Sugerencias">
+          {SUGERENCIAS.map((s) => (
+            <button key={s} className="chip-sug" disabled={!activo} onClick={() => enviar(s)}>{s}</button>
+          ))}
+        </div>
+      )}
       <form className="entrada" onSubmit={(ev) => { ev.preventDefault(); enviar() }}>
         <input
           value={texto}
@@ -345,7 +396,7 @@ function Chat({ chat, confirmaciones, resolve, pedir, status, session, valores, 
         />
         <button className="btn primario" type="submit" disabled={!activo || !texto.trim()}>Enviar</button>
       </form>
-      {!activo && <p className="nota-chat">{DEMO ? 'Es una reproducción grabada: aquí no se pueden enviar encargos.' : 'Sin conexión con el núcleo: arranca el agente con make agent-web.'}</p>}
+      {!activo && <p className="nota-chat">{SESION ? 'Reproducción de una sesión real grabada.' : DEMO ? 'Es una reproducción grabada: aquí no se pueden enviar encargos.' : 'Sin conexión con el núcleo: arranca el agente con make agent-web.'}</p>}
       {aviso && activo && <p className="nota-chat mala">{aviso}</p>}
     </section>
   )
@@ -407,7 +458,7 @@ function Celda({ children, largo }) {
   )
 }
 
-function Pantalla({ screen, status, valores }) {
+function Pantalla({ screen, status, valores, frame, real }) {
   const obs = screen?.observed
   const reales = useMemo(() => new Map((screen?.raw?.elements ?? []).map((e) => [e.id, e])), [screen])
 
@@ -446,6 +497,9 @@ function Pantalla({ screen, status, valores }) {
           </span>
         )}
       </header>
+      {dosPantallas(real) && (
+        <div className="pantalla-dos"><DosPantallas frame={frame} real={real} nota={NOTA_REAL} /></div>
+      )}
       <div className="tabla" role="table" aria-label="Lo que ves frente a lo que ve la IA">
         <div className="fila cabecera" role="row">
           <span role="columnheader">Elemento</span>
@@ -585,7 +639,7 @@ function Actividad({ audit, etiquetas, valores }) {
 // ---------------------------------------------------------------- app
 
 export default function App() {
-  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame } = useEvents()
+  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real } = useEvents()
   const ahora = useAhora()
   // La reproducción vive aquí para que no se pierda al cambiar de pestaña.
   const rep = useReproduccion(linea, valores)
@@ -609,7 +663,7 @@ export default function App() {
       <Barra status={status} vista={vista} ir={ir} avisos={avisos} />
       {vista === 'directo' && (
         <div className="vista-directo">
-          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} />
+          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} real={real} />
           <aside className="lado" aria-label="Razonamiento y chat">
             <Razonamiento rep={rep} />
             <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
@@ -623,7 +677,7 @@ export default function App() {
             : <section className="panel vacio-panel"><h2>Sin alarmas</h2><p>Si un correo pide cambiar una cuenta, da órdenes a la IA o el núcleo bloquea algo, aparecerá aquí.</p></section>}
         </main>
       )}
-      {vista === 'pantalla' && <main className="vista"><Pantalla screen={screen} status={status} valores={valores} /></main>}
+      {vista === 'pantalla' && <main className="vista"><Pantalla screen={screen} status={status} valores={valores} frame={frame} real={real} /></main>}
       {vista === 'registro' && <main className="vista"><Actividad audit={audit} etiquetas={etiquetas} valores={valores} /></main>}
     </div>
   )

@@ -78,6 +78,10 @@ def connect(session: str, adapter: Adapter) -> None:
     if hasattr(adapter, "on_frame"):
         adapter.on_frame = lambda f, s=session: frame(s, f)
         adapter.watching = events.frame_watchers
+    if hasattr(adapter, "on_real_frame"):  # lo que ves tú (#170): la pantalla real, solo al canal local
+        adapter.on_real_frame = lambda f, s=session: events.publish_frame(
+            {"type": "frame", "session": s, "vista": "real", "app": f.get("app") or "", "w": int(f["w"]),
+             "h": int(f["h"]), "mime": f.get("mime", "image/jpeg"), "img": f["img"]})
     # Vista de 8 y los ojos de 8 en la ventana (#154): el adaptador web censura su copia con
     # lo que vio el modelo y pasa el mismo bloqueo final; todo dentro del proceso.
     if hasattr(adapter, "on_core_event"):

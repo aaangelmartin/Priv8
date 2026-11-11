@@ -80,6 +80,19 @@ FRAME_TICK_MS = 15      # sin trabajos, cada cuánto atiende el navegador los fo
 SYNC_EVERY_S = 0.1      # cada cuánto se mira si la pestaña ha cambiado (debounce de los cambios)
 VIEWPORT = {"width": 1100, "height": 760}
 
+# Lo que ves tú (#170): mientras una consola mira, la pestaña real que maneja 8 (con sus valores,
+# el cursor y los bocadillos) también va a la consola, junto a la vista de 8, como fotograma con
+# vista "real". Es la pantalla de la persona: va solo por el canal local de fotogramas (127.0.0.1,
+# como screen.raw), nunca al modelo ni al registro. PRIV8_REAL_FRAMES=0 lo apaga.
+REAL_FPS = 7
+REAL_MAX_W = 1100
+REAL_QUALITY = 70
+
+
+def real_frames_enabled() -> bool:
+    v = os.environ.get("PRIV8_REAL_FRAMES", "").strip().lower()
+    return v not in ("0", "off", "false", "no")
+
 # Lo que dice 8 en el bocadillo: corto, una frase, sin markdown.
 BLOQUEO = {
     "destino": "Ese dato del correo no entra en ese campo.",
@@ -362,6 +375,13 @@ class WebAdapter:
         self.frames = frames_enabled()
         self.frames_sent = 0
         self._vista: Vista8 | None = None
+        # Lo que ves tú: la pestaña real a la consola (core.connect pone on_real_frame).
+        self.on_real_frame: Callable[[dict[str, Any]], Any] | None = None
+        self.real_frames = real_frames_enabled()
+        self._rec_cdp: Any = None
+        self._rec_page: Any = None
+        self._rec_at = 0.0
+        self._rec_pend: tuple[float, str, int, int, str] | None = None
         self._frame: tuple[str, int, int] | None = None  # último fotograma del espejo sin enviar
         self._last_img: tuple[str, int, int] | None = None
         self._frame_at = 0.0
@@ -407,6 +427,7 @@ class WebAdapter:
                     continue
             else:
                 self._stop_cast()
+                self._rec_stop()
                 try:
                     job = self._jobs.get(timeout=0.4)
                 except queue.Empty:
@@ -420,6 +441,7 @@ class WebAdapter:
                 fut.set_exception(e)
             self._sync_force = True  # tras una acción o una lectura, la vista de 8 se vuelve a copiar
         self._stop_cast()
+        self._rec_stop()
         if self._vista is not None:
             self._vista.close()
         self._ctx.close()
@@ -606,9 +628,61 @@ class WebAdapter:
             if self._sync_force or time.monotonic() - self._sync_at > SYNC_EVERY_S:
                 self._sync(page)
             self._flush()
+            self._rec_tick(page)
             page.wait_for_timeout(FRAME_TICK_MS)
         except PwError:
             time.sleep(FRAME_TICK_MS / 1000)
+
+    # ---- lo que ves tú: la pestaña real a la consola (#170), en el hilo del navegador ----
+
+    def _rec_tick(self, page: Any) -> None:
+        """La pestaña real a la consola mientras mira: sigue a la pestaña activa."""
+        if not self.real_frames or self.on_real_frame is None:
+            return
+        if page is not self._rec_page:
+            self._rec_stop()
+            cdp = self._ctx.new_cdp_session(page)
+            app = self.app
+
+            def on(p: dict[str, Any]) -> None:
+                try:
+                    cdp.send("Page.screencastFrameAck", {"sessionId": p["sessionId"]})
+                except Exception:  # noqa: BLE001
+                    return
+                meta = p.get("metadata") or {}
+                self._rec_pend = (time.time(), p["data"], int(meta.get("deviceWidth") or 0),
+                                  int(meta.get("deviceHeight") or 0), app)
+                self._rec_write()
+
+            cdp.on("Page.screencastFrame", on)
+            cdp.send("Page.startScreencast", {"format": "jpeg", "quality": REAL_QUALITY,
+                                              "maxWidth": REAL_MAX_W, "maxHeight": REAL_MAX_W})
+            self._rec_cdp, self._rec_page = cdp, page
+        self._rec_write()
+
+    def _rec_write(self) -> None:
+        """Envía el último fotograma real pendiente si toca (REAL_FPS como mucho): gana el último."""
+        pend = self._rec_pend
+        if pend is None or self.on_real_frame is None or time.time() - self._rec_at < 1 / REAL_FPS:
+            return
+        _, data, w, h, app = pend
+        if not w or not h:
+            return
+        self._rec_pend, self._rec_at = None, time.time()
+        try:
+            self.on_real_frame({"app": app, "w": w, "h": h, "img": data, "mime": "image/jpeg"})
+        except Exception:  # noqa: BLE001 - la consola nunca para al agente
+            pass
+
+    def _rec_stop(self) -> None:
+        cdp, self._rec_cdp, self._rec_page = self._rec_cdp, None, None
+        if cdp is None:
+            return
+        try:
+            cdp.send("Page.stopScreencast")
+            cdp.detach()
+        except Exception:  # noqa: BLE001
+            pass
 
     def _vista_activa(self) -> bool:
         return self._vista is not None and self._vista.casting

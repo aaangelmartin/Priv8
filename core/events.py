@@ -69,8 +69,8 @@ def subscribe_frames(fn: Listener) -> Callable[[], None]:
 
 def publish_frame(msg: dict[str, Any]) -> None:
     with _lock:
-        if isinstance(msg.get("session"), str):
-            _last_frames[msg["session"]] = msg
+        if isinstance(msg.get("session"), str):  # uno por sesión y vista (la de 8 y la real)
+            _last_frames[f'{msg["session"]}|{msg.get("vista") or ""}'] = msg
         targets = list(_frame_listeners)
     for fn in targets:
         try:
