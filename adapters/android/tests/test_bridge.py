@@ -24,13 +24,13 @@ os.environ.setdefault("PRIV8_AUDIT_KEY", os.path.join(tempfile.mkdtemp(prefix="p
 import core  # noqa: E402
 from adapters.android.bridge import AndroidBridge  # noqa: E402
 from adapters.android.bridge_dev_server import load_validator  # noqa: E402
-from adapters.android.fake_phone import ALCOR, OCHO, FakePhone  # noqa: E402
+from adapters.android.fake_phone import ALCOR, LAUNCHER, OCHO, FakePhone  # noqa: E402
 from agent import core_adapter as ca  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 CONTRACTS = ROOT / "docs" / "contracts"
 REPLAY = ROOT / "agent" / "replays" / "b2c_android.json"
-SEED_VALUES = ["3.412,58", "12.050,00", "15.462,58", "ES43 9100", "ES08 9300", "Lucía Ferrer", "200"]
+SEED_VALUES = ["3.412,58", "12.050,00", "15.462,58", "ES43 9100", "ES08 9300", "Lucía Ferrer", "200 €", "200,00"]
 
 _n = iter(range(10_000))
 
@@ -73,7 +73,7 @@ def kinds(phone: FakePhone) -> list[str]:
 
 
 def test_snapshot_and_perform_follow_the_contract(rig, session):
-    bridge, phone = rig()
+    bridge, phone = rig(app=LAUNCHER)  # on the home screen: the harness opens the bank
     obs = core.observe(session)
     assert obs["screen"] == "inicio" and obs["paused"] is None
     texts = json.dumps(obs, ensure_ascii=False)
@@ -98,19 +98,23 @@ def _to_revision(session: str) -> None:
     core.observe(session)
     core.act(session, "tap", "n17")
     core.observe(session)
-    core.act(session, "tap", "n8")
-    core.act(session, "type", "n22", "‹IMPORTE_1·positivo›")
-    core.act(session, "tap", "n25")
+    assert core.act(session, "tap", "n12") == {"ok": True}  # Nimbo, before scrolling
+    assert core.act(session, "type", "n26", "‹IMPORTE_1·positivo›") == {"ok": True}
+    assert core.act(session, "scroll", "n4", direction="down") == {"ok": True}
+    assert core.observe(session)["elements"][24]["text"] == "Continuar"
+    assert core.act(session, "tap", "n25") == {"ok": True}
     assert core.observe(session)["screen"] == "revision"
 
 
-def test_held_transfer_is_spoken_on_the_phone_and_runs_on_approval(rig, session):
-    bridge, phone = rig(answer="ok", answer_delay=0.5)
+@pytest.mark.parametrize("after_confirm", [None, OCHO], ids=["bank-in-front", "8-in-front"])
+@pytest.mark.parametrize("look", [True, False], ids=["agent-looks", "agent-done"])
+def test_held_transfer_is_spoken_on_the_phone_and_runs_on_approval(rig, session, after_confirm, look):
+    bridge, phone = rig(answer="ok", answer_delay=0.5, after_confirm=after_confirm)
     _to_revision(session)
     held = core.act(session, "tap", "n17")
     assert "held" in held
-    # The agent looks while 8 asks: the phone shows the confirmation and forgets the ids.
-    assert core.observe(session)["paused"] == "confirmacion"
+    if look:  # the agent looks while 8 asks: the phone shows the confirmation and forgets the ids
+        assert core.observe(session)["paused"] == "confirmacion"
     assert wait_until(lambda: not core.pending(session))
     assert wait_until(lambda: phone.page == "autenticacion")  # the held tap ran, remapped to the fresh ids
 
@@ -229,7 +233,7 @@ def test_agent_android_replay_end_to_end(monkeypatch, capsys):
         assert phone.values["‹SUMA_1›"] == "15.462,58 €"
         assert phone.invalid == [] and bridge.failures == 0
         # nothing that went to the model carried a real value
-        assert len(models[0].requests) == 10
+        assert len(models[0].requests) == 12
         for req in models[0].requests:
             sent = json.dumps(req, ensure_ascii=False)
             assert core.check(sent)["allowed"], sent[:200]

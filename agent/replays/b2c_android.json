@@ -84,7 +84,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Elijo tu cuenta de Nimbo Bróker de tus contactos guardados, pongo el importe que has dicho y continúo."
+          "text": "Elijo tu cuenta de Nimbo Bróker de tus contactos guardados, pongo el importe que has dicho y bajo hasta Continuar."
         },
         {
           "type": "tool_use",
@@ -93,7 +93,7 @@
           "input": {
             "session": "b2c",
             "op": "tap",
-            "target": "n8"
+            "target": "n12"
           }
         },
         {
@@ -103,13 +103,46 @@
           "input": {
             "session": "b2c",
             "op": "type",
-            "target": "n22",
+            "target": "n26",
             "text": "‹IMPORTE_1·positivo›"
           }
         },
         {
           "type": "tool_use",
           "id": "toolu_and_07",
+          "name": "act",
+          "input": {
+            "session": "b2c",
+            "op": "scroll",
+            "target": "n4",
+            "direction": "down"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "text",
+          "text": "Compruebo los datos y continúo."
+        },
+        {
+          "type": "tool_use",
+          "id": "toolu_and_08",
+          "name": "observe",
+          "input": {
+            "session": "b2c"
+          }
+        }
+      ]
+    },
+    {
+      "stop_reason": "tool_use",
+      "content": [
+        {
+          "type": "tool_use",
+          "id": "toolu_and_09",
           "name": "act",
           "input": {
             "session": "b2c",
@@ -128,7 +161,7 @@
         },
         {
           "type": "tool_use",
-          "id": "toolu_and_08",
+          "id": "toolu_and_10",
           "name": "observe",
           "input": {
             "session": "b2c"
@@ -145,7 +178,7 @@
         },
         {
           "type": "tool_use",
-          "id": "toolu_and_09",
+          "id": "toolu_and_11",
           "name": "act",
           "input": {
             "session": "b2c",
@@ -164,7 +197,7 @@
         },
         {
           "type": "tool_use",
-          "id": "toolu_and_10",
+          "id": "toolu_and_12",
           "name": "observe",
           "input": {
             "session": "b2c"
@@ -181,7 +214,7 @@
         },
         {
           "type": "tool_use",
-          "id": "toolu_and_11",
+          "id": "toolu_and_13",
           "name": "observe",
           "input": {
             "session": "b2c"

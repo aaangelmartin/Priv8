@@ -55,6 +55,8 @@ REPLY_TIMEOUT_S = 15.0
 REFRESH_TIMEOUT_S = 8.0
 APP_OCHO = "es.priv8.ocho"
 APP_ALCOR = "es.priv8.banks.alcor"
+# Bank screens that belong to the person (login, the code of the transfer): 8 does not cover them.
+PERSON_SCREENS = {"login", "autenticacion"}
 
 Log = Callable[[str], None]
 
@@ -95,6 +97,8 @@ class AndroidBridge:
         self.before_snapshot: Callable[[], None] | None = None  # simulated person, as in core/scenes.py
         # How long say() waits for app 8's events channel to reconnect once it is in front.
         self.present_wait = 6.0
+        # How long say() waits for the person to finish a login or the bank's code first.
+        self.person_wait = 180.0
 
         self.device: str | None = None
         self.failures = 0  # invalid messages, in or out
@@ -369,6 +373,16 @@ class AndroidBridge:
             action = self._remap(action, ref)
             if action is None:
                 return {"ok": False, "error": "target_no_encontrado"}
+        res = self._perform(action)
+        if target and ref and res.get("error") in ("target_no_encontrado", "no_permitido"):
+            # The screen changed under the action with no snapshot in between (8's
+            # confirmation came and went): find the element again and try once more.
+            again = self._remap(action, ref)
+            if again is not None:
+                res = self._perform(again)
+        return res
+
+    def _perform(self, action: dict[str, Any]) -> dict[str, Any]:
         msg = {"type": "perform", "id": self._next_id("a"), **action}
         try:
             reply = self._call(self._request(msg), self.reply_timeout + 1)
@@ -386,11 +400,19 @@ class AndroidBridge:
         key = lambda e: (e.get("role"), e.get("sel"), e.get("label"), e.get("text"))  # noqa: E731
         nth = [e["id"] for e in ref["elements"] if key(e) == key(old)].index(target)
         end = time.monotonic() + REFRESH_TIMEOUT_S
+        reopened = False
         while True:
             try:
                 raw = self._snapshot()
             except BridgeUnavailable:
                 return None
+            # When 8's confirmation closes, Android may show 8's own screen instead of the app
+            # the action belongs to: bring that app back once (the harness, not the agent).
+            if (raw.get("app") != ref.get("app") and not reopened
+                    and self.core.pause_before_policy(raw) is None):
+                reopened = True
+                self._perform({"op": "open_app", "text": ref["app"]})
+                continue
             if raw.get("elements") and not self.core.pause_before_policy(raw):
                 same = [e["id"] for e in raw["elements"] if key(e) == key(old)]
                 if raw.get("app") == ref.get("app") and len(same) > nth:
@@ -422,10 +444,28 @@ class AndroidBridge:
         """8 says `text` (tokens, not values) on the phone: the core publishes the utterance,
         and this bridge sends render_values and then the voice message. With `present`, app
         8 comes to the front first and its events channel gets a moment to reconnect."""
-        if present and self.connected and (self._last or {}).get("app") != APP_OCHO:
-            before = self.core.events.count()
-            if self.open_app(APP_OCHO):
-                end = time.monotonic() + self.present_wait
-                while self.core.events.count() <= before and time.monotonic() < end:
-                    time.sleep(0.2)
-        return self.core.say(self.session, text)
+        # An approved action may still be running (approve closes the request before it
+        # performs): let it finish before 8 comes to the front.
+        end = time.monotonic() + 30
+        while self._tasks and time.monotonic() < end:
+            time.sleep(0.1)
+        if present and self.connected:
+            # Never over the bank while the person logs in or types the code (PSD2).
+            if not self.wait_for_screen(self._person_done, self.person_wait, every=1.0):
+                self.log("la persona sigue en la autenticación: 8 habla sin ponerse delante")
+            elif (self._last or {}).get("app") != APP_OCHO:
+                before = self.core.events.count()
+                if self.open_app(APP_OCHO):
+                    end = time.monotonic() + self.present_wait
+                    while self.core.events.count() <= before and time.monotonic() < end:
+                        time.sleep(0.2)
+        utt = self.core.say(self.session, text)
+        if utt is not None:  # let the events channel and the phone get it before the process ends
+            end = time.monotonic() + self.present_wait
+            while utt["utterance"] not in self.voice_done and time.monotonic() < end:
+                time.sleep(0.1)
+        return utt
+
+    def _person_done(self, raw: dict[str, Any]) -> bool:
+        return (self.core.pause_before_policy(raw) is None
+                and raw.get("screen") not in PERSON_SCREENS)

@@ -47,14 +47,20 @@ class FakePhone:
     """Banca Alcor and app 8 behind the bridge, in a background thread."""
 
     def __init__(self, url: str = "ws://127.0.0.1:8765", *, answer: str | None = "ok",
-                 answer_delay: float = 0.2, page: str = "inicio", app: str = ALCOR) -> None:
+                 answer_delay: float = 0.2, page: str = "inicio", app: str = ALCOR,
+                 after_confirm: str | None = None) -> None:
         self.url = url
         self.answer = answer  # "ok", "no", or None (nobody answers)
         self.answer_delay = answer_delay
         self.validator = load_validator(CONTRACTS)
         self.app, self.page = app, page
+        # The app in front once 8's confirmation closes. On the AVD it can be 8's own screen
+        # instead of the bank (the task below), so the core must bring the bank back.
+        self.after_confirm = after_confirm
         self.form = {"iban": "", "beneficiario": "", "importe": "", "concepto": ""}
         self.seq = 0
+        self.scrolled = False  # transferencia: scrolled down once
+        self.keys: dict[str, str] = {}  # transferencia: element id -> node key
         self.ids: set[str] = set()  # ids of the last snapshot, as the real service keeps them
         self.confirming: str | None = None  # id of the confirm_request on screen
         self.received: list[dict[str, Any]] = []  # every message from the core, in order
@@ -158,6 +164,8 @@ class FakePhone:
             res["reason"] = "cancelado"
         self.answered[req["id"]] = res
         self.confirming = None
+        if self.after_confirm:
+            self.app = self.after_confirm
         await ws.send(json.dumps(res))
 
     # ------------------------------------------------------------------ the phone
@@ -197,18 +205,20 @@ class FakePhone:
         p = self.page
         if p == "inicio" and op == "tap" and t == "n17":
             self.page = "transferencia"
-        elif p == "transferencia" and op == "tap" and t == "n8":
+        elif p == "transferencia" and op == "tap" and self.keys.get(t) == "k0":
             self.form.update(iban=NIMBO[1], beneficiario=NIMBO[0])
-        elif p == "transferencia" and op == "type" and t in ("n18", "n20", "n22", "n24"):
-            self.form[{"n18": "iban", "n20": "beneficiario", "n22": "importe", "n24": "concepto"}[t]] = text
+        elif p == "transferencia" and op == "type" and self.keys.get(t) in ("iban", "beneficiario", "importe", "concepto"):
+            self.form[self.keys[t]] = text
         elif p == "transferencia" and op == "scroll":
-            pass
-        elif p == "transferencia" and op == "tap" and t == "n25":
-            self.page = "revision"
+            self.scrolled = msg.get("direction") == "down"
+        elif p == "transferencia" and op == "tap" and self.keys.get(t) == "continuar":
+            self.page, self.scrolled = "revision", False
         elif p == "revision" and op == "tap" and t == "n17":
             self.page = "autenticacion"
         elif p == "revision" and op == "tap" and t == "n18":
             self.page = "transferencia"
+        elif p == "transferencia" and op == "tap" and t == "n2":
+            self.page, self.scrolled = "inicio", False
         elif p == "resultado" and op == "tap" and t == "n14":
             self.page = "inicio"
         else:
@@ -245,32 +255,46 @@ class FakePhone:
                 _el(18, "button", "id/btn_movimientos", "Ver movimientos", actions=["tap"])]
 
     def _transferencia(self) -> list[dict[str, Any]]:
+        """Before scrolling: the origin account and the fields down to Importe. After one
+        scroll down: from «Cambiar cuenta» to Continuar. Ids are assigned in preorder over
+        what is visible, as SnapshotBuilder does."""
         f = self.form
-        return [_el(1, "other", "id/screen_transferencia", parent=None),
-                _el(2, "button", "id/btn_volver", "Volver", "Volver a la pantalla anterior", actions=["tap"]),
-                _el(3, "heading", "id/titulo", "Nueva transferencia"),
-                _el(4, "other", None, actions=["scroll"]),
-                _el(5, "button", "id/btn_cambiar_origen", "Cambiar cuenta", parent=4, actions=["tap"]),
-                _el(6, "heading", "id/contactos_titulo", "Contactos guardados", parent=4),
-                _el(7, "other", "id/lista_contactos", parent=4),
-                _el(8, "button", "id/contacto", parent=7, actions=["tap"]),
-                _el(9, "text", "id/contacto_nombre", NIMBO[0], parent=8),
-                _el(10, "text", "id/contacto_iban", NIMBO[1], parent=8),
-                _el(11, "button", "id/contacto", parent=7, actions=["tap"]),
-                _el(12, "text", "id/contacto_nombre", "Lucía Ferrer · Brezo Banco", parent=11),
-                _el(13, "text", "id/contacto_iban", "ES89 9200 0003 7855 0066 7788", parent=11),
-                _el(14, "button", "id/contacto", parent=7, actions=["tap"]),
-                _el(15, "text", "id/contacto_nombre", "Marta Ruiz Gil", parent=14),
-                _el(16, "text", "id/contacto_iban", "ES48 9100 0004 9633 0099 8877", parent=14),
-                _el(17, "text", "id/iban_destino_label", "IBAN de destino", parent=4),
-                _el(18, "textbox", "id/iban_destino", f["iban"] or None, "IBAN de destino", 4, ["tap", "type"]),
-                _el(19, "text", "id/beneficiario_label", "Beneficiario", parent=4),
-                _el(20, "textbox", "id/beneficiario", f["beneficiario"] or None, "Beneficiario", 4, ["tap", "type"]),
-                _el(21, "text", "id/importe_label", "Importe", parent=4),
-                _el(22, "textbox", "id/importe", f["importe"] or None, "Importe", 4, ["tap", "type"]),
-                _el(23, "text", "id/concepto_label", "Concepto", parent=4),
-                _el(24, "textbox", "id/concepto", f["concepto"] or None, "Concepto", 4, ["tap", "type"]),
-                _el(25, "button", "id/btn_continuar", "Continuar", parent=4, actions=["tap"])]
+        nodes = [  # (key, role, sel, text, label, parent, actions, visible before / after scrolling)
+            ("root", "other", "id/screen_transferencia", None, None, None, None, True, True),
+            ("volver", "button", "id/btn_volver", "Volver", "Volver a la pantalla anterior", "root", ["tap"], True, True),
+            ("titulo", "heading", "id/titulo", "Nueva transferencia", None, "root", None, True, True),
+            ("scroll", "other", None, None, None, "root", ["scroll"], True, True),
+            ("o_tit", "heading", "id/origen_titulo", "Desde", None, "scroll", None, True, False),
+            ("o_alias", "text", "id/origen_alias", "Cuenta nómina", None, "scroll", None, True, False),
+            ("o_iban", "text", "id/origen_iban", "ES43 9100 0001 5740 1234 5678", None, "scroll", None, True, False),
+            ("o_saldo", "text", "id/origen_saldo", "Disponible: 3.412,58 €", None, "scroll", None, True, False),
+            ("cambiar", "button", "id/btn_cambiar_origen", "Cambiar cuenta", None, "scroll", ["tap"], True, True),
+            ("c_tit", "heading", "id/contactos_titulo", "Contactos guardados", None, "scroll", None, True, True),
+            ("lista", "other", "id/lista_contactos", None, None, "scroll", None, True, True),
+            ("k0", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
+            ("k0n", "text", "id/contacto_nombre", NIMBO[0], None, "k0", None, True, True),
+            ("k0i", "text", "id/contacto_iban", NIMBO[1], None, "k0", None, True, True),
+            ("k1", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
+            ("k1n", "text", "id/contacto_nombre", "Lucía Ferrer · Brezo Banco", None, "k1", None, True, True),
+            ("k1i", "text", "id/contacto_iban", "ES89 9200 0003 7855 0066 7788", None, "k1", None, True, True),
+            ("k2", "button", "id/contacto", None, None, "lista", ["tap"], True, True),
+            ("k2n", "text", "id/contacto_nombre", "Marta Ruiz Gil", None, "k2", None, True, True),
+            ("k2i", "text", "id/contacto_iban", "ES48 9100 0004 9633 0099 8877", None, "k2", None, True, True),
+            ("l_iban", "text", "id/iban_destino_label", "IBAN de destino", None, "scroll", None, True, True),
+            ("iban", "textbox", "id/iban_destino", f["iban"] or None, "IBAN de destino", "scroll", ["tap", "type"], True, True),
+            ("l_ben", "text", "id/beneficiario_label", "Beneficiario", None, "scroll", None, True, True),
+            ("beneficiario", "textbox", "id/beneficiario", f["beneficiario"] or None, "Beneficiario", "scroll", ["tap", "type"], True, True),
+            ("l_imp", "text", "id/importe_label", "Importe", None, "scroll", None, True, True),
+            ("importe", "textbox", "id/importe", f["importe"] or None, "Importe", "scroll", ["tap", "type"], True, True),
+            ("l_con", "text", "id/concepto_label", "Concepto", None, "scroll", None, False, True),
+            ("concepto", "textbox", "id/concepto", f["concepto"] or None, "Concepto", "scroll", ["tap", "type"], False, True),
+            ("continuar", "button", "id/btn_continuar", "Continuar", None, "scroll", ["tap"], False, True),
+        ]
+        shown = [n for n in nodes if (n[8] if self.scrolled else n[7])]
+        ids = {n[0]: i for i, n in enumerate(shown, 1)}
+        self.keys = {f"n{i}": n[0] for n, i in zip(shown, ids.values())}
+        return [_el(ids[k], role, sel, text, label, ids.get(par) if par else None, acts)
+                for k, role, sel, text, label, par, acts, _b, _a in shown]
 
     def _revision(self) -> list[dict[str, Any]]:
         f = self.form
