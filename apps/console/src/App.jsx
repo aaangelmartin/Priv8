@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useEvents, VERIFY_URL } from './useEvents.js'
+import { comentarioDe8 } from './alertas.js'
 
 const TOKEN_RE = /(‹[^›]*›)/g
 const CLS = { verde: 'seguro', ambar: 'aviso', rojo: 'bloqueo' }
@@ -30,10 +31,46 @@ function Elements({ title, sub, elements, observed }) {
   )
 }
 
+const ETIQUETA = { cuenta: 'Cambio de cuenta', instruccion: 'Órdenes a la IA', bloqueo: 'Bloqueo del núcleo' }
+
+function Alarmas({ alerts, review, comentario }) {
+  if (alerts.length === 0) return null
+  const activas = alerts.filter((a) => !a.revisada).length
+  return (
+    <section className={`alarmas ${activas ? 'activas' : ''}`} role="alert" aria-live="assertive">
+      <header>
+        <h2>{activas ? `Posible fraude detectado · ${activas} sin revisar` : 'Alarmas revisadas'}</h2>
+        <span>Detectado en local a partir de los tokens: no hace falta ver los datos</span>
+      </header>
+      <ul>
+        {alerts.map((a) => (
+          <li key={a.clave} className={`alarma t-${a.tipo} ${a.revisada ? 'revisada' : ''}`}>
+            <div className="alarma-cab">
+              <span className="chip">{ETIQUETA[a.tipo]}</span>
+              <b>{a.titulo}</b>
+              <span className="sp" />
+              <span className="donde">{a.app}{a.pantalla ? ` · ${a.pantalla}` : ''} · {a.ts.toLocaleTimeString('es-ES')}</span>
+            </div>
+            <p><Tokens text={a.detalle} /></p>
+            {a.evidencia && <blockquote><Tokens text={a.evidencia} /></blockquote>}
+            {!a.revisada && <button className="btn" onClick={() => review(a.clave)}>Marcar como revisada</button>}
+          </li>
+        ))}
+      </ul>
+      {comentario && (
+        <div className="dice8">
+          <span className="chip">Lo que dice 8</span>
+          <p><Tokens text={comentario} /></p>
+        </div>
+      )}
+    </section>
+  )
+}
+
 const fmt = (v) => (v == null ? '—' : `${v} ms`)
 
 export default function App() {
-  const { status, screen, audit, pending, resolve } = useEvents()
+  const { status, screen, audit, pending, resolve, alerts, review } = useEvents()
   const [check, setCheck] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -64,6 +101,8 @@ export default function App() {
         )}
         <button className="btn" onClick={verify} disabled={busy}>Verificar registro</button>
       </header>
+
+      <Alarmas alerts={alerts} review={review} comentario={comentarioDe8(audit)} />
 
       <main className="split">
         <Elements title="Lo que ves" sub="valores reales, solo en local" elements={screen?.raw?.elements} />

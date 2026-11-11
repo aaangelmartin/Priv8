@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { alertaDeBloqueo, alertasDePantalla } from './alertas.js'
 
 export const WS_URL = 'ws://127.0.0.1:8700/events'
 export const VERIFY_URL = 'http://127.0.0.1:8700/verify'
@@ -10,12 +11,24 @@ export function useEvents() {
   const [screen, setScreen] = useState(null)
   const [audit, setAudit] = useState([])
   const [pending, setPending] = useState([])
+  const [alerts, setAlerts] = useState([])
   const wsRef = useRef(null)
 
   useEffect(() => {
     let closed = false
     let timer = null
     let tries = 0
+
+    // Alarmas nuevas arriba; la misma clave no se repite.
+    const addAlerts = (list) => {
+      const nuevas = list.filter(Boolean)
+      if (nuevas.length === 0) return
+      setAlerts((prev) => {
+        const vistas = new Set(prev.map((a) => a.clave))
+        const add = nuevas.filter((a) => !vistas.has(a.clave)).map((a) => ({ ...a, ts: new Date(), revisada: false }))
+        return add.length ? [...add, ...prev] : prev
+      })
+    }
 
     const connect = () => {
       setStatus('conectando')
@@ -25,8 +38,8 @@ export function useEvents() {
       ws.onmessage = (e) => {
         let m
         try { m = JSON.parse(e.data) } catch { return }
-        if (m.type === 'screen') setScreen(m)
-        else if (m.type === 'audit') setAudit((a) => [...a, m.event].slice(-MAX_AUDIT))
+        if (m.type === 'screen') { setScreen(m); addAlerts(alertasDePantalla(m)) }
+        else if (m.type === 'audit') { setAudit((a) => [...a, m.event].slice(-MAX_AUDIT)); addAlerts([alertaDeBloqueo(m.event)]) }
         else if (m.type === 'confirm_request') setPending((p) => (p.some((x) => x.id === m.id) ? p : [...p, m]))
         else if (m.type === 'approval_result') setPending((p) => p.filter((x) => x.id !== m.id))
       }
@@ -49,5 +62,9 @@ export function useEvents() {
     return true
   }, [])
 
-  return { status, screen, audit, pending, resolve }
+  const review = useCallback((clave) => {
+    setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
+  }, [])
+
+  return { status, screen, audit, pending, resolve, alerts, review }
 }

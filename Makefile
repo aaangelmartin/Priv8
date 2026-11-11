@@ -42,6 +42,7 @@ test:
 	uv run pytest agent/tests core/tests voice/tests adapters/web/tests metrics
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
+	node apps/console/src/alertas.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
 metrics:
