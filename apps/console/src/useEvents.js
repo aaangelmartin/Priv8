@@ -3,6 +3,7 @@ import { alertaDeBloqueo, alertasDePantalla } from './alertas.js'
 import { valoresDe } from './tokens.js'
 import { textoDeSegmentos } from './directo.js'
 import { conFotogramas, urlsDe } from './frame.js'
+import { esSesion, proximos, reloj, tramo, valida } from './reproductor.js'
 
 // ?ws=ws://127.0.0.1:8790/events escucha otro núcleo (PRIV8_EVENTS_PORT) sin tocar la demo.
 const URLS = urlsDe(window.location.search)
@@ -18,6 +19,13 @@ const PARAMS = new URLSearchParams(window.location.search)
 export const FEED = /^[a-z0-9-]+$/.test(PARAMS.get('feed') ?? '') ? PARAMS.get('feed') : null
 export const SIN_PROTOCOLO = FEED === 'sin-protocolo'
 export const DEMO = PARAMS.has('demo') || FEED !== null
+// ?feed=sesion-b2b reproduce una sesión real grabada (scripts/grabar_sesion.py, #170): los mismos
+// mensajes que recibió la consola, con sus fotogramas, al ritmo en que llegaron. La consola se
+// comporta como en directo (la frase final llega por voz, el encargo es el de la persona); solo
+// no se puede escribir ni aprobar.
+export const SESION = esSesion(FEED)
+// BASE_URL es '/' en local y '/consola/' en demo.priv8.es (BASE_PATH al compilar).
+export const BASE = import.meta.env.BASE_URL
 
 const MAX_AUDIT = 500
 const MAX_CHAT = 200
@@ -56,6 +64,9 @@ export function useEvents() {
   const [linea, setLinea] = useState([])
   // El último fotograma de la pantalla real (#147): píxeles con valores reales, solo en memoria.
   const [frame, setFrame] = useState(null)
+  // Lo que ves tú (#170): el último fotograma de la pestaña real que maneja 8. En directo, solo por
+  // el canal local; en una sesión grabada, de la grabación (datos ficticios del seed).
+  const [real, setReal] = useState(null)
   const wsRef = useRef(null)
   const sendRef = useRef(null)
   const sessionRef = useRef('b2b')
@@ -111,12 +122,13 @@ export function useEvents() {
         if (/inicio/i.test(d) && !paso) {
           anunciado = false
           // En las reproducciones no hay nadie escribiendo: el encargo grabado hace de mensaje de la persona.
-          if (DEMO && e.model_saw) post({ k: 'tu', texto: e.model_saw, grabado: true })
+          // En una sesión grabada, el mensaje de la persona es el task_request que se grabó.
+          if (DEMO && !SESION && e.model_saw) post({ k: 'tu', texto: e.model_saw, grabado: true })
           return
         }
         if (e.model_saw && !ES_LLAMADA.test(e.model_saw) && !/razona/i.test(d)) {
           // La respuesta final de 8. En vivo llega también como frase de voz; si no llega, se pone esta.
-          if (DEMO) post({ k: '8', texto: e.model_saw })
+          if (DEMO && !SESION) post({ k: '8', texto: e.model_saw })
           else {
             clearTimeout(respuesta)
             respuesta = setTimeout(() => post({ k: '8', texto: e.model_saw }), 2500)
@@ -137,7 +149,16 @@ export function useEvents() {
 
     const handle = (m) => {
       if (m.type === 'frame') {
-        if (typeof m.img === 'string' && m.w > 0 && m.h > 0) setFrame({ ...m, recibido: Date.now() })
+        // En vivo trae los píxeles (img); en una sesión grabada, la ruta del JPEG (src).
+        if (!((typeof m.img === 'string' || typeof m.src === 'string') && m.w > 0 && m.h > 0)) return
+        // vista 'real': la pestaña que maneja 8, lo que ves tú (#170); si no, la vista de 8.
+        if (m.vista === 'real') setReal({ ...m, recibido: Date.now() })
+        else setFrame({ ...m, recibido: Date.now() })
+        return
+      }
+      if (m.type === 'task_request') {
+        // Solo llega en las sesiones grabadas: lo que escribió la persona en el chat.
+        if (SESION && typeof m.text === 'string') post({ k: 'tu', texto: m.text })
         return
       }
       if (m.type === 'screen') {
@@ -189,6 +210,49 @@ export function useEvents() {
       }
     }
 
+    if (SESION) {
+      sendRef.current = () => false // ni encargos ni aprobaciones: ya están en la grabación
+      const cache = new Map() // fotogramas ya pedidos, para que estén cuando toque pintarlos
+      const precargar = (srcs) => {
+        for (const s of srcs) {
+          if (cache.has(s)) continue
+          const im = new Image()
+          im.src = `${BASE}${s}`
+          cache.set(s, im)
+          if (cache.size > 400) cache.delete(cache.keys().next().value)
+        }
+      }
+      let sesion = null
+      let i = 0
+      let j = 0
+      let antes = performance.now()
+      const tick = () => {
+        const ahora = performance.now()
+        const t = reloj.avanzar((ahora - antes) / 1000)
+        antes = ahora
+        if (!sesion) return
+        const r = tramo(sesion, i, j, t)
+        i = r.i
+        j = r.j
+        r.msgs.forEach(handle)
+        if (r.real) setReal(r.real)
+        precargar(proximos(sesion, t))
+        if (reloj.estado.terminado) window.__p8FeedFin = true
+      }
+      fetch(`${BASE}${FEED}.json`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (closed) return
+          if (!valida(d)) { setStatus('sin demo'); return }
+          sesion = d
+          reloj.cargar(d.duracion)
+          precargar(proximos(d, -1))
+        })
+        .catch(() => setStatus('sin demo'))
+      const id = setInterval(tick, 50)
+      return () => { closed = true; clearInterval(id); clearTimeout(respuesta) }
+    }
+
     if (DEMO) {
       let seq = 1000
       sendRef.current = (msg) => {
@@ -202,7 +266,8 @@ export function useEvents() {
         } })
         return true
       }
-      fetch(FEED ? `/${FEED}.json` : '/demo.json')
+      // BASE_URL es '/' en local y '/consola/' en demo.priv8.es (BASE_PATH al compilar).
+      fetch(`${import.meta.env.BASE_URL}${FEED ?? 'demo'}.json`)
         .then((r) => r.json())
         .then((msgs) => {
           // demo.json: un mensaje cada 700 ms para que se vea cómo se construye la pantalla.
@@ -226,6 +291,7 @@ export function useEvents() {
       ws.onclose = () => {
         if (closed) return
         setFrame(null) // sin núcleo, la pantalla real no está al día: vuelve el esquema
+        setReal(null)
         setStatus('reconectando')
         timer = setTimeout(connect, Math.min(500 * 2 ** tries++, 5000))
       }
@@ -263,5 +329,5 @@ export function useEvents() {
     setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
   }, [])
 
-  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame }
+  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real }
 }

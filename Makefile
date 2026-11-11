@@ -54,6 +54,13 @@ mcp-site:
 demo-b2b:
 	scripts/demo_b2b.sh
 
+# Panel de la demo en directo (#169): una página local en :5170 con un botón para B2B y otro
+# para B2C. Es lo mismo que el doble clic en «Demo Priv8.command».
+.PHONY: panel
+panel:
+	cd apps/panel && ([ -d node_modules ] || pnpm install) && pnpm -s build
+	uv run python scripts/panel.py
+
 # Alba Core (:5173), the mailbox (:5174) and the audit console (:5175). First time: make web-install.
 web:
 	(cd apps/erp-sim && pnpm dev) & (cd apps/inbox-sim && pnpm dev) & (cd apps/console && pnpm dev) & wait
@@ -91,6 +98,7 @@ test:
 	node apps/console/src/directo.test.mjs
 	node apps/console/src/vivo.test.mjs
 	node apps/android-8/dev/test_estados.mjs
+	node apps/console/src/reproductor.test.mjs
 	node apps/erp-sim/src/sesion.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.
@@ -113,6 +121,14 @@ video-con-protocolo: sin-protocolo
 	uv run python scripts/grabar_consola.py con-protocolo
 
 videos: video-sin-protocolo video-con-protocolo
+
+# Una sesión B2B real grabada para la web de la demo (#170): el stack real en puertos libres
+# (5193, 5194, 8792; nunca los de la demo en directo), Chromium con ventana y el agente con el
+# .env (gasta API: dos encargos con PRIV8_MODEL). Escribe apps/console/public/sesion-b2b.json y
+# apps/console/public/sesion-b2b/; se abre con ?feed=sesion-b2b. ENV_FILE=ruta para otro .env.
+.PHONY: grabar-sesion
+grabar-sesion:
+	uv run python scripts/grabar_sesion.py --env-file $${ENV_FILE:-.env}
 
 # 8 calls the simulated Banca Alcor line (#24): AI disclosure first, menu by DTMF, then it
 # hands the call to the person. No keys. OBJETIVO="bloquear la tarjeta", VOZ=texto|local|elevenlabs.

@@ -10,7 +10,7 @@ const LINKS = [
   ['comparar', 'Comparativa'],
   ['faq', 'Preguntas'],
 ];
-const NAMES = { inicio: 'Priv8', demo: 'Demostración', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Pide una demo' };
+const NAMES = { inicio: 'Priv8', demo: 'Demostración', problema: 'El problema', protocolo: 'Protocolo', producto: 'Productos', quien: 'Para quién', confianza: 'Confianza', contacto: 'Contacto' };
 
 /* Barra suelta y blanca, con el radio del notch. 8 vive dentro y te sigue con la mirada. */
 export default function Nav() {
@@ -76,7 +76,7 @@ export default function Nav() {
         ))}
       </ul>
       <div className="tools">
-        <a className="pill" href="#contacto">Pide una demo</a>
+        <a className="pill" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a>
         <button type="button" className="menu-btn" aria-expanded={open} aria-controls="nav-menu" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen((o) => !o)}>
           <span /><span />
         </button>
@@ -84,7 +84,7 @@ export default function Nav() {
       {/* móvil: el menú se despliega bajo la barra con todas las secciones */}
       <div id="nav-menu" className={'nav-menu' + (open ? ' open' : '')} hidden={!open}>
         {LINKS.map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)} aria-current={section === id ? 'true' : undefined}>{label}</a>)}
-        <a className="nav-menu-cta" href="#contacto" onClick={() => setOpen(false)}>Pide una demo</a>
+        <a className="nav-menu-cta" href="https://demo.priv8.es" target="_blank" rel="noopener" onClick={() => setOpen(false)}>Ver la demo</a>
       </div>
     </nav>
   );

@@ -27,8 +27,10 @@ export function encaja(w, h, maxW, maxH) {
   return { width: Math.floor(w * k), height: Math.floor(h * k) }
 }
 
-// El frame es la vista de 8 censurada en el DOM (web): se enseña tal cual.
-export const esVista8 = (frame) => frame?.vista === '8' && typeof frame.img === 'string' && frame.w > 0 && frame.h > 0
+// El frame es la vista de 8 censurada en el DOM (web): se enseña tal cual. En vivo trae los
+// píxeles (img, base64); en una sesión grabada (#170), la ruta de su JPEG (src).
+export const tieneImagen = (frame) => (typeof frame?.img === 'string' || typeof frame?.src === 'string') && frame.w > 0 && frame.h > 0
+export const esVista8 = (frame) => frame?.vista === '8' && tieneImagen(frame)
 
 // Android: el frame es de un móvil.
 export const esMovilFrame = (frame) => /^es\./.test(frame?.app ?? '') || (frame?.h ?? 0) > (frame?.w ?? 0) * 1.3

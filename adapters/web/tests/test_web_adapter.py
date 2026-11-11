@@ -374,7 +374,11 @@ def test_vista_de_8_solo_mientras_alguien_mira(web, core, monkeypatch):
         assert time.monotonic() - t0 < 0.5
         # Otra pantalla que 8 aún no ha leído: marcadores, y el fotograma no casa.
         web.goto("inbox", "/bandeja")
-        assert _wait(lambda: not seen[-1]["fresh"])
+        assert _wait(lambda: not [m for m in seen if m.get("vista") == "8"][-1]["fresh"])
+        # Lo que ves tú (#170): la pestaña real también llega, como vista «real», solo a este canal.
+        assert _wait(lambda: any(m.get("vista") == "real" for m in seen))
+        real = next(m for m in seen if m.get("vista") == "real")
+        assert real["app"] == "inbox" and base64.b64decode(real["img"])[:2] == b"\xff\xd8"
         html = web._call(web._vista.html)
         assert "8 aún no ha leído" not in html  # el aviso va en la capa de 8, no en la copia
         assert not [v for t, v in known() if len(v) >= 6 and v in html]

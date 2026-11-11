@@ -73,6 +73,9 @@ TASKS = {
 }
 
 
+REPLY_RE = re.compile(r"\b(contesta|responde|escribe|env[ií]a|reenv[ií]a)")
+
+
 def expand_task(text: str) -> str:
     """The person's request, or the built-in task it asks for. "registrar factura" and any request to
     register the invoice ("Registra la factura de Suministros Lumen") get the full built-in instructions,
@@ -80,7 +83,8 @@ def expand_task(text: str) -> str:
     t = " ".join(text.strip().lower().split())
     if t in TASKS:
         return TASKS[t]
-    if "factura" in t and re.search(r"\bregistr", t):
+    # Only an order to register it: "Contesta al proveedor que la factura está registrada" is a reply.
+    if "factura" in t and re.search(r"\bregistr(a|ar|ala|arla|ame)\b", t) and not REPLY_RE.search(t):
         return TASKS["registrar factura"]
     return text
 
@@ -452,7 +456,7 @@ async def _main(a: argparse.Namespace) -> int:
 
     while console:  # --web: answer and approvals in the console, then the next request (until Ctrl-C)
         save()
-        err(f"status={result.status} steps={result.steps}")
+        err(f"status={result.status} steps={result.steps} gasto={SPENT['session']:.4f} $")
         print(result.final_text, flush=True)
         if result.final_text and core.voice is not None:
             core.voice.say(a.session, result.final_text)  # tokens only; the core runs the final block
