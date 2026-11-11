@@ -34,6 +34,8 @@ function fmt(ms) {
 export default function Deck() {
   const [idx, setIdx] = useState(fromHash);
   const [move, setMove] = useState(null);
+  /* después del primer paso, ninguna diapositiva repite la entrada escalonada */
+  const [quietas, setQuietas] = useState(false);
   const [printing, setPrinting] = useState(() => document.documentElement.classList.contains('printing'));
   const [t0, setT0] = useState(null);
   const [now, setNow] = useState(Date.now());
@@ -50,6 +52,7 @@ export default function Deck() {
     history.replaceState(null, '', `#${to + 1}`);
     if (still()) { setIdx(to); return; }
     busy.current = true;
+    setQuietas(true);
     setMove({ from, to, dir: to > from ? 1 : -1 });
     setIdx(to);
     setTimeout(() => { setMove(null); busy.current = false; }, PASO_MS);
@@ -134,7 +137,7 @@ export default function Deck() {
           const paso = move ? (move.dir > 0 ? ' adelante' : ' atras') : '';
           return (
             <SlideCtx.Provider key={S.id} value={{ live: on || printing || !!sale, active: on && !printing, printing, n: label(i), annex: !!S.annex }}>
-              <section className={`slide s-${S.tone}${on ? ' on' : ''}${S.annex ? ' annex' : ''}${sale ? ' sale' + paso : ''}${entra ? ' entra' + paso : ''}`} aria-hidden={!on && !printing} aria-roledescription="diapositiva" aria-label={label(i)} id={`d-${S.id}`}>
+              <section className={`slide s-${S.tone}${on ? ' on' : ''}${quietas && !printing ? ' quieta' : ''}${S.annex ? ' annex' : ''}${sale ? ' sale' + paso : ''}${entra ? ' entra' + paso : ''}`} aria-hidden={!on && !printing} aria-roledescription="diapositiva" aria-label={label(i)} id={`d-${S.id}`}>
                 {entra && (
                   <div className={`borde${move.dir > 0 ? '' : ' abajo'}`} aria-hidden="true" style={{ background: `var(${TONE_VAR[SLIDES[move.from].tone]})` }}>
                     <Blend from={TONE_VAR[SLIDES[move.from].tone]} to={TONE_VAR[S.tone]} seed={i + 3} overlay />

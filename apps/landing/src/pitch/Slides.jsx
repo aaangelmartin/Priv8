@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import Eight from '../eight/Eight.jsx';
 import Field from '../Field.jsx';
 import correo from './img/correo.jpg';
@@ -59,61 +59,15 @@ function Head({ eyebrow, children, d = 0, chip }) {
 }
 
 /* ---------------------------------------------------------------- 1 portada */
-/* La intro, como la de la web: al abrir la presentación, 8 grande en el centro con los ojos abiertos saluda, mira a
-   un lado y a otro, y vuela a su sitio en la portada; el texto entra detrás. Solo la primera vez y con movimiento. */
-let introHecha = false;
-function useIntro(active, printing) {
-  const [fase, setFase] = useState(() => {
-    let still = false;
-    try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
-    return !introHecha && active && !printing && !still ? 'hola' : 'fin';
-  });
-  const [look, setLook] = useState(null);
-  const [saluda, setSaluda] = useState(true);
-  useEffect(() => {
-    if (fase !== 'hola') return undefined;
-    introHecha = true;
-    const t = [
-      /* saluda (abre los ojos y da el saltito) y pasa a mirar para poder mirar a los lados */
-      setTimeout(() => setSaluda(false), 760),
-      setTimeout(() => setLook([-0.95, 0.05, -6]), 800),
-      setTimeout(() => setLook([0.95, 0.05, 6]), 1550),
-      setTimeout(() => setLook(null), 2250),
-      setTimeout(() => setFase('vuela'), 2550),
-      setTimeout(() => setFase('fin'), 3650),
-    ];
-    return () => t.forEach(clearTimeout);
-  }, []);
-  return [fase, look, saluda];
-}
-
 function Portada() {
-  const { active, printing } = useContext(SlideCtx);
-  const [fase, look, saluda] = useIntro(active, printing);
-  const [conIntro] = useState(fase !== 'fin');
-  const caja = useRef(null);
-  /* cuánto hay que mover y agrandar a 8 para que salga del centro de la diapositiva */
-  useLayoutEffect(() => {
-    const el = caja.current;
-    if (!el || fase === 'fin') return;
-    const hero = el.querySelector('.e-hero');
-    if (!hero) return;
-    /* se mide su sitio real, sin la transformación de la intro puesta */
-    const prev = hero.style.transform;
-    hero.style.transition = 'none'; hero.style.transform = 'none';
-    const r = hero.getBoundingClientRect(), s = el.getBoundingClientRect();
-    hero.style.transform = prev; hero.style.transition = '';
-    el.style.setProperty('--ix', `${s.left + s.width / 2 - (r.left + r.width / 2)}px`);
-    el.style.setProperty('--iy', `${s.top + s.height / 2 - (r.top + r.height / 2)}px`);
-  }, [fase]);
+  const { active } = useContext(SlideCtx);
   return (
-    <div ref={caja} className={'in portada' + (active ? ' live' : '') + (conIntro ? ' con-intro' : '') + (fase !== 'fin' ? ` intro intro-${fase}` : '')}>
+    <div className={'in portada' + (active ? ' live' : '')}>
       {active && <Field />}
       {active && <div className="clean" />}
       <div className="top"><span className="brand">Priv8</span><span>priv8.es</span></div>
-      {fase === 'hola' && <p className="hola" aria-hidden="true">¡Hola, soy 8!</p>}
       <div className="center">
-        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" look={look} mode={fase === 'hola' && saluda ? 'saludar' : 'mirar'} />
+        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" />
         <R d={1} as="h1"><span className="line">8 hace el trámite.</span><span className="line soft">Sin ver tus datos.</span></R>
         <R d={3} as="p" className="who">Ángel Martín, Álvaro Carpintero, Marco Barroso y Pablo Rojo</R>
         <R d={4} as="p" className="event">Hackfinance | Madrid Engineering Week | 12 nov 2026</R>
