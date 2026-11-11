@@ -8,10 +8,12 @@ import '@fontsource/ibm-plex-sans/600.css'
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/600.css'
 import '../../../brand/tokens.css'
-import App from './App.jsx'
+import App, { SoloVista } from './App.jsx'
 import { textureUrl } from './texture.js'
 
 document.documentElement.style.setProperty('--c-textura', textureUrl())
 import './styles.css'
 
-createRoot(document.getElementById('root')).render(<App />)
+// ?vista=8: solo lo que ve 8, a pantalla completa (otra pestaña o la pantalla de la demo).
+const solo = new URLSearchParams(window.location.search).get('vista') === '8'
+createRoot(document.getElementById('root')).render(solo ? <SoloVista /> : <App />)

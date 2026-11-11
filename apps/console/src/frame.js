@@ -1,8 +1,12 @@
-// La pantalla real de 8 (#147): funciones puras sobre el mensaje `frame` del núcleo.
+// La pantalla de 8 en directo (#147, #154): funciones puras sobre el mensaje `frame` del núcleo
+// y sobre la pantalla observada.
 //
-// Un frame trae la imagen de la pestaña o del móvil que maneja 8 (valores reales, solo
-// en local) y las cajas de los elementos de la última observación, con su clase y lo que
-// leyó el modelo. w y h son el espacio de las cajas; la imagen puede ser más pequeña.
+// Web: el frame trae la vista de 8 (vista: '8'), una página espejo que el adaptador censura
+// en el DOM antes de pintarla: cada valor ámbar ya es su token y cada rojo «nunca sale». La
+// consola la enseña tal cual, sin tapar nada encima.
+// Android: el frame trae la pantalla real del móvil; la consola no la enseña. Vuelve a pintar
+// la pantalla con lo que vio el modelo (los elementos observados, en su sitio), así que ahí
+// tampoco existe el valor real.
 
 // ws://127.0.0.1:8700/events por defecto; ?ws=ws://127.0.0.1:8790/events para probar otro
 // núcleo sin tocar la demo. Solo se aceptan 127.0.0.1 y localhost: el canal lleva datos reales.
@@ -23,66 +27,35 @@ export function encaja(w, h, maxW, maxH) {
   return { width: Math.floor(w * k), height: Math.floor(h * k) }
 }
 
-// Por qué «lo que ve 8» tapa la pantalla entera, o null si se ve con sus cajas.
-//   pausa: 8 mira a otro lado (autenticación, diálogo del sistema, su confirmación)
-//   sin_leer: la pantalla ha cambiado y 8 aún no la ha leído
-export function velo(frame) {
-  if (!frame) return null
-  if (frame.paused) return 'pausa'
-  if (!frame.fresh) return 'sin_leer'
-  return null
-}
-
-const area = (r) => r.w * r.h
-
-// Qué se dibuja en «lo que ve 8»:
-//   nitidos: cajas verdes con texto, que se ven tal cual (los contenedores grandes no
-//            cuentan: dejarían ver lo que no está marcado)
-//   tapados: cajas ámbar (su token o el texto con tokens) y rojas («nunca sale»), de mayor
-//            a menor para que las de dentro queden encima
-export function capas(frame) {
-  const rects = Array.isArray(frame?.rects) ? frame.rects : []
-  const total = (frame?.w ?? 0) * (frame?.h ?? 0)
-  const nitidos = rects.filter((r) => r.cls === 'verde' && r.text && total > 0 && area(r) < total * 0.5)
-  const tapados = rects.filter((r) => r.cls === 'ambar' || r.cls === 'rojo').sort((a, b) => area(b) - area(a))
-  return { nitidos, tapados }
-}
-
-// Lo que pone la tapa de una caja: el texto que leyó el modelo (con tokens) o su token.
-export function tapa(r) {
-  if (r.cls === 'rojo') return { tipo: 'nunca', texto: 'nunca sale' }
-  const texto = r.text ?? r.token ?? ''
-  return { tipo: 'token', texto: texto || r.token || '' }
-}
-
-// Una caja del frame en porcentajes de lo que se enseña (el recorte, o el frame entero).
-export function enPorcentaje(r, c) {
-  const ox = c.x ?? 0
-  const oy = c.y ?? 0
-  return {
-    left: `${((r.x - ox) / c.w) * 100}%`, top: `${((r.y - oy) / c.h) * 100}%`,
-    width: `${(r.w / c.w) * 100}%`, height: `${(r.h / c.h) * 100}%`,
-  }
-}
-
-// La parte del fotograma que se enseña: lo que ocupan los elementos que lee 8, con margen.
-// Alba Core dibuja una ventana antigua pequeña en medio de un escritorio vacío: así se ve
-// grande. Sin cajas, o si ocupan casi todo, el fotograma entero. Redondeado a 8 px para que
-// no tiemble entre fotogramas.
-export function recorte(frame, margen = 28) {
-  const entero = { x: 0, y: 0, w: frame?.w ?? 0, h: frame?.h ?? 0 }
-  const rects = (Array.isArray(frame?.rects) ? frame.rects : []).filter((r) => r.w > 0 && r.h > 0)
-  if (!rects.length || !(entero.w > 0 && entero.h > 0)) return entero
-  const x0 = Math.max(0, Math.floor((Math.min(...rects.map((r) => r.x)) - margen) / 8) * 8)
-  const y0 = Math.max(0, Math.floor((Math.min(...rects.map((r) => r.y)) - margen) / 8) * 8)
-  const x1 = Math.min(entero.w, Math.ceil((Math.max(...rects.map((r) => r.x + r.w)) + margen) / 8) * 8)
-  const y1 = Math.min(entero.h, Math.ceil((Math.max(...rects.map((r) => r.y + r.h)) + margen) / 8) * 8)
-  const c = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
-  if (c.w * c.h > entero.w * entero.h * 0.8 || c.w < 120 || c.h < 120) return entero
-  return c
-}
-
-export const cajaDe =(frame, id) => (id && Array.isArray(frame?.rects) ? frame.rects.find((r) => r.id === id) ?? null : null)
+// El frame es la vista de 8 censurada en el DOM (web): se enseña tal cual.
+export const esVista8 = (frame) => frame?.vista === '8' && typeof frame.img === 'string' && frame.w > 0 && frame.h > 0
 
 // Android: el frame es de un móvil.
 export const esMovilFrame = (frame) => /^es\./.test(frame?.app ?? '') || (frame?.h ?? 0) > (frame?.w ?? 0) * 1.3
+
+// Lo que va en la vista de 8 de un móvil: cada elemento observado en el sitio que ocupa en la
+// pantalla real (bounds del snapshot, solo en local), con lo que leyó el modelo.
+//   {w, h, cajas: [{id, x, y, w, h, role, cls, texto, label, contenedor}]}
+// texto: el observado (tokens), null en lo rojo. Los contenedores (contienen a otros) no llevan
+// texto: se pintan como zonas. De mayor a menor área, para que lo de dentro quede encima.
+export function cajasMovil(screen) {
+  const obs = screen?.observed
+  const raw = screen?.raw
+  if (!obs || !raw) return null
+  const pos = new Map((raw.elements ?? []).filter((e) => Array.isArray(e.bounds) && e.bounds.length === 4).map((e) => [e.id, e.bounds]))
+  let W = 0
+  let H = 0
+  for (const b of pos.values()) { W = Math.max(W, b[2]); H = Math.max(H, b[3]) }
+  if (!W || !H) return null
+  const cajas = []
+  for (const el of obs.elements ?? []) {
+    const b = pos.get(el.id)
+    if (!b || b[2] <= b[0] || b[3] <= b[1]) continue
+    cajas.push({ id: el.id, x: b[0], y: b[1], w: b[2] - b[0], h: b[3] - b[1], role: el.role, cls: el.cls ?? 'verde',
+      texto: el.cls === 'rojo' ? null : el.text ?? null, label: el.label ?? null })
+  }
+  const dentro = (a, c) => a !== c && c.x >= a.x && c.y >= a.y && c.x + c.w <= a.x + a.w && c.y + c.h <= a.y + a.h
+  for (const c of cajas) c.contenedor = cajas.some((o) => dentro(c, o))
+  cajas.sort((a, b) => b.w * b.h - a.w * a.h)
+  return { w: W, h: H, cajas }
+}

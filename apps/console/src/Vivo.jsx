@@ -3,7 +3,7 @@
 // (pantallas con valores reales, solo en local, y eventos de auditoría con tokens).
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Eight from './eight/Eight.jsx'
-import { EnClaro, Real, Tokens } from './piezas.jsx'
+import { EnClaro, Md, Real, Tokens } from './piezas.jsx'
 import { nombreApp, nombrePantalla } from './directo.js'
 import { duracion, esMovil, focoDe, lineaDe, piensaTras, textoPlano } from './vivo.js'
 
@@ -275,8 +275,11 @@ function Aparece({ texto, valores, mostrar, vivo, alCrecer }) {
   return <Tokens text={partes.slice(0, k).join('')} valores={valores} mostrar={mostrar} />
 }
 
-export function Razonamiento({ rep, modo, valores }) {
+// Lo que ve 8: los tokens tal cual, sin el valor local ni siquiera al pasar por encima.
+export function Razonamiento({ rep }) {
   const { lineas, pensando } = rep
+  const valores = undefined
+  const modo = 'ocho'
   const ref = useRef(null)
   const pegado = useRef(true)
   const arriba = useRef(0)
@@ -306,7 +309,7 @@ export function Razonamiento({ rep, modo, valores }) {
         }}>
         {lineas.length === 0 && <li className="ln vacia">Aquí verás cada paso de 8: lo que lee, lo que decide, dónde pulsa y qué escribe.</li>}
         {lineas.map((l) => {
-          const largo = l.tipo === 'dice' || l.tipo === 'encargo'
+          const largo = l.tipo === 'encargo'
           return (
             <li key={l.n} className={`ln t-${l.tono} k-${l.tipo}`}>
               <span className="ln-t">{l.t != null ? mmssMs(l.t) : ''}</span>
@@ -315,7 +318,9 @@ export function Razonamiento({ rep, modo, valores }) {
                 <b>{l.titulo}</b>
                 {l.texto && (largo
                   ? <p className="ln-dice"><Aparece texto={l.texto} valores={valores} mostrar={mostrar} vivo={l.n === ultimo} alCrecer={crecer} /></p>
-                  : <p className="ln-x"><Tokens text={l.texto} valores={valores} mostrar={mostrar} /></p>)}
+                  : l.tipo === 'piensa'
+                    ? <Md texto={l.texto} className="ln-x ln-md" />
+                    : <p className="ln-x"><Tokens text={l.texto} valores={valores} mostrar={mostrar} /></p>)}
                 {l.sub && <span className="ln-s">{l.sub}</span>}
               </div>
             </li>

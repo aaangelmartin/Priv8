@@ -107,8 +107,9 @@ export function lineaDe(ev, screen) {
       if (ev.model_saw && /razona/i.test(d)) {
         return { tipo: 'piensa', tono: 'neutro', titulo: paso ? `Paso ${paso} - piensa` : 'Piensa', texto: ev.model_saw }
       }
+      // La respuesta final: entera solo en el chat; aquí, que ha respondido.
       if (ev.model_saw && !ES_LLAMADA.test(ev.model_saw)) {
-        return { tipo: 'dice', tono: 'seguro', titulo: paso ? `Paso ${paso} - responde` : 'Responde', texto: ev.model_saw }
+        return { tipo: 'dice', tono: 'seguro', titulo: paso ? `Paso ${paso} - responde en el chat` : 'Responde en el chat', texto: null }
       }
       if (ev.model_saw && ES_LLAMADA.test(ev.model_saw)) {
         const ms = ev.ms?.model
