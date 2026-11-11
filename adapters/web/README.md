@@ -41,3 +41,5 @@ web = WebAdapter(start="inbox")
 core.connect("b2b", web)
 core.observe("b2b")
 ```
+
+**Lo que ves tú (#170).** Mientras una consola mira, el adaptador manda además la pestaña real que maneja 8 (con los valores, el cursor y los bocadillos), a 7 fotogramas por segundo como mucho, para que la consola la enseñe junto a lo que ve el modelo. Es la pantalla de la persona: va solo por el canal local de fotogramas (`frame` con `vista: "real"`, 127.0.0.1, como `screen.raw`), nunca al modelo ni al registro. `PRIV8_REAL_FRAMES=0` lo apaga. `make grabar-sesion` la graba con los datos ficticios del seed para la web de la demo.
