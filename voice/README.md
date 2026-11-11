@@ -76,3 +76,37 @@ To try a real voice once there is a key: copy `voice/.env.example` to `voice/.en
 `MixedVoicePlayer` reports each transition through `Listener.onGap` and, per utterance, a `GapReport` with the maximum and the mean over the voice switches. The figure for the demo is the **maximum gap over the demo utterances** (the sum across accounts and the transfer confirmation), with the mean beside it. The details and limits of the measure are in [android/README.md](android/README.md#how-the-gap-is-measured).
 
 Not measured yet: it needs the player running on the emulator with a real ElevenLabs key.
+
+## Llamar al banco por ti (#24)
+
+8 calls the bank for the person, says it is an AI, gets through the menu and hands the call over. No keys needed.
+
+```bash
+make llamada-banco                                              # goal: talk to an adviser
+make llamada-banco OBJETIVO="No reconozco un cargo" VOZ=texto   # the line asks for the PIN: handover
+make linea-alcor                                                # the line as a service on :8711
+PRIV8_IVR_URL=http://127.0.0.1:8711 make llamada-banco          # same call over HTTP
+```
+
+| File | What it does |
+|---|---|
+| `ivr_alcor.py` | Simulated Banca Alcor phone line (invented number, menus and adviser). Menu by DTMF, hold music, a human adviser at the end; asks for card number, PIN, SMS code or DNI on some branches. In process or as a small HTTP service |
+| `bank_call.py` | `BankCall`: 8's side of the call. Navigators, lines, voices, audit, CLI and the live path |
+
+**Rules, enforced in code and tests**
+
+- **Disclosure first.** The first thing 8 sends on the line is `AVISO` ("le llama Ocho, un asistente de inteligencia artificial, en nombre de un cliente…"). No key is pressed before it. When a human answers, 8 introduces itself again and hands over.
+- **Red data and identity are the person's.** 8 only presses a single key that was offered in the menu it just heard (`_pulsa` refuses anything else) and only says its fixed sentences (`FRASES`). If the line asks for PIN, code, password, card digits or an identity document, 8 says that only its client can give that and hands the call over at that moment (`blocked` · `rojo` in the audit).
+- **Tokens to the model.** The person's goal and every line prompt go through `core.tokenize_text` before 8 decides; `BankCall.modelo_vio` holds everything the navigator received. The process mounts `core.trust(known())` first, as `main` does, so the person's own name is caught too.
+- **Mixed voice.** 8's sentences on the line are fixed and data-free (no digits: "Ocho"), so they may go to ElevenLabs; `CloudVoice` runs the final block again before each request.
+- **Audit.** `core.record` with kind `call` for start, disclosure, each key, hold and handover; `blocked` with reason `rojo` when the line asks for a red datum. The bank's line number is the only value, as in #23.
+
+**Modes**
+
+| | Default (no keys) | With keys |
+|---|---|---|
+| Line | `LineaLocal` (in process) or `LineaHttp` (`PRIV8_IVR_URL`) | `PRIV8_LLAMADA_REAL=1` + `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_PHONE_NUMBER_ID`, `PRIV8_BANCO_TEL`: `LiveBankCall`, ElevenLabs Conversational AI over Twilio. **Untested**: endpoint shape as in `call.py`, to be verified. The DTMF and transfer tools and the person's number are configured on the ElevenLabs agent, not sent from here; only the intent (not the literal goal) goes into the prompt |
+| Menu choice | `NavegadorLocal`, keywords | `PRIV8_LLAMADA_NAVEGADOR=claude` + `ANTHROPIC_API_KEY`: `NavegadorClaude`, tokenized text only, after `core.check` |
+| 8's voice | `VOZ=auto`: system voice (`say` on macOS, `espeak`); `VOZ=texto` silent | `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`: ElevenLabs |
+
+Tests: `voice/tests/test_bank_call.py` (menu navigation for every branch, hold and handover, disclosure first, red-data handover with no keys pressed after the request, no seed value in anything model-bound, in the audit or in what 8 said, audit events valid against `audit.schema.json`, the HTTP line, the Claude navigator seeing tokens only).
