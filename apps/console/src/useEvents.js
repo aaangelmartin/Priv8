@@ -3,7 +3,7 @@ import { alertaDeBloqueo, alertasDePantalla } from './alertas.js'
 import { valoresDe } from './tokens.js'
 import { textoDeSegmentos } from './directo.js'
 import { conFotogramas, urlsDe } from './frame.js'
-import { esSesion, proximos, reloj, tramo, valida } from './reproductor.js'
+import { delPar, esSesion, migrar, proximos, reloj, tramo, valida } from './reproductor.js'
 
 // ?ws=ws://127.0.0.1:8790/events escucha otro núcleo (PRIV8_EVENTS_PORT) sin tocar la demo.
 const URLS = urlsDe(window.location.search)
@@ -163,9 +163,17 @@ export function useEvents() {
       if (m.type === 'frame') {
         // En vivo trae los píxeles (img); en una sesión grabada, la ruta del JPEG (src).
         if (!((typeof m.img === 'string' || typeof m.src === 'string') && m.w > 0 && m.h > 0)) return
-        // vista 'real': la pestaña que maneja 8, lo que ves tú (#170); si no, la vista de 8.
-        if (m.vista === 'real') setReal({ ...m, recibido: Date.now() })
-        else setFrame({ ...m, recibido: Date.now() })
+        // Una pestaña real suelta, sin su vista de 8, no se pinta: las dos van siempre en par (#187).
+        if (m.vista === 'real') return
+        const recibido = Date.now()
+        const { real: r, ...vista } = m
+        setFrame({ ...vista, recibido })
+        // Web: el par trae la pestaña real del mismo instante (lo que ves tú, #170). Las dos se
+        // ponen a la vez, en el mismo render, con el mismo id de par.
+        if (m.vista === '8') {
+          const okReal = r && (typeof r.img === 'string' || typeof r.src === 'string') && r.w > 0 && r.h > 0
+          setReal(okReal ? { ...r, vista: 'real', par: m.par, recibido } : null)
+        }
         return
       }
       if (m.type === 'render_values') {
@@ -244,18 +252,26 @@ export function useEvents() {
       let sesion = null
       let i = 0
       let j = 0
+      let k = 0
       let antes = performance.now()
       const tick = () => {
         const ahora = performance.now()
         const t = reloj.avanzar((ahora - antes) / 1000)
         antes = ahora
         if (!sesion) return
-        const r = tramo(sesion, i, j, t)
+        const r = tramo(sesion, i, j, t, k)
         i = r.i
         j = r.j
-        r.msgs.forEach((m, k) => { selloSesion = r.ats[k]; handle(m) })
+        k = r.k
+        r.msgs.forEach((m, n) => { selloSesion = r.ats[n]; handle(m) })
         selloSesion = null
-        if (r.real) setReal(r.real)
+        if (r.real) setReal(r.real) // Android: la pantalla del móvil
+        if (r.par) {
+          // Las dos pantallas del mismo par, a la vez; sin par nuevo, siguen las del anterior.
+          const p = delPar(r.par)
+          setFrame(p.frame)
+          setReal(p.real)
+        }
         precargar(proximos(sesion, t))
         if (reloj.estado.terminado) window.__p8FeedFin = true
       }
@@ -264,6 +280,7 @@ export function useEvents() {
         .then((d) => {
           if (closed) return
           if (!valida(d)) { setStatus('sin demo'); return }
+          d = migrar(d) // grabaciones anteriores: los fotogramas sueltos, en pares
           sesion = d
           setMeta({ caso: d.caso ?? null, vertical: d.vertical ?? (d.nombre?.includes('b2c') ? 'b2c' : 'b2b'), titulo: d.titulo ?? null,
             provisional: d.provisional === true, encargos: d.encargos ?? [] })

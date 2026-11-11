@@ -78,10 +78,6 @@ def connect(session: str, adapter: Adapter) -> None:
     if hasattr(adapter, "on_frame"):
         adapter.on_frame = lambda f, s=session: frame(s, f)
         adapter.watching = events.frame_watchers
-    if hasattr(adapter, "on_real_frame"):  # lo que ves tú (#170): la pantalla real, solo al canal local
-        adapter.on_real_frame = lambda f, s=session: events.publish_frame(
-            {"type": "frame", "session": s, "vista": "real", "app": f.get("app") or "", "w": int(f["w"]),
-             "h": int(f["h"]), "mime": f.get("mime", "image/jpeg"), "img": f["img"]})
     # Vista de 8 y los ojos de 8 en la ventana (#154): el adaptador web censura su copia con
     # lo que vio el modelo y pasa el mismo bloqueo final; todo dentro del proceso.
     if hasattr(adapter, "on_core_event"):
@@ -206,6 +202,14 @@ def frame(session: str, f: dict[str, Any]) -> dict[str, Any] | None:
            "img": f["img"], "rects": rects}
     if vista:
         msg["vista"] = "8"
+        # Pares (#187): la pestaña real del mismo instante (lo que ves tú, #170) va en el mismo
+        # mensaje, con el mismo id, para que la consola nunca enseñe una sin la otra.
+        if f.get("par") is not None:
+            msg["par"] = int(f["par"])
+        r = f.get("real")
+        if isinstance(r, dict) and isinstance(r.get("img"), str):
+            msg["real"] = {"app": r.get("app") or msg["app"], "w": int(r["w"]), "h": int(r["h"]),
+                           "mime": r.get("mime", "image/jpeg"), "img": r["img"]}
     events.publish_frame(msg)  # solo local, como screen.raw
     return msg
 

@@ -105,8 +105,8 @@ async def events_ws(ws: WebSocket) -> None:
         while True:
             await send(await queue.get())
 
-    # Fotogramas: un hueco por sesión y vista (la de 8 y la real, #170). Mientras se envía uno,
-    # el siguiente pisa al anterior.
+    # Fotogramas: un hueco por sesión y vista. En web, cada fotograma de la vista de 8 lleva la
+    # pestaña real del mismo instante (par, #187): uno pisa al anterior entero, nunca media pareja.
     latest: dict[str, dict] = {}
     ready = asyncio.Event()
 

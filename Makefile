@@ -99,6 +99,7 @@ test:
 	node apps/console/src/vivo.test.mjs
 	node apps/android-8/dev/test_estados.mjs
 	node apps/console/src/reproductor.test.mjs
+	node apps/console/src/sesiones.test.mjs
 	node apps/erp-sim/src/sesion.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.

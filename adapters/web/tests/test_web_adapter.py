@@ -375,10 +375,14 @@ def test_vista_de_8_solo_mientras_alguien_mira(web, core, monkeypatch):
         # Otra pantalla que 8 aún no ha leído: marcadores, y el fotograma no casa.
         web.goto("inbox", "/bandeja")
         assert _wait(lambda: not [m for m in seen if m.get("vista") == "8"][-1]["fresh"])
-        # Lo que ves tú (#170): la pestaña real también llega, como vista «real», solo a este canal.
-        assert _wait(lambda: any(m.get("vista") == "real" for m in seen))
-        real = next(m for m in seen if m.get("vista") == "real")
+        # Lo que ves tú (#170): la pestaña real llega en el mismo mensaje (par, #187), solo a este canal.
+        pares = [m for m in seen if m.get("vista") == "8"]
+        assert all(isinstance(m.get("par"), int) and m.get("real") for m in pares)
+        assert [m["par"] for m in pares] == sorted(m["par"] for m in pares)
+        real = pares[-1]["real"]
         assert real["app"] == "inbox" and base64.b64decode(real["img"])[:2] == b"\xff\xd8"
+        assert (real["w"], real["h"]) == (pares[-1]["w"], pares[-1]["h"])
+        assert not any(m.get("vista") == "real" for m in seen)  # nunca una sola, sin su par
         html = web._call(web._vista.html)
         assert "8 aún no ha leído" not in html  # el aviso va en la capa de 8, no en la copia
         assert not [v for t, v in known() if len(v) >= 6 and v in html]
@@ -411,6 +415,57 @@ def test_vista_de_8_escribe_tokens(web, core, monkeypatch):
         assert IBAN_MAESTRO not in html and IBAN_MAESTRO.replace(" ", "") not in html
     finally:
         unsub()
+
+
+def test_pares_misma_capa_de_8_en_las_dos_pantallas(web_cursor):
+    """Pares (#187): cada fotograma de la vista de 8 lleva la pestaña real del mismo instante, y
+    la capa de 8 del espejo es la de la pestaña real (posición, ojos, bocadillo, punto del
+    tecleo), con tokens en lugar de valores. Mientras 8 se desliza y teclea siguen saliendo pares."""
+    w = web_cursor
+    seen: list[dict] = []
+    real_txt = "1.234,56 EUR"
+    w.goto("inbox", "/reset")
+    w.goto("inbox", "/responder/9")
+    s = by_sel(w.snapshot())
+    w.frames, w.on_frame, w.watching = True, seen.append, (lambda: 1)
+    w.p8_render_text = lambda t: t.replace("‹IMPORTE_1›", real_txt)
+    try:
+        assert _wait(lambda: any(m.get("real") for m in seen), timeout=10)
+        # Durante el deslizamiento y el tecleo, el hilo del navegador sigue sacando pares.
+        antes = len(seen)
+        w.note_action({"op": "type", "target": s["#texto"]["id"], "text": "‹NOMBRE_1›"})
+        assert w.perform({"op": "type", "target": s["#texto"]["id"], "text": "Ana Pérez Gil"})["ok"]
+        assert len(seen) - antes >= 2
+        assert all(m["vista"] == "8" and m.get("real") and isinstance(m.get("par"), int) for m in seen)
+        assert [m["par"] for m in seen] == sorted(set(m["par"] for m in seen))
+        assert _wait(lambda: w._call(lambda: w._vista.page.evaluate(
+            "() => document.querySelector('#texto')?.value")) == "‹NOMBRE_1›")
+        # Un bocadillo con un valor: la pestaña real lo dice con el valor, el espejo con el token.
+        w._decir("Registro ‹IMPORTE_1› ahora.", None, "neutro", "hablar", 8000)
+        time.sleep(1.8)  # el tecleo del bocadillo ha terminado
+
+        def comparar():
+            page = w._page(w.app)
+            estado = w._ocho(page, "congelar", None)
+            try:
+                w._vista.call("fijar", w._estado_espejo(estado))
+                leer = """() => { const sh = document.getElementById('p8-cursor-8').shadowRoot
+                  return [sh.querySelector('.tx').textContent, getComputedStyle(sh.querySelector('.cur')).transform,
+                          (sh.querySelector('.ojos svg.p8-fijo') || sh.querySelector('.ojos svg')).innerHTML, getComputedStyle(sh.querySelector('.bub')).opacity] }"""
+                return page.evaluate(leer), w._vista.page.evaluate(leer), w._vista.html()
+            finally:
+                w._ocho(page, "soltar", None)
+        (rt, rtr, rsvg, rop), (vt, vtr, vsvg, vop), html = w._call(comparar)
+        assert rt == f"Registro {real_txt} ahora." and vt == "Registro ‹IMPORTE_1› ahora."
+        assert rtr == vtr and rtr != "none"   # el cursor en el mismo sitio
+        assert rsvg == vsvg and rsvg              # los mismos ojos, en el mismo instante
+        assert rop == vop == "1"
+        assert real_txt not in html and "Ana Pérez" not in html
+    finally:
+        w.watching = lambda: 0
+        w.on_frame = None
+        w.p8_render_text = None
+    assert _wait(lambda: not w._vista_activa())
 
 
 # ---------------------------------------------------------------- pantallas conocidas (#148)
