@@ -45,7 +45,7 @@
       ]
     },
     "reason": {
-      "description": "Obligatorio si kind es blocked.",
+      "description": "Obligatorio si kind es blocked. asesoria (v1.2): la persona pidió consejo de inversión y 8 no lo da; la petición no llega al modelo.",
       "enum": [
         "fuga",
         "destino",
@@ -55,7 +55,8 @@
         "token_desconocido",
         "caducado",
         "cancelado",
-        "adaptador"
+        "adaptador",
+        "asesoria"
       ]
     },
     "app": {

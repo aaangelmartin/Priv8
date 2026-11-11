@@ -59,6 +59,10 @@ Un cliente v1 sigue validando. Salen de las notas de Ángel en #58 y #70 (issue 
 - **Motivo de rechazo `adaptador`:** el adaptador no pudo ejecutar la acción. Vale en `act` y en la auditoría.
 - **Ejemplos:** paquete real `es.priv8.banks.alcor`; el campo de contraseña no ofrece `type`; `hello.device` como lo manda el emulador.
 
+## v1.2 (11 nov) · cambio aditivo
+
+- **Motivo de rechazo `asesoria`** (issue #43), solo en la auditoría: la persona pidió consejo de inversión («¿en qué fondo lo meto?») y 8 no lo da, porque ejecuta y no asesora (MiFID II). El bucle del agente lo detecta antes de llamar al modelo, así que la petición no sale. En el canal de eventos va primero un `voice` con la frase fija, toda en `cloud` porque no lleva datos, y después el `audit` `blocked` con `reason: asesoria`, que la app 8 pinta con la cara «no puedo» (`rechazar` en `docs/ojos.html`). No es un motivo de `act` ni de `oracle`. Ejemplos: `audit.blocked-asesoria.json`, `events.audit-asesoria.json`, `events.voice-no-puedo.json`.
+
 ## Qué concreta respecto a la arquitectura
 
 Estos puntos no estaban cerrados en `docs/arquitectura.html`. Se proponen así; si alguien necesita otra cosa, se comenta en el PR.
