@@ -114,6 +114,8 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        // A dictation still listening would compete with the spoken confirmation's recognizer.
+        dictador.parar()
         events.stop()
         super.onStop()
     }
@@ -128,6 +130,8 @@ class MainActivity : Activity() {
      * `--es dictado movil|portatil` chooses who dictates from then on.
      */
     private fun dictarSiSePide(intent: Intent?) {
+        // Debug only: in a release build no other app can make 8 start listening or change who dictates.
+        if (!BuildConfig.DEBUG) return
         intent?.getStringExtra(EXTRA_VIA)?.let {
             via = Tareas.via(it, emulador())
             Log.i(TAG_DICTADO, "dictado via ${via.name.lowercase()}")

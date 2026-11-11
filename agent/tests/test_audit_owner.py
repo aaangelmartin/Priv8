@@ -87,6 +87,11 @@ async def test_replay_over_real_core_records_each_event_once(recording_core):
     # The loop owns task events: start, one per model step, end.
     assert kinds["task"] == result.steps + 2
     assert set(kinds) <= TOOL_EVENTS | {"approval", "task"}
+    # The final answer is recorded once (in its step event); the end event only marks the end.
+    if result.final_text:
+        said = [e for e in events if e["kind"] == "task" and e.get("model_saw") == result.final_text]
+        assert len(said) == 1
+    assert not [e for e in events if e["kind"] == "task"][-1].get("model_saw")
 
     # No event appears twice and the single chain still verifies.
     assert _adjacent_twins(events) == []
