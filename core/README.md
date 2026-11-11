@@ -1,6 +1,6 @@
-# Núcleo del protocolo (`core/`)
+<img alt="Núcleo del protocolo" src="../brand/banner/cabeceras/core.png" width="100%">
 
-El núcleo de Priv8 CUA: una librería de Python que corre en el mismo proceso que el servidor MCP y el agente (`agent/`). Recibe la pantalla real de un adaptador, la devuelve tokenizada, ejecuta las acciones del modelo rehidratando en local, retiene lo irreversible hasta que la persona confirma, bloquea cualquier fuga y firma el registro de auditoría. Sigue los contratos de `docs/contracts/`.
+La librería del protocolo: tokeniza la pantalla, ejecuta lo que pide el modelo rehidratando en local, retiene lo irreversible, bloquea fugas y firma la auditoría. Corre en el mismo proceso que `agent/`.
 
 ## Qué hay
 
@@ -43,7 +43,8 @@ uv run python -m core.server                       # solo el canal de eventos (t
 uv run pytest core/tests
 ```
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 - **Orden del ejecutor.** Antes de tocar la pantalla comprueba que el elemento exista en la última observación, que no haya pausa (la persona se autentica) ni sea rojo o una contraseña, que todos los tokens existan en la bóveda, la procedencia y la confirmación. Después rehidrata y ejecuta.
 - **Pausa.** Un diálogo del sistema, la confirmación de 8 o el foco en una contraseña dejan la observación vacía y rechazan `act` hasta que acaba. Una pantalla sin política no sale (`denied: sin_regla`).
@@ -52,3 +53,5 @@ uv run pytest core/tests
 - **Canal de eventos.** Solo escucha en 127.0.0.1, porque el mensaje `screen` lleva la pantalla real. Acepta `approval_result`, `task_request` y `dictation_start` (Whisper en local, `voice/dictado.py`). Los fotogramas de la pantalla real van por un canal aparte que no pasa por la auditoría ni por el puente.
 - **Vista de 8.** `preview` clasifica una pantalla igual que `observe` sin mandarla a ningún sitio, y `mask_text` tapa solo lo sensible de un texto suelto. Los usa la vista de 8 del adaptador web (`adapters/web/vista.py`).
 - El estado vive en el proceso y no se persiste.
+
+</details>

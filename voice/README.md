@@ -1,6 +1,6 @@
-# Voz mixta, llamadas y dictado (`voice/`)
+<img alt="Voz mixta, llamadas y dictado" src="../brand/banner/cabeceras/voice.png" width="100%">
 
-8 habla con dos voces: ElevenLabs lee las frases sin datos y la voz local (TextToSpeech en el móvil, Web Speech en la consola) lee cifras y nombres, así que un valor real nunca llega a la voz en la nube. Aquí están también la llamada al banco en nombre de la persona (#24) y el dictado con Whisper en el portátil (#47).
+ElevenLabs lee las frases sin datos; la voz local lee cifras y nombres. También la llamada al banco (#24) y el dictado con Whisper (#47).
 
 ```
 modelo       «Entre tus tres cuentas tienes ‹SUMA_1›.»
@@ -50,7 +50,8 @@ uv run pytest voice/tests
 
 Desde la raíz del repositorio (también entra en `make test`). Los tests de contrato leen `docs/contracts/`. El cliente de ElevenLabs se importa solo cuando se usa: los tests inyectan un cliente falso y ninguno llama a la API real. El test de dictado con el modelo real se salta si el modelo no está en la caché.
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 **Segmentador.** `segment(template, render, utterance=..., session=..., leak_check=..., audit=...)` devuelve un `Utterance` cuyo `to_contract()` valida contra `docs/contracts/voice.schema.json`.
 
@@ -78,3 +79,5 @@ Desde la raíz del repositorio (también entra en `make test`). Los tests de con
 | Voz de 8 | `VOZ=auto`: voz del sistema (`say`, `espeak`); `VOZ=texto` sin voz | `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID` |
 
 **Dictado (#47).** El reconocedor del emulador no funciona, así que la app 8 manda `dictation_start` por el canal de eventos y el núcleo transcribe el micrófono del portátil con Whisper en local (hasta 1,2 s de silencio, 7 s como mucho; faster-whisper small, `es`, CPU int8). En un Android real lo hace el reconocedor del dispositivo y la app manda `task_request`. El audio no sale nunca del móvil ni del portátil; solo el modelo se descarga. `PRIV8_WHISPER_MODEL=base` usa uno más pequeño. Lo oído no se registra: la auditoría guarda un `task` con los tokens y la longitud. Sin el extra, `dictation_start` responde `{"type":"dictation","text":"","error":"no_disponible"}`.
+
+</details>

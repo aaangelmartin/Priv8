@@ -1,4 +1,62 @@
-# App 8 para Android (`apps/android-8/`)
+<img alt="App 8 para Android" src="../../brand/banner/cabeceras/apps-android-8.png" width="100%">
+
+La app **Priv8** (`es.priv8.ocho`): el asistente al que hablas o escribes y el servicio de accesibilidad que hace de adaptador Android del núcleo.
+
+| Pieza | Archivo | Qué hace |
+|---|---|---|
+| Snapshot | `SnapshotBuilder.kt` | El árbol de accesibilidad, como `snapshot.schema.json`. Los campos rojos salen ya enmascarados |
+| Puente | `BridgeClient.kt` | Cliente de `ws://127.0.0.1:8765`; se reconecta solo |
+| Acciones | `Performer.kt` | `tap`, `type`, `back`, `open_app`, `scroll`, `key` |
+| Cursor de 8 | `CursorOverlay.kt` | Los ojos de 8 se deslizan a cada acción y se ocultan en las pausas |
+| Mira a otro lado | `Pause.kt` | Con el foco en la clave u OTP, o un diálogo del sistema, no sale nada |
+| Confirmación hablada | `confirm/` | La frase con los valores, en voz local, y «confirmo» o «cancela» |
+| Asistente | `chat/` | Conversación, progreso, bloqueos y confirmaciones (#163) |
+| Ojos | `assets/ocho/` | 8 se mueve con los eventos y con el volumen real (#39, #42) |
+| Renderizador local | `Frase.kt` | Pone los valores reales en lo que dice 8, solo en el móvil (#40) |
+| Dictado | `Tareas.kt` | En el móvil, el reconocedor del dispositivo; en el emulador, Whisper en el portátil (#47) |
+
+Logcat solo recibe tipos, ids, recuentos y códigos; nunca contenido de la pantalla ni valores.
+
+## Requisitos
+
+- JDK 17.
+- Android SDK en `~/Library/Android/sdk` con `platforms;android-34`, `platform-tools`, `emulator` y `cmdline-tools;latest`.
+- AVD `priv8`: Pixel 7, `system-images;android-34;google_apis;arm64-v8a` (Android 14).
+
+Crear el AVD si no existe:
+
+```sh
+SDK=~/Library/Android/sdk
+$SDK/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;arm64-v8a" "platforms;android-34"
+echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n priv8 \
+  -k "system-images;android-34;google_apis;arm64-v8a" -d pixel_7
+```
+
+## Compilar
+
+```sh
+cd apps/android-8
+ANDROID_HOME=~/Library/Android/sdk ./gradlew assembleDebug
+```
+
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. La primera vez el wrapper descarga Gradle 8.14.3 y las dependencias; después funciona sin red (`--offline`).
+
+## Ejecutar
+
+Desde la raíz del repositorio:
+
+```sh
+scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.apk
+~/Library/Android/sdk/platform-tools/adb reverse tcp:8765 tcp:8765
+~/Library/Android/sdk/platform-tools/adb logcat -s Priv8A11y
+```
+
+`emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
+
+Todo el lado del móvil en un comando (issue #48): `scripts/movil.sh` compila la app 8 y los tres bancos (Alcor, Brezo, Nimbo), llama a `emu.sh` con las cuatro APK y abre los puertos 8765 (puente) y 8700 (eventos). Con `--no-build` instala lo ya compilado; `--headless` pasa a `emu.sh`. Necesita `JAVA_HOME` con un JDK 17.
+
+<details>
+<summary><b>Detalle de cada pieza</b></summary>
 
 App Android **Priv8** (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad «Priv8» (`Priv8AccessibilityService`), que es el adaptador Android del núcleo. 8 es el nombre del agente dentro de la app.
 
@@ -38,44 +96,6 @@ Paquete `es.priv8.ocho.confirm`, aislado para que la app (#39) y el diseño (#36
 - El agente no puede leer ni tocar esta pantalla: snapshot vacío y `perform` rechazado mientras está delante.
 
 Logcat (etiqueta `Priv8Confirm`) solo recibe ids, recuentos y resultados; nunca la frase ni lo que se oyó.
-
-## Requisitos
-
-- JDK 17.
-- Android SDK en `~/Library/Android/sdk` con `platforms;android-34`, `platform-tools`, `emulator` y `cmdline-tools;latest`.
-- AVD `priv8`: Pixel 7, `system-images;android-34;google_apis;arm64-v8a` (Android 14).
-
-Crear el AVD si no existe:
-
-```sh
-SDK=~/Library/Android/sdk
-$SDK/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;arm64-v8a" "platforms;android-34"
-echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n priv8 \
-  -k "system-images;android-34;google_apis;arm64-v8a" -d pixel_7
-```
-
-## Compilar
-
-```sh
-cd apps/android-8
-ANDROID_HOME=~/Library/Android/sdk ./gradlew assembleDebug
-```
-
-El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. La primera vez el wrapper descarga Gradle 8.14.3 y las dependencias; después funciona sin red (`--offline`).
-
-## Ejecutar
-
-Desde la raíz del repositorio:
-
-```sh
-scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.apk
-~/Library/Android/sdk/platform-tools/adb reverse tcp:8765 tcp:8765
-~/Library/Android/sdk/platform-tools/adb logcat -s Priv8A11y
-```
-
-`emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
-
-Todo el lado del móvil en un comando (issue #48): `scripts/movil.sh` compila la app 8 y los tres bancos (Alcor, Brezo, Nimbo), llama a `emu.sh` con las cuatro APK y abre los puertos 8765 (puente) y 8700 (eventos). Con `--no-build` instala lo ya compilado; `--headless` pasa a `emu.sh`. Necesita `JAVA_HOME` con un JDK 17.
 
 ## Probar el puente sin el núcleo
 
@@ -191,3 +211,5 @@ adb logcat -s Priv8Dictado   # «dictado: listening on the laptop», luego «lap
 ```
 
 Para probar el reconocedor del emulador (A) en vez de Whisper: `adb emu avd hostmicon` y `--es dictado movil`.
+
+</details>

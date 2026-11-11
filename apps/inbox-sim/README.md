@@ -1,6 +1,6 @@
-# Bandeja de correo simulada (`apps/inbox-sim/`)
+<img alt="Bandeja de correo simulada" src="../../brand/banner/cabeceras/apps-inbox-sim.png" width="100%">
 
-El buzón de cuentas a pagar de Talleres Norte (`cuentasapagar@talleresnorte.example`), la otra pantalla del B2B. Llega la factura F-2026-0412 de Suministros Lumen con su PDF y, en el cuerpo, un cambio de IBAN con una instrucción para el asistente: la trampa que Priv8 CUA bloquea por procedencia. Datos de `data/seed.json`.
+El buzón de cuentas a pagar de Talleres Norte. Llega la factura F-2026-0412 de Suministros Lumen y, en el cuerpo, la trampa: un cambio de IBAN con órdenes para el asistente.
 
 ## Qué hay
 
@@ -33,8 +33,11 @@ pnpm dev          # http://127.0.0.1:5174
 
 No tiene pruebas propias: lo prueban `uv run pytest adapters/web/tests` y la batería de correos de `data/test_bateria.py`.
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 - **Aspecto de webmail (#129).** Menú lateral, búsqueda, avatares, extractos, etiquetas y estrellas son pantalla para la persona y van sin `data-p8`. En las filas, `.remitente` enseña el nombre y entrega la dirección al adaptador con `data-p8-text`, así que el snapshot no cambia.
 - **Contrato con el adaptador web.** El mismo que el ERP (`apps/erp-sim/README.md`): solo entra en el snapshot lo que lleva `data-p8`.
 - La vista previa del PDF sale hoy del seed; con #20 el texto se extraerá del PDF en local.
+
+</details>

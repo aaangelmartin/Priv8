@@ -1,6 +1,6 @@
-# Web de Priv8 (`apps/landing/`)
+<img alt="Web de Priv8" src="../../brand/banner/cabeceras/apps-landing.png" width="100%">
 
-La web pública de Priv8 (priv8.es): explica Priv8 CUA y sus dos verticales, con 8 en vivo acompañando la lectura y demos de lo que ve y lo que no ve el modelo. Vite y React, sin servidor propio.
+La web pública, [priv8.es](https://priv8.es): Vite y React, con 8 en vivo y el campo de datos. Su estilo es el de todos los gráficos de este repositorio.
 
 ## Qué hay
 
@@ -31,7 +31,10 @@ En local la build usa rutas relativas, así que `dist/` se abre tal cual, tambi�
 
 No tiene pruebas propias: `pnpm build` debe terminar sin errores.
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 - **Despliegue.** `.github/workflows/landing-pages.yml` la publica en GitHub Pages al subir a `main` cambios de `apps/landing/` o del propio flujo, o a mano desde la pestaña Actions. Instala con `pnpm install --frozen-lockfile`, construye con `BASE_PATH` (la raíz con el dominio propio, `/<repositorio>/` sin él) y sube `apps/landing/dist`.
 - Requisito una vez en el repositorio: Settings → Pages → Source: «GitHub Actions».
+
+</details>

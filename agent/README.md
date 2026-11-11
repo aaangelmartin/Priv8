@@ -1,6 +1,6 @@
-# Servidor MCP y bucle del agente (`agent/`)
+<img alt="Servidor MCP y bucle del agente" src="../brand/banner/cabeceras/agent.png" width="100%">
 
-El agente 8: un bucle con Claude que solo ve tres herramientas, `observe`, `act` y `oracle`, servidas por un servidor MCP propio (#25). El núcleo (`core/`) corre en el mismo proceso, así que todo lo que llega a Claude ya pasó por los tokens, las políticas y el bloqueo final. Sigue los contratos de `docs/contracts/`.
+El bucle de 8 con Claude y el servidor MCP con tres herramientas: `observe`, `act` y `oracle`. Todo lo que llega al modelo ya pasó por `core/`.
 
 ## Qué hay
 
@@ -45,7 +45,8 @@ uv run pytest agent/tests
 
 `tests/test_contracts.py` valida contra los esquemas de `docs/contracts/` (o de `PRIV8_CONTRACTS_DIR`); `tests/test_real_core.py` corre las dos escenas con el núcleo real y comprueba que ninguna petición a Claude lleva un valor de las escenas.
 
-## Detalles
+<details>
+<summary><b>Detalles</b></summary>
 
 **Garantías.**
 
@@ -101,3 +102,5 @@ uv run python -m agent.server --web --transport stdio     # para un host que lo 
 - Si el bucle pide más pasos de los grabados, falla con `ReplayExhausted`. `--record FILE` escribe este formato desde una ejecución en vivo. `ReplayModel` y `write_replay` están en `agent/agent.py`.
 
 **Lo que el núcleo expone.** `core_adapter.py` espera cinco funciones de `core` que devuelven `dict` compatibles con JSON: `observe(session)` (`observation.schema.json`), `act(session, op, target=None, text=None, direction=None)` y `oracle(session, op, args)` (`tools.schema.json`), `check(payload)` con `allowed` y `findings` (el tipo de patrón, nunca el valor) y `record(event)` (`audit.schema.json`, con `seq`, `ts`, `prev`, `hash` y `sig`). `PRIV8_CORE=real|fake` elige el núcleo (por defecto `real`); si a `core` le falta alguna función, `build_real_core()` lanza `RealCoreUnavailable` con los nombres que faltan.
+
+</details>

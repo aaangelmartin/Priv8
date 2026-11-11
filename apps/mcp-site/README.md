@@ -1,6 +1,6 @@
-# Web mcp.priv8.es (`apps/mcp-site/`)
+<img alt="Web mcp.priv8.es" src="../../brand/banner/cabeceras/apps-mcp-site.png" width="100%">
 
-El sitio de Priv8 como servidor MCP (#157). Explica cómo usar Priv8 con tu propio Claude Code y sirve el instalador de una línea del paquete `priv8-mcp`. Es un sitio estático con Vite y React.
+[mcp.priv8.es](https://mcp.priv8.es): cómo usar Priv8 con tu Claude Code y el instalador de una línea del paquete `priv8-mcp` (#157). Sitio estático con Vite y React.
 
 ## Qué hay
 
