@@ -66,7 +66,7 @@ export function RotaAsistente() {
     <span className="ia-rot" ref={box} aria-hidden="true">
       {ASISTENTES.map((a, k) => (
         <span key={a.nombre} className={'ia' + (k === i ? ' on' : '')}>
-          <i style={{ '--ico': `url(${a.icono})` }} />{'\u00a0'}{a.nombre}
+          <i style={{ '--ico': `url("${a.icono}")` }} />{'\u00a0'}{a.nombre}
         </span>
       ))}
     </span>

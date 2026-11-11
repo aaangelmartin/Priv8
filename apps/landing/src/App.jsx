@@ -128,7 +128,7 @@ function Footer({ pal }) {
         </div>
         {/* firma de quien lo hace, como en open2agents.com: el vector de laaabs, centrado y discreto */}
         <div className="foot-by-row">
-          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
+          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url("${byLaaabs}")` }} />
         </div>
         {/* firma final: 8, el mismo que te ha acompañado por la web, aterriza aquí a la izquierda del nombre */}
         <div className="foot-word">
