@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Priv8 · Diapositivas</title>
+<style>
+  /* Fuentes locales: la presentación funciona sin red (OFL, @fontsource 5.2.5) */
+  @font-face { font-family: Sora; font-weight: 600; src: url(fonts/sora-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: Sora; font-weight: 700; src: url(fonts/sora-latin-700-normal.woff2) format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 400; src: url(fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "IBM Plex Sans"; font-weight: 600; src: url(fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-weight: 500; src: url(fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-weight: 600; src: url(fonts/ibm-plex-mono-latin-600-normal.woff2) format("woff2"); }
+
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --cobalto: #2D45D6; --noche: #0B1B33; --claro: #8FA2FF; --niebla: #EEF2F8; --pizarra: #5A6478; --linea: #D6DCE8;
+    --tok-bg: #E4E9FD; --tok-fg: #2236B5; --rojo: #A83228; --rojo-bg: #FBE5E3; --verde: #18734C; --verde-bg: #DFF2E7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #05101f; height: 100%; }
+  body { font: 400 22px/1.4 "IBM Plex Sans", sans-serif; color: var(--noche); -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: hidden; }
+  h1, h2, h3, b.s { font-family: Sora, sans-serif; letter-spacing: -.025em; }
+
+  .deck { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px; transform-origin: center; }
+  .slide { position: absolute; inset: 0; padding: 64px 80px; display: none; flex-direction: column; background: #fff; overflow: hidden; }
+  .slide.on { display: flex; }
+  .slide.cob { background: var(--cobalto); color: #fff; }
+  .slide.night { background: var(--noche); color: #fff; }
+  .kick { font: 600 15px/1 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--cobalto); margin-bottom: 18px; }
+  .cob .kick, .night .kick { color: #c4cdff; }
+  h2 { font-size: 46px; line-height: 1.08; max-width: 1050px; }
+  .lead { margin-top: 18px; font-size: 24px; color: var(--pizarra); max-width: 980px; }
+  .cob .lead, .night .lead { color: #dbe1ff; }
+  .num { position: absolute; right: 36px; bottom: 26px; font: 500 14px/1 "IBM Plex Mono", monospace; color: var(--pizarra); }
+  .cob .num, .night .num { color: #c4cdff; }
+  .tok { font: 600 .9em/1 "IBM Plex Mono", monospace; background: var(--tok-bg); color: var(--tok-fg); padding: .2em .45em; border-radius: 6px; white-space: nowrap; }
+  .real { font: 600 .9em/1 "IBM Plex Mono", monospace; background: var(--rojo-bg); color: var(--rojo); padding: .2em .45em; border-radius: 6px; white-space: nowrap; }
+  .grow { flex: 1; }
+
+  /* 1 · portada */
+  .cover { justify-content: center; }
+  .cover .eyes { width: 150px; margin-bottom: 40px; }
+  .cover h1 { font-size: 64px; line-height: 1.05; max-width: 1060px; }
+  .cover .logo { position: absolute; left: 80px; bottom: 56px; height: 34px; filter: brightness(0) invert(1); }
+  .cover .who { position: absolute; right: 80px; bottom: 58px; font: 500 16px/1.4 "IBM Plex Mono", monospace; color: #dbe1ff; text-align: right; }
+
+  /* pantalla de ejemplo */
+  .screen { border-radius: 18px; background: #fff; color: var(--noche); box-shadow: 0 24px 60px rgba(5, 16, 31, .25); padding: 22px 26px; display: grid; gap: 12px; font-size: 20px; }
+  .screen .row { display: flex; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--linea); padding-bottom: 10px; }
+  .screen .row:last-child { border: 0; padding: 0; }
+  .screen .row span:first-child { color: var(--pizarra); }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-top: 40px; }
+  .three { display: grid; grid-template-columns: 1fr 60px 1fr 60px 1fr; align-items: stretch; margin-top: 44px; }
+  .arrow { display: grid; place-items: center; font: 600 34px/1 "IBM Plex Mono", monospace; color: var(--cobalto); }
+  .cob .arrow { color: #fff; }
+  .zone { border-radius: 18px; padding: 24px; display: grid; gap: 12px; align-content: start; background: var(--niebla); }
+  .zone h3 { font-size: 24px; }
+  .zone small { font-size: 17px; color: var(--pizarra); line-height: 1.35; }
+  .zone.cloud { background: var(--noche); color: #fff; }
+  .zone.cloud small { color: #c4cdff; }
+  .zone .lbl { font: 600 13px/1 "IBM Plex Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--pizarra); }
+  .zone.cloud .lbl { color: #c4cdff; }
+
+  ul.pts { list-style: none; display: grid; gap: 14px; margin-top: 30px; max-width: 1000px; }
+  ul.pts li { padding-left: 30px; position: relative; font-size: 24px; }
+  ul.pts li::before { content: ""; position: absolute; left: 0; top: .5em; width: 12px; height: 12px; border-radius: 50%; background: var(--cobalto); }
+  .cob ul.pts li::before { background: #fff; }
+
+  .pieces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 36px; }
+  .piece { border-radius: 16px; padding: 20px; background: rgba(255, 255, 255, .1); }
+  .piece b { display: block; font: 700 21px/1.2 Sora, sans-serif; margin-bottom: 8px; }
+  .piece span { font-size: 17px; color: #dbe1ff; line-height: 1.35; display: block; }
+
+  .steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 40px; counter-reset: s; }
+  .step { border: 1.5px solid var(--linea); border-radius: 16px; padding: 18px; counter-increment: s; display: grid; gap: 8px; align-content: start; }
+  .step::before { content: counter(s); width: 32px; height: 32px; border-radius: 50%; background: var(--cobalto); color: #fff; display: grid; place-items: center; font: 600 16px/1 "IBM Plex Mono", monospace; }
+  .step b { font: 700 20px/1.2 Sora, sans-serif; }
+  .step span { font-size: 16.5px; color: var(--pizarra); line-height: 1.35; }
+  .step.stop { border-color: var(--rojo); background: var(--rojo-bg); }
+  .step.stop::before { background: var(--rojo); }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 44px; }
+  .m { border-radius: 18px; padding: 26px 24px; background: rgba(255, 255, 255, .1); }
+  .m strong { display: block; font: 700 54px/1 Sora, sans-serif; letter-spacing: -.03em; }
+  .m strong i { font-style: normal; color: #c4cdff; font-size: 36px; }
+  .m span { display: block; margin-top: 12px; font-size: 18px; color: #dbe1ff; line-height: 1.35; }
+  .foot { margin-top: auto; font-size: 16px; color: #c4cdff; }
+
+  .vs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 40px; margin-top: 36px; }
+  .vs div { border-left: 4px solid var(--linea); padding-left: 18px; }
+  .vs div.us { border-color: var(--cobalto); }
+  .vs b { display: block; font: 700 22px/1.25 Sora, sans-serif; }
+  .vs span { font-size: 19px; color: var(--pizarra); }
+
+  .hint { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); font: 500 12px/1 "IBM Plex Mono", monospace; color: #5a6478; }
+
+  @media print {
+    html, body { background: #fff; height: auto; overflow: visible; }
+    .deck { position: static; transform: none !important; width: auto; height: auto; }
+    .slide { position: relative; display: flex !important; width: 1280px; height: 720px; page-break-after: always; break-after: page; }
+    .hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <section class="slide cob cover">
+    <img class="eyes" src="../../brand/logo/8-reposo-cobalto.svg" alt="8">
+    <h1>Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja.</h1>
+    <img class="logo" src="../../brand/logo/priv8-cua-claro.svg" alt="Priv8 CUA">
+    <div class="who">Hackfinance · Madrid Engineering Week 2026<br>Ángel, Álvaro, Marco y Pablo</div>
+  </section>
+
+  <section class="slide">
+    <p class="kick">El problema</p>
+    <h2>Un agente que usa la pantalla lo ve todo.</h2>
+    <div class="two">
+      <div class="screen">
+        <div class="row"><span>Titular</span><span class="real">Lucía Ferrer</span></div>
+        <div class="row"><span>IBAN</span><span class="real">ES91 9400 0001 3211 …</span></div>
+        <div class="row"><span>Saldo</span><span class="real">12.050,00 €</span></div>
+        <div class="row"><span>DNI</span><span class="real">12345678Z</span></div>
+      </div>
+      <ul class="pts" style="margin-top:0">
+        <li>Cada captura viaja entera al proveedor del modelo.</li>
+        <li>Un correo puede «cambiar la cuenta» o dar órdenes a la IA.</li>
+        <li>Transferir o firmar queda en manos del modelo.</li>
+      </ul>
+    </div>
+    <p class="lead" style="margin-top:auto">Por eso los procesos con ERP, CRM y banca que no tienen API siguen sin automatizarse.</p>
+    <span class="num">2</span>
+  </section>
+
+  <section class="slide">
+    <p class="kick">La frontera</p>
+    <h2>El modelo ve tokens. Tu máquina pone los datos.</h2>
+    <div class="three">
+      <div class="zone">
+        <span class="lbl">Entorno de confianza</span>
+        <h3>Tu pantalla</h3>
+        <div>Saldo <span class="real">12.050,00 €</span></div>
+        <div>IBAN <span class="real">ES91 9400 …</span></div>
+        <small>Se lee el DOM o la accesibilidad. Detector con IBAN mod-97, letra del DNI, Luhn y bóveda local.</small>
+      </div>
+      <div class="arrow">→</div>
+      <div class="zone cloud">
+        <span class="lbl">Proveedor del modelo</span>
+        <h3>Lo que recibe la IA</h3>
+        <div>Saldo <span class="tok">‹IMPORTE_2›</span></div>
+        <div>IBAN <span class="tok">‹IBAN_1·propio›</span></div>
+        <small>Solo tres herramientas: observe, act y oracle. Contraseñas, PIN y OTP no salen nunca.</small>
+      </div>
+      <div class="arrow">→</div>
+      <div class="zone">
+        <span class="lbl">Entorno de confianza</span>
+        <h3>Ejecutor local</h3>
+        <div>act(type, <span class="tok">‹IBAN_1›</span>)</div>
+        <div>escribe <span class="real">ES91 9400 …</span></div>
+        <small>Lo irreversible espera tu «sí». Todo queda en un registro firmado.</small>
+      </div>
+    </div>
+    <span class="num">3</span>
+  </section>
+
+  <section class="slide cob">
+    <p class="kick">El protocolo</p>
+    <h2>Ocho piezas, sobre cualquier modelo.</h2>
+    <div class="pieces">
+      <div class="piece"><b>Tokens</b><span>Tipados y estables por sesión.</span></div>
+      <div class="piece"><b>Tres clases</b><span>Rojo nunca sale, ámbar se tokeniza, verde es interfaz.</span></div>
+      <div class="piece"><b>Oráculo</b><span>Suma y compara sin revelar, con presupuesto.</span></div>
+      <div class="piece"><b>Ejecutor</b><span>Pone el valor real en local, justo antes de actuar.</span></div>
+      <div class="piece"><b>Procedencia</b><span>Un IBAN llegado por correo no entra en un campo de pago.</span></div>
+      <div class="piece"><b>Tu «sí»</b><span>Transferir, invertir, firmar o enviar esperan a una persona.</span></div>
+      <div class="piece"><b>Bloqueo final</b><span>Si algo se escapa sin tokenizar, la petición no sale.</span></div>
+      <div class="piece"><b>Auditoría</b><span>Qué vio el modelo, qué se bloqueó y quién aprobó, firmado.</span></div>
+    </div>
+    <span class="num">4</span>
+  </section>
+
+  <section class="slide">
+    <p class="kick">Demo 1 · B2B · Priv8 para empresas</p>
+    <h2>Una factura llega por correo. 8 la registra sin ver los datos.</h2>
+    <div class="steps">
+      <div class="step"><b>Bandeja</b><span>Correo del proveedor con la factura en PDF.</span></div>
+      <div class="step"><b>ERP</b><span>Registra número e importe con tokens en Alba Core.</span></div>
+      <div class="step stop"><b>IBAN nuevo</b><span>El correo pide cambiar la cuenta. La procedencia lo bloquea.</span></div>
+      <div class="step"><b>Llamada</b><span>8 llama al número de la ficha, no al del correo.</span></div>
+      <div class="step"><b>Registro</b><span>Tu «sí» en la consola y el registro firmado.</span></div>
+    </div>
+    <p class="lead" style="margin-top:auto">Sobre un ERP sin API, con el modelo que la empresa elija.</p>
+    <span class="num">5</span>
+  </section>
+
+  <section class="slide">
+    <p class="kick">Demo 2 · B2C · 8 en tu móvil</p>
+    <h2>«¿Cuánto tengo entre mis bancos?»</h2>
+    <div class="two" style="align-items:start">
+      <ul class="pts" style="margin-top:0">
+        <li>8 recorre Banca Alcor, Brezo Banco y Nimbo Bróker por accesibilidad.</li>
+        <li>Suma con el oráculo: la IA solo ve <span class="tok">‹SUMA_1›</span>.</li>
+        <li>La cifra la dice la voz del móvil. A la nube solo van frases sin datos.</li>
+      </ul>
+      <ul class="pts" style="margin-top:0">
+        <li>«Pasa 200 € al bróker»: 8 lo prepara y te pregunta por voz.</li>
+        <li>Mira a otro lado mientras pones tu huella o tu clave.</li>
+        <li>Si le pides consejo de inversión, no asesora: ejecuta lo que tú elijas.</li>
+      </ul>
+    </div>
+    <span class="num">6</span>
+  </section>
+
+  <section class="slide cob">
+    <p class="kick">Medido en las dos escenas</p>
+    <h2>Mismo trámite, sin y con Priv8.</h2>
+    <div class="metrics">
+      <div class="m"><strong>6 <i>→</i> 0</strong><span>datos reales que llegan al modelo en la escena B2B</span></div>
+      <div class="m"><strong>8 <i>→</i> 0</strong><span>datos reales que llegan al modelo en la escena B2C</span></div>
+      <div class="m"><strong>3 <i>→</i> 0</strong><span>frases con datos enviadas a la voz en la nube</span></div>
+      <div class="m"><strong>10/10</strong><span>correos con cambio de cuenta detectados, 0 falsos positivos en 20</span></div>
+    </div>
+    <p class="foot">Las dos tareas se completan igual, con 1,8 ms añadidos por paso. Se reproduce sin claves con make metrics. Todos los datos son inventados.</p>
+    <span class="num">7</span>
+  </section>
+
+  <section class="slide">
+    <p class="kick">Por qué nosotros</p>
+    <h2>Los demás resuelven el pago o la bóveda. Priv8, lo que el agente ve.</h2>
+    <div class="vs">
+      <div><b>Visa TAP, Google AP2, x402</b><span>Cómo paga un agente.</span></div>
+      <div><b>Bóvedas de datos (Skyflow)</b><span>Datos en APIs, sin agentes que usen pantallas.</span></div>
+      <div><b>Redacción en pantalla</b><span>Tapar datos impide trabajar.</span></div>
+      <div class="us"><b>Priv8 CUA</b><span>El agente trabaja con tokens, actúa con tu permiso y deja un registro firmado.</span></div>
+    </div>
+    <span class="num">8</span>
+  </section>
+
+  <section class="slide cob cover">
+    <img class="eyes" src="../../brand/logo/8-reposo-cobalto.svg" alt="8">
+    <h1>El agente hace el trámite. Los datos se quedan contigo.</h1>
+    <img class="logo" src="../../brand/logo/priv8-cua-claro.svg" alt="Priv8 CUA">
+    <div class="who">github.com/aaangelmartin/Priv8</div>
+  </section>
+
+</div>
+<p class="hint">← → para pasar · F para pantalla completa</p>
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let i = Math.max(0, Math.min(slides.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));
+  const show = () => { slides.forEach((s, k) => s.classList.toggle('on', k === i)); history.replaceState(null, '', '#' + (i + 1)); };
+  const fit = () => { const s = Math.min(innerWidth / 1280, innerHeight / 720); document.getElementById('deck').style.transform = `translate(-50%, -50%) scale(${s})`; };
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) i = Math.min(slides.length - 1, i + 1);
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) i = Math.max(0, i - 1);
+    else if (e.key === 'Home') i = 0; else if (e.key === 'End') i = slides.length - 1;
+    else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); return; }
+    else return;
+    e.preventDefault(); show();
+  });
+  addEventListener('click', (e) => { i = e.clientX > innerWidth / 3 ? Math.min(slides.length - 1, i + 1) : Math.max(0, i - 1); show(); });
+  addEventListener('resize', fit); fit(); show();
+</script>
+</body>
+</html>
