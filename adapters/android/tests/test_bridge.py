@@ -20,6 +20,8 @@ import pytest
 # The tests never write the repo's audit log or key.
 os.environ.setdefault("PRIV8_AUDIT", "off")
 os.environ.setdefault("PRIV8_AUDIT_KEY", os.path.join(tempfile.mkdtemp(prefix="priv8-"), "priv8.key"))
+# No screenshots of a real emulator from the tests: the frame test brings its own capture (#147).
+os.environ.setdefault("PRIV8_FRAMES", "0")
 
 import core  # noqa: E402
 from adapters.android.bridge import AndroidBridge  # noqa: E402
@@ -300,3 +302,47 @@ def test_agent_android_without_task_or_dictation_asks_for_a_task(monkeypatch, ca
     monkeypatch.delattr(core, "next_task", raising=False)
     assert agent.main(["--android"]) == 2
     assert "--task" in capsys.readouterr().err
+
+
+# ---------------------------------------------------------------- real screen (#147)
+
+def test_frames_of_the_phone_only_while_a_console_watches(session):
+    """The bridge sends screenshots (here a fake capture, never the emulator) with the bounds
+    of the last snapshot, only while someone watches; they never reach the audit log."""
+    from adapters.android.bridge import png_size
+
+    png = b"\x89PNG\r\n\x1a\n" + b"\x00\x00\x00\rIHDR" + (1080).to_bytes(4, "big") + (2400).to_bytes(4, "big") + b"\x08\x02"
+    assert png_size(png) == (1080, 2400)
+    shots = []
+    bridge = AndroidBridge(session, port=0, core=core, log=lambda _m: None)
+    bridge.frames = True
+    bridge.capture = lambda: shots.append(1) or (png, "image/png", 1080, 2400)
+    bridge.start()
+    phone = FakePhone(f"ws://127.0.0.1:{bridge.port}", app=ALCOR).start()
+    recorded = []
+    real_record = core.AUDIT.record
+    core.AUDIT.record = lambda ev: recorded.append(ev) or real_record(ev)
+    try:
+        ca.mount_android(session, bridge=bridge, events=False)
+        obs = core.observe(session)
+        time.sleep(0.7)
+        assert shots == []  # nobody watching: no screenshots
+        seen = []
+        unsub = core.events.subscribe_frames(lambda m: m["session"] == session and seen.append(m))
+        try:
+            assert wait_until(lambda: any(m["fresh"] for m in seen), 4)
+        finally:
+            unsub()
+        m = next(m for m in seen if m["fresh"])
+        assert (m["w"], m["h"], m["mime"]) == (1080, 2400, "image/png")
+        assert m["app"] == ALCOR and m["screen"] == obs["screen"]
+        cls = {e["id"]: e["cls"] for e in obs["elements"]}
+        assert m["rects"] and all(cls[r["id"]] == r["cls"] for r in m["rects"])
+        assert any(r["cls"] == "ambar" and r["token"] for r in m["rects"])
+        texts = json.dumps(m["rects"], ensure_ascii=False)
+        assert not any(v in texts for v in SEED_VALUES)
+        assert all("img" not in json.dumps(ev) for ev in recorded)
+    finally:
+        core.AUDIT.record = real_record
+        phone.stop()
+        bridge.stop()

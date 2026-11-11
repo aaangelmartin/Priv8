@@ -26,15 +26,28 @@ texts or values, only types, ids and counts.
 
 The server runs in its own thread with its own event loop; snapshot() and
 perform() block the caller until the phone answers.
+
+Real screen in the console (#147): while a console watches
+(core.events.frame_watchers()) and a phone is connected, a thread of this
+trusted process takes screenshots of the emulator with `adb exec-out screencap
+-p` (FRAME_FPS at most; resized to JPEG with macOS `sips` when it is there) and
+sends them through core.frame with the bounds of the last snapshot. The agent
+never gets adb: this is the harness. PRIV8_FRAMES=0 turns it off.
 """
 
 from __future__ import annotations
 
 import asyncio
 import importlib
+import base64
 import itertools
 import json
+import os
+import shutil
+import struct
+import subprocess
 import sys
+import tempfile
 import threading
 import time
 from collections.abc import Callable
@@ -59,6 +72,54 @@ APP_ALCOR = "es.priv8.banks.alcor"
 PERSON_SCREENS = {"login", "autenticacion"}
 
 Log = Callable[[str], None]
+
+FRAME_FPS = 3
+FRAME_MAX_SIDE = 1000  # px of the longest side of the JPEG sent to the console
+
+
+def find_adb() -> str | None:
+    """adb of the Android SDK (the laptop side); None if it is not installed."""
+    for root in (os.environ.get("ANDROID_HOME"), os.environ.get("ANDROID_SDK_ROOT"),
+                 os.path.expanduser("~/Library/Android/sdk"), os.path.expanduser("~/Android/Sdk")):
+        if root:
+            cand = os.path.join(root, "platform-tools", "adb")
+            if os.access(cand, os.X_OK):
+                return cand
+    return shutil.which("adb")
+
+
+def png_size(data: bytes) -> tuple[int, int] | None:
+    """(width, height) from the IHDR of a PNG."""
+    if len(data) < 24 or data[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    return struct.unpack(">II", data[16:24])
+
+
+def screencap(adb: str, timeout: float = 5.0) -> tuple[bytes, str, int, int] | None:
+    """A screenshot of the emulator: (image, mime, width, height) in phone px, or None."""
+    try:
+        png = subprocess.run([adb, "exec-out", "screencap", "-p"], capture_output=True,
+                             timeout=timeout, check=False).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    size = png_size(png)
+    if size is None:
+        return None
+    sips = shutil.which("sips")
+    if sips:  # macOS: a JPEG of ~1000 px weighs a tenth of the PNG
+        with tempfile.TemporaryDirectory(prefix="priv8-cap-") as d:
+            src, dst = os.path.join(d, "s.png"), os.path.join(d, "s.jpg")
+            with open(src, "wb") as f:
+                f.write(png)
+            try:
+                subprocess.run([sips, "-s", "format", "jpeg", "-s", "formatOptions", "62",
+                                "-Z", str(FRAME_MAX_SIDE), src, "--out", dst],
+                               capture_output=True, timeout=timeout, check=True)
+                with open(dst, "rb") as f:
+                    return f.read(), "image/jpeg", size[0], size[1]
+            except (OSError, subprocess.SubprocessError):
+                pass
+    return png, "image/png", size[0], size[1]
 
 
 class BridgeUnavailable(RuntimeError):
@@ -120,6 +181,12 @@ class AndroidBridge:
         self._ref: dict[str, Any] | None = None   # last one with elements (not paused)
         self._unsubscribe: Callable[[], None] | None = None
         self._tasks: set[asyncio.Task[None]] = set()
+        # Real screen in the console (#147).
+        self.frames = os.environ.get("PRIV8_FRAMES", "").strip().lower() not in ("0", "off", "false", "no")
+        self.capture: Callable[[], tuple[bytes, str, int, int] | None] | None = None
+        self.frames_sent = 0
+        self._frames_stop = threading.Event()
+        self._frames_thread: threading.Thread | None = None
 
     # ------------------------------------------------------------------ lifecycle
 
@@ -132,9 +199,54 @@ class AndroidBridge:
             raise BridgeUnavailable(f"no se pudo abrir ws://{self.host}:{self.port}: {self._server}")
         self._unsubscribe = self.core.events.subscribe(self._on_core_event)
         self.log(f"escuchando en ws://{self.host}:{self.port} (sesión {self.session})")
+        self._start_frames()
         return self
 
+    # ------------------------------------------------------------------ real screen (#147)
+
+    def _start_frames(self) -> None:
+        if not self.frames or not hasattr(self.core, "frame"):
+            return
+        if self.capture is None:
+            adb = find_adb()
+            if adb is None:
+                self.log("sin adb: la consola no verá la pantalla real del móvil")
+                return
+            self.capture = lambda: screencap(adb)
+        self._frames_stop.clear()
+        self._frames_thread = threading.Thread(target=self._frames_loop, name="priv8-pantalla", daemon=True)
+        self._frames_thread.start()
+
+    def _frames_loop(self) -> None:
+        while not self._frames_stop.is_set():
+            t0 = time.monotonic()
+            if self.connected and self.core.events.frame_watchers() > 0:
+                self.frame_once()
+                wait = max(0.05, 1 / FRAME_FPS - (time.monotonic() - t0))
+            else:
+                wait = 0.5
+            self._frames_stop.wait(wait)
+
+    def frame_once(self) -> bool:
+        """One screenshot to the console, with the bounds of the last snapshot."""
+        cap = self.capture() if self.capture else None
+        if cap is None:
+            return False
+        img, mime, w, h = cap
+        raw = self._last or {}
+        boxes = {e["id"]: e["bounds"] for e in raw.get("elements", []) if e.get("bounds")}
+        try:
+            self.core.frame(self.session, {"app": raw.get("app", ""), "w": w, "h": h, "mime": mime,
+                                           "img": base64.b64encode(img).decode("ascii"), "boxes": boxes,
+                                           "where": {"app": raw.get("app"), "screen": raw.get("screen")}})
+        except Exception as e:  # noqa: BLE001 - the console never stops the agent
+            self.log(f"fotograma no enviado: {type(e).__name__}")
+            return False
+        self.frames_sent += 1
+        return True
+
     def stop(self) -> None:
+        self._frames_stop.set()
         if self._unsubscribe:
             self._unsubscribe()
             self._unsubscribe = None
