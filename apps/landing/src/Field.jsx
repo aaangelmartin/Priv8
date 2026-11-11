@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
+import { TEAM, mail } from './team.js';
 
 /* Campo de datos de la portada. Filas de datos inventados (IBAN, importes, nombres, DNI…) suben despacio.
    Donde pasa el cursor, o la lente que se mueve sola, cada dato se convierte en su token: lo que ve la IA.
    Los datos no tapan el texto: a la izquierda se apagan. */
+/* Datos de todo tipo, con los nombres y correos del equipo; cada uno con el token que vería el modelo. */
 const DATA = [
-  ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'], ['3.412,58 €', '‹IMPORTE_1›'], ['Ángel Martín', '‹NOMBRE_1›'],
-  ['12345678Z', '‹DNI_1›'], ['1.180,00 €', '‹IMPORTE_2›'], ['B12345674', '‹CIF_1›'], ['Suministros Lumen', '‹NOMBRE_2›'],
-  ['+34 600 000 000', '‹TELEFONO_1›'], ['ES71 9400 0007 0206 0223 3441', '‹IBAN_2›'], ['200,00 €', '‹IMPORTE_3›'],
-  ['angel.martin@correo.es', '‹EMAIL_1›'], ['Álvaro Carpintero', '‹NOMBRE_3›'], ['12.050,00 €', '‹IMPORTE_4›'],
-  ['4111 1111 1111 1111', 'nunca sale'], ['Marco Barroso', '‹NOMBRE_4›'], ['X1234567L', '‹NIE_1›'], ['Pablo Rojo', '‹NOMBRE_5›'], ['ES08 9300 0001 0522 0033 4455', '‹IBAN_3›'],
+  ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'], ['3.412,58 €', '‹IMPORTE_1›'], [TEAM[0].name, '‹NOMBRE_1›'], [mail(TEAM[0].user), '‹EMAIL_1›'],
+  ['12345678Z', '‹DNI_1›'], ['1.180,00 €', '‹IMPORTE_2›'], [TEAM[1].name, '‹NOMBRE_2›'], ['B12345674', '‹CIF_1›'], [mail(TEAM[1].user), '‹EMAIL_2›'],
+  ['+34 600 000 000', '‹TELEFONO_1›'], ['ES71 9400 0007 0206 0223 3441', '‹IBAN_2›'], [TEAM[2].name, '‹NOMBRE_3›'], ['200,00 €', '‹IMPORTE_3›'],
+  [mail(TEAM[2].user), '‹EMAIL_3›'], ['Suministros Lumen', '‹NOMBRE_4›'], ['12.050,00 €', '‹IMPORTE_4›'], [TEAM[3].name, '‹NOMBRE_5›'],
+  ['4111 1111 1111 1111', 'nunca sale'], [mail(TEAM[3].user), '‹EMAIL_4›'], ['X1234567L', '‹NIE_1›'], ['ES08 9300 0001 0522 0033 4455', '‹IBAN_3›'],
+  ['+34 611 000 000', '‹TELEFONO_2›'], ['48215963M', '‹DNI_2›'], ['980,40 €', '‹IMPORTE_5›'], ['PIN 4821', 'nunca sale'],
+  ['53120874M', '‹DNI_3›'], ['71409352X', '‹DNI_4›'], ['Y2918374R', '‹NIE_2›'], ['29384756W', '‹DNI_5›'],
 ];
 
 const sstep = (v) => { const x = Math.min(1, Math.max(0, v)); return x * x * (3 - 2 * x); };
@@ -20,7 +24,7 @@ export default function Field() {
     const ctx = cv.getContext('2d');
     let still = false;
     try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
-    let W = 0, H = 0, dpr = 1, items = [], raf = 0, ptr = null, lastPtr = -1e9, visible = true;
+    let W = 0, H = 0, span = 1, dpr = 1, items = [], raf = 0, ptr = null, lastPtr = -1e9, visible = true;
     /* bienvenida: 8 mira a un lado y solo lo que mira se censura, como una mirada que pasa por encima de los datos.
        Cuando deja de mirar, esos datos vuelven a verse. */
     const root = document.documentElement;
@@ -33,7 +37,8 @@ export default function Field() {
       W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
       items = []; let k = 0;
-      for (let y = 0; y < H + ROW * 2; y += ROW) {
+      span = Math.ceil((H + ROW * 2) / ROW) * ROW;
+      for (let y = 0; y < span; y += ROW) {
         let x = -((y / ROW) * 53) % 180;
         while (x < W) {
           const d = DATA[k++ % DATA.length];
@@ -82,8 +87,8 @@ export default function Field() {
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
       ctx.textBaseline = 'middle';
       for (const it of items) {
-        let y = it.y - (drift % (ROW * 2));
-        if (y < -ROW) y += Math.ceil((H + ROW * 2) / ROW) * ROW;
+        /* subida continua: cada fila da la vuelta por fuera de la pantalla, así nunca hay saltos */
+        let y = (it.y - drift) % span; if (y < 0) y += span; y -= ROW;
         const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly;
         const off = Math.abs(cx - W / 2) / (W / 2);
         /* bordes suaves: dentro del todo, token; cerca del borde, a medias; fuera, el dato */
