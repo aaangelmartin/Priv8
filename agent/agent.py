@@ -219,6 +219,15 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
         uses = [b for b in content if _get(b, "type") == "tool_use"]
         text = "".join(_get(b, "text", "") for b in content if _get(b, "type") == "text").strip()
         said = [f"{_get(u, 'name')} {json.dumps(_get(u, 'input'), ensure_ascii=False)}" for u in uses]
+        # What the model reasons before acting (its thinking summary and its text), so the console can show
+        # 8 thinking live. It only ever saw tokens, and it passes the final block like everything else.
+        if uses:
+            thought = " ".join(_get(b, "thinking", "") for b in content if _get(b, "type") == "thinking").strip()
+            reasoning = " ".join(x for x in (thought, text) if x).strip()
+            if reasoning and core.leak.check(reasoning).ok:
+                audit({"session": session, "kind": "task", "model_saw": reasoning,
+                       "tokens": list(dict.fromkeys(tokens_in(reasoning))),
+                       "detail": f"paso {step} - razona"})
         audit({"session": session, "kind": "task", "model_saw": "; ".join(said) or text or None,
                "tokens": list(dict.fromkeys(tokens_in(" ".join(said) + " " + text))),
                "detail": f"paso {step} - {stop}", "ms": {"model": model_ms}})

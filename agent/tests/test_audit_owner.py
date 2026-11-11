@@ -85,7 +85,8 @@ async def test_replay_over_real_core_records_each_event_once(recording_core):
     assert {e["confirm"] for e in approved} == {e["confirm"] for e in events if e["kind"] == "held"}
 
     # The loop owns task events: start, one per model step, end.
-    assert kinds["task"] == result.steps + 2
+    razona = sum(1 for e in events if e["kind"] == "task" and "razona" in (e.get("detail") or ""))
+    assert kinds["task"] == result.steps + 2 + razona
     assert set(kinds) <= TOOL_EVENTS | {"approval", "task"}
     # The final answer is recorded once (in its step event); the end event only marks the end.
     if result.final_text:
