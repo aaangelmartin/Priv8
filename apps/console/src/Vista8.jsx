@@ -5,6 +5,8 @@
 //        «nunca sale», los marcadores, el cursor de 8 y su bocadillo ya están en la página.
 //   Android: la pantalla otra vez, con lo que vio el modelo de cada elemento en su sitio.
 //   Sin fotogramas (reproducciones, sin núcleo): el esquema de Vivo.jsx.
+//   Sesión grabada (?feed=sesion-b2b, #170): los mismos fotogramas, desde sus JPEG, y además
+//        la ventana real que manejó 8 (PantallaReal).
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Eight from './eight/Eight.jsx'
 import { Tokens } from './piezas.jsx'
@@ -32,10 +34,11 @@ function useTamano(ref) {
 }
 
 // Decodifica el último fotograma y lo pinta en un lienzo: sin parpadeos entre uno y otro.
-function Lienzo({ frame, width, height }) {
+function Lienzo({ frame, width, height, etiqueta = 'Lo que ve 8: la pantalla con los datos cambiados por tokens' }) {
   const canvas = useRef(null)
   const turno = useRef(0)
   const ultimo = useRef(null)
+  const pintado = useRef(0)
   const pintar = (im) => {
     const c = canvas.current
     if (!c || !im || !width) return
@@ -49,14 +52,15 @@ function Lienzo({ frame, width, height }) {
     ctx.drawImage(im, 0, 0, W, H)
   }
   useEffect(() => {
-    if (!frame?.img) return
+    if (!frame?.img && !frame?.src) return
     const n = ++turno.current
     const im = new Image()
-    im.src = `data:${frame.mime || 'image/jpeg'};base64,${frame.img}`
-    im.decode().then(() => { if (n === turno.current) { ultimo.current = im; pintar(im) } }).catch(() => {})
-  }, [frame?.img]) // eslint-disable-line react-hooks/exhaustive-deps
+    im.src = frame.src ? `${import.meta.env.BASE_URL}${frame.src}` : `data:${frame.mime || 'image/jpeg'};base64,${frame.img}`
+    // Gana el más nuevo ya decodificado: si uno tarda (un JPEG que aún baja), no se queda en blanco.
+    im.decode().then(() => { if (n > pintado.current) { pintado.current = n; ultimo.current = im; pintar(im) } }).catch(() => {})
+  }, [frame?.img, frame?.src]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { pintar(ultimo.current) }, [width, height]) // eslint-disable-line react-hooks/exhaustive-deps
-  return <canvas ref={canvas} className="vista-lienzo" style={{ width, height }} role="img" aria-label="Lo que ve 8: la pantalla con los datos cambiados por tokens" />
+  return <canvas ref={canvas} className="vista-lienzo" style={{ width, height }} role="img" aria-label={etiqueta} />
 }
 
 function chipDe(frame) {
@@ -65,25 +69,28 @@ function chipDe(frame) {
   return { tono: 'cobalto', texto: 'Censurado en el DOM' }
 }
 
-export function VistaWeb({ frame, cabecera = true }) {
+export function VistaWeb({ frame, cabecera = true, real = false, rotulo = null, nota = 'Pantalla real' }) {
   const stage = useRef(null)
   const t = useTamano(stage)
   const { width, height } = encaja(frame.w, frame.h, t.w, t.h - (cabecera ? CABECERA : 0))
-  const chip = chipDe(frame)
+  const chip = real ? { tono: 'aviso', texto: nota } : chipDe(frame)
   return (
     <div className="escenario vista-escenario" ref={stage}>
       {width > 0 && (
         <div className="ventana vista-ventana" style={{ width }} aria-label={`Lo que ve 8: ${nombreApp(frame.app)} ${nombrePantalla(frame.screen)}`}>
           {cabecera && (
             <div className="ventana-cab">
-              <span className="puntos" aria-hidden="true"><i /><i /><i /></span>
+              {rotulo
+                ? <span className={`rotulo ${real ? 'r-real' : 'r-ocho'}`}>{rotulo}</span>
+                : <span className="puntos" aria-hidden="true"><i /><i /><i /></span>}
               <b className="ventana-app">{nombreApp(frame.app)}</b>
               {frame.screen && <span className="ventana-pantalla">{nombrePantalla(frame.screen)}</span>}
               <span className="sp" />
               <span className={`vista-chip t-${chip.tono}`}>{chip.texto}</span>
             </div>
           )}
-          <Lienzo frame={frame} width={width} height={height} />
+          <Lienzo frame={frame} width={width} height={height}
+            etiqueta={real ? 'La ventana real que maneja 8, con los datos ficticios de la demo' : undefined} />
         </div>
       )}
     </div>
@@ -129,6 +136,27 @@ export function MovilDe8({ screen }) {
           <span className="movil-leyenda">Lo que ve 8: la pantalla otra vez, solo con lo que leyó el modelo</span>
         </>
       )}
+    </div>
+  )
+}
+
+// Lo que ves tú y lo que ve el modelo, juntas (#170): la pestaña real que maneja 8 (con sus
+// valores, su cursor y sus bocadillos) y la vista de 8 censurada en el DOM. Lado a lado si hay
+// sitio a lo ancho; una encima de otra si el hueco es más alto que ancho (pantallas estrechas).
+// La real solo llega por el canal local (o, en la web de la demo, de una sesión grabada con
+// datos ficticios).
+export function DosPantallas({ frame, real, nota }) {
+  const caja = useRef(null)
+  const t = useTamano(caja)
+  const fila = t.w >= t.h * 1.25
+  return (
+    <div className={`dos-pantallas ${fila ? 'en-fila' : 'en-columna'}`} ref={caja}>
+      {real
+        ? <VistaWeb frame={{ ...real, vista: 'real' }} real rotulo="Lo que ves tú" nota={nota} />
+        : <div className="escenario real-espera"><p>Lo que ves tú aparece en cuanto 8 empieza a trabajar.</p></div>}
+      {esVista8(frame)
+        ? <VistaWeb frame={frame} rotulo="Lo que ve el modelo" />
+        : <div className="escenario real-espera"><p>Lo que ve el modelo aparece con la primera pantalla.</p></div>}
     </div>
   )
 }

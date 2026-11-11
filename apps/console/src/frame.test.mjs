@@ -19,6 +19,9 @@ const web = { type: 'frame', session: 'b2b', app: 'alba-core', screen: 'factura.
 assert.equal(esVista8(web), true)
 assert.equal(esVista8({ ...web, vista: undefined }), false) // pantalla real (Android): nunca tal cual
 assert.equal(esVista8(null), false)
+// sesión grabada (#170): el fotograma trae la ruta de su JPEG en lugar de los píxeles
+assert.equal(esVista8({ vista: '8', src: 'sesion-b2b/v0001.jpg', w: 1100, h: 760 }), true)
+assert.equal(esVista8({ vista: '8', w: 1100, h: 760 }), false)
 assert.equal(esMovilFrame({ app: 'es.priv8.banks.alcor', w: 1080, h: 2400 }), true)
 assert.equal(esMovilFrame(web), false)
 
