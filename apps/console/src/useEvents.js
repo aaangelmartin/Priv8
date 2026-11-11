@@ -7,7 +7,13 @@ export const VERIFY_URL = 'http://127.0.0.1:8700/verify'
 
 // ?demo reproduce public/demo.json: mensajes reales del núcleo en el flujo de la factura
 // con la trampa del IBAN, capturados sin llamar a la IA. Sirve para ensayar y para el vídeo.
-export const DEMO = new URLSearchParams(window.location.search).has('demo')
+// ?feed=sin-protocolo y ?feed=con-protocolo reproducen el mismo trámite B2B con y sin Priv8
+// (make sin-protocolo, metrics/feeds.py), al ritmo que marca cada mensaje (`at`). Para el
+// arranque de la demo y los vídeos de docs/entregables/video/.
+const PARAMS = new URLSearchParams(window.location.search)
+export const FEED = /^[a-z0-9-]+$/.test(PARAMS.get('feed') ?? '') ? PARAMS.get('feed') : null
+export const SIN_PROTOCOLO = FEED === 'sin-protocolo'
+export const DEMO = PARAMS.has('demo') || FEED !== null
 
 const MAX_AUDIT = 500
 
@@ -20,6 +26,9 @@ export function useEvents() {
   // Token → valor real y etiqueta de cada elemento, de todas las pantallas vistas (solo en local).
   const [valores, setValores] = useState({})
   const [etiquetas, setEtiquetas] = useState({})
+  // Solo en los feeds: valores reales que ha recibido el modelo y el resumen final.
+  const [enClaro, setEnClaro] = useState(0)
+  const [fin, setFin] = useState(null)
   const wsRef = useRef(null)
   const sendRef = useRef(null)
 
@@ -50,8 +59,14 @@ export function useEvents() {
           for (const el of o?.elements ?? []) n[`${o.app}|${o.screen}|${el.id}`] = el.label || el.text || el.role
           return n
         })
-        addAlerts(alertasDePantalla(m))
+        if (typeof m.total === 'number') setEnClaro(m.total)
+        if (m.protocolo !== false) addAlerts(alertasDePantalla(m))
+      } else if (m.type === 'fin') {
+        setFin(m)
+        window.__p8FeedFin = true
       } else if (m.type === 'audit') {
+        // En los feeds, la hora es la de la reproducción (las grabadas son todas del mismo segundo).
+        if (FEED) m = { ...m, event: { ...m.event, ts: new Date().toISOString() } }
         setAudit((a) => [...a, m.event].slice(-MAX_AUDIT))
         addAlerts([alertaDeBloqueo(m.event)])
       } else if (m.type === 'confirm_request') {
@@ -72,11 +87,12 @@ export function useEvents() {
           model_saw: null, detail: msg.ok ? 'aprobado en pantalla' : 'rechazado en pantalla',
         } })
       }
-      fetch('/demo.json')
+      fetch(FEED ? `/${FEED}.json` : '/demo.json')
         .then((r) => r.json())
         .then((msgs) => {
-          // Un mensaje cada 700 ms para que se vea cómo se construye la pantalla.
-          msgs.forEach(({ msg }, i) => timers.push(setTimeout(() => !closed && handle(msg), 400 + i * 700)))
+          // demo.json: un mensaje cada 700 ms para que se vea cómo se construye la pantalla.
+          // Los feeds traen su propio ritmo en `at` (segundos).
+          msgs.forEach(({ msg, at }, i) => timers.push(setTimeout(() => !closed && handle(msg), FEED ? at * 1000 : 400 + i * 700)))
         })
         .catch(() => setStatus('sin demo'))
       return () => { closed = true; timers.forEach(clearTimeout) }
@@ -120,5 +136,5 @@ export function useEvents() {
     setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
   }, [])
 
-  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas }
+  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin }
 }

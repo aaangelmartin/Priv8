@@ -1,6 +1,6 @@
 # Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
 
-.PHONY: agent agent-web web web-install replay replay-fake demo test metrics
+.PHONY: agent agent-web web web-install replay replay-fake demo test metrics sin-protocolo video-sin-protocolo video-con-protocolo videos
 
 # MCP server (streamable HTTP on :8701) and the agent loop, live against the Claude API.
 # Needs ANTHROPIC_API_KEY (see .env.example).
@@ -49,3 +49,19 @@ test:
 metrics:
 	PRIV8_AUDIT=off uv run python -m metrics.b2b
 	PRIV8_AUDIT=off uv run python -m metrics.b2c
+
+# The same B2B scene with and without the protocol as console feeds (#45), from the same
+# run as make metrics. Writes apps/console/public/{sin,con}-protocolo.json; open them with
+# ?feed=sin-protocolo or ?feed=con-protocolo.
+sin-protocolo:
+	PRIV8_AUDIT=off uv run python -m metrics.feeds
+
+# Videos of the console playing those feeds (Playwright, 1440x900) in docs/entregables/video/.
+# Needs pnpm install in apps/console; also writes an .mp4 when ffmpeg is available.
+video-sin-protocolo: sin-protocolo
+	uv run python scripts/grabar_consola.py sin-protocolo
+
+video-con-protocolo: sin-protocolo
+	uv run python scripts/grabar_consola.py con-protocolo
+
+videos: video-sin-protocolo video-con-protocolo

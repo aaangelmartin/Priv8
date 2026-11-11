@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { DEMO, VERIFY_URL, useEvents } from './useEvents.js'
+import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, useEvents } from './useEvents.js'
 import { comentarioDe8 } from './alertas.js'
 import { TOKEN_RE, alinear, partesDeToken } from './tokens.js'
 import logoClaro from '../../../brand/logo/priv8-cua-claro.svg'
@@ -11,6 +11,7 @@ const ESTADO = {
   verde: { cls: 'seguro', texto: 'lo ve' },
   ambar: { cls: 'aviso', texto: 'tokenizado' },
   rojo: { cls: 'bloqueo', texto: 'nunca sale' },
+  claro: { cls: 'bloqueo', texto: 'en claro' }, // solo en ?feed=sin-protocolo
 }
 const ORIGEN = {
   maestro: 'dato del ERP', correo: 'llegó por correo', tercero: 'de un tercero',
@@ -47,6 +48,16 @@ function Valor({ tok, valores }) {
   )
 }
 
+// Sin protocolo: el texto tal cual llega a la IA, con los valores reales marcados en rojo.
+const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+function EnClaro({ text, valores }) {
+  if (text == null) return <span className="vacio">sin texto</span>
+  if (text === '') return <span className="vacio">vacío</span>
+  if (!valores?.length) return text
+  const re = new RegExp(`(${valores.map(escapar).join('|')})`)
+  return text.split(re).map((p, i) => (i % 2 ? <mark key={i} className="fuga">{p}</mark> : p))
+}
+
 function useAhora(ms = 1000) {
   const [t, setT] = useState(Date.now())
   useEffect(() => { const id = setInterval(() => setT(Date.now()), ms); return () => clearInterval(id) }, [ms])
@@ -73,7 +84,7 @@ const CONEXION = {
   conectado: ['seguro', 'Conectado al núcleo'],
   conectando: ['aviso', 'Conectando…'],
   reconectando: ['aviso', 'Reconectando…'],
-  demo: ['cobalto', 'Demo · mensajes grabados'],
+  demo: FEED ? ['cobalto', 'Reproducción · factura del proveedor (B2B)'] : ['cobalto', 'Demo · mensajes grabados'],
   'sin demo': ['bloqueo', 'Falta demo.json'],
 }
 
@@ -115,6 +126,53 @@ function Cabecera({ status, tema, setTema }) {
         <button aria-pressed={tema === 'dark'} onClick={() => setTema('dark')}>Oscuro</button>
       </div>
     </header>
+  )
+}
+
+// ---------------------------------------------------------------- modo de los feeds
+
+function Modo({ enClaro, audit, fin }) {
+  const bloqueos = audit.filter((e) => e.kind === 'blocked').length
+  if (SIN_PROTOCOLO) {
+    return (
+      <section className="modo sin" role="status" aria-live="polite">
+        <div className="texto">
+          <p className="eyebrow">El mismo trámite, sin Priv8 CUA</p>
+          <h1>Sin protocolo: el modelo recibe esto</h1>
+          <p className="sub">
+            {fin
+              ? `Trámite terminado: ${fin.valores_al_modelo} valores reales han llegado al modelo, ${fin.bloqueos} bloqueos, ninguna confirmación.`
+              : 'Cada pantalla va entera a la IA. Lo marcado en rojo son datos reales: cuentas, CIF, nombres, teléfonos y correos.'}
+          </p>
+        </div>
+        <div className="contador" aria-label={`${enClaro} valores reales enviados al modelo`}>
+          <b>{enClaro}</b>
+          <span>valores reales<br />enviados al modelo</span>
+        </div>
+      </section>
+    )
+  }
+  return (
+    <section className="modo con" role="status" aria-live="polite">
+      <img className="ocho" src={ochoReposo} alt="" />
+      <div className="texto">
+        <p className="eyebrow">El mismo trámite, con Priv8 CUA</p>
+        <h1>Con protocolo: el modelo recibe tokens</h1>
+        <p className="sub">
+          {fin
+            ? `Trámite terminado: ${fin.valores_al_modelo} valores reales han llegado al modelo y se han bloqueado ${fin.bloqueos} acciones con datos del correo.`
+            : 'Los datos se cambian por tokens antes de salir. La cifra real solo está en esta máquina.'}
+        </p>
+      </div>
+      <div className="contador" aria-label={`${enClaro} valores reales enviados al modelo`}>
+        <b>{enClaro}</b>
+        <span>valores reales<br />enviados al modelo</span>
+      </div>
+      <div className="contador bloq">
+        <b>{bloqueos}</b>
+        <span>acciones<br />bloqueadas</span>
+      </div>
+    </section>
   )
 }
 
@@ -161,11 +219,12 @@ function Pendiente({ p, resolve, valores, ahora }) {
 
 const ETIQUETA = { cuenta: 'Cambio de cuenta', instruccion: 'Órdenes a la IA', bloqueo: 'Bloqueo del núcleo' }
 
-function Alarmas({ alerts, review, comentario, valores }) {
+// compacta: una línea por alarma (en los feeds, para que la pantalla quepa en el vídeo).
+function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
   if (alerts.length === 0) return null
   const activas = alerts.filter((a) => !a.revisada).length
   return (
-    <section className={`alarmas ${activas ? 'activas' : ''}`} role="alert" aria-live="assertive">
+    <section className={`alarmas ${activas ? 'activas' : ''} ${compacta ? 'compacta' : ''}`} role="alert" aria-live="assertive">
       <header className="sec-cab">
         <img className="ocho" src={activas ? ochoNuncaSale : ochoReposo} alt="" />
         <div>
@@ -182,9 +241,9 @@ function Alarmas({ alerts, review, comentario, valores }) {
               <span className="sp" />
               <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` · ${a.pantalla}` : ''} · {hora(a.ts)}</span>
             </div>
-            <p><Tokens text={a.detalle} valores={valores} mostrar="ambos" /></p>
-            {a.evidencia && <blockquote><Tokens text={a.evidencia} valores={valores} /></blockquote>}
-            {a.revisada
+            {!compacta && <p><Tokens text={a.detalle} valores={valores} mostrar="ambos" /></p>}
+            {!compacta && a.evidencia && <blockquote><Tokens text={a.evidencia} valores={valores} /></blockquote>}
+            {compacta ? null : a.revisada
               ? <span className="hecho">Revisada</span>
               : <button className="btn sec" onClick={() => review(a.clave)}>Marcar como revisada</button>}
           </li>
@@ -254,8 +313,8 @@ function Pantalla({ screen, status, valores }) {
       <div className="tabla" role="table" aria-label="Lo que ves frente a lo que ve la IA">
         <div className="fila cabecera" role="row">
           <span role="columnheader">Elemento</span>
-          <span role="columnheader">Lo que ves <em>solo en local</em></span>
-          <span role="columnheader">Lo que ve la IA <em>tokens</em></span>
+          <span role="columnheader">Lo que ves <em>{SIN_PROTOCOLO ? 'en pantalla' : 'solo en local'}</em></span>
+          <span role="columnheader">Lo que ve la IA <em>{SIN_PROTOCOLO ? 'en claro' : 'tokens'}</em></span>
           <span role="columnheader">Estado</span>
         </div>
         {els.length === 0 && <p className="vacio fila-vacia">{obs.paused ? 'Pantalla en pausa: no se lee nada.' : 'Sin elementos.'}</p>}
@@ -270,7 +329,7 @@ function Pantalla({ screen, status, valores }) {
                 <span className="tecnico">{el.label ? `${el.role} · ${el.id}` : el.id}</span>
               </span>
               <span role="cell"><Celda largo={largo}><Real real={r.text} observado={el.text} /></Celda></span>
-              <span role="cell"><Celda largo={largo}><Tokens text={el.text} valores={valores} /></Celda></span>
+              <span role="cell"><Celda largo={largo}>{SIN_PROTOCOLO ? <EnClaro text={el.text} valores={el.claro} /> : <Tokens text={el.text} valores={valores} />}</Celda></span>
               <span role="cell"><span className={`p8-estado p8-estado--${e.cls}`}>{e.texto}</span></span>
             </div>
           )
@@ -287,11 +346,16 @@ const OP = { tap: 'Pulsa', type: 'Escribe', open_app: 'Abre', send: 'Envía', sc
 function describir(e, etiquetas) {
   const lugar = (id) => etiquetas[`${e.app}|${e.screen}|${id}`]
   switch (e.kind) {
-    case 'observe_sent': return { tono: 'neutro', titulo: `Lee ${nombreApp(e.app)} · ${e.screen}`, detalle: e.counts ? `${e.counts.verde} visibles · ${e.counts.ambar} tokenizados · ${e.counts.rojo} nunca salen` : null }
+    case 'observe_sent': {
+      const titulo = `Lee ${nombreApp(e.app)} · ${e.screen}`
+      if (e.claro != null) return { tono: e.claro ? 'bloqueo' : 'neutro', titulo, detalle: `Pantalla entera al modelo · ${e.claro} ${e.claro === 1 ? 'valor real' : 'valores reales'} en claro` }
+      return { tono: 'neutro', titulo, detalle: e.counts ? `${e.counts.verde} visibles · ${e.counts.ambar} tokenizados · ${e.counts.rojo} nunca salen` : null }
+    }
     case 'act': {
       const [, op, target, ...resto] = (e.model_saw ?? '').split(' ')
       const texto = resto.join(' ')
       if (op === 'open_app') return { tono: 'neutro', titulo: `Abre ${nombreApp(target)}` }
+      if (op === 'call') return { tono: 'neutro', titulo: 'Llama', detalle: [target, ...resto].join(' ') || null }
       const donde = lugar(target)
       return { tono: 'neutro', titulo: `${OP[op] ?? op}${donde ? ` «${donde}»` : target ? ` ${target}` : ''}`, detalle: texto || null }
     }
@@ -324,7 +388,7 @@ function Actividad({ audit, etiquetas, valores }) {
     <section className="panel actividad" aria-label="Actividad">
       <header className="sec-cab">
         <div>
-          <p className="eyebrow">Registro firmado</p>
+          <p className="eyebrow">{SIN_PROTOCOLO ? 'Sin registro firmado' : 'Registro firmado'}</p>
           <h2>Actividad</h2>
         </div>
       </header>
@@ -394,7 +458,7 @@ function Resumen({ screen, audit, pending, alerts }) {
 // ---------------------------------------------------------------- app
 
 export default function App() {
-  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas } = useEvents()
+  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin } = useEvents()
   const [tema, setTema] = useTema()
   const ahora = useAhora()
   const atencion = pending.length + alerts.filter((a) => !a.revisada).length
@@ -404,9 +468,10 @@ export default function App() {
   }, [atencion])
 
   return (
-    <div className="app">
+    <div className={`app ${SIN_PROTOCOLO ? 'sin-protocolo' : ''}`}>
       <Cabecera status={status} tema={tema} setTema={setTema} />
-      {(screen || audit.length > 0) && <Resumen screen={screen} audit={audit} pending={pending} alerts={alerts} />}
+      {FEED && <Modo enClaro={enClaro} audit={audit} fin={fin} />}
+      {!SIN_PROTOCOLO && (screen || audit.length > 0) && <Resumen screen={screen} audit={audit} pending={pending} alerts={alerts} />}
       <div className="layout">
         <main className="principal">
           {pending.length > 0 && (
@@ -414,7 +479,7 @@ export default function App() {
               {pending.map((p) => <Pendiente key={p.id} p={p} resolve={resolve} valores={valores} ahora={ahora} />)}
             </section>
           )}
-          <Alarmas alerts={alerts} review={review} comentario={comentarioDe8(audit)} valores={valores} />
+          <Alarmas alerts={alerts} review={review} comentario={comentarioDe8(audit)} valores={valores} compacta={!!FEED} />
           <Pantalla screen={screen} status={status} valores={valores} />
         </main>
         <aside className="lateral">
