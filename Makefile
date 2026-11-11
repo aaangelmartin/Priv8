@@ -174,3 +174,10 @@ dictado-install:
 FILE ?= --mic
 dictado:
 	uv run --extra dictado python -m voice.dictado $(FILE)
+
+# The jury deck: builds the landing (priv8.es/pitch) and prints /pitch to docs/entregables/priv8-presentacion.pdf
+# with headless Chromium, one 16:9 slide per page, annex at the end. Needs network for the fonts.
+.PHONY: pitch-pdf
+pitch-pdf:
+	cd apps/landing && ([ -d node_modules ] || pnpm install) && pnpm -s build
+	uv run python scripts/pitch_pdf.py

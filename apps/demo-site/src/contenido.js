@@ -42,8 +42,8 @@ adb shell settings put secure enabled_accessibility_services \\
   es.priv8.ocho/.Priv8AccessibilityService
 adb shell settings put secure accessibility_enabled 1`;
 
-/* La presentación del jurado la preparan Marco y Álvaro. Cuando esté publicada, poner aquí su dirección. */
-export const PRESENTACION_URL = null;
+/* La presentación del jurado, en la web (apps/landing/pitch). El PDF está en docs/entregables/priv8-presentacion.pdf. */
+export const PRESENTACION_URL = 'https://priv8.es/pitch/';
 
 /* Enlaces, en dos grupos. Cada uno: etiqueta corta, título, una línea y la dirección. `pending` sale en lugar del
    enlace mientras no exista. */
@@ -58,6 +58,7 @@ export const ENLACES = [
     { ico: 'codigo', tag: 'Código', title: 'Repositorio', what: 'GitHub, con el README para ejecutarlo.', href: REPO },
     { ico: 'web', tag: 'Web', title: 'priv8.es', what: 'Qué ve 8, cómo funciona y para quién es.', href: 'https://priv8.es' },
     { ico: 'enchufe', tag: 'MCP', title: 'Con tu asistente', what: 'mcp.priv8.es, con tu modelo y tu clave.', href: 'https://mcp.priv8.es' },
+    { ico: 'jurado', tag: 'Jurado', title: 'Presentación', what: 'La del jurado, con 8 en directo. priv8.es/pitch', href: PRESENTACION_URL },
   ] },
 ];
 

@@ -19,7 +19,7 @@
   /* Voz en vivo: mientras llega el nivel del micrófono o de la salida de audio,
      8 escucha o habla con ese nivel; la cara de los eventos (base) se guarda y
      vuelve FIN_VIVO_MS después del último nivel. */
-  var base = E.REPOSO, vivo = null, finVivo = null, FIN_VIVO_MS = 600;
+  var base = E.REPOSO, vivo = null, finVivo = null, FIN_VIVO_MS = 600, saludoHasta = 0;
   var CARA_VIVA = { microfono: 'escuchar', voz: 'hablar' };
   var enAndroid = !!window.OchoAndroid;
   var params = new URLSearchParams(location.search);
@@ -69,7 +69,10 @@
     if (!w || !w.P8 || !big || !big.querySelector('svg')) { setTimeout(prepararOjos, 50); return; }
     var st = d.createElement('style'); st.textContent = CSS; d.head.appendChild(st);
     P8 = w.P8;
-    mostrar(pendiente);
+    /* la intro, como en la web y la presentación: al abrir la app 8 saluda (ojos cerrados del todo, los abre,
+       saltito y sonrisa) y luego queda en reposo; si ya ha llegado otra cara, esa manda */
+    if (pendiente === E.REPOSO || !pendiente) { saludoHasta = Date.now() + 2600; aplicar([{ cara: 'saludar', ms: 2400 }]); }
+    else mostrar(pendiente);
   }
   marco.addEventListener('load', prepararOjos);
 
@@ -96,7 +99,8 @@
     conexion: function (c, sinCara) {
       if (c === conexion) return;
       conexion = c;
-      if (!sinCara) aplicar(E.conexion(c));
+      // si acaba de saludar al abrirse, no vuelve a saludar al conectarse
+      if (!sinCara && !(c === 'conectado' && Date.now() < saludoHasta)) aplicar(E.conexion(c));
       pintarEstado();
     },
     /* Nivel real de la voz, de 0 a 1, unas 30 veces por segundo mientras suena:

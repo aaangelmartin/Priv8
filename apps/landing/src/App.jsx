@@ -123,7 +123,7 @@ function Footer({ pal }) {
           <nav className="foot-cols" aria-label="Pie">
             <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">Priv8 en el móvil</a><a href="#integrar">Integración</a></div>
             <div><b>Confianza</b><a href="#garantias">Garantías</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
-            <div><b>Empezar</b><a href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a><a href="https://mcp.priv8.es" target="_blank" rel="noopener">Pruébalo en tu ordenador</a><a href="#comparar">Por qué Priv8</a></div>
+            <div><b>Empezar</b><a href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a><a href="https://mcp.priv8.es" target="_blank" rel="noopener">Pruébalo en tu ordenador</a><a href="#comparar">Por qué Priv8</a><a href="pitch/">Presentación</a></div>
           </nav>
         </div>
         {/* firma de quien lo hace, como en open2agents.com: el vector de laaabs, centrado y discreto */}

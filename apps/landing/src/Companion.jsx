@@ -224,8 +224,8 @@ export default function Companion({ pal, intro }) {
   const fgA = useTweenColor(light ? band : '#FFFFFF');
   const cutA = useTweenColor(under);
   const col = { fg: fgA, cut: cutA };
-  /* en la bienvenida, ojos bien abiertos todo el rato: nada de párpados entornados */
-  const mode = override || (stage === 'wake' || stage === 'fly' ? 'mirar' : spot.mode);
+  /* en la bienvenida, saluda: abre los ojos desde cerrados del todo, da un saltito y sonríe; luego vuela mirando */
+  const mode = override || (stage === 'wake' ? 'saludar' : stage === 'fly' ? 'mirar' : spot.mode);
   return (
     <div className="layer8">
       <div ref={box} className="companion" style={{ width: BASE, height: BASE }} onMouseEnter={() => { if (stage === 'done' && spot.say) say(spot.say, spot.side); }} role="img" aria-label="8, el agente de Priv8">

@@ -261,7 +261,7 @@ export function createEngine(){
     var kick={listo:[-0.2,0.26],enfado:[0.1,-0.12],sorpresa:[-0.1,0.2],miedo:[0.06,-0.1],nove:[0.08,-0.1]}[m];
     if(kick){ s.svx=kick[0]; s.svy=kick[1]; }
     if(m==='nove'){ s.P=0; s.Pv=0; }
-    if(m==='saludar'){ s.cl=0.9; s.clv=0; }
+    if(m==='saludar'){ s.cl=1; s.clv=0; }
     if(prev==='cargando' && m!=='cargando'){ s.svx=-0.1; s.svy=0.14; }
     /* transición: pequeña anticipación y un parpadeo, como cuando alguien cambia de atención */
     if(prev && prev!==m && !kick){ s.svx+=0.03; s.svy-=0.05; }
@@ -336,7 +336,7 @@ export function createEngine(){
         }
         break; }
       case 'saludar': { blinks=false; s.tx=0; s.ty=-0.12;
-        if(e1<0.3){ clT=0.9; sc=0.92; }
+        if(e1<0.3){ clT=1; sc=0.92; }
         if(e1>=0.3 && e1<0.8){ oy=-3.2*Math.sin((e1-0.3)/0.5*Math.PI); if(!this.kicked){ s.svx=-0.12; s.svy=0.2; this.kicked=1; } }
         if(e1>=0.45 && e1<2.2) low=[0.45,0.45];
         tilt=(e1>0.4 && e1<2.2)?7:0; break; }
@@ -434,7 +434,7 @@ export function createEngine(){
       sp(s,'z'+i2,'zv'+i2,size[i2],0.18,0.6);
     }
     s.b=hide?0:blinkAt(this.blinkQ,now);
-    sp(s,'cl','clv',(m==='nuncasale')?0.9:clT,(m==='agradecer')?0.12:0.07,0.8); if(s.cl<0) s.cl=0; if(s.cl>0.92){ s.cl=0.92; if(s.clv>0) s.clv=0; }
+    sp(s,'cl','clv',(m==='nuncasale')?0.9:clT,(m==='agradecer')?0.12:0.07,0.8); if(s.cl<0) s.cl=0; var clMax=(m==='saludar')?1:0.92; if(s.cl>clMax){ s.cl=clMax; if(s.clv>0) s.clv=0; }
     var bAll=Math.max(s.b,s.cl);
     sp(s,'sh','shv',sc,0.12,0.7);
     sp(s,'sx','svx',1,0.18,0.72); sp(s,'sy','svy',1,0.18,0.72);
