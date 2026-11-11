@@ -16,24 +16,24 @@ async def _act(core, **args):
 
 async def test_token_is_rehydrated_for_the_executor(world):
     core, fake = world
-    assert await _act(core, op="type", target="e6", text="‹PROVEEDOR_1·correo›") == {"ok": True}
+    assert await _act(core, op="type", target="e6", text="‹PROVEEDOR_1-correo›") == {"ok": True}
     assert fake.adapter.performed[-1] == {"op": "type", "target": "e6", "text": SEED["proveedor"]}
     assert fake.adapter.fields["e6"].value == SEED["proveedor"]
 
 
 async def test_destination_policy_blocks_iban_from_email(world):
     core, fake = world
-    r = await _act(core, op="type", target="e10", text="‹IBAN_2·correo›")
+    r = await _act(core, op="type", target="e10", text="‹IBAN_2-correo›")
     assert r["denied"] == "destino"
     assert fake.adapter.performed == []
     assert fake.adapter.fields["e10"].value == SEED["iban_maestro"]
     ev = fake.audit.events[-1]
-    assert ev["kind"] == "blocked" and ev["reason"] == "destino" and "‹IBAN_2·correo›" in ev["tokens"]
+    assert ev["kind"] == "blocked" and ev["reason"] == "destino" and "‹IBAN_2-correo›" in ev["tokens"]
 
 
 async def test_unknown_token_is_not_written(world):
     core, fake = world
-    r = await _act(core, op="type", target="e6", text="‹PROVEEDOR_9·correo›")
+    r = await _act(core, op="type", target="e6", text="‹PROVEEDOR_9-correo›")
     assert r["denied"] == "token_desconocido"
     assert fake.adapter.performed == []
 
@@ -54,8 +54,8 @@ async def test_raw_value_from_the_model_is_blocked(world):
 
 async def test_critical_action_is_held_for_confirmation(world):
     core, fake = world
-    for target, token in [("e6", "‹PROVEEDOR_1·correo›"), ("e7", "‹CIF_1·tercero›"), ("e8", "‹FACTURA_1·correo›"),
-                          ("e9", "‹IMPORTE_1·positivo›")]:
+    for target, token in [("e6", "‹PROVEEDOR_1-correo›"), ("e7", "‹CIF_1-tercero›"), ("e8", "‹FACTURA_1-correo›"),
+                          ("e9", "‹IMPORTE_1-positivo›")]:
         assert await _act(core, op="type", target=target, text=token) == {"ok": True}
     r = await _act(core, op="tap", target="e13")
     assert r == {"held": {"confirm": "c1"}}
@@ -77,9 +77,9 @@ async def test_oracle_compares_without_revealing(world):
     core, _ = world
     async with Client(build_server(core)) as client:
         r = await client.call_tool("oracle", {"session": "s1", "op": "compare",
-                                              "args": ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"]})
+                                              "args": ["‹IMPORTE_1-positivo›", "‹IMPORTE_2-positivo›"]})
         s = await client.call_tool("oracle", {"session": "s1", "op": "sum",
-                                              "args": ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"]})
+                                              "args": ["‹IMPORTE_1-positivo›", "‹IMPORTE_2-positivo›"]})
     assert r.structured_content == {"result": "igual", "budget_left": 29}
     assert s.structured_content["result"] == "‹SUMA_1›"
     assert s.structured_content["tramo"] == "1.000–10.000"
@@ -89,7 +89,7 @@ async def test_oracle_budget_runs_out():
     from agent.fakes import build_fake_core
 
     core, _ = build_fake_core(oracle_budget=1)
-    args = {"session": "s1", "op": "compare", "args": ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"]}
+    args = {"session": "s1", "op": "compare", "args": ["‹IMPORTE_1-positivo›", "‹IMPORTE_2-positivo›"]}
     async with Client(build_server(core)) as client:
         assert (await client.call_tool("oracle", args)).structured_content["result"] == "igual"
         assert (await client.call_tool("oracle", args)).structured_content["denied"] == "presupuesto"

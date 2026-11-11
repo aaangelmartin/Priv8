@@ -7,9 +7,9 @@
   "screen": "factura.alta",
   "model_saw": "observe factura.alta",
   "tokens": [
-    "‹PROVEEDOR_1·maestro›",
-    "‹IMPORTE_1·positivo›",
-    "‹IBAN_1·maestro›"
+    "‹PROVEEDOR_1-maestro›",
+    "‹IMPORTE_1-positivo›",
+    "‹IBAN_1-maestro›"
   ],
   "approved_by": null,
   "counts": {

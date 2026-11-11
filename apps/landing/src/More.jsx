@@ -19,7 +19,7 @@ const PIECES = [
   { k: 'detector', h: 'Tres clases de dato', t: 'Al leer la pantalla, cada dato se clasifica. Claves, PIN y códigos nunca salen. IBAN, nombres e importes se tokenizan. La interfaz va libre.',
     v: (go) => <><Tok never><V real="PIN 4821" tok="nunca sale" on={go} /></Tok><Tok><V real="ES43 9100 …" tok="se tokeniza" on={go} i={6} /></Tok><span className="free"><V real="Transferir" tok="libre" on={go} i={12} /></span></> },
   { k: 'vault', h: 'Tokens con tipo', t: 'Cada dato se cambia por un token estable en toda la sesión, con su tipo y una pista útil. La tabla token → valor vive solo en tu máquina.',
-    v: (go) => <><Tok><V real="ES43 9100 0001 57…" tok="‹IBAN_1·propio›" on={go} /></Tok><Tok><V real="3.412,58 €" tok="‹IMPORTE_3·positivo›" on={go} i={8} /></Tok></> },
+    v: (go) => <><Tok><V real="ES43 9100 0001 57…" tok="‹IBAN_1-propio›" on={go} /></Tok><Tok><V real="3.412,58 €" tok="‹IMPORTE_3-positivo›" on={go} i={8} /></Tok></> },
   { k: 'gate', h: 'Bloqueo final', t: 'Antes de salir, cada petición se revisa. Si un IBAN, un DNI o una tarjeta se escapa sin tokenizar, la petición no sale.',
     v: (go) => <span className={'oq gate-v' + (go ? ' hit' : '')}><span className="gate-req">petición → ES71 9400 0007 …</span><b className="gate-stamp">retenida</b></span> },
   { k: 'oracle', h: 'Oráculo con límite', t: 'El modelo puede preguntar «¿cubre 200 €?» y recibir «sí» o «no», sin la cifra. Con un máximo de preguntas para que no la adivine.',

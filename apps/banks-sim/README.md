@@ -23,7 +23,7 @@ Salen de `src/alcor/assets/seed-alcor.json`. Todo es inventado; los IBAN pasan m
 
 | | |
 |---|---|
-| Usuario | `lucia.ferrer` |
+| Usuario | `angel.martin` |
 | Clave | `Alcor-2026` |
 | Código SMS (OTP) | `482913` |
 
@@ -35,16 +35,16 @@ Uno de los movimientos de la cuenta nómina («Tienda Arcén», 5 nov) lleva en 
 
 ## Datos de prueba (Brezo Banco y Nimbo Bróker)
 
-Salen de `src/brezo/assets/seed-brezo.json` y `src/nimbo/assets/seed-nimbo.json`. Usuario, clave, OTP, cuenta, IBAN y saldo son los de `data/seed.json` (`bancos.brezo` y `bancos.nimbo`). Los IBAN son los que Alcor ya tiene como contactos propios, así que la transferencia de Alcor a «Lucía Ferrer · Nimbo Bróker» va a la cuenta de Nimbo.
+Salen de `src/brezo/assets/seed-brezo.json` y `src/nimbo/assets/seed-nimbo.json`. Usuario, clave, OTP, cuenta, IBAN y saldo son los de `data/seed.json` (`bancos.brezo` y `bancos.nimbo`). Los IBAN son los que Alcor ya tiene como contactos propios, así que la transferencia de Alcor a «Ángel Martín - Nimbo Bróker» va a la cuenta de Nimbo.
 
 | | Brezo Banco | Nimbo Bróker |
 |---|---|---|
-| Usuario | `lferrer` | `lucia.f` |
+| Usuario | `amartin` | `angel.m` |
 | Clave | `Brezo-2026` | `Nimbo-2026` |
 | Código SMS (OTP) | `730518` | `215664` |
 | Cuenta | Cuenta online · 1.875,40 € | Efectivo del bróker · 640,00 € |
 
-Saldo de Lucía entre los tres bancos: 3.412,58 + 12.050,00 (Alcor) + 1.875,40 (Brezo) + 640,00 (Nimbo) = **17.977,98 €**. La cartera de fondos de Nimbo del seed no aparece: la app solo enseña cuentas con IBAN.
+Saldo de Ángel entre los tres bancos: 3.412,58 + 12.050,00 (Alcor) + 1.875,40 (Brezo) + 640,00 (Nimbo) = **17.977,98 €**. La cartera de fondos de Nimbo del seed no aparece: la app solo enseña cuentas con IBAN.
 
 Las apps son independientes: una transferencia en Alcor no suma saldo en Nimbo (cada app vive en su propia memoria).
 

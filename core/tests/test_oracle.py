@@ -54,11 +54,11 @@ def test_compare_y_matches(env):
 
 
 @pytest.mark.parametrize("op, args, reason", [
-    ("sum", ["‹IMPORTE_9›", "‹IMPORTE_1·positivo›"], "token_desconocido"),
-    ("compare", ["‹IMPORTE_1·positivo›"], "sin_regla"),
-    ("matches", ["‹IMPORTE_1·positivo›", "‹IBAN_1·maestro›"], "sin_regla"),
-    ("sum", ["‹IBAN_1·maestro›", "‹IMPORTE_1·positivo›"], "sin_regla"),
-    ("divide", ["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›"], "sin_regla"),
+    ("sum", ["‹IMPORTE_9›", "‹IMPORTE_1-positivo›"], "token_desconocido"),
+    ("compare", ["‹IMPORTE_1-positivo›"], "sin_regla"),
+    ("matches", ["‹IMPORTE_1-positivo›", "‹IBAN_1-maestro›"], "sin_regla"),
+    ("sum", ["‹IBAN_1-maestro›", "‹IMPORTE_1-positivo›"], "sin_regla"),
+    ("divide", ["‹IMPORTE_1-positivo›", "‹IMPORTE_2-positivo›"], "sin_regla"),
 ])
 def test_rechazos(env, op, args, reason):
     c, _, _ = env

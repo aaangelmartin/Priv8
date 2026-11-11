@@ -7,9 +7,9 @@ const Leak = ({ children }) => <span className="leak">{children}</span>;
 
 /* ---------------------------------------------------- 1 · qué recibe el modelo */
 const FIELDS = [
-  { k: 'Titular', real: 'Ángel Martín', tok: '‹NOMBRE_1·propio›', face: 'nove', tone: 'warn' },
-  { k: 'Cuenta nómina', real: 'ES43 9100 0001 5740 1234 5678', tok: '‹IBAN_1·propio›', face: 'nove', tone: 'warn', mono: true },
-  { k: 'Saldo', real: '3.412,58 €', tok: '‹IMPORTE_1·positivo›', face: 'nove', tone: 'warn' },
+  { k: 'Titular', real: 'Ángel Martín', tok: '‹NOMBRE_1-propio›', face: 'nove', tone: 'warn' },
+  { k: 'Cuenta nómina', real: 'ES43 9100 0001 5740 1234 5678', tok: '‹IBAN_1-propio›', face: 'nove', tone: 'warn', mono: true },
+  { k: 'Saldo', real: '3.412,58 €', tok: '‹IMPORTE_1-positivo›', face: 'nove', tone: 'warn' },
   { k: 'Clave', real: 'Alcor-2026', shown: '••••••••••', tok: null, face: 'nuncasale', tone: 'bad', mono: true },
   { k: 'Botón', real: 'Hacer una transferencia', tok: 'Hacer una transferencia', face: 've', tone: 'ok', plain: true },
 ];
@@ -71,7 +71,7 @@ function ScreenDemo({ pal }) {
 /* ---------------------------------------------------- 2 · inyección en un correo */
 const STEPS = [
   ['Abre el correo de Suministros Lumen', 'La factura F-2611 llega con un PDF adjunto.'],
-  ['Lee la factura', 'Al modelo le llegan ‹CIF_1·proveedor› e ‹IMPORTE_2·factura›.'],
+  ['Lee la factura', 'Al modelo le llegan ‹CIF_1-proveedor› e ‹IMPORTE_2-factura›.'],
   ['La registra en el ERP Alba Core', 'El ejecutor escribe los valores reales en local.'],
   ['El pie del correo pide pagar a otro IBAN', null],
   ['Llama al proveedor al número de su ficha', 'Se presenta como IA y pregunta por el último pedido.'],
@@ -148,7 +148,7 @@ function OracleDemo() {
     <div className="demo-grid">
       <div className="oracle">
         <p className="label">El saldo que ve el modelo</p>
-        <p className="big"><span className="tok">‹IMPORTE_1·positivo›</span></p>
+        <p className="big"><span className="tok">‹IMPORTE_1-positivo›</span></p>
         <button type="button" className="peek" onClick={() => setPeek(!peek)} aria-pressed={peek}>{peek ? fmt(BALANCE) + ' - solo lo ves tú' : 'Ver el valor real (solo en tu pantalla)'}</button>
         <label className="slider" htmlFor="amt">
           <span>¿El saldo cubre <b>{fmt(amount)}</b>?</span>

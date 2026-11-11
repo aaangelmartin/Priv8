@@ -2,7 +2,7 @@
 //
 // Se calculan en local, sin la IA, a partir de lo mismo que ve el modelo: tokens.
 // No hace falta ningún valor real, porque el token ya dice de dónde viene el dato:
-// ‹IBAN_1·correo› es una cuenta que solo ha aparecido en un correo.
+// ‹IBAN_1-correo› es una cuenta que solo ha aparecido en un correo.
 //
 //   cuenta       un correo trae una cuenta bancaria que no es la de la ficha
 //   instruccion  el correo da órdenes al asistente («sin consultar», «ignora…»)
@@ -10,7 +10,7 @@
 //
 // Cada alarma tiene una clave estable para no repetirse y para poder marcarla revisada.
 
-const IBAN_CORREO = /‹IBAN_\d+·correo›/g
+const IBAN_CORREO = /‹IBAN_\d+-correo›/g
 const ORDEN_A_LA_IA = /(nota para el asistente|asistente:|sin consultar|ignora (las|todas)|no (lo )?consultes|actualice la cuenta|cambie la cuenta)/i
 const DESTINO = /^(\w+) de origen (\w+) no entra en ([\w.]+) \(acepta: ([^)]+)\)/
 
@@ -69,7 +69,7 @@ export function alertaDeBloqueo(event) {
 }
 
 // Lo último que dijo 8 sobre una cuenta del correo, para enseñarlo junto a la alarma.
-const MENCIONA_IBAN_CORREO = /‹IBAN_\d+·correo›/
+const MENCIONA_IBAN_CORREO = /‹IBAN_\d+-correo›/
 
 export function comentarioDe8(audit) {
   for (let i = audit.length - 1; i >= 0; i--) {

@@ -17,7 +17,7 @@ from referencing import Registry, Resource
 
 HERE = Path(__file__).resolve().parent
 BASE_URI = "https://priv8.dev/contracts/"
-TOKEN_RE = re.compile(r"‹([A-Z]+)_(\d+)(?:·([a-z]+))?›")
+TOKEN_RE = re.compile(r"‹([A-Z]+)_(\d+)(?:-([a-z]+))?›")
 
 
 def load_registry():
@@ -62,7 +62,7 @@ def main() -> int:
         else:
             print(f"ok     invalid/{example.name} (rechazado)")
     # La regex de token.md y el patrón del esquema común tienen que coincidir.
-    for tok in ("‹IBAN_1·propio›", "‹IMPORTE_6›", "‹SUMA_12›"):
+    for tok in ("‹IBAN_1-propio›", "‹IMPORTE_6›", "‹SUMA_12›"):
         if not TOKEN_RE.fullmatch(tok):
             failures += 1
             print(f"FALLA  regex de token.md no acepta {tok}")

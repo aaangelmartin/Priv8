@@ -30,7 +30,7 @@ async def test_replay_registers_the_invoice(world):
         "factura.importe": SEED["importe_correo"],
         "pago.iban": SEED["iban_maestro"],
     }
-    assert "‹FACTURA_1·correo›" in result.final_text
+    assert "‹FACTURA_1-correo›" in result.final_text
 
     steps = [e for e in fake.audit.events if e["kind"] == "task" and e.get("detail", "").startswith("paso ")]
     assert [int(e["detail"].split()[1]) for e in steps] == [1, 2, 3, 4, 5, 6]
@@ -61,7 +61,7 @@ async def test_short_replay_fails_loudly(world, tmp_path):
 def test_replay_cli_runs_without_api_key(monkeypatch, capsys):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     assert agent_mod.main(["--replay", str(REPLAY)]) == 0
-    assert "‹FACTURA_1·correo›" in capsys.readouterr().out
+    assert "‹FACTURA_1-correo›" in capsys.readouterr().out
 
 
 def test_live_request_shape(monkeypatch):

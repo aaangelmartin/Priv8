@@ -498,7 +498,7 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
       <div class="row"><span>Clave de firma</span><span class="v">••••••</span></div>
     </div>
     <div><span class="lbl">Lo que ve la IA</span>
-      <div class="row"><span>Cuenta nómina</span><span class="tok">‹IBAN_1·propio›</span></div>
+      <div class="row"><span>Cuenta nómina</span><span class="tok">‹IBAN_1-propio›</span></div>
       <div class="row"><span>Saldo</span><span class="tok">‹SALDO_1›</span></div>
       <div class="row"><span>Clave de firma</span><span class="st bad">nunca sale</span></div>
     </div>
@@ -524,7 +524,7 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
     <div><code>H3 · 18/24<br>Sora 600</code><span style="font-family:var(--f-display);font-weight:600;font-size:1.125rem">Protocolo de privacidad para agentes</span></div>
     <div><code>Texto · 16/25<br>Plex Sans 400</code><span>Cada dato sensible se sustituye por un token antes de llegar al modelo.</span></div>
     <div><code>Pequeño · 14/20<br>Plex Sans 400</code><span style="font-size:.875rem;color:var(--muted)">Saldrá hacia el proveedor del modelo durante esta sesión.</span></div>
-    <div><code>Token · 14<br>Plex Mono 600</code><span><span class="tok">‹IMPORTE_1·positivo›</span></span></div>
+    <div><code>Token · 14<br>Plex Mono 600</code><span><span class="tok">‹IMPORTE_1-positivo›</span></span></div>
     <div><code>Etiqueta · 12<br>Plex Mono 600 · +0,12em</code><span class="eyebrow" style="letter-spacing:.12em">Auditoría · paso 4</span></div>
   </div>
   <p class="lead small">Cifras en Plex Sans con <code>font-variant-numeric: tabular-nums</code> en tablas y saldos. Formato español: 3.420,15 €. Sin mayúsculas sostenidas en frases; solo en etiquetas cortas en Plex Mono.</p>
@@ -538,12 +538,12 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
     <p class="lead">Es el elemento más reconocible de la marca: enseña, en la misma línea que el texto, que un dato está ahí pero el agente no lo ve.</p>
   </div>
   <div class="anat">
-    <span class="bigtok" aria-label="Token: IBAN 1, propio">‹<span>IBAN</span>_<span>1</span>·<span>propio</span>›</span>
+    <span class="bigtok" aria-label="Token: IBAN 1, propio">‹<span>IBAN</span>_<span>1</span>-<span>propio</span>›</span>
     <div class="parts">
       <div><b>‹ ›</b>Comillas angulares simples (U+2039, U+203A). Nunca [ ] ni { }.</div>
       <div><b>IBAN</b>Tipo, en mayúsculas: IBAN, SALDO, IMPORTE, PERSONA, DNI, MOVIMIENTO.</div>
       <div><b>_1</b>Número estable durante la sesión. El mismo dato, el mismo token.</div>
-      <div><b>·propio</b>Calificador opcional tras un punto medio: propio, positivo, destino.</div>
+      <div><b>-propio</b>Calificador opcional tras un punto medio: propio, positivo, destino.</div>
     </div>
   </div>
   <div class="spec">
@@ -557,7 +557,7 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
     <div><span>Clase CSS</span><span>.p8-token</span></div>
   </div>
   <div class="grid2">
-    <div class="card"><h3>Así sí</h3><p>Tienes <span class="tok">‹SALDO_1›</span> en <span class="tok">‹IBAN_1·propio›</span>.</p><p>Un solo color para todos los tokens, sea cual sea el tipo. El token no se trunca ni se abrevia.</p></div>
+    <div class="card"><h3>Así sí</h3><p>Tienes <span class="tok">‹SALDO_1›</span> en <span class="tok">‹IBAN_1-propio›</span>.</p><p>Un solo color para todos los tokens, sea cual sea el tipo. El token no se trunca ni se abrevia.</p></div>
     <div class="card"><h3>Accesibilidad</h3><p>Los lectores de pantalla leen el token como "dato protegido, IBAN 1": usa <code>aria-label</code> y no dejes que lean las comillas. Para el usuario, el renderizador local muestra el valor real; el token solo aparece en la consola y en las explicaciones.</p></div>
   </div>
 </section>
@@ -624,7 +624,7 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
     <span class="eyebrow">Plantilla del modelo</span>
     <p class="line">Tienes <span class="tok">‹SALDO_TOTAL›</span> entre tus dos cuentas. La de <span class="tok">‹PERSONA_1›</span> tiene <span class="tok">‹SALDO_2›</span>.</p>
     <span class="eyebrow">Lo que oye el usuario</span>
-    <p class="line"><span class="v-el">Tienes</span> <span class="v-lo">3.420,15 euros</span> <span class="v-el">entre tus dos cuentas. La de</span> <span class="v-lo">Lucía</span> <span class="v-el">tiene</span> <span class="v-lo">1.200 euros</span><span class="v-el">.</span></p>
+    <p class="line"><span class="v-el">Tienes</span> <span class="v-lo">3.420,15 euros</span> <span class="v-el">entre tus dos cuentas. La de</span> <span class="v-lo">Ángel</span> <span class="v-el">tiene</span> <span class="v-lo">1.200 euros</span><span class="v-el">.</span></p>
     <div class="legend"><span><i style="background:var(--accent-soft)"></i>ElevenLabs: frases sin datos</span><span><i style="background:var(--warn-soft);border-bottom:2px solid var(--warn-dot)"></i>Voz local: cifras, nombres, IBAN, fechas de movimientos</span></div>
   </div>
   <div class="grid2">
@@ -682,7 +682,7 @@ pre{margin:0;background:#0B1B33;color:#E9EEF7;border-radius:12px;padding:16px;ov
 &lt;link rel="stylesheet" href="/brand/tokens.css"&gt;
 
 <span style="color:#9DA8BC">&lt;!-- Token y etiqueta de estado --&gt;</span>
-&lt;span class="p8-token"&gt;‹IBAN_1·propio›&lt;/span&gt;
+&lt;span class="p8-token"&gt;‹IBAN_1-propio›&lt;/span&gt;
 &lt;span class="p8-estado p8-estado--bloqueo"&gt;nunca sale&lt;/span&gt;</pre>
   <p class="lead small">La banca simulada usa un nombre inventado, nunca la marca de un banco real.</p>
 </section>

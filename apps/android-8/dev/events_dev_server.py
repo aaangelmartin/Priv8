@@ -122,7 +122,7 @@ class Channel:
                 {"voice": "cloud", "text": "Voy a pasar"},
                 {"voice": "local", "token": "‹IMPORTE_4›", "say_as": "currency"},
                 {"voice": "cloud", "text": "a tu cuenta de"},
-                {"voice": "local", "token": "‹PROVEEDOR_1·propio›", "say_as": "name"},
+                {"voice": "local", "token": "‹PROVEEDOR_1-propio›", "say_as": "name"},
                 {"voice": "cloud", "text": "¿Lo confirmas?"},
             ],
             "channels": ["voz", "pantalla"], "sca": "persona", "expires_s": 300,
@@ -159,10 +159,10 @@ class Channel:
         if name == "saldo":
             return [
                 (A("task", detail="¿Cuánto tengo entre mis bancos?"), 2.0),
-                (A("observe_sent", model_saw="Banca Alcor - Saldo ‹IMPORTE_1·positivo›", tokens=["‹IMPORTE_1·positivo›"], counts={"verde": 9, "ambar": 4, "rojo": 0}), 4.6),
+                (A("observe_sent", model_saw="Banca Alcor - Saldo ‹IMPORTE_1-positivo›", tokens=["‹IMPORTE_1-positivo›"], counts={"verde": 9, "ambar": 4, "rojo": 0}), 4.6),
                 (A("act", model_saw="act open_app brezo"), 1.2),
-                (A("observe_sent", model_saw="Brezo Banco - Saldo ‹IMPORTE_2·positivo›", tokens=["‹IMPORTE_2·positivo›"], counts={"verde": 7, "ambar": 3, "rojo": 0}), 4.6),
-                (A("oracle", model_saw="oracle sum ‹IMPORTE_1› ‹IMPORTE_2› ‹IMPORTE_3›", tokens=["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›", "‹IMPORTE_3·positivo›"]), 1.8),
+                (A("observe_sent", model_saw="Brezo Banco - Saldo ‹IMPORTE_2-positivo›", tokens=["‹IMPORTE_2-positivo›"], counts={"verde": 7, "ambar": 3, "rojo": 0}), 4.6),
+                (A("oracle", model_saw="oracle sum ‹IMPORTE_1› ‹IMPORTE_2› ‹IMPORTE_3›", tokens=["‹IMPORTE_1-positivo›", "‹IMPORTE_2-positivo›", "‹IMPORTE_3-positivo›"]), 1.8),
                 (V([{"voice": "cloud", "text": "Entre tus tres cuentas tienes"}, {"voice": "local", "token": "‹SUMA_1›", "say_as": "currency"}]), 3.5),
             ]
         if name == "transferencia":
@@ -179,7 +179,7 @@ class Channel:
         if name == "bloqueos":
             return [
                 (A("blocked", reason="rojo", model_saw="act type n4 clave"), 3.0),
-                (A("blocked", reason="destino", model_saw="act type e7 ‹IBAN_2·correo›", tokens=["‹IBAN_2·correo›"]), 3.2),
+                (A("blocked", reason="destino", model_saw="act type e7 ‹IBAN_2-correo›", tokens=["‹IBAN_2-correo›"]), 3.2),
             ]
         raise KeyError(name)
 

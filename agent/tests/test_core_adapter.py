@@ -34,8 +34,8 @@ def make_stub_core(*, without: tuple[str, ...] = ()) -> types.ModuleType:
         record({"session": session, "kind": "observe_sent", "screen": "factura"})
         return {"session": session, "app": "erp", "screen": "factura", "seq": 1, "paused": False,
                 "budget_left": 5,
-                "elements": [{"id": "e1", "role": "input", "label": "IBAN", "text": "‹IBAN_1·maestro›",
-                              "cls": "ambar", "tokens": ["‹IBAN_1·maestro›"], "actions": ["type"]},
+                "elements": [{"id": "e1", "role": "input", "label": "IBAN", "text": "‹IBAN_1-maestro›",
+                              "cls": "ambar", "tokens": ["‹IBAN_1-maestro›"], "actions": ["type"]},
                              {"id": "e2", "role": "input", "label": "Clave", "text": None,
                               "cls": "rojo", "tokens": [], "actions": []}]}
 
@@ -145,11 +145,11 @@ def test_agent_cli_exits_cleanly_without_core(monkeypatch, capsys):
 def test_ports_wire_through(stub_core):
     core = build_real_core()
     assert core.screen.observe("s1")["screen"] == "factura"
-    assert core.actor.act("s1", "type", "e1", "‹IBAN_1·maestro›") == {"ok": True}
+    assert core.actor.act("s1", "type", "e1", "‹IBAN_1-maestro›") == {"ok": True}
     core.actor.act("s1", "scroll", direction="down")
     assert core.oracle.oracle("s1", "compare", ["‹IMPORTE_1›", "‹IMPORTE_2›"])["result"] == "igual"
     assert stub_core.calls[1:] == [
-        ("act", "s1", "type", "e1", "‹IBAN_1·maestro›", None),
+        ("act", "s1", "type", "e1", "‹IBAN_1-maestro›", None),
         ("act", "s1", "scroll", None, None, "down"),
         ("oracle", "s1", "compare", ("‹IMPORTE_1›", "‹IMPORTE_2›")),
     ]

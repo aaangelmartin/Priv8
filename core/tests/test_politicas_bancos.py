@@ -204,7 +204,7 @@ def sensibles(bank):
         out |= {("IBAN", iban(a["iban"])), ("IMPORTE", eur(a["balance_cents"]))}
     out.add(("IMPORTE", eur(sum(a["balance_cents"] for a in s["accounts"]))))
     for c in s["contacts"]:
-        out |= {("IBAN", iban(c["iban"])), ("PERSONA", c["name"].split(" · ")[0])}
+        out |= {("IBAN", iban(c["iban"])), ("PERSONA", c["name"].split(" - ")[0])}
     for m in s["movements"]:
         out |= {("IMPORTE", eur(m["amount_cents"], signed=True)), ("PERSONA", m["counterparty"]),
                 ("MOVIMIENTO", m["concept"])}
@@ -295,7 +295,7 @@ def test_enviar_queda_retenido(core, bank):
     assert phone.performed == []
     req = [m for m in seen if m.get("type") == "confirm_request"][-1]
     assert req["kind"] == "transferir"
-    assert "Lucía" not in json.dumps(obs, ensure_ascii=False)
+    assert "Ángel" not in json.dumps(obs, ensure_ascii=False)
     # Cancelar no es crítico: pasa.
     cancelar = next(e["id"] for e in phone.raw["elements"] if e["sel"] == "id/btn_cancelar")
     assert core.act("b", "tap", cancelar) == {"ok": True}

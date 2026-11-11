@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[3]
 CONTRACTS = ROOT / "docs" / "contracts"
 REPLAY = ROOT / "agent" / "replays" / "b2c_android.json"
 SEED_VALUES = ["3.412,58", "12.050,00", "15.462,58", "1.875,40", "640,00", "17.977,98", "ES43 9100", "ES08 9300",
-               "ES89 9200", "Lucía Ferrer", "200 €", "200,00"]
+               "ES89 9200", "Ángel Martín", "200 €", "200,00"]
 
 _n = iter(range(10_000))
 
@@ -100,7 +100,7 @@ def _to_revision(session: str) -> None:
     core.act(session, "tap", "n17")
     core.observe(session)
     assert core.act(session, "tap", "n12") == {"ok": True}  # Nimbo, before scrolling
-    assert core.act(session, "type", "n26", "‹IMPORTE_1·positivo›") == {"ok": True}
+    assert core.act(session, "type", "n26", "‹IMPORTE_1-positivo›") == {"ok": True}
     assert core.act(session, "scroll", "n4", direction="down") == {"ok": True}
     assert core.observe(session)["elements"][24]["text"] == "Continuar"
     assert core.act(session, "tap", "n25") == {"ok": True}
@@ -125,7 +125,7 @@ def test_held_transfer_is_spoken_on_the_phone_and_runs_on_approval(rig, session,
     req, values = phone.received[i], phone.received[i - 1]["values"]
     toks = [s["token"] for s in req["summary"] if s.get("token")]
     assert toks and set(toks) <= set(values)
-    assert values["‹IMPORTE_1·positivo›"] == "200 €"  # the value the person said
+    assert values["‹IMPORTE_1-positivo›"] == "200 €"  # the value the person said
     assert phone.answered[req["id"]]["ok"] is True
     approvals = [e for e in core.AUDIT.events if e["session"] == session and e["kind"] == "approval"]
     assert approvals and approvals[-1]["approved_by"] == "persona"
@@ -158,7 +158,7 @@ def test_pending_confirmation_is_sent_again_after_hello(rig, session):
 def test_say_sends_render_values_then_the_utterance(rig, session):
     bridge, phone = rig()
     core.observe(session)
-    res = core.oracle(session, "sum", ["‹IMPORTE_2·positivo›", "‹IMPORTE_3·positivo›"])
+    res = core.oracle(session, "sum", ["‹IMPORTE_2-positivo›", "‹IMPORTE_3-positivo›"])
     published: list = []
     unsubscribe = core.events.subscribe(lambda m: published.append(m) if m.get("type") == "voice" else None)
     try:
@@ -253,7 +253,7 @@ def test_agent_android_waits_for_dictated_tasks(monkeypatch, tmp_path):
     """Without --task, each dictated task (core.next_task, #47) is tokenized and run."""
     from agent import agent
 
-    said = iter(["pasa 200 € a Marta", "¿cuánto tengo?", None])  # None: dictation closed
+    said = iter(["pasa 200 € a Marco", "¿cuánto tengo?", None])  # None: dictation closed
     asked: list = []
 
     def next_task(session, timeout=None):

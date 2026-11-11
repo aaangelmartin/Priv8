@@ -5,9 +5,9 @@
     "name": "Nimbo Bróker"
   },
   "user": {
-    "login": "lucia.f",
+    "login": "angel.m",
     "password": "Nimbo-2026",
-    "name": "Lucía Ferrer",
+    "name": "Ángel Martín",
     "otp": "215664"
   },
   "accounts": [
@@ -21,13 +21,13 @@
   "contacts": [
     {
       "id": "alcor",
-      "name": "Lucía Ferrer · Banca Alcor",
+      "name": "Ángel Martín - Banca Alcor",
       "iban": "ES4391000001574012345678",
       "own": true
     },
     {
       "id": "brezo",
-      "name": "Lucía Ferrer · Brezo Banco",
+      "name": "Ángel Martín - Brezo Banco",
       "iban": "ES8992000003785500667788",
       "own": true
     }
@@ -44,7 +44,7 @@
       "account": "efectivo",
       "date": "2026-11-01",
       "concept": "Aportación mensual desde Banca Alcor",
-      "counterparty": "Lucía Ferrer",
+      "counterparty": "Ángel Martín",
       "amount_cents": 100000
     },
     {
@@ -65,7 +65,7 @@
       "account": "efectivo",
       "date": "2026-10-01",
       "concept": "Aportación mensual desde Banca Alcor",
-      "counterparty": "Lucía Ferrer",
+      "counterparty": "Ángel Martín",
       "amount_cents": 100000
     }
   ]

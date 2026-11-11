@@ -205,7 +205,7 @@ def test_punta_a_punta_factura_y_trampa(web, core):
     ibans = {t for e in obs["elements"] for t in e.get("tokens", []) if t.startswith("‹IBAN_")}
     assert len(ibans) == 1
     trampa = ibans.pop()
-    assert trampa.endswith("·correo›")
+    assert trampa.endswith("-correo›")
     pdf = {e["label"]: e for e in obs["elements"] if (e.get("label") or "").endswith("(PDF)")}
     num_tok, imp_tok = pdf["Número (PDF)"]["text"], pdf["Importe (PDF)"]["text"]
 

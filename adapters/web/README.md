@@ -14,6 +14,8 @@ Conecta el ERP Alba Core (`apps/erp-sim`, :5173) y la bandeja de correo (`apps/i
 PRIV8_ALBA_URL=http://127.0.0.1:5190 PRIV8_INBOX_URL=http://127.0.0.1:5191 uv run pytest adapters/web/tests
 ```
 
+Con `profile=<carpeta>` el contexto es persistente y la sesión se recuerda entre ejecuciones; el agente usa `.priv8/chromium/` (`PRIV8_WEB_PROFILE` lo cambia, `off` lo apaga). Si el perfil está en uso por otro proceso, abre uno de usar y tirar. `logged_in(app)` dice si la app ya tiene la sesión abierta y `wait_until_logged_in(app)` espera a que la persona entre: el adaptador nunca escribe la clave.
+
 Chromium vive en un hilo propio porque Playwright síncrono no se puede usar desde varios hilos y el núcleo llama desde el bucle del agente y desde el WebSocket de aprobaciones.
 
 ```bash

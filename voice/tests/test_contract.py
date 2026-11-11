@@ -32,7 +32,7 @@ VAULT = {
     "‹SUMA_1›": "4.873,00 €",
     "‹IMPORTE_6›": "200 €",
     "‹PROVEEDOR_2›": "Nimbo Bróker",
-    "‹PERSONA_1›": "Lucía Ferrer",
+    "‹PERSONA_1›": "Ángel Martín",
     "‹IBAN_1›": "ES91 2100 0418 4502 0005 1332",
     "‹TEL_1›": "612 345 678",
     "‹FACTURA_1›": "F-2026-0042",
@@ -57,13 +57,13 @@ def test_sum_matches_the_contract_example(validator):
 
 @pytest.mark.parametrize("template", [
     "Entre tus tres cuentas tienes ‹SUMA_1›.",
-    "Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2·propio›. ¿Lo confirmas?",
-    "Hola, ‹PERSONA_1·titular›",
-    "Lo envío a ‹IBAN_1·maestro›",
-    "Te llamo al ‹TEL_1·maestro› por la factura ‹FACTURA_1·correo›",
+    "Voy a pasar ‹IMPORTE_6› a tu cuenta de ‹PROVEEDOR_2-propio›. ¿Lo confirmas?",
+    "Hola, ‹PERSONA_1-titular›",
+    "Lo envío a ‹IBAN_1-maestro›",
+    "Te llamo al ‹TEL_1-maestro› por la factura ‹FACTURA_1-correo›",
     "‹IMPORTE_6›",
     # blocked: the whole sentence is read locally, still schema-valid
-    "Lucía Ferrer, tienes ‹SUMA_1›",
+    "Ángel Martín, tienes ‹SUMA_1›",
     "Paso 200 € a ‹PROVEEDOR_2›",
 ])
 def test_segmenter_output_is_schema_valid(validator, template):

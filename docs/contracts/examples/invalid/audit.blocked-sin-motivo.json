@@ -5,9 +5,9 @@
   "kind": "blocked",
   "app": "alba-core",
   "screen": "factura.alta",
-  "model_saw": "act type e7 ‹IBAN_2·correo›",
+  "model_saw": "act type e7 ‹IBAN_2-correo›",
   "tokens": [
-    "‹IBAN_2·correo›"
+    "‹IBAN_2-correo›"
   ],
   "approved_by": null,
   "ms": {

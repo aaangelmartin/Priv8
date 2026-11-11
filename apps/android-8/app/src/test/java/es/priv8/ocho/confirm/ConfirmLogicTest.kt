@@ -29,12 +29,12 @@ class RendererTest {
     private val summary = listOf(
         Segment("local", null, "‹IMPORTE_1›", "currency"),
         Segment("cloud", "a tu cuenta de", null, null),
-        Segment("local", null, "‹PROVEEDOR_1·propio›", "name"),
+        Segment("local", null, "‹PROVEEDOR_1-propio›", "name"),
         Segment("cloud", "¿Lo confirmas?", null, null),
     )
 
     @Test fun rendersScreenAndSpeech() {
-        val values = mapOf("‹IMPORTE_1›" to "200,00 €", "‹PROVEEDOR_1·propio›" to "Nimbo Bróker")
+        val values = mapOf("‹IMPORTE_1›" to "200,00 €", "‹PROVEEDOR_1-propio›" to "Nimbo Bróker")
         val r = Renderer.render(summary) { values[it] }
         assertEquals("200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?", r.screen)
         assertEquals("Doscientos euros a tu cuenta de Nimbo Bróker. ¿Lo confirmas?", r.spoken)
@@ -52,13 +52,13 @@ class RendererTest {
         assertEquals("Entre tus tres bancos tienes 17.977,98 €. Te he preparado la transferencia.", r.screen)
         // Lowercase after a value continues the sentence.
         assertEquals("200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?",
-            Renderer.render(summary) { mapOf("‹IMPORTE_1›" to "200,00 €", "‹PROVEEDOR_1·propio›" to "Nimbo Bróker")[it] }.screen)
+            Renderer.render(summary) { mapOf("‹IMPORTE_1›" to "200,00 €", "‹PROVEEDOR_1-propio›" to "Nimbo Bróker")[it] }.screen)
     }
 
     @Test fun missingValueIsCounted() {
         val r = Renderer.render(summary) { null }
         assertEquals(2, r.missing)
-        assertEquals("‹IMPORTE_1› a tu cuenta de ‹PROVEEDOR_1·propio›. ¿Lo confirmas?", r.screen)
+        assertEquals("‹IMPORTE_1› a tu cuenta de ‹PROVEEDOR_1-propio›. ¿Lo confirmas?", r.screen)
     }
 }
 

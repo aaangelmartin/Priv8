@@ -10,13 +10,15 @@ pnpm dev          # http://127.0.0.1:5173
 
 Usuario de la demo: `admin.alba` / `Alba-2026!` (la clave es roja: la escribe la persona, nunca el agente).
 
+Sesión ya abierta (#137): con `VITE_ALBA_SESION=admin.alba pnpm dev` (lo hace `make demo-b2b`) Alba Core abre con esa sesión, como el ordenador de una empresa, sin pasar por la identificación. Solo en desarrollo. Si la persona pulsa «Cerrar sesión», queda cerrada hasta que vuelve a entrar con su clave. La lógica está en `src/sesion.js` (prueba: `node src/sesion.test.mjs`).
+
 | Ruta | Pantalla | Política |
 |---|---|---|
 | `/login` | Identificación | `login` |
 | `/facturas/alta` | Alta de factura del pedido recibido (Suministros Lumen, PED-2026-3318) | `factura.alta` |
 | `/proveedores/7` | Ficha del proveedor con el IBAN maestro y el teléfono | `proveedor.ficha` |
 | `/proveedores`, `/facturas` | Listados | — |
-| `/reset` | Borra la sesión y las facturas registradas | — |
+| `/reset` | Borra la sesión y las facturas registradas (con la sesión de la demo, vuelve a abrirla) | — |
 
 ## Contrato con el adaptador web
 

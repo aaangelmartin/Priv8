@@ -100,10 +100,10 @@
             "session": "b2c",
             "op": "sum",
             "args": [
-              "‹IMPORTE_3·positivo›",
-              "‹IMPORTE_4·positivo›",
-              "‹IMPORTE_5·positivo›",
-              "‹IMPORTE_6·positivo›"
+              "‹IMPORTE_3-positivo›",
+              "‹IMPORTE_4-positivo›",
+              "‹IMPORTE_5-positivo›",
+              "‹IMPORTE_6-positivo›"
             ]
           }
         }
@@ -198,7 +198,7 @@
             "session": "b2c",
             "op": "type",
             "target": "n26",
-            "text": "‹IMPORTE_1·positivo›"
+            "text": "‹IMPORTE_1-positivo›"
           }
         },
         {
@@ -321,7 +321,7 @@
       "content": [
         {
           "type": "text",
-          "text": "Entre tus tres bancos tienes ‹SUMA_1›. Te he preparado la transferencia de ‹IMPORTE_1·positivo› a tu cuenta de Nimbo Bróker; se envía cuando la confirmas y pones tu código."
+          "text": "Entre tus tres bancos tienes ‹SUMA_1›. Te he preparado la transferencia de ‹IMPORTE_1-positivo› a tu cuenta de Nimbo Bróker; se envía cuando la confirmas y pones tu código."
         }
       ]
     }
