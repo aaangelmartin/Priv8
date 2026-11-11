@@ -5,10 +5,13 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.util.Log
 import es.priv8.ocho.confirm.ConfirmActivity
+import java.io.File
 
 /**
  * Dictation (issue #47): 8 listens to a task, on the device only. The audio
@@ -41,10 +44,13 @@ class Dictador(
         return null
     }
 
-    fun escuchar() {
+    fun escuchar(audio: File? = null) {
         if (escuchando) return
         noDisponible()?.let { Log.i(TAG, "dictado off: $it"); onAviso(it); return }
-        val rec = recognizer ?: SpeechRecognizer.createOnDeviceSpeechRecognizer(context).also {
+        // A fresh recognizer for every task: the recognition service can restart
+        // between two taps, and a reused one then fails with ERROR_CLIENT forever.
+        recognizer?.destroy()
+        val rec = SpeechRecognizer.createOnDeviceSpeechRecognizer(context).also {
             it.setRecognitionListener(listener)
             recognizer = it
         }
@@ -52,7 +58,32 @@ class Dictador(
         parado = false
         Log.i(TAG, "dictado: listening on-device")
         onParcial("Te escucho…")
-        rec.startListening(ConfirmActivity.recognizerIntent())
+        val intent = ConfirmActivity.recognizerIntent()
+        if (audio != null && BuildConfig.DEBUG && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Debug only: raw PCM 16-bit 16 kHz mono instead of the microphone,
+            // to tell a bad emulator microphone from a bad recognizer.
+            // Through a pipe: the recognition service may not open app files itself.
+            val (leer, escribir) = ParcelFileDescriptor.createPipe()
+            Thread {
+                try {
+                    val n = ParcelFileDescriptor.AutoCloseOutputStream(escribir).use { out -> audio.inputStream().use { inp ->
+                        // At the pace of a microphone: 100 ms of 16 kHz 16-bit mono at a time.
+                        val buf = ByteArray(3_200); var total = 0L
+                        while (true) { val r = inp.read(buf); if (r < 0) break; out.write(buf, 0, r); total += r; Thread.sleep(100) }
+                        total
+                    } }
+                    Log.i(TAG, "dictado: debug audio sent ($n bytes)")
+                } catch (e: java.io.IOException) {
+                    Log.i(TAG, "dictado: debug audio failed: ${e.javaClass.simpleName}")
+                }
+            }.start()
+            intent.putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, leer)
+                .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
+                .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, 16_000)
+                .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, 1)
+            Log.i(TAG, "dictado: debug audio from a file")
+        }
+        rec.startListening(intent)
     }
 
     fun parar() {

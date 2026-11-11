@@ -19,6 +19,7 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import es.priv8.ocho.confirm.ConfirmActivity
 import org.json.JSONObject
+import java.io.File
 
 /**
  * App 8: the eyes full screen, moved by the core's events (issue #39).
@@ -105,7 +106,11 @@ class MainActivity : Activity() {
 
     /** For the emulator: `adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true`. */
     private fun dictarSiSePide(intent: Intent?) {
-        if (intent?.getBooleanExtra(EXTRA_DICTAR, false) == true) window.decorView.post { dictador.escuchar() }
+        if (intent?.getBooleanExtra(EXTRA_DICTAR, false) != true) return
+        // Debug only: `--es audio prueba.pcm` reads files/prueba.pcm instead of the microphone.
+        val audio = intent.getStringExtra("audio")?.takeIf { BuildConfig.DEBUG }
+            ?.let { File(getExternalFilesDir(null), File(it).name) }?.takeIf { it.isFile }
+        window.decorView.post { dictador.escuchar(audio) }
     }
 
     override fun onDestroy() {
