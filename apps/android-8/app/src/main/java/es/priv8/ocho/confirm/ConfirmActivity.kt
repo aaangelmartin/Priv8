@@ -98,6 +98,9 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         val r = Renderer.render(request.segments) { LocalValues.get(request.session, it) }
         rendered = r
         summary.text = r.screen
+        // The request came over the bridge, so the core is up. This screen has no events
+        // channel of its own: without this its eyes said «sin conexión» (debug label).
+        ojos.conexion(true, face = false)
         ojos.cara("esperar")
         confirm.isEnabled = r.missing == 0
         startedAt = SystemClock.elapsedRealtime()

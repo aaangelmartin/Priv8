@@ -33,6 +33,8 @@ class Dictador(
      * True if the laptop took it; false shows the notice instead.
      */
     private val alPortatil: () -> Boolean = { false },
+    /** Microphone level while listening (SpeechRecognizer rmsdB), for 8's eyes (#42). */
+    private val onNivel: (Float) -> Unit = {},
 ) {
     private var recognizer: SpeechRecognizer? = null
     /** Stopped by the person: the recognizer's error after cancel() is not a failure. */
@@ -116,7 +118,7 @@ class Dictador(
     private val listener = object : RecognitionListener {
         override fun onReadyForSpeech(params: Bundle?) {}
         override fun onBeginningOfSpeech() {}
-        override fun onRmsChanged(rmsdB: Float) {}
+        override fun onRmsChanged(rmsdB: Float) = onNivel(rmsdB)
         override fun onBufferReceived(buffer: ByteArray?) {}
         override fun onEndOfSpeech() {}
         override fun onEvent(eventType: Int, params: Bundle?) {}

@@ -88,6 +88,7 @@ class MainActivity : Activity() {
             },
             onAviso = { subtitulo.mostrarTexto(it, AVISO_MS) },
             alPortatil = ::dictarEnPortatil,
+            onNivel = { ojos.microfono(it) },
         )
         val toque = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
             override fun onSingleTapUp(e: MotionEvent): Boolean {
