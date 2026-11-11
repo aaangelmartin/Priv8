@@ -174,6 +174,7 @@ class ReplayModel:
         self.responses: list[JSON] = data["responses"]
         self.requests: list[JSON] = []
         self._i = 0
+        self.pause_s = float(os.environ.get("PRIV8_REPLAY_PAUSA_S", "0") or 0)
 
     async def create(self, *, system: str, messages: list[Any], tools: list[JSON]) -> Any:
         # Snapshot the exact model-bound payload, as the live client would send it.
@@ -183,6 +184,8 @@ class ReplayModel:
             raise ReplayExhausted(f"replay has {len(self.responses)} responses; step {self._i + 1} needs one more")
         response = self.responses[self._i]
         self._i += 1
+        if self.pause_s > 0:  # a recorded replay at the pace of a model (PRIV8_REPLAY_PAUSA_S)
+            await anyio.sleep(self.pause_s)
         return response
 
 
@@ -413,6 +416,9 @@ async def _main(a: argparse.Namespace) -> int:
         persona = bool(a.replay) if a.simulated_persona is None else a.simulated_persona
         if a.web:  # Alba Core and the mailbox in Chromium; the person approves in the console
             web = mount_web(a.session)
+            if a.replay and os.environ.get("PRIV8_REPLAY_ESPERA_CONSOLA"):
+                # A recording (scripts/grabar_sesion.py): the replay starts once a console watches.
+                await anyio.to_thread.run_sync(_wait_for_console, web)
             if console and not a.task_given:
                 err(f"priv8: pide el encargo a 8 en la consola ({CONSOLE_URL})")
                 task = await _next_console_task(a.session)
@@ -487,8 +493,23 @@ async def _main(a: argparse.Namespace) -> int:
     err(f"status={result.status} steps={result.steps}")
     print(result.final_text)
     if a.web:
+        if result.final_text and core.voice is not None:  # as in the console loop: tokens only
+            core.voice.say(a.session, result.final_text)
         _wait_for_approvals(a.session, err)
     return 0 if result.status in ("done", "asesoria") else 1
+
+
+def _wait_for_console(web: Any, timeout_s: float = 60) -> None:
+    """Until a console watches the frames of `web` (or timeout_s), then a moment for the first pair."""
+    end = time.monotonic() + timeout_s
+    while time.monotonic() < end:
+        try:
+            if web.watching():
+                break
+        except Exception:  # noqa: BLE001
+            break
+        time.sleep(0.2)
+    time.sleep(2.0)
 
 
 async def _next_console_task(session: str, poll_s: float = 1.0) -> str:

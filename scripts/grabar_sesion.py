@@ -68,6 +68,7 @@ ENCARGOS = ["Registra la factura de Suministros Lumen",
 SESION = "b2b"
 CASO: dict[str, Any] | None = None  # --caso: un caso del catálogo (data/casos.json, #187)
 APRUEBA_S = 4.0          # lo que tarda «la persona» en leer la confirmación y aprobarla
+PAUSA_REPLAY_S = 3.0     # con respuestas grabadas, lo que «piensa» el modelo antes de cada una
 HUECO_MAX_S = 6.0        # un silencio más largo se acorta a esto en la reproducción
 ANCHO = 1100             # ancho de los JPEG publicados
 CALIDAD = 7              # ffmpeg -q:v (2 mejor, 31 peor); 7 es una calidad JPEG de unos 70
@@ -514,6 +515,12 @@ def main() -> int:
             cmd = ["uv", "run", "python", "-m", "agent.agent", "--web"]
             if replay is not None:
                 cmd += ["--replay", str(replay), "--task", ENCARGOS[0]]
+                # Empieza cuando el grabador ya mira, y al ritmo de un modelo (no en milisegundos).
+                env.update(PRIV8_REPLAY_ESPERA_CONSOLA="1", PRIV8_REPLAY_PAUSA_S=str(PAUSA_REPLAY_S))
+                # El registro dice quién decidió: el modelo de las respuestas grabadas («escrito a mano»).
+                autor = json.loads(replay.read_text(encoding="utf-8")).get("model")
+                if autor:
+                    env["PRIV8_MODEL"] = autor
             elif record is not None:
                 record.parent.mkdir(parents=True, exist_ok=True)
                 cmd += ["--record", str(record)]
@@ -542,11 +549,15 @@ def main() -> int:
             parar(p)
     assert rec is not None and tmp is not None
 
-    info = {"grabada": time.strftime("%Y-%m-%d"), "modelo": dotenv.get("PRIV8_MODEL") or os.environ.get("PRIV8_MODEL"),
-            "encargos": ENCARGOS}
+    modelo = dotenv.get("PRIV8_MODEL") or os.environ.get("PRIV8_MODEL")
+    if replay is not None:  # el modelo que dio las respuestas grabadas (o «escrito a mano»)
+        modelo = json.loads(replay.read_text(encoding="utf-8")).get("model") or modelo
+    info = {"grabada": time.strftime("%Y-%m-%d"), "modelo": modelo, "encargos": ENCARGOS}
     if CASO is not None:
+        # `fuente` del caso (data/casos.json) si lo dice: p. ej. que las decisiones del modelo van escritas a mano.
         info.update(caso=CASO["id"], vertical="b2b", titulo=CASO["titulo"], provisional=False,
-                    fuente="Alba Core y el correo reales, agente " + ("con respuestas grabadas" if replay else "en vivo"))
+                    fuente=CASO.get("fuente") or ("Alba Core y el correo reales, agente "
+                                                  + ("con respuestas grabadas" if replay else "en vivo")))
     sesion = montar(rec, a.fps, info)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from casos_comun import pares_incoherentes
