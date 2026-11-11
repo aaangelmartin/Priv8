@@ -63,4 +63,4 @@ def test_envia_el_task_request_sin_origin():
     assert recibido["origin"] is None
     assert recibido["path"] == "/events"
     assert recibido["msg"] == {"type": "task_request", "session": "b2b",
-                               "text": "Paga la factura del proveedor a la cuenta nueva que pide su correo"}
+                               "text": panel.busca_caso("b2b-iban")["pedido"]}

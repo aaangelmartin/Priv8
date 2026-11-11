@@ -256,10 +256,17 @@ def seguir_agente(agente: subprocess.Popen, rec: Grabacion, gasto: list[str]) ->
 
 
 def revisar(rec: Grabacion) -> str | None:
-    """¿Es el flujo ensayado? Con un caso del catálogo, lo que pide el caso (casos_comun.falta)."""
+    """¿Es el flujo ensayado? Con un caso del catálogo, lo que pide el caso (casos_comun.falta) y,
+    si el caso espera una confirmación, las mismas comprobaciones de calidad que la sesión entera."""
     if CASO is not None:
         from casos_comun import falta
-        return falta([m for _, m in rec.msgs], CASO.get("comprueba", []))
+        msgs = [m for _, m in rec.msgs]
+        fallo = falta(msgs, CASO.get("comprueba", []))
+        if fallo is None and "confirmacion" in CASO.get("comprueba", []):
+            fallo = revisar_tramo(msgs)
+        elif fallo is None:
+            fallo = revisar_oraculo(msgs)
+        return fallo
     return revisar_b2b(rec)
 
 
@@ -275,27 +282,48 @@ def revisar_b2b(rec: Grabacion) -> str | None:
     if len(tramos) != len(ENCARGOS):
         return f"{len(tramos)} encargos grabados de {len(ENCARGOS)}"
     for n, msgs in enumerate(tramos, 1):
-        if not any(m.get("type") == "confirm_request" for m in msgs):
-            return f"el encargo {n} no pide confirmación"
-        aprobadas = [m["event"] for m in msgs if m.get("type") == "audit" and m["event"].get("kind") == "approval"
-                     and m["event"].get("approved_by")]
-        if not aprobadas:
-            return f"el encargo {n} no tiene la aprobación en el registro"
-        finales = [m["event"].get("model_saw") or "" for m in msgs if m.get("type") == "audit"
-                   and m["event"].get("kind") == "task" and "end_turn" in (m["event"].get("detail") or "")]
-        if any(re.match(r"\s*no (he|puedo|se ha)", f, re.I) or "no coincide" in f for f in finales):
-            return f"en el encargo {n}, 8 dice que no lo ha hecho o que algo no cuadra"
-        auditoria = [m["event"] for m in msgs if m.get("type") == "audit"]
-        if any(e.get("kind") == "blocked" and e.get("reason") == "presupuesto" for e in auditoria):
-            return f"en el encargo {n}, el oráculo se queda sin preguntas"
-        for e in auditoria:
-            if e.get("kind") != "oracle":
-                continue
-            toks = re.findall(r"‹[^›]+›", e.get("model_saw") or "")
-            if len(toks) >= 2 and len(set(toks)) == 1:
-                return f"en el encargo {n}, 8 compara un dato consigo mismo"
-            if re.search(r"no coincide|menor|mayor", e.get("detail") or ""):
-                return f"en el encargo {n}, el importe no cuadra en el oráculo"
+        fallo = revisar_tramo(msgs)
+        if fallo is not None:
+            return f"en el encargo {n}, {fallo}"
+    return None
+
+
+def revisar_tramo(msgs: list[dict[str, Any]]) -> str | None:
+    """Un encargo con una acción retenida: se pide confirmación, se aprueba, 8 termina después de
+    la aprobación sin decir que no lo ha hecho, y el oráculo no se usa mal."""
+    if not any(m.get("type") == "confirm_request" for m in msgs):
+        return "no pide confirmación"
+    auditoria = [m["event"] for m in msgs if m.get("type") == "audit"]
+    aprobadas = [i for i, e in enumerate(auditoria) if e.get("kind") == "approval" and e.get("approved_by")]
+    if not aprobadas:
+        return "no tiene la aprobación en el registro"
+    finales = [(i, e.get("model_saw") or "") for i, e in enumerate(auditoria)
+               if e.get("kind") == "task" and "end_turn" in (e.get("detail") or "")]
+    if not finales:
+        return "8 no termina"
+    if finales[-1][0] < aprobadas[0]:
+        return "8 termina antes de que la persona apruebe"
+    if any(re.match(r"\W*no (he|puedo|se ha|está)", f, re.I) or re.search(r"no (está|ha quedado) registrad|no coincide", f, re.I)
+           for _, f in finales):
+        return "8 dice que no lo ha hecho o que algo no cuadra"
+    return revisar_oraculo(msgs)
+
+
+def revisar_oraculo(msgs: list[dict[str, Any]]) -> str | None:
+    """El oráculo no se queda sin preguntas, no compara un dato consigo mismo ni da un descuadre."""
+    for m in msgs:
+        if m.get("type") != "audit":
+            continue
+        e = m["event"]
+        if e.get("kind") == "blocked" and e.get("reason") == "presupuesto":
+            return "el oráculo se queda sin preguntas"
+        if e.get("kind") != "oracle":
+            continue
+        toks = re.findall(r"‹[^›]+›", e.get("model_saw") or "")
+        if len(toks) >= 2 and len(set(toks)) == 1:
+            return "8 compara un dato consigo mismo"
+        if re.search(r"no coincide|menor|mayor", e.get("detail") or ""):
+            return "el importe no cuadra en el oráculo"
     return None
 
 
