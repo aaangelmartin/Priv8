@@ -95,6 +95,8 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        // A dictation still listening would compete with the spoken confirmation's recognizer.
+        dictador.parar()
         events.stop()
         super.onStop()
     }
@@ -106,7 +108,8 @@ class MainActivity : Activity() {
 
     /** For the emulator: `adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true`. */
     private fun dictarSiSePide(intent: Intent?) {
-        if (intent?.getBooleanExtra(EXTRA_DICTAR, false) != true) return
+        // Debug only: in a release build no other app can make 8 start listening.
+        if (!BuildConfig.DEBUG || intent?.getBooleanExtra(EXTRA_DICTAR, false) != true) return
         // Debug only: `--es audio prueba.pcm` reads files/prueba.pcm instead of the microphone.
         val audio = intent.getStringExtra("audio")?.takeIf { BuildConfig.DEBUG }
             ?.let { File(getExternalFilesDir(null), File(it).name) }?.takeIf { it.isFile }

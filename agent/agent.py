@@ -228,8 +228,8 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
         if stop == "pause_turn":
             continue
         if not uses:
-            audit({"session": session, "kind": "task", "model_saw": text or None,
-                   "tokens": list(dict.fromkeys(tokens_in(text))), "detail": f"fin · paso {step}"})
+            # the step event above already carries the final text: mark the end without repeating it
+            audit({"session": session, "kind": "task", "detail": f"fin · paso {step}"})
             return AgentResult("done", step, final_text=text, tool_calls=calls)
 
         results = []
@@ -318,14 +318,17 @@ async def _main(a: argparse.Namespace) -> int:
     return 0 if result.status == "done" else 1
 
 
-def _wait_for_approvals(session: str, err: Any, timeout_s: float = 180) -> None:
+def _wait_for_approvals(session: str, err: Any, timeout_s: float | None = None) -> None:
     """With --web the held actions run when the person approves them in the console, so the
     process (core, adapter and browser) stays up until nothing is pending or time runs out."""
     import time
 
     import core as real
 
-    end = time.monotonic() + timeout_s
+    # wait as long as a held action can still be approved in the console, plus a margin
+    from core.confirm import EXPIRES_S
+
+    end = time.monotonic() + (timeout_s if timeout_s is not None else EXPIRES_S + 10)
     if real.pending(session):
         err("priv8: hay acciones retenidas; apruébalas o recházalas en la consola (http://127.0.0.1:5175)")
     while real.pending(session) and time.monotonic() < end:
