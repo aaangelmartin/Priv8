@@ -15,10 +15,10 @@ const LOCAL = typeof window !== 'undefined' && /^(127\.0\.0\.1|localhost)$/.test
 const ORIGIN = typeof window !== 'undefined' ? window.location.origin : SITE;
 const INSTALAR = LOCAL ? `curl -fsSL ${ORIGIN}/instalar.sh | PRIV8_MCP_URL=${ORIGIN} bash` : `curl -fsSL ${SITE}/instalar.sh | bash`;
 
+const PEDIDO = 'Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen';
 const STEPS = [
-  { n: '1', title: 'Instala', text: <>Descarga Priv8 en <code>{DIR}</code> y comprueba su suma SHA-256.</>, cmd: INSTALAR, mode: 'cargando' },
-  { n: '2', title: 'Conecta', text: 'Añade Priv8 a Claude Code en una carpeta de prueba y abre Claude Code.', cmd: `mkdir -p ~/priv8-prueba && cd ~/priv8-prueba && claude mcp add priv8 -- ${DIR}/priv8-mcp mcp && claude`, mode: 'escuchar' },
-  { n: '3', title: 'Pide', text: 'Pégalo en Claude Code. Lo que haya que aprobar te espera en la consola de Priv8.', cmd: 'Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen', prompt: '>', mode: 'leer' },
+  { n: '1', title: 'Instala', text: 'Un comando: descarga Priv8, comprueba su suma, instala lo que necesita y lo registra en tu Claude Code.', cmd: INSTALAR, mode: 'cargando' },
+  { n: '2', title: 'Pide', text: <>Abre Claude Code en cualquier carpeta (<code>claude</code>) y pídele esto. Lo que haya que aprobar te espera en la consola de Priv8.</>, cmd: PEDIDO, prompt: '>', mode: 'leer' },
 ];
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
@@ -36,16 +36,34 @@ async function copy(text) {
   }
 }
 
-function Step({ n, title, text, cmd, prompt = '$', mode }) {
+function useCopy(text) {
   const [state, setState] = useState('idle');
   const t = useRef(0);
   useEffect(() => () => clearTimeout(t.current), []);
   const go = async () => {
-    const ok = await copy(cmd);
+    const ok = await copy(text);
     setState(ok ? 'ok' : 'err');
     clearTimeout(t.current);
     t.current = setTimeout(() => setState('idle'), 2000);
   };
+  return [state, go];
+}
+const copyLabel = (state) => (state === 'ok' ? 'Copiado' : state === 'err' ? 'Cópialo a mano' : 'Copiar');
+
+/* el comando de instalación, grande, en la portada */
+function HeroCmd() {
+  const [state, go] = useCopy(INSTALAR);
+  return (
+    <div className="cmd cmd-hero">
+      <code><span className="cmd-prompt" aria-hidden="true">$</span>{INSTALAR}</code>
+      <button type="button" className={`copy copy-${state}`} onClick={go} aria-label="Copiar el comando de instalación">{copyLabel(state)}</button>
+      <span className="sr" role="status" aria-live="polite">{state === 'ok' ? 'Copiado al portapapeles' : ''}</span>
+    </div>
+  );
+}
+
+function Step({ n, title, text, cmd, prompt = '$', mode }) {
+  const [state, go] = useCopy(cmd);
   return (
     <li className="step">
       <div className="step-top">
@@ -57,7 +75,7 @@ function Step({ n, title, text, cmd, prompt = '$', mode }) {
       <div className="cmd">
         <code><span className="cmd-prompt" aria-hidden="true">{prompt}</span>{cmd}</code>
         <button type="button" className={`copy copy-${state}`} onClick={go} aria-label={`Copiar el paso ${n}`}>
-          {state === 'ok' ? 'Copiado' : state === 'err' ? 'Cópialo a mano' : 'Copiar'}
+          {copyLabel(state)}
         </button>
         <span className="sr" role="status" aria-live="polite">{state === 'ok' ? 'Copiado al portapapeles' : ''}</span>
       </div>
@@ -99,8 +117,8 @@ function Hero() {
           <Eight className="e8" mode={mode} fg="#FFFFFF" cut="#2D45D6" label="8" />
         </div>
         <h1 id="h-hero"><span className="line">Prueba Priv8</span><span className="soft line">con tu Claude Code.</span></h1>
-        <p className="hero-sub">Tu Claude Code hace un trámite en un ERP y un correo de prueba sin ver los datos: recibe <Tok>‹IBAN_1-maestro›</Tok>, no el IBAN.</p>
-        <div className="cta"><a className="btn btn-white" href="#pasos">Empezar</a></div>
+        <p className="hero-sub">Tu Claude Code hace un trámite en un ERP y un correo de prueba sin ver los datos.</p>
+        <div className="hero-cmd"><HeroCmd /></div>
       </div>
     </section>
   );
@@ -111,11 +129,11 @@ function Pasos() {
     <section id="pasos" className="block block-paper" aria-labelledby="h-pasos">
       <div className="wrap">
         <div className="block-head">
-          <h2 id="h-pasos">Tres pasos. <span className="soft">Cinco minutos.</span></h2>
+          <h2 id="h-pasos">Dos pasos. <span className="soft">Cinco minutos.</span></h2>
           <p className="lead">macOS o Linux, con <a href="https://docs.astral.sh/uv/">uv</a> y <a href="https://docs.claude.com/en/docs/claude-code/overview">Claude Code</a>. Sin claves nuestras: el modelo es el tuyo.</p>
         </div>
         <ol className="steps">{STEPS.map((s) => <Step key={s.n} {...s} />)}</ol>
-        {LOCAL && <p className="local">Vista local: el paso 1 instala desde este servidor en lugar de mcp.priv8.es.</p>}
+        {LOCAL && <p className="local">Vista local: el comando instala desde este servidor en lugar de mcp.priv8.es.</p>}
       </div>
     </section>
   );
@@ -171,9 +189,10 @@ function Detalles() {
             <summary>Qué se instala y cómo quitarlo</summary>
             <ul className="mini">
               <li>Todo va en <code>{DIR}</code>: el código de Priv8 (1 MB), sus dependencias de Python con uv (unos 170 MB) y el Chromium de Playwright (unos 350 MB). Si no tienes Python 3.12, uv lo descarga a su caché.</li>
-              <li>No usa sudo, no toca tu PATH ni tu configuración de Claude Code y no pide ninguna clave. Puedes <a href={`${SITE}/instalar.sh`}>leer el instalador</a>.</li>
+              <li>Si encuentra Claude Code, registra Priv8 para tu usuario con <code>claude mcp add --scope user priv8 -- {DIR}/priv8-mcp mcp</code>. Si ya estaba, no lo toca. Si no tienes Claude Code, te dice la línea para hacerlo luego.</li>
+              <li>No usa sudo, no toca tu PATH y no pide ninguna clave. Puedes <a href={`${SITE}/instalar.sh`}>leer el instalador</a> y lanzarlo otra vez para actualizar.</li>
               <li>Solo escucha en 127.0.0.1: 5173, 5174 y 5175 para las apps de prueba y 8700 para la consola.</li>
-              <li>Para quitarlo: <code>claude mcp remove priv8 && rm -rf {DIR}</code></li>
+              <li>Para quitarlo: <code>claude mcp remove priv8 --scope user && rm -rf {DIR}</code></li>
               {sum && <li>SHA-256 del paquete: <code>{sum}</code></li>}
             </ul>
           </details>
@@ -189,7 +208,7 @@ function Detalles() {
             <summary>Si algo no va</summary>
             <ul className="mini">
               <li><b>/mcp dice que priv8 ha fallado:</b> lánzalo a mano para ver el motivo, <code>{DIR}/priv8-mcp mcp</code>. Suele ser el puerto 8700 ocupado.</li>
-              <li><b>Puertos ocupados:</b> añade <code>-e PRIV8_EVENTS_PORT=8790 -e PRIV8_CONSOLE_PORT=5185</code> al <code>claude mcp add</code>.</li>
+              <li><b>Puertos ocupados:</b> vuelve a registrarlo con otros, por ejemplo <code>claude mcp remove priv8 --scope user && claude mcp add --scope user priv8 -e PRIV8_EVENTS_PORT=8790 -e PRIV8_CONSOLE_PORT=5185 -- {DIR}/priv8-mcp mcp</code></li>
               <li><b>No se abre la consola:</b> ábrela en <code>http://127.0.0.1:5175</code>.</li>
               <li><b>Claude Code se queda esperando:</b> hay algo retenido. Apruébalo en la consola y dile que siga.</li>
               <li><b>Alba Core pide clave:</b> abre <code>http://127.0.0.1:5173/reset</code> en la ventana de Chromium.</li>
@@ -198,6 +217,19 @@ function Detalles() {
             </ul>
           </details>
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* cierre cobalto, como el de la landing: una línea y el mismo comando */
+function Cierre() {
+  return (
+    <section id="cierre" className="block block-cobalt close" aria-labelledby="h-cierre">
+      <div className="wrap close-in">
+        <Eight className="close-eight" mode="alegria" fg="#FFFFFF" cut="#2D45D6" label="8" />
+        <h2 id="h-cierre">Pruébalo ahora. <span className="soft">Es un comando.</span></h2>
+        <div className="hero-cmd"><HeroCmd /></div>
       </div>
     </section>
   );
@@ -216,11 +248,18 @@ function Footer() {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Saber más</b><a href={HOME}>priv8.es</a><a href={REPO}>Código en GitHub</a></div>
+            <div><b>Probar</b><a href="#pasos">Pasos</a><a href="#veras">Qué vas a ver</a><a href="#detalles">Detalles</a></div>
+            <div><b>Priv8</b><a href={HOME}>priv8.es</a><a href={REPO}>Código</a></div>
+            <div><b>Instalar</b><a href={`${SITE}/instalar.sh`}>El instalador</a><a href="./priv8-mcp.tar.gz">El paquete</a></div>
           </nav>
         </div>
+        {/* firma de quien lo hace, como en la landing: el vector de laaabs, centrado, encima del nombre grande */}
         <div className="foot-by-row">
           <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
+        </div>
+        <div className="foot-word">
+          <Eight className="spot-foot" mode="mirar" fg="#2D45D6" cut="#FFFFFF" label="8" />
+          <span>Priv8</span>
         </div>
       </div>
     </footer>
@@ -239,6 +278,9 @@ export default function App() {
         <Veras />
         <Blend from="--band" to="--paper" seed={5} />
         <Detalles />
+        <Blend from="--paper" to="--band" seed={8} />
+        <Cierre />
+        <Blend from="--band" to="--paper" seed={9} />
       </main>
       <Footer />
     </>

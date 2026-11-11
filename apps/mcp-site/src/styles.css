@@ -139,7 +139,7 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .blend-pixels svg { display: block; overflow: visible; }
 
 /* ---------- pasos ---------- */
-.steps { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; max-width: 1180px; }
+.steps { list-style: none; margin: 0 auto; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 1040px; }
 .step { background: var(--card); border-radius: var(--r); padding: clamp(22px, 2.4vw, 30px); display: grid; grid-template-rows: auto auto 1fr auto; gap: 12px; min-width: 0; }
 .step-top { display: flex; align-items: center; justify-content: space-between; }
 .step-n { font: 700 3rem/1 var(--f-display); letter-spacing: -.05em; color: var(--band); }
@@ -179,23 +179,29 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 .faq details[open] summary::after { transform: translateY(-30%) rotate(225deg); }
 .faq details p { padding: 0 0 22px; color: var(--ink-2); }
 
-/* ---------- pie ---------- */
-.foot { position: relative; background: var(--paper); color: var(--ink); border-top: 0; padding: clamp(56px, 7vw, 90px) 0 0; overflow: hidden; }
+/* ---------- pie: el de la landing tal cual (apps/landing/src/styles.css, pie blanco) ---------- */
+.foot { position: relative; background: var(--paper); color: var(--ink); border-top: 0; padding: clamp(72px, 9vw, 110px) 0 0; overflow: hidden; }
 .foot-mid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(32px, 6vw, 96px); align-items: start; }
-.foot-brand { display: grid; gap: 20px; }
+@media (max-width: 900px) { .foot-mid { grid-template-columns: 1fr; } }
+.foot-brand { display: grid; gap: 22px; }
 .foot-brand p { color: var(--ink-2); max-width: 46ch; }
 .foot-logo { display: inline-flex; align-items: center; gap: 12px; color: var(--band); text-decoration: none; font: 700 1.6rem/1 var(--f-display); letter-spacing: -.03em; }
 .foot-eight { width: 56px; height: 56px; }
-.foot-cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; justify-items: end; }
+.foot-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .foot-cols div { display: grid; gap: 12px; align-content: start; }
 .foot-cols b { font: 600 .74rem/1 var(--f-mono); letter-spacing: .01em; color: var(--ink-2); margin-bottom: 6px; }
-.foot-cols a { color: var(--ink); text-decoration: none; opacity: .8; justify-self: start; transition: opacity .2s ease, transform .25s var(--ease); }
+.foot-cols a { color: var(--ink); text-decoration: none; opacity: .78; transition: opacity .2s ease, transform .25s var(--ease); justify-self: start; }
 .foot-cols a:hover { opacity: 1; transform: translateX(3px); }
-@media (max-width: 760px) { .foot-mid { grid-template-columns: minmax(0, 1fr); } }
-/* firma «by laaabs», como en la landing: el vector como máscara, en el gris del texto secundario y en cobalto al pasar */
-.foot-by-row { display: flex; justify-content: center; padding-block: clamp(44px, 6vw, 72px) 40px; }
+.foot-word { display: flex; align-items: center; justify-content: center; gap: .14em; margin-top: clamp(48px, 7vw, 90px); padding-bottom: clamp(28px, 4vw, 56px); font: 700 clamp(4.5rem, 1rem + 15vw, 16rem)/.9 var(--f-display); letter-spacing: -.055em; color: var(--band); user-select: none; }
+.foot-word > span { color: var(--band); }
+.spot-foot { width: 1.05em; aspect-ratio: 46 / 32; flex: none; transform: scale(1.4); transform-origin: right center; }
+.spot-foot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+/* firma «by laaabs», encima del nombre grande, como en la landing */
+.foot-by-row { display: flex; justify-content: center; margin-top: clamp(40px, 6vw, 72px); }
 .foot-by { display: block; width: 104px; height: 24px; background: var(--ink-2); -webkit-mask: var(--by) center / contain no-repeat; mask: var(--by) center / contain no-repeat; transition: background-color .15s ease; }
 .foot-by:hover, .foot-by:focus-visible { background: var(--band); }
+@media (max-width: 720px) { .foot-by-row { margin-top: 40px; } }
+.foot-by-row + .foot-word { margin-top: clamp(20px, 3vw, 40px); }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -203,4 +209,9 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
   .btn, .copy, .foot-cols a { transition: none; }
 }
 .e8 { width: 100%; height: 100%; }
-@media (max-width: 760px) { .foot-cols { justify-items: start; } }
+
+/* ---------- cierre ---------- */
+.close-in { display: grid; justify-items: center; text-align: center; gap: 22px; }
+.close-eight { width: clamp(90px, 9vw, 130px); aspect-ratio: 46 / 32; }
+.close-eight svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.close .hero-cmd { margin-top: 8px; }
