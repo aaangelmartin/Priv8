@@ -48,6 +48,22 @@ El núcleo lee la pantalla por un adaptador conectado a cada sesión (`core.conn
 - **La orden de la persona** pasa por `core.tokenize_text` antes de llegar a Claude, en el proceso que tiene la bóveda. Con `--server-url` la bóveda está en el otro proceso: la orden sale tal cual y el bloqueo final del bucle la retiene si lleva un dato (por ejemplo «pasa 200 €» de la escena B2C).
 - **Dos procesos, dos registros.** Con `--server-url` o stdio, cada proceso abre su propio registro firmado. Si los dos apuntan al mismo `PRIV8_AUDIT`, las cadenas se mezclan: dale a cada uno su archivo.
 
+### En el emulador Android (`--android`, B2C)
+
+```bash
+scripts/movil.sh --no-build          # AVD priv8, APK y adb reverse de 8765 y 8700
+make agent-android-replay            # respuestas grabadas sobre Banca Alcor real, sin clave
+make agent-android TASK="¿Cuánto tengo entre mis cuentas? Después pasa 200 € a mi cuenta de Nimbo Bróker."
+make agent-android                   # sin TASK: espera las tareas dictadas en el móvil (core.next_task)
+```
+
+- **El puente.** El núcleo sirve `ws://127.0.0.1:8765` y el servicio de accesibilidad de la app 8 se conecta como cliente. `adapters/android/bridge.py` lo envuelve como adaptador (`snapshot`/`perform`) y valida cada mensaje contra `bridge.schema.json`. Arranca también el canal de eventos (:8700) para los ojos y los subtítulos de 8.
+- **Antes de empezar**, el arnés (no el agente) abre Banca Alcor si no está delante y espera a que la persona entre: el login es siempre suyo.
+- **Confirmaciones.** Lo retenido va al móvil: `render_values` con los valores de sus tokens y después `confirm_request`; 8 lo dice con la voz local y la `approval_result` vuelve por el puente. Tras cada `hello` se reenvía lo pendiente con el mismo id. Si al cerrarse la confirmación el móvil enseña la pantalla de 8 o ha olvidado los ids, el puente vuelve a leer la pantalla, encuentra el mismo elemento y ejecuta.
+- **La respuesta.** Al acabar, el proceso espera lo retenido, espera a que la persona termine su código en el banco y pone a 8 delante: `core.say` publica la frase con tokens y el puente manda antes `render_values`, así que la cifra solo existe en el móvil.
+- **Tareas dictadas.** Sin `--task`, cada tarea de `core.next_task("b2c")` pasa por `core.tokenize_text` antes de llegar a Claude, igual que la pantalla.
+- **Replay.** `agent/replays/b2c_android.json` está escrito sobre las pantallas reales de Alcor en el AVD (ids `n1…`). Solo cubre Alcor; el saldo de los tres bancos necesita grabar una ejecución en vivo con `RECORD=FILE` y clave. Los tests usan `adapters/android/fake_phone.py`, que da esas mismas pantallas.
+
 ## Garantías
 
 - **Tres herramientas.** El servidor solo registra `tools/list` y `tools/call`; `resources/*` y `prompts/*` responden «Method not found». El agente se niega a arrancar si el servidor ofrece otra cosa que `observe`, `act` y `oracle`.
