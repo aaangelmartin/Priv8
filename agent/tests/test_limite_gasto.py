@@ -80,3 +80,4 @@ async def test_session_budget_blocks_the_next_task(world, tmp_path, monkeypatch)
     async with Client(build_server(core)) as client:
         result = await run_agent(client, model, core, model.task)
     assert result.status == "budget" and result.steps == 0 and model.requests == []
+

@@ -20,6 +20,7 @@ Claude passes the final block first. The replay format is in agent/README.md.
 from __future__ import annotations
 
 import argparse
+import re
 import os
 import json
 import sys
@@ -70,6 +71,18 @@ TASKS = {
         "de pago es el de la ficha del proveedor. Después pulsa Registrar y confirma que ha quedado registrada."
     ),
 }
+
+
+def expand_task(text: str) -> str:
+    """The person's request, or the built-in task it asks for. "registrar factura" and any request to
+    register the invoice ("Registra la factura de Suministros Lumen") get the full built-in instructions,
+    which name no one: so a company name in the request cannot end up as an unrelated token."""
+    t = " ".join(text.strip().lower().split())
+    if t in TASKS:
+        return TASKS[t]
+    if "factura" in t and re.search(r"\bregistr", t):
+        return TASKS["registrar factura"]
+    return text
 
 
 # ------------------------------------------------------------------ spend limits
@@ -216,7 +229,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
     """Run one task. `core` provides the leak check and audit ports of the trust zone."""
     say = log or (lambda *_: None)
     tools = await load_tools(client)
-    prompt = TASKS.get(task.strip().lower(), task)
+    prompt = expand_task(task)
     messages: list[Any] = [{"role": "user", "content": f"Sesión: {session}\n\nTarea: {prompt}"}]
     calls: list[JSON] = []
     audit = core.audit.record
@@ -382,7 +395,7 @@ async def _main(a: argparse.Namespace) -> int:
         else:
             mount_scene(a.session, a.scene or DEFAULT_SCENE, simulated_persona=persona)
         # What the person asked goes to Claude with their data as tokens of this session.
-        task = tokenize_task(a.session, TASKS.get(task.strip().lower(), task))
+        task = tokenize_task(a.session, expand_task(task))
 
     async def run_with(target: Any) -> AgentResult:
         if web is not None:  # each task starts on the start screens, whatever the last one left
@@ -436,7 +449,7 @@ async def _main(a: argparse.Namespace) -> int:
         await anyio.to_thread.run_sync(_wait_for_approvals, a.session, err)
         err("priv8: esperando el siguiente encargo en la consola")
         said = await _next_console_task(a.session)
-        task = tokenize_task(a.session, TASKS.get(said.strip().lower(), said))
+        task = tokenize_task(a.session, expand_task(said))
         result = await run_with(build_server(core))
 
     save()
