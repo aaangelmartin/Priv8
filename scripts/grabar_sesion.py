@@ -7,7 +7,7 @@ vez el stack real y guarda todo lo que recibe la consola, para que `?feed=sesion
 reproduzca tal cual:
 
 1. Arranca Alba Core y el correo en puertos libres (por defecto 5193 y 5194, con la sesión de
-   la demo abierta) y el agente real (`python -m agent.agent --web`, Chromium con ventana) con
+   la demo abierta) y el agente real (`python -m agent.agent --web`, Chromium sin ventana; --con-ventana para verla) con
    el núcleo de eventos en PRIV8_EVENTS_PORT (8792). Nunca toca 5173-5175, 8700, 5301 ni 5303:
    ahí puede estar la demo en directo.
 2. Se conecta al canal como la consola (`?frames=1`) y pide, como lo haría una persona en el
@@ -62,7 +62,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "apps" / "console" / "public"
 NOMBRE = "sesion-b2b"
-PROTEGIDOS = {5173, 5174, 5175, 8700, 8701, 5301, 5302, 5303}
+PROTEGIDOS = set(range(5170, 5176)) | {8700, 8701, 8765} | set(range(5301, 5308))
 ENCARGOS = ["Registra la factura de Suministros Lumen",
             "Contesta al proveedor que la factura está registrada"]
 SESION = "b2b"
@@ -420,6 +420,8 @@ def main() -> int:
     ap.add_argument("--fps", type=float, default=5.0, help="fotogramas por segundo como mucho, en cada pantalla")
     ap.add_argument("--intentos", type=int, default=6,
                     help="el modelo no siempre sigue el flujo ensayado: se repite hasta que lo sigue")
+    ap.add_argument("--con-ventana", action="store_true",
+                    help="Chromium con ventana (por defecto sin ventana, PRIV8_WEB_HEADLESS=1)")
     ap.add_argument("--caso", help="un caso B2B de data/casos.json (por ejemplo b2b-iban)")
     a = ap.parse_args()
 
@@ -476,6 +478,8 @@ def main() -> int:
                    "PRIV8_ALBA_URL": f"http://127.0.0.1:{a.alba_port}",
                    "PRIV8_INBOX_URL": f"http://127.0.0.1:{a.inbox_port}",
                    "PRIV8_REAL_FRAMES": "1", "PYTHONUNBUFFERED": "1"}
+            if not a.con_ventana:  # sin ventanas en el ordenador de quien graba; mismo tamaño y cursor
+                env["PRIV8_WEB_HEADLESS"] = "1"
             log(f"intento {intento} de {a.intentos}")
             cmd = ["uv", "run", "python", "-m", "agent.agent", "--web"]
             if replay is not None:
