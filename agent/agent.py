@@ -72,6 +72,33 @@ TASKS = {
 }
 
 
+# ------------------------------------------------------------------ spend limits
+# Strict limits so a live demo cannot be abused: per task and per session (this process).
+# The total cap is the API key's workspace spend limit in the Anthropic Console.
+TASK_BUDGET_USD = float(os.environ.get("PRIV8_TASK_BUDGET_USD", "0.05"))
+SESSION_BUDGET_USD = float(os.environ.get("PRIV8_SESSION_BUDGET_USD", "0.50"))
+# $ per million tokens (input, output), first-party API, prompts up to 100K tokens.
+PRICES = {"claude-haiku-5-5": (0.10, 0.50), "claude-sonnet-5-5": (2.0, 10.0), "claude-opus-5-5": (4.0, 20.0)}
+SPENT = {"session": 0.0}
+
+
+def cost_usd(response: Any, model: str = MODEL) -> float:
+    """What one response cost, from its usage. Cache reads and writes are counted at the full input
+    price (a slight overestimate keeps the limit strict). Unknown models use the most expensive row."""
+    usage = _get(response, "usage")
+    if usage is None:
+        return 0.0
+    pin, pout = PRICES.get(model, max(PRICES.values()))
+    tin = sum(int(_get(usage, k, 0) or 0) for k in
+              ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens"))
+    tout = int(_get(usage, "output_tokens", 0) or 0)
+    return (tin * pin + tout * pout) / 1_000_000
+
+
+def _dolares(x: float) -> str:
+    return f"{x:.2f}".replace(".", ",") + " $"
+
+
 # ------------------------------------------------------------------ model clients
 
 class ModelClient(Protocol):
@@ -164,7 +191,7 @@ def _jsonable(obj: Any) -> Any:
 
 @dataclass
 class AgentResult:
-    status: str  # done | asesoria | step_limit | blocked | refusal | max_tokens | error
+    status: str  # done | asesoria | step_limit | budget | blocked | refusal | max_tokens | error
     steps: int
     final_text: str = ""
     tool_calls: list[JSON] = field(default_factory=list)
@@ -200,6 +227,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
     audit({"session": session, "kind": "task", "model_saw": prompt if core.leak.check(prompt).ok else None,
            "detail": f"inicio - {MODEL} - máx {max_steps} pasos - {', '.join(sorted(t['name'] for t in tools))}"})
 
+    task_spent = 0.0
     for step in range(1, max_steps + 1):
         # Final block: what is new in this request (system and tools on step 1).
         outgoing = messages[-1] if step > 1 else {"system": SYSTEM, "tools": tools, "messages": messages}
@@ -210,6 +238,13 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
                    "detail": f"paso {step} - patrón: {', '.join(verdict.matched)}"})
             return AgentResult("blocked", step, tool_calls=calls)
 
+        if SPENT["session"] >= SESSION_BUDGET_USD:
+            audit({"session": session, "kind": "task",
+                   "detail": f"límite de gasto de la sesión - {_dolares(SESSION_BUDGET_USD)}"})
+            return AgentResult("budget", step - 1, tool_calls=calls, final_text=(
+                f"He parado: esta sesión ha llegado a su límite de gasto ({_dolares(SESSION_BUDGET_USD)}). "
+                "Reinicia la demo para seguir."))
+
         t0 = time.perf_counter()
         try:
             response = await model.create(system=SYSTEM, messages=messages, tools=tools)
@@ -219,6 +254,9 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
             audit({"session": session, "kind": "task", "detail": f"paso {step} - error {type(exc).__name__}"})
             return AgentResult("error", step, tool_calls=calls)
         model_ms = round((time.perf_counter() - t0) * 1000)
+        spent = cost_usd(response, getattr(model, "model", MODEL))
+        task_spent += spent
+        SPENT["session"] += spent
 
         stop = _get(response, "stop_reason")
         content = list(_get(response, "content", []) or [])
@@ -251,6 +289,12 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
             # the step event above already carries the final text: mark the end without repeating it
             audit({"session": session, "kind": "task", "detail": f"fin - paso {step}"})
             return AgentResult("done", step, final_text=text, tool_calls=calls)
+        if task_spent >= TASK_BUDGET_USD:  # the model wants to keep going but this task is out of budget
+            audit({"session": session, "kind": "task",
+                   "detail": f"límite de gasto del encargo - {_dolares(TASK_BUDGET_USD)} - paso {step}"})
+            return AgentResult("budget", step, tool_calls=calls, final_text=(
+                f"He parado este encargo: ha llegado a su límite de gasto ({_dolares(TASK_BUDGET_USD)}). "
+                "Pídemelo en partes más pequeñas."))
 
         results = []
         moved = stop_acts = False  # the last act of this turn can change the screen / acts no longer run
