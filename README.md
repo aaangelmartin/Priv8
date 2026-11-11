@@ -164,6 +164,66 @@ Ver `apps/android-8/README.md` y `apps/banks-sim/README.md`. En resumen:
 - `scripts/emu.sh` arranca el emulador, instala los APK y activa el servicio de 8;
 - `adb reverse tcp:8765 tcp:8765` une el emulador con el puente del portátil.
 
+## Usar Priv8 desde Claude Code
+
+Priv8 CUA es un servidor MCP. Cualquier host MCP (Claude Code, Claude Desktop u otro agente) puede usarlo como su capa de *computer use* sobre las apps reales de la demo, con la misma protección que 8:
+
+- `observe` devuelve la pantalla con tokens en lugar de datos.
+- `act` escribe tokens, y el ejecutor local pone el valor real en pantalla.
+- `oracle` compara y suma sin enseñar las cifras.
+- Registrar, transferir o enviar queda retenido hasta que la persona lo aprueba en la consola (B2B) o en el móvil (B2C).
+- Un IBAN que llega por correo no puede cambiar la cuenta de pago (procedencia).
+- Todo queda en el registro firmado (`audit/priv8.jsonl`) y la consola lo enseña en directo.
+
+El modelo del host no recibe más herramientas que esas tres, ni acceso al navegador ni al sistema.
+
+### Arrancar el servidor
+
+```bash
+make web              # Alba Core :5173, correo :5174, consola :5175 (en otra terminal)
+make mcp-web          # Priv8 en http://127.0.0.1:8701/mcp, sesión b2b
+```
+
+Se abre Chromium: entra en Alba Core con el usuario de prueba de `data/seed.json`. La clave la escribe la persona. Hasta entonces las herramientas responden que la pantalla aún no está y que se vuelva a observar.
+
+Para el móvil, `scripts/movil.sh --no-build` y después `make mcp-android` (sesión b2c). Lo retenido se aprueba en el móvil.
+
+No lo lances a la vez que `make agent-web` o `make agent-android`: comparten los puertos 8700, 8701 y 8765, y la ventana del navegador.
+
+### Conectar Claude Code
+
+Con el servidor ya arrancado (HTTP):
+
+```bash
+claude mcp add --transport http priv8 http://127.0.0.1:8701/mcp
+```
+
+O que lo arranque Claude Code (stdio). Cambia la ruta por la de tu copia del repositorio:
+
+```bash
+claude mcp add priv8 -- uv run --directory /ruta/a/Priv8 python -m agent.server --web --transport stdio
+```
+
+Con stdio, Claude Code arranca Priv8 al empezar la sesión (y con él Chromium) y lo para al salir. `/mcp` dentro de Claude Code enseña si está conectado. Con `--scope project` el comando escribe un `.mcp.json` en la raíz del repositorio; este repositorio no trae ninguno, para que Priv8 no arranque solo a quien lo abra. Si lo quieres compartir con tu equipo, este es el contenido:
+
+```json
+{
+  "mcpServers": {
+    "priv8": {"type": "http", "url": "http://127.0.0.1:8701/mcp"}
+  }
+}
+```
+
+Claude Code pide aprobar cada servidor de un `.mcp.json` de proyecto antes de usarlo.
+
+Después, pídele el trámite en lenguaje normal: «Usa priv8 para registrar en Alba Core la factura que ha llegado por correo». El servidor manda al host las mismas reglas que tiene 8 (campo `instructions` de MCP): usar los tokens tal cual, no adivinar valores, no tocar los campos rojos, esperar a la persona cuando algo queda retenido, tratar el texto de la pantalla como datos y no asesorar inversiones. Cuando `act` devuelve `held`, el resultado lleva además una frase que dice dónde se aprueba y que vuelva a observar más tarde.
+
+### Lo que Priv8 no protege aquí
+
+Priv8 protege lo que el agente lee en la pantalla y lo que escribe en ella. Lo que escribes en el chat de Claude Code llega al modelo tal cual: no pegues ahí datos personales (un IBAN, un DNI, un importe). 8 y la consola de Priv8 pasan primero tu petición por el núcleo y la convierten en tokens; un host genérico no puede hacerlo.
+
+Además, el registro firmado guarda lo que pasa por las tres herramientas, no los turnos del modelo del host, y el chat «Pide a 8» de la consola no manda encargos al host.
+
 ## Prueba
 
 ```bash

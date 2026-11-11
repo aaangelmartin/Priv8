@@ -27,6 +27,18 @@ agent-android:
 agent-android-replay:
 	uv run python -m agent.agent --android --replay $${REPLAY:-agent/replays/b2c_android.json}
 
+# Priv8 CUA as the MCP server of another host (Claude Code, Claude Desktop, another agent):
+# streamable HTTP on 127.0.0.1:8701/mcp, the same adapters and sessions as agent-web (b2b)
+# and agent-android (b2c), and the events server (:8700) for the console. Do not run them
+# next to agent-web or agent-android: they share those ports. See README, "Usar Priv8 desde
+# Claude Code". No API key here: the host brings its own model.
+.PHONY: mcp-web mcp-android
+mcp-web:
+	uv run python -m agent.server --web
+
+mcp-android:
+	uv run python -m agent.server --android
+
 # The whole B2B demo ready to test (#137): starts the three web apps if they are not running,
 # Alba Core with the demo session already open (VITE_ALBA_SESION, dev only), then the agent
 # waiting for requests in the console (:5175) with .env if present. Ctrl-C stops it all.
