@@ -65,6 +65,7 @@ Solo para el modo en vivo: `cp .env.example .env` y rellena la clave.
 | `PRIV8_CORE` | `real` (el núcleo de `core/`) o `fake` (simulado en memoria) | `real` |
 | `PRIV8_AUDIT` | Registro firmado; `off` lo deja solo en memoria | `audit/priv8.jsonl` |
 | `PRIV8_AUDIT_KEY` | Clave ed25519 del registro; se crea si no existe | `audit/priv8.key` |
+| `PRIV8_POLITICA_ESTRICTA` | `1` o vacía: modo estricto, al modelo solo llega lo que cubre una regla del sitio. `0`: permisivo, también el resto de la página filtrado por el detector (salvo en una política con `modo: estricto`). Ver [`core/README.md`](core/README.md#modo-estricto) | estricto |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | Voz en la nube (ver [`voice/README.md`](voice/README.md)) | - |
 
 Al llegar a un límite, 8 para y lo dice en la consola. `make demo-b2b` lee el `.env` solo; para el resto, `uv run --env-file .env ...`.

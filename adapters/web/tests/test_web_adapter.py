@@ -510,9 +510,11 @@ def test_observe_con_el_nucleo_se_recupera(web_known):
 
 # ---------------------------------------------------------------- toda la página (#154)
 
-def test_la_observacion_lleva_toda_la_pagina(web, core):
-    """Además de lo marcado (e1, e2… sin cambios), cada texto visible va como elemento de solo
-    lectura (t1, t2…), filtrado por el núcleo: la interfaz en claro y los datos con su token."""
+def test_la_observacion_lleva_toda_la_pagina(web, core, monkeypatch):
+    """Modo permisivo: además de lo marcado (e1, e2… sin cambios), cada texto visible va como
+    elemento de solo lectura (t1, t2…), filtrado por el núcleo: la interfaz en claro y los datos
+    con su token."""
+    monkeypatch.setenv("PRIV8_POLITICA_ESTRICTA", "0")
     web.goto("inbox", "/reset")
     web.goto("inbox", "/correo/9")
     raw = web.snapshot()
@@ -529,10 +531,32 @@ def test_la_observacion_lleva_toda_la_pagina(web, core):
     assert any(t.endswith("-correo›") for e in textos.values() for t in e.get("tokens", []))  # procedencia
 
 
+def test_modo_estricto_solo_lo_marcado(web, core, monkeypatch):
+    """Modo estricto (#177, por defecto): de la página solo sale lo que cubre una regla del
+    sitio. Los textos sueltos sin regla no llegan; el cuerpo del correo sí, por su regla."""
+    monkeypatch.delenv("PRIV8_POLITICA_ESTRICTA", raising=False)
+    web.goto("inbox", "/reset")
+    web.goto("inbox", "/correo/9")
+    obs = core.observe("b2b")
+    sent = json.dumps(obs, ensure_ascii=False)
+    for libre in ("Analizado por el antivirus", "Redactar"):
+        assert libre not in sent, libre
+    sueltos = [e for e in obs["elements"] if e["id"].startswith("t")]
+    assert all(e["cls"] == "ambar" for e in sueltos)  # solo los que casan una regla (.nombre)
+    cuerpo = next(e for e in obs["elements"] if e.get("tokens") and "‹IBAN_" in (e.get("text") or ""))
+    assert "cambiado de banco" in cuerpo["text"]  # la tarea lo necesita
+    for real in (IBAN_TRAMPA, "Suministros Lumen", "611 222 333", "facturacion@"):
+        assert real not in sent, real
+    ev = core.AUDIT.events[-1]
+    assert ev["kind"] == "observe_sent" and ev["detail"].startswith("modo estricto")
+
+
 def test_vista_de_8_es_la_pagina_entera_filtrada(web, core, monkeypatch):
-    """La vista de 8 enseña el texto de la interfaz tal cual y los datos con su token, también
-    antes de que 8 lea la pantalla (vista previa del núcleo, sin mandarla al modelo)."""
+    """Modo permisivo: la vista de 8 enseña el texto de la interfaz tal cual y los datos con su
+    token, también antes de que 8 lea la pantalla (vista previa del núcleo, sin mandarla al modelo)."""
     import sys
+
+    monkeypatch.setenv("PRIV8_POLITICA_ESTRICTA", "0")
 
     sys.path.insert(0, str(ROOT / "data"))
     from check_seed import known
@@ -555,5 +579,32 @@ def test_vista_de_8_es_la_pagina_entera_filtrada(web, core, monkeypatch):
         assert not [v for t, v in known() if len(v) >= 6 and v in html]
         assert "Álvaro" not in html  # el usuario de la barra de estado, tapado
         assert not any(ev.get("kind") == "observe_sent" for ev in recorded)  # nada ha ido al modelo
+    finally:
+        unsub()
+
+
+def test_vista_de_8_en_modo_estricto(web, core, monkeypatch):
+    """Modo estricto: la vista de 8 tapa también lo que no cubre una regla (marcador), porque
+    tampoco llega al modelo. Se ven los títulos, etiquetas y botones con regla y los tokens."""
+    import sys
+
+    monkeypatch.delenv("PRIV8_POLITICA_ESTRICTA", raising=False)
+    sys.path.insert(0, str(ROOT / "data"))
+    from check_seed import known
+
+    monkeypatch.setattr(web, "frames", True)
+    core.trust(known())
+    _login(web)
+    web.goto("alba-core", "/facturas/alta")
+    unsub = core.events.subscribe_frames(lambda m: None)
+    try:
+        assert _wait(lambda: web._vista_activa() and "‹IBAN_" in web._call(web._vista.html), timeout=10)
+        html = web._call(web._vista.html)
+        for ui in ("Alta de factura de proveedor", "Importe del pedido", "Número de factura", "Registrar"):
+            assert ui in html, ui
+        for libre in ("Empresa 01 - Ejercicio 2026", "Cerrar sesión", "Álvaro"):  # sin regla: no sale
+            assert libre not in html, libre
+        assert not [v for t, v in known() if len(v) >= 6 and v in html]
+        assert web._vista.blocked == 0
     finally:
         unsub()

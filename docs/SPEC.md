@@ -45,6 +45,8 @@ Detalle completo en `docs/contracts/token.md`.
 5. **Confirmación humana.** Transferir, invertir, firmar, enviar y llamar quedan retenidos (`held`) hasta que la persona aprueba, por voz o en pantalla, con un resumen en voz mixta. Caduca a los 5 minutos. La autenticación del banco (SCA de PSD2) y los controles marcados `solo_persona` los hace siempre la persona; mientras se autentica, el agente queda en pausa.
 6. **Auditoría.** JSONL encadenado por hashes y firmado con ed25519. Registra qué recibió el modelo, qué se bloqueó y qué aprobó la persona. `python -m core.verify` detecta una línea alterada.
 
+**Modo estricto (por defecto).** Al modelo solo llega el texto que cubre una regla de la política: ámbar como token, rojo como `null` y el verde que la regla declara legible (que también pasa el detector). Un elemento sin regla llega sin su texto, y el texto suelto de la página no llega. El modo permisivo, que una política pide con `modo: permisivo` o la variable `PRIV8_POLITICA_ESTRICTA=0`, manda además el resto de la página filtrado por el detector. Gana siempre el más estricto. Detalle y argumento en `core/README.md`.
+
 **Bloqueo final.** Cada petición hacia el modelo o la voz en la nube se revisa entera antes de salir: patrones validados, datos rojos y cualquier valor real de la bóveda o de la lista de confianza. Si aparece uno, la petición no sale y queda `blocked: fuga`. Falla cerrado.
 
 ## 5. Herramientas del agente
@@ -82,10 +84,11 @@ Una implementación es conforme si cumple todo lo siguiente. Entre paréntesis, 
 8. El oráculo no permite reconstruir una cifra con el presupuesto por defecto (`test_oracle::test_no_se_reconstruye_una_cifra_por_busqueda_binaria`).
 9. El bloqueo final para cualquier valor de la bóveda o patrón sensible, también con escapes JSON (`test_leak`).
 10. La auditoría detecta una línea editada, borrada, reordenada o con firma ajena (`test_audit`).
+11. En modo estricto, un texto sin regla (una dirección, un nombre poco común) no llega al modelo, aunque el detector no lo reconozca; en permisivo sí (`test_extras::test_estricto_solo_sale_lo_que_cubre_una_regla`, `test_extras::test_observe_y_el_modo_del_entorno`).
 
 ## 8. Límites conocidos
 
-- Los nombres sueltos sin contexto ni presencia previa en la bóveda o en la lista de confianza pueden no detectarse. Por eso las pantallas necesitan política y la bandeja de correo usa reglas.
+- Los nombres sueltos sin contexto ni presencia previa en la bóveda o en la lista de confianza pueden no detectarse. Por eso las pantallas necesitan política, la bandeja de correo usa reglas y el modo estricto es el de por defecto. Dentro de un texto que una regla declara legible (el cuerpo del correo) el detector sigue siendo la única barrera.
 - La llamada de verificación necesita el número real del proveedor para marcar. Es el único valor que sale: va a la voz con retención cero y queda en la auditoría.
 - En la demo, el núcleo corre en el portátil junto al emulador, unidos por `adb reverse`. En producción, el núcleo va dentro del móvil.
 - El agente ejecuta, no aconseja: ante una petición de asesoría de inversión, responde que no puede.
