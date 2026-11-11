@@ -1,12 +1,14 @@
 <img alt="Web mcp.priv8.es" src="../../brand/banner/cabeceras/apps-mcp-site.png" width="100%">
 
-[mcp.priv8.es](https://mcp.priv8.es): cómo usar Priv8 con tu Claude Code y el instalador de una línea del paquete `priv8-mcp` (#157). Sitio estático con Vite y React.
+[mcp.priv8.es](https://mcp.priv8.es): cómo usar Priv8 con tu asistente (Claude Code, Codex, Gemini CLI, Grok CLI, Cursor, opencode o cualquier otro que hable MCP) y el instalador de una línea del paquete `priv8-mcp` (#157, #195). Sitio estático con Vite y React.
 
 ## Qué hay
 
 | Archivo | Qué es |
 |---|---|
 | `src/App.jsx` | La página: qué hace Priv8, el instalador y los pasos |
+| `src/Asistentes.jsx`, `src/ia/` | Los seis asistentes con su icono y el reloj compartido del rotador (copia de `apps/landing`). Iconos: Simple Icons (CC0) y LobeHub Icons (MIT) para Grok |
+| `src/conectar.jsx` | Cómo conectar Priv8 en cada asistente, con el enlace a su documentación |
 | `src/Field.jsx`, `src/texture.js` | Fondo animado |
 | `src/eight/` | 8 con el motor de los ojos de la web |
 | `src/team.js` | Equipo |
