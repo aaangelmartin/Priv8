@@ -33,6 +33,21 @@ const NODES = {
   yes: { x: 27, y: 74, h: 'Tu «sí»', s: 'confirma' },
   log: { x: 9, y: 74, h: 'Registro', s: 'firmado' },
 };
+/* móvil: el mismo mapa en vertical. Tu máquina arriba (ida por la izquierda, vuelta por la derecha), la frontera
+   en horizontal y el proveedor del modelo abajo. */
+const NODES_M = {
+  screen: { x: 27, y: 18 }, detect: { x: 27, y: 33 }, vault: { x: 27, y: 48 },
+  gate: { x: 50, y: 65 }, model: { x: 50, y: 87 },
+  exec: { x: 73, y: 48 }, yes: { x: 73, y: 33 }, log: { x: 73, y: 18 },
+};
+function useNarrow(q = '(max-width: 760px)') {
+  const [on, setOn] = useState(() => { try { return window.matchMedia(q).matches; } catch (e) { return false; } });
+  useEffect(() => {
+    let m; try { m = window.matchMedia(q); } catch (e) { return undefined; }
+    const f = () => setOn(m.matches); m.addEventListener('change', f); return () => m.removeEventListener('change', f);
+  }, [q]);
+  return on;
+}
 const TRIP = [
   { at: 'screen', pk: '3.412,58 €', real: true, h: 'La pantalla tiene datos reales', t: 'El saldo, el IBAN, el titular. Todo eso está en tu pantalla.' },
   { at: 'detect', pk: '3.412,58 € · importe', real: true, h: 'El detector los reconoce', t: 'Sabe que es un importe. Las claves y los códigos los marca para que nunca salgan.' },
@@ -54,7 +69,9 @@ export function HowArch() {
     const t = setInterval(() => { if (performance.now() > hold.current) setI((v) => (v + 1) % TRIP.length); }, 2400);
     return () => clearInterval(t);
   }, [seen]);
-  const st = TRIP[i], n = NODES[st.at];
+  const narrow = useNarrow();
+  const at = (k) => (narrow ? { ...NODES[k], ...NODES_M[k] } : NODES[k]);
+  const st = TRIP[i], n = at(st.at);
   const pick = (k) => { setI(k); hold.current = performance.now() + 9000; };
   return (
     <section id="como" className={'block block-cobalt trip' + (seen ? ' seen' : '')} aria-labelledby="h-arch" ref={ref}>
@@ -64,29 +81,22 @@ export function HowArch() {
           <p className="eyebrow">Cómo funciona</p>
           <h2 id="h-arch">Los datos no cruzan. <span className="soft">Los tokens, sí.</span></h2>
         </div>
-        <div className="tmap">
+        <div className={'tmap' + (narrow ? ' tmap-m' : '')}>
           <div className="tz tz-local"><span>Tu máquina · los datos reales viven aquí</span></div>
           <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models">{MODELS.map((m) => <i key={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' ? 'evenodd' : undefined} /></svg>{m}</i>)}</div></div>
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" />
+            {narrow
+              ? <><path d="M27 18 V48 L50 65 V87" /><path d="M50 87 V65 L73 48 V18" /></>
+              : <><path d="M9 26 H45 L63 50 L85 50" /><path d="M85 50 L63 50 L45 74 H9" /></>}
           </svg>
-          {Object.entries(NODES).map(([k, v]) => (
+          {Object.keys(NODES).map((k) => [k, at(k)]).map(([k, v]) => (
             <div key={k} className={'tn tn-' + k + (st.at === k ? ' on' : '')} style={{ left: v.x + '%', top: v.y + '%' }}>
               <b>{v.h}</b><small>{v.s}</small>
             </div>
           ))}
-          <div className={'tpk' + (st.real ? ' real' : '')} style={{ left: n.x + '%', top: `calc(${n.y}% - 52px)` }}>{st.pk}</div>
+          <div className={'tpk' + (st.real ? ' real' : '')} style={{ left: n.x + '%', top: `calc(${n.y}% - ${narrow ? 46 : 52}px)` }}>{st.pk}</div>
         </div>
-        {/* móvil: el mismo recorrido, en vertical */}
-        <ol className="tlist">
-          {TRIP.map((x, k) => (
-            <li key={k} className={k === i ? 'on' : k < i ? 'past' : ''} onClick={() => pick(k)}>
-              <span className="tl-n">{k + 1}</span>
-              <span className="tl-tx"><b>{x.h}</b><span>{x.t}</span><em className={x.real ? 'real' : ''}>{x.pk}</em></span>
-            </li>
-          ))}
-        </ol>
         <div className="tcap">
           <div className="tcap-tx" key={i}><p className="tcap-n">{i + 1} de {TRIP.length}</p><h3>{st.h}</h3><p>{st.t}</p></div>
           <div className="tcap-r">

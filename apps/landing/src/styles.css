@@ -1181,3 +1181,49 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .tcap-tx, .tcap .d-dots { display: none; }
   .tcap-r { justify-items: center; }
 }
+
+/* ================= v9: hero en móvil con su campo de datos ================= */
+/* el campo se apaga él solo detrás del texto (Field.jsx); el velo central ya no hace falta en el móvil */
+@media (max-width: 700px) {
+  .hero::after { background: linear-gradient(180deg, rgba(45, 69, 214, 0) 0%, rgba(45, 69, 214, 0) 100%); }
+}
+/* "Qué ve": las dos versiones apiladas en el mismo hueco; título y texto siempre juntos */
+.see-stack { display: grid; width: 100%; }
+.see-v { grid-area: 1 / 1; display: grid; gap: 14px; align-content: start; justify-items: start; opacity: 0; visibility: hidden; transform: translateY(14px); filter: blur(6px); transition: opacity .5s var(--ease), transform .6s var(--ease), filter .5s ease, visibility 0s linear .5s; }
+.see-v.on { opacity: 1; visibility: visible; transform: none; filter: none; transition-delay: .08s, .08s, .08s, 0s; }
+.see2 .see-h, .see2 .see-l { min-height: 0 !important; }
+.see2 .see-v .see-h { margin: 0; }
+.see2 .see-v .lead { margin-top: 0; }
+@media (max-width: 900px) {
+  .see-v { gap: 8px; }
+  .see2 .see-v .lead { display: block; }
+  .bank { height: auto !important; min-height: 0 !important; }
+}
+
+/* "Cómo funciona" en móvil: el mapa en vertical */
+@media (max-width: 760px) {
+  .tmap.tmap-m { display: block; height: 540px; margin-top: 0; }
+  .tmap-m .tz { left: 0; right: 0; width: auto; padding: 12px 14px; border-radius: 20px; }
+  .tmap-m .tz-local { top: 0; bottom: 42%; }
+  .tmap-m .tz-cloud { top: 74%; bottom: 0; display: block; }
+  .tmap-m .tz-cloud .models { display: none; }
+  .tmap-m .tz span { font-size: .72rem; }
+  .tmap-m .tline { left: 4%; right: 4%; top: 65%; bottom: auto; width: auto; height: 2px; transform: translateY(-50%); background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .8) 0 8px, transparent 8px 14px); }
+  .tmap-m .tn { min-width: 128px; padding: 10px 12px; }
+  .tmap-m .tn b { font-size: .86rem; }
+  .tmap-m .tn small { display: block; font-size: .66rem; }
+  .tmap-m .tn-model { min-width: 150px; padding: 12px; }
+  .tmap-m .tpk { font-size: .74rem; padding: 6px 9px; }
+  .tcap { display: block; margin-top: 18px; text-align: center; }
+  .tcap-tx { display: block !important; min-height: 7.4em; }
+  .tcap .d-dots { display: flex !important; justify-content: center; }
+  .tcap-r { justify-items: center; margin-top: 14px; }
+  .tcap h3 { font-size: 1.3rem; }
+}
+/* la etiqueta sobre blanco con contraste suficiente */
+.scene-paper .eyebrow { color: var(--accent); }
+/* escritorio: «8 solo ve tokens.» en una línea */
+@media (min-width: 901px) {
+  .see2 { grid-template-columns: minmax(0, .74fr) minmax(0, 1.26fr); }
+  .see2 h2.see-h { font-size: clamp(2rem, min(1rem + 2.3vw, 6.6vh), 3.3rem); }
+}

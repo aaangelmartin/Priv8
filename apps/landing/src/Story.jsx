@@ -66,6 +66,10 @@ const ROWS = [
   ['Clave', '••••••••••', 'nunca sale'],
 ];
 
+const SEE = [
+  { e: 'Sin Priv8', h: <>Un agente normal <span className="soft">lo ve todo.</span></>, l: 'Para usar una web, el agente manda la pantalla entera al proveedor del modelo: tu nombre, tu IBAN, tu saldo y tus movimientos. Nadie debería dejarle así sus cuentas.' },
+  { e: 'Con Priv8', h: <>8 solo ve <span className="soft">tokens.</span></>, l: 'La misma pantalla y la misma tarea. El modelo sabe qué es cada campo y trabaja con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina.' },
+];
 /* 1 · Lo que ve un agente normal frente a lo que ve 8. Composición de la portada: 8 arriba, titular, pantalla debajo. */
 export function SeeScene() {
   return (
@@ -76,11 +80,16 @@ export function SeeScene() {
           <div className="wrap see2">
             <div className="see-copy">
               <Spot className="spot-scn" mode={safe ? 'nove' : 'miedo'} say={safe ? 'Así sí. No veo nada que no deba.' : 'Esto no debería verlo nadie.'} />
-              <p className="eyebrow">{safe ? 'Con Priv8' : 'Sin Priv8'}</p>
-              <h2 key={phase} className="swap see-h">{safe ? <>8 solo ve <span className="soft">tokens.</span></> : <>Un agente normal <span className="soft">lo ve todo.</span></>}</h2>
-              <p key={'l' + phase} className="lead swap see-l">{safe
-                ? 'La misma pantalla y la misma tarea. El modelo sabe qué es cada campo y trabaja con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina.'
-                : 'Para usar una web, el agente manda la pantalla entera al proveedor del modelo: tu nombre, tu IBAN, tu saldo y tus movimientos. Por eso ni los bancos ni las personas se fían de dejarle sus cuentas.'}</p>
+              {/* las dos versiones ocupan el mismo hueco: título y texto van siempre juntos y la pantalla no salta */}
+              <div className="see-stack">
+                {SEE.map((v, k) => (
+                  <div key={k} className={'see-v' + (k === phase ? ' on' : '')} aria-hidden={k !== phase}>
+                    <p className="eyebrow">{v.e}</p>
+                    <h2 className="see-h">{v.h}</h2>
+                    <p className="lead see-l">{v.l}</p>
+                  </div>
+                ))}
+              </div>
             </div>
             <BankScreen safe={safe} />
           </div>
