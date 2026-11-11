@@ -1,12 +1,11 @@
 // Completa dist/ después de `vite build` con todo lo que enlaza demo.priv8.es. Nada de esto se guarda en git
 // dentro de apps/demo-site: se copia en cada build.
 //
-//   /consola/              build estática de apps/console con BASE_PATH=/consola/ (?feed=sesion-b2b, la sesión real grabada
-//                          con sus fotogramas en /consola/sesion-b2b/; también ?feed=sin-protocolo, ?feed=con-protocolo, ?demo)
+//   /consola/              build estática de apps/console con BASE_PATH=/consola/: los casos grabados de data/casos.json
+//                          (?feed=sesion-<caso>, con sus fotogramas en /consola/sesion-*/), ?feed=sin-protocolo y ?demo
 //   /correo/               build estática de apps/inbox-sim (la bandeja), con BASE_PATH=/correo/
 //   /erp/                  build estática de apps/erp-sim (Alba Core) con la sesión de la demo ya abierta
 //   /equipo/<usuario>.png  foto de perfil de GitHub de cada persona del equipo (si no hay red, iniciales)
-//   /docs/entregables/video/  los vídeos de la demo (sin y con protocolo; el B2C cuando exista)
 //   /apk/                  APK de depuración: app Priv8 y los tres bancos (./gradlew assembleDebug)
 //   /archivos.json         tamaño de cada archivo copiado, para las tarjetas
 //
@@ -38,17 +37,15 @@ for (const [dir, ruta, env] of APPS) {
   run(`pnpm exec vite build --outDir "${join(DIST, ruta)}" --emptyOutDir`, cwd, { BASE_PATH: `/${ruta}/`, ...env });
   log(`${dir} en /${ruta}/`);
 }
-for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json', 'sesion-b2b.json']) {
+// Cada caso del catálogo (#187) tiene que llegar con su grabación: sin ella, su pestaña de la web saldría vacía.
+const CASOS = JSON.parse(readFileSync(join(ROOT, 'data/casos.json'), 'utf8')).casos;
+for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json', 'sesion-b2b.json', ...CASOS.map((c) => `${c.feed}.json`)]) {
   if (!existsSync(join(DIST, 'consola', f))) throw new Error(`La consola no trae ${f}`);
 }
 // Las rutas profundas (/correo/bandeja, /erp/facturas...) las sirve el middleware con el index.html de su app
 // (functions/_middleware.js): _redirects no vale porque se aplicaría también a los archivos.
 
-// 2. vídeos
-// Solo los vídeos: el PDF y las diapositivas de docs/entregables no se publican aquí (la presentación del jurado
-// va aparte, PRESENTACION_URL en src/contenido.js).
-cpSync(join(ROOT, 'docs/entregables/video'), join(DIST, 'docs/entregables/video'), { recursive: true });
-log('vídeos en /docs/entregables/video/');
+// 2. Sin vídeos (#187): la web reproduce los casos en la consola. Los vídeos siguen en docs/entregables/video.
 
 // 3. APK
 const APKS = [

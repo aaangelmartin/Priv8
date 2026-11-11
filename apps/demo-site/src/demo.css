@@ -176,3 +176,54 @@ a.dl-row:hover .dl-arrow { transform: translateX(2px); }
 .dcta { margin-top: 6px; }
 .btn-cobalt { background: var(--band); color: #fff; box-shadow: 0 10px 30px rgba(45, 69, 214, .25); }
 .btn-cobalt:hover { background: #2238bd; }
+
+/* ---------- casos grabados (#187): la consola real dentro de la página ---------- */
+.dcasos { display: grid; gap: 18px; max-width: 1240px; margin: 0 auto; }
+.dverticales { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.dverticales button { display: flex; align-items: center; gap: 14px; text-align: left; padding: 16px 18px; border-radius: 20px; border: 2px solid var(--line); background: #fff;
+  color: var(--ink); cursor: pointer; font: inherit; transition: border-color .2s ease, transform .2s var(--ease), box-shadow .2s ease; }
+.dverticales button:hover { transform: translateY(-1px); border-color: #c7d0f0; }
+.dverticales button[aria-selected="true"] { border-color: var(--band); box-shadow: 0 10px 30px rgba(45, 69, 214, .14); }
+.dv-tag { flex: none; font: 700 .8rem/1 var(--f-mono); padding: 9px 10px; border-radius: 10px; background: var(--tok-bg); color: var(--tok-fg); }
+.dverticales button[aria-selected="true"] .dv-tag { background: var(--band); color: #fff; }
+.dv-txt { display: grid; gap: 2px; min-width: 0; }
+.dv-txt b { font: 600 1.1rem/1.25 var(--f-display); letter-spacing: -.02em; }
+.dv-txt span { color: var(--ink-2); font-size: .9rem; }
+.dchips { display: flex; flex-wrap: wrap; gap: 8px; }
+.dchip { font: 600 .92rem/1 var(--f-body); padding: 11px 16px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer;
+  transition: background .2s ease, color .2s ease, border-color .2s ease; }
+.dchip:hover { border-color: var(--band); }
+.dchip[aria-selected="true"] { background: var(--band); border-color: var(--band); color: #fff; }
+.dverticales button:focus-visible, .dchip:focus-visible { outline: 3px solid rgba(45, 69, 214, .35); outline-offset: 2px; }
+.dcaso-info { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto; align-items: center; gap: 8px 22px; animation: dentra .35s var(--ease) both; }
+.dpedido { margin: 0; display: grid; gap: 4px; }
+.dpedido span { font: 600 .72rem/1 var(--f-mono); color: var(--accent); }
+.dpedido b { font: 600 1.05rem/1.3 var(--f-display); letter-spacing: -.02em; }
+.dque { margin: 0; color: var(--ink-2); font-size: .95rem; line-height: 1.5; }
+.dabrir { white-space: nowrap; }
+@media (max-width: 900px) { .dcaso-info { grid-template-columns: 1fr; } .dverticales { grid-template-columns: 1fr; } }
+.dconsola { position: relative; overflow: hidden; border-radius: 24px; background: var(--paper); border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(11, 27, 51, .14); }
+.dconsola iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; animation: dfunde .45s ease both; }
+.dnota-consola { margin: 0; text-align: center; color: var(--ink-2); font-size: .88rem; }
+@keyframes dentra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes dfunde { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- córrelo en tu máquina ---------- */
+.dpasos { list-style: none; margin: 0 auto; padding: 0; max-width: 1240px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1100px) { .dpasos { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .dpasos { grid-template-columns: 1fr; } }
+.dpaso { position: relative; display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 22px 20px 20px; border-radius: var(--r); background: #fff; border: 1px solid var(--line); }
+.dpaso-n { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--band); color: #fff; font: 700 1rem/1 var(--f-display); }
+.dpaso h3 { font-size: 1.2rem; letter-spacing: -.03em; }
+.dpaso p { color: var(--ink-2); font-size: .93rem; line-height: 1.5; }
+.dpaso .dcmd { margin-top: auto; font-size: .76rem; padding: 12px 14px; border-radius: 14px; }
+.dpaso .dlink { font-size: .88rem; }
+.dmas { max-width: 1240px; margin: 28px auto 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(18px, 3vw, 32px); align-items: start; }
+@media (max-width: 900px) { .dmas { grid-template-columns: 1fr; } }
+.dmas-links { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.dapks { display: grid; gap: 10px; padding: 20px; border-radius: var(--r); background: #fff; border: 1px solid var(--line); }
+.dapks h3 { font-size: 1.15rem; letter-spacing: -.03em; }
+.dapks p { color: var(--ink-2); font-size: .92rem; }
+.dapks .drow { background: var(--mist); }
+.dinstalar summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
+.dinstalar .dcmd { margin-top: 8px; font-size: .76rem; }

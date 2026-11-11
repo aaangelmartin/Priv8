@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import { VIDEO_B2C, VIDEOS_B2B, CONSOLA_B2B, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
+import { CASOS, VERTICALES, PASOS, MAS, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
 
-const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['enlaces', 'Enlaces'], ['equipo', 'Equipo']];
+const SECCIONES = [['casos', 'Casos'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces'], ['equipo', 'Equipo']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
 
 /* Tamaños de lo que copió scripts/assemble.mjs. En `pnpm dev` no existe: no se enseñan tamaños ni avisos. */
@@ -82,21 +82,6 @@ function Head({ eyebrow, title, soft, lead }) {
   );
 }
 
-function Video({ title, time, what, base }) {
-  return (
-    <figure className="dvid">
-      <div className="dvideo-frame">
-        {/* #t= pide un fotograma con contenido como portada, sin imagen aparte */}
-        <video controls preload="metadata" playsInline aria-label={`Vídeo: ${title}`}>
-          <source src={`${base}.webm#t=1`} type="video/webm" />
-          <source src={`${base}.mp4#t=1`} type="video/mp4" />
-        </video>
-      </div>
-      <figcaption><b>{title}</b><span>{what}</span><i>{time}</i></figcaption>
-    </figure>
-  );
-}
-
 /* Una fila: título, una línea y una sola acción (toda la fila es el enlace). */
 function Row({ title, what, href, label, download, off }) {
   if (off) return <li className="drow is-off"><div><b>{title}</b><span>{label}</span></div></li>;
@@ -119,65 +104,119 @@ function Hero() {
       <div className="wrap hero-stage">
         <div className="hero-anchor dhero-eight"><Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8, el agente de Priv8" /></div>
         <h1 id="h-hero"><span className="line">Toda la demo.</span></h1>
-        <p className="hero-sub">Los vídeos, las pantallas para probarlo y los enlaces del proyecto.</p>
+        <p className="hero-sub">La consola de verdad con cada caso grabado dentro, y cómo correrlo en tu máquina.</p>
         <div className="cta">
-          <a className="btn btn-white" href="#videos">Ver los vídeos</a>
+          <a className="btn btn-white" href="#casos">Ver los casos</a>
+          <a className="btn btn-ghost" href="#correlo">Córrelo tú</a>
         </div>
       </div>
     </section>
   );
 }
 
-function Videos() {
+/* La consola real dentro de la página, reproduciendo un caso. Se pinta a su tamaño de escritorio y se escala al
+   ancho que haya: así se ve igual que en el portátil de la demo. */
+function Consola({ caso }) {
+  const ref = useRef(null);
+  const [w, setW] = useState(1200);
+  useLayoutEffect(() => {
+    const el = ref.current; if (!el) return undefined;
+    const medir = () => setW(el.clientWidth);
+    medir();
+    const ro = new ResizeObserver(medir); ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const [bw, bh] = w < 1000 ? [1280, 860] : [1440, 900];
+  const k = w / bw;
   return (
-    <section id="videos" className="dblock" data-tone="paper" aria-labelledby="h-videos">
+    <div className="dconsola" ref={ref} style={{ height: Math.round(bh * k) }}>
+      <iframe key={caso.id} src={caso.href} title={`Consola de Priv8: ${caso.titulo}`} loading="lazy"
+        style={{ width: bw, height: bh, transform: `scale(${k})` }} />
+    </div>
+  );
+}
+
+function Casos() {
+  const [vertical, setVertical] = useState('b2b');
+  const lista = CASOS.filter((c) => c.vertical === vertical);
+  const [id, setId] = useState(lista[0].id);
+  const caso = CASOS.find((c) => c.id === id) ?? lista[0];
+  const elegirVertical = (v) => { setVertical(v); setId(CASOS.find((c) => c.vertical === v).id); };
+  return (
+    <section id="casos" className="dblock" data-tone="paper" aria-labelledby="h-casos">
       <div className="wrap">
-        <Head eyebrow="Vídeos" title="La demo," soft="en dos minutos." />
-        <div className="prod-grid">
-          <article className="prod">
-            <p className="eyebrow">B2B</p>
-            <h3>Priv8 para empresas</h3>
-            <p>La factura de un proveedor, registrada en el ERP sin que el modelo vea los datos.</p>
-            <div className="dvids">{VIDEOS_B2B.map((v) => <Video key={v.base} {...v} />)}</div>
-          </article>
-          <article className="prod">
-            <p className="eyebrow">B2C</p>
-            <h3>8 en tu móvil</h3>
-            <p>«¿Cuánto tengo entre mis bancos?» y «Pasa 200 € al bróker», por voz.</p>
-            {VIDEO_B2C
-              ? <div className="dvids"><Video title="Vídeo B2C" time="" what="8 en el emulador." base={VIDEO_B2C} /></div>
-              : <div className="dslot" role="note"><b>Vídeo B2C</b><span>Pendiente de grabar.</span></div>}
-          </article>
+        <Head eyebrow="Casos grabados" title="La consola," soft="con todo dentro."
+          lead="La consola de verdad, reproduciendo sesiones grabadas: lo que ves tú junto a lo que ve el modelo, el razonamiento de 8, sus confirmaciones y sus alarmas. Elige un caso." />
+        <div className="dcasos">
+          <div className="dverticales" role="tablist" aria-label="Vertical">
+            {VERTICALES.map((v) => (
+              <button key={v.id} type="button" role="tab" aria-selected={vertical === v.id} onClick={() => elegirVertical(v.id)}>
+                <span className="dv-tag">{v.id.toUpperCase()}</span>
+                <span className="dv-txt"><b>{v.title}</b><span>{v.what}</span></span>
+              </button>
+            ))}
+          </div>
+          <div className="dchips" role="tablist" aria-label="Casos">
+            {lista.map((c) => (
+              <button key={c.id} type="button" role="tab" aria-selected={c.id === caso.id} className="dchip" onClick={() => setId(c.id)}>{c.titulo}</button>
+            ))}
+          </div>
+          <div className="dcaso-info" key={caso.id}>
+            {caso.pedido && <p className="dpedido"><span>Lo que pide la persona</span><b>«{caso.pedido}»</b></p>}
+            <p className="dque">{caso.que}</p>
+            <a className="dlink dabrir" href={caso.href} target="_blank" rel="noopener">Abrir a pantalla completa</a>
+          </div>
+          <Consola caso={caso} />
+          <p className="dnota-consola">Abajo, reproducir y pausar, velocidad y la barra para saltar a cualquier momento. Las pestañas Alarmas, Pantalla y Registro siguen la grabación. Datos ficticios de la demo.</p>
         </div>
       </div>
     </section>
   );
 }
 
-function Prueba({ archivos }) {
+function Correlo({ archivos }) {
   return (
-    <section id="prueba" className="dblock" data-tone="paper" aria-labelledby="h-prueba">
+    <section id="correlo" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-correlo">
       <div className="wrap">
-        <Head eyebrow="Pruébalo tú" title="Las mismas pantallas," soft="para usarlas a mano." />
-        <div className="prod-grid">
-          <article className="prod">
-            <p className="eyebrow">B2B</p>
-            <h3>Priv8 para empresas</h3>
-            <p>Una sesión real de 8, grabada y reproducida en la consola: lo que ves tú junto a lo que ve el modelo, el razonamiento, el chat y la confirmación.</p>
-            <div className="dcta"><a className="btn btn-cobalt" href={CONSOLA_B2B.href}>Abrir la consola</a></div>
-          </article>
-          <article className="prod">
-            <p className="eyebrow">B2C</p>
-            <h3>8 en tu móvil</h3>
-            <p>Las cuatro apps para un emulador de Android Studio. Usuarios y claves inventados.</p>
+        <Head eyebrow="Córrelo en tu máquina" title="Todo esto," soft="en tu portátil."
+          lead="El mismo código, el mismo núcleo y las mismas apps. Sin clave ya funciona con respuestas grabadas; con la tuya, 8 piensa en vivo." />
+        <ol className="dpasos">
+          {PASOS.map((p) => (
+            <li key={p.n} className="dpaso">
+              <span className="dpaso-n" aria-hidden="true">{p.n}</span>
+              <h3>{p.title}</h3>
+              <p>{p.what}</p>
+              <pre className="dcmd"><code>{p.cmd}</code></pre>
+              <a className="dlink" href={p.link.href} target="_blank" rel="noopener">{p.link.label}</a>
+            </li>
+          ))}
+        </ol>
+        <div className="dmas">
+          <ul className="dmas-links">
+            {MAS.map((l) => (
+              <li key={l.title}>
+                <a className="dl-row" href={l.href} target="_blank" rel="noopener">
+                  <span className="dl-tag">{l.tag}</span>
+                  <span className="dl-txt"><b>{l.title}</b><span>{l.what}</span></span>
+                  <Flecha out />
+                </a>
+              </li>
+            ))}
+          </ul>
+          <div className="dapks">
+            <h3>Las apps para el emulador</h3>
+            <p>Android Studio, un emulador de Android 14 y estas cuatro APK. Usuarios y claves inventados.</p>
             <ul className="drows">
               {APKS.map((a) => {
-                const s = size(archivos, a.file);
-                return <Row key={a.href} {...a} download off={!s.ok} label={s.ok ? (s.label ? `Descargar, ${s.label}` : 'Descargar') : s.label} />;
+                const t = size(archivos, a.file);
+                return <Row key={a.href} {...a} download off={!t.ok} label={t.ok ? (t.label ? `Descargar, ${t.label}` : 'Descargar') : t.label} />;
               })}
             </ul>
-            <pre className="dcmd"><code>{INSTALAR}</code></pre>
-          </article>
+            <details className="dinstalar">
+              <summary>Instalarlas a mano con adb</summary>
+              <pre className="dcmd"><code>{INSTALAR}</code></pre>
+            </details>
+          </div>
         </div>
       </div>
     </section>
@@ -257,7 +296,7 @@ function Footer() {
             <p>Privacidad para agentes de IA que usan pantallas. El modelo trabaja con tokens; los datos se quedan contigo.</p>
           </div>
           <nav className="foot-cols" aria-label="Pie">
-            <div><b>Demo</b><a href="#videos">Vídeos</a><a href="#prueba">Pruébalo tú</a><a href="#enlaces">Enlaces</a></div>
+            <div><b>Demo</b><a href="#casos">Casos</a><a href="#correlo">Córrelo tú</a><a href="#enlaces">Enlaces</a></div>
             <div><b>Más</b><a href="#equipo">Equipo</a></div>
             <div><b>Fuera</b><a href="https://priv8.es">priv8.es</a><a href={REPO} target="_blank" rel="noopener">GitHub</a></div>
           </nav>
@@ -282,9 +321,9 @@ export default function App() {
       <main>
         <Hero />
         <Blend from="--band" to="--paper" seed={1} overlay />
-        <Videos />
-        <Prueba archivos={archivos} />
+        <Casos />
         <Blend from="--paper" to="--mist" seed={2} />
+        <Correlo archivos={archivos} />
         <Enlaces />
         <Blend from="--mist" to="--band" seed={3} />
         <Equipo archivos={archivos} />
