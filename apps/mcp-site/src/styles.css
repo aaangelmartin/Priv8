@@ -85,22 +85,27 @@ code { font-family: var(--f-mono); font-size: .88em; background: var(--tok-bg); 
 @media (max-width: 380px) { .nav .pill { display: none; } }
 
 /* ---------- portada ---------- */
-.hero { position: relative; min-height: 100vh; min-height: 100svh; padding-bottom: 64px; display: grid; align-items: center; overflow: hidden; background: var(--band); color: #fff; }
+/* tamaños de la portada: exactamente los de apps/landing (.hero, .hero-stage, .hero-anchor, .hero h1), igual que demo.priv8.es */
+.hero { position: relative; min-height: calc(100vh + 64px); min-height: calc(100svh + 64px); padding-bottom: 64px; display: grid; align-items: center; overflow: hidden; background: var(--band); color: #fff; }
 .field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 46% 52% at 50% 56%, var(--band) 50%, transparent 82%); }
-.hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: clamp(104px, 15vh, 140px); padding-bottom: clamp(48px, 9vh, 88px); }
-.hero-anchor { width: clamp(104px, min(18vw, 22vh), 220px); aspect-ratio: 46 / 32; margin-bottom: clamp(16px, 2.4vw, 28px); }
-.hero h1 { font-size: clamp(2.3rem, min(1rem + 5vw, 10vh), 5.4rem); letter-spacing: -.05em; line-height: 1; display: grid; justify-items: center; }
-.hero h1 .line { display: block; }
+.hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 42% 48% at 50% 60%, var(--band) 46%, transparent 80%); }
+.hero-stage { position: relative; z-index: 1; display: grid; justify-items: center; text-align: center; padding-top: clamp(92px, 15vh, 136px); padding-bottom: clamp(32px, 8vh, 72px); }
+.hero-anchor { width: clamp(110px, min(24vw, 30vh), 340px); aspect-ratio: 46 / 32; margin: clamp(18px, 2.4vw, 30px) 0 clamp(14px, 2vw, 26px); }
+.hero h1 { font-size: clamp(2rem, min(1rem + 5vw, 10.5vh), 5.6rem); letter-spacing: -.05em; line-height: 1; margin-top: 6px; display: grid; justify-items: center; }
+.hero h1 .line { display: block; white-space: nowrap; }
 .hero h1 .soft { color: #c4cdff; }
-.hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.2rem); line-height: 1.6; color: #dbe1ff; max-width: 62ch; text-wrap: balance; }
+.hero-sub { margin-top: 24px; font-size: clamp(1.05rem, .98rem + .35vw, 1.22rem); line-height: 1.6; color: #dbe1ff; max-width: 62ch; text-wrap: balance; }
+@media (max-width: 700px) {
+  .hero-anchor { width: clamp(96px, min(62vw, 30vh), 260px); }
+  .hero h1 { font-size: clamp(1.7rem, 8.2vw, 2.6rem); }
+}
 .hero-sub .tok { background: #fff; color: #1f33b0; }
 .hero-cmd { margin-top: 30px; width: min(680px, 100%); display: grid; gap: 12px; }
 .hero-note { font-size: .92rem; color: #c4cdff; }
 .hero-note a { color: #fff; }
 .hero-note code { background: rgba(255, 255, 255, .14); color: #fff; }
 @media (max-width: 700px) {
-  .hero::after { background: radial-gradient(ellipse 120% 62% at 50% 56%, var(--band) 60%, rgba(45, 69, 214, 0) 100%); }
+  .hero::after { background: radial-gradient(ellipse 120% 62% at 50% 58%, var(--band) 58%, rgba(45, 69, 214, 0) 100%); }
 }
 
 /* ---------- comandos con copiar ---------- */
