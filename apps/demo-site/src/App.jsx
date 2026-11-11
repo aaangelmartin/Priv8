@@ -203,7 +203,7 @@ const Flecha = ({ out }) => (
 
 function Enlaces() {
   return (
-    <section id="enlaces" className="dblock" data-tone="paper" aria-labelledby="h-enlaces">
+    <section id="enlaces" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-enlaces">
       <div className="wrap">
         <Head eyebrow="Enlaces" title="Todo," soft="en una lista." />
         <div className="dlinks">
@@ -272,8 +272,9 @@ export default function App() {
         <Casos />
         <Blend from="--paper" to="--mist" seed={2} />
         <Correlo archivos={archivos} />
-        <Blend from="--mist" to="--paper" seed={3} />
+        <Blend from="--mist" to="--band" seed={3} />
         <Enlaces />
+        <Blend from="--band" to="--paper" seed={5} />
       </main>
       <Footer />
     </>
