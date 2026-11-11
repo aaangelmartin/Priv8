@@ -121,7 +121,7 @@ class BridgeClient(
         private const val TAG = Priv8AccessibilityService.TAG
         const val VERSION = 1
         private const val MIN_BACKOFF_MS = 1_000L
-        private const val MAX_BACKOFF_MS = 30_000L
+        private const val MAX_BACKOFF_MS = 4_000L // local port: cheap to retry, quick to come back
         private const val PING_S = 15L
         private val RECONNECT = Any()
     }
