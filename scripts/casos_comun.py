@@ -36,8 +36,9 @@ def _audit(msgs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [m["event"] for m in msgs if m.get("type") == "audit"]
 
 
-def falta(msgs: list[dict[str, Any]], comprueba: list[str]) -> str | None:
-    """None si los mensajes grabados cumplen cada comprobación; si no, la primera que falla."""
+def falta(msgs: list[dict[str, Any]], comprueba: list[str], *, estricto: bool = True) -> str | None:
+    """None si los mensajes grabados cumplen cada comprobación; si no, la primera que falla. Con
+    `estricto` (al grabar) además rechaza un oráculo sin preguntas."""
     ev = _audit(msgs)
     pantallas = [m.get("observed") or {} for m in msgs if m.get("type") == "screen"]
     for c in comprueba:
@@ -53,6 +54,6 @@ def falta(msgs: list[dict[str, Any]], comprueba: list[str]) -> str | None:
             return "8 no mira a otro lado en ninguna pantalla"
         if c == "rojo" and not any(el.get("cls") == "rojo" for p in pantallas for el in p.get("elements", [])):
             return "ninguna pantalla tiene un dato rojo"
-    if any(e.get("kind") == "blocked" and e.get("reason") == "presupuesto" for e in ev):
+    if estricto and any(e.get("kind") == "blocked" and e.get("reason") == "presupuesto" for e in ev):
         return "el oráculo se queda sin preguntas"
     return None
