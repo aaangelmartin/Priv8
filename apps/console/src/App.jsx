@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, useEvents } from './useEvents.js'
 import { comentarioDe8 } from './alertas.js'
-import { TOKEN_RE, alinear, partesDeToken } from './tokens.js'
+import { partesDeToken } from './tokens.js'
 import { estadoDe8, mmss, nombreApp, nombrePantalla, tareaActual } from './directo.js'
+import { EnClaro, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
+import { PantallaDe8, Razonamiento, useReproduccion } from './Vivo.jsx'
 import Eight from './eight/Eight.jsx'
 import ochoAvatar from '../../../brand/logo/8-reposo-cobalto.svg'
 
@@ -21,89 +23,66 @@ const ORIGEN = {
   titular: 'del titular', propio: 'propio', positivo: 'importe',
 }
 
-// Los textos del núcleo usan «·» como separador; en la consola se ve « | ». Los tokens
-// (‹IBAN_1·correo›) no llevan espacios alrededor del punto y no se tocan.
-const limpio = (s) => (typeof s === 'string' ? s.replace(/\s·\s/g, ' | ') : s)
-
-// ---------------------------------------------------------------- piezas
-
-function Token({ tok, valores }) {
-  const real = valores?.[tok]
-  return <code className="tok" title={real ? `En local: ${real}` : undefined}>{tok}</code>
-}
-
-// Texto con tokens.
-//   token: el chip del token (lo que ve la IA)
-//   ambos: el valor real delante del token (solo en local)
-//   real:  el valor real, con el token al pasar por encima (lo que lees tú)
-function Tokens({ text, valores, mostrar = 'token' }) {
-  if (text == null) return <span className="redacted">nunca sale</span>
-  if (text === '') return <span className="vacio">vacío</span>
-  return text.split(TOKEN_RE).map((part, i) => {
-    if (!(i % 2)) return part
-    const real = valores?.[part]
-    if (mostrar === 'real' && real) return <span key={i} className="local" title={part}>{real}</span>
-    if (mostrar === 'ambos' && real) return <Valor key={i} tok={part} valores={valores} />
-    return <Token key={i} tok={part} valores={valores} />
-  })
-}
-
-function Valor({ tok, valores }) {
-  const real = valores?.[tok]
-  return (
-    <span className="valor">
-      {real && <b>{real}</b>}
-      <code className="tok">{tok}</code>
-    </span>
-  )
-}
-
-// Sin protocolo: el texto tal cual llega a la IA, con los valores reales marcados en rojo.
-const escapar = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-function EnClaro({ text, valores }) {
-  if (text == null) return <span className="vacio">sin texto</span>
-  if (text === '') return <span className="vacio">vacío</span>
-  if (!valores?.length) return text
-  const re = new RegExp(`(${valores.map(escapar).join('|')})`)
-  return text.split(re).map((p, i) => (i % 2 ? <mark key={i} className="fuga">{p}</mark> : p))
-}
-
-function useAhora(ms = 1000) {
-  const [t, setT] = useState(Date.now())
-  useEffect(() => { const id = setInterval(() => setT(Date.now()), ms); return () => clearInterval(id) }, [ms])
-  return t
-}
-
-// Cambios de cara sin prisa: cada estado se queda al menos `ms` antes de pasar al siguiente.
-function useCalma(valor, clave, ms = 900) {
-  const [v, setV] = useState(valor)
-  const ultimo = useRef(0)
-  useEffect(() => {
-    const espera = Math.max(0, ultimo.current + ms - Date.now())
-    const id = setTimeout(() => { setV(valor); ultimo.current = Date.now() }, espera)
-    return () => clearTimeout(id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clave])
-  return v
-}
-
-const hora = (d) => (d ? new Date(d).toLocaleTimeString('es-ES', { hour12: false }) : '')
-
 // ---------------------------------------------------------------- barra
 
 const CONEXION = {
   conectado: ['seguro', 'Conectado al núcleo'],
   conectando: ['aviso', 'Conectando…'],
   reconectando: ['aviso', 'Reconectando…'],
-  demo: FEED ? ['cobalto', 'Reproducción: factura del proveedor (B2B)'] : ['cobalto', 'Demo con mensajes grabados'],
+  demo: FEED ? ['cobalto', 'Reproducción B2B'] : ['cobalto', 'Demo grabada'],
   'sin demo': ['bloqueo', 'Falta demo.json'],
 }
 
-function Barra({ status }) {
+// La vista principal es 8 en directo y el chat; lo demás va en pestañas de la barra.
+const VISTAS = [['directo', 'En directo'], ['alarmas', 'Alarmas'], ['pantalla', 'Pantalla'], ['registro', 'Registro']]
+const vistaDeHash = () => {
+  const h = window.location.hash.replace('#', '')
+  return VISTAS.some(([k]) => k === h) ? h : 'directo'
+}
+function useVista() {
+  const [v, setV] = useState(vistaDeHash)
+  useEffect(() => {
+    const f = () => setV(vistaDeHash())
+    window.addEventListener('hashchange', f)
+    return () => window.removeEventListener('hashchange', f)
+  }, [])
+  const ir = (k) => {
+    const url = `${window.location.pathname}${window.location.search}${k === 'directo' ? '' : `#${k}`}`
+    window.history.replaceState(null, '', url)
+    setV(k)
+  }
+  return [v, ir]
+}
+
+function Barra({ status, vista, ir, avisos }) {
+  const [tono, texto] = CONEXION[status] ?? ['aviso', status]
+  return (
+    <header className="nav">
+      <span className="brand">
+        <Eight className="nav-eight" mode={status === 'conectado' || status === 'demo' ? 'mirar' : 'sinconexion'} fg={BLANCO} cut={COBALTO} label="8" />
+        <span className="word">Priv8</span>
+        <span className="producto">Consola</span>
+      </span>
+      <nav className="vistas" role="tablist" aria-label="Vistas de la consola">
+        {VISTAS.map(([k, t]) => {
+          const a = avisos[k]
+          return (
+            <button key={k} role="tab" aria-selected={vista === k} onClick={() => ir(k)}>
+              {t}
+              {a?.n > 0 && <span className={`insignia t-${a.tono}`} title={a.texto}>{a.n}</span>}
+            </button>
+          )
+        })}
+      </nav>
+      <span className="sp" />
+      <span className={`conexion t-${tono}`} role="status"><i aria-hidden="true" />{texto}</span>
+    </header>
+  )
+}
+
+function Verificar() {
   const [check, setCheck] = useState(null)
   const [busy, setBusy] = useState(false)
-  const [tono, texto] = CONEXION[status] ?? ['aviso', status]
-
   const verify = async () => {
     setBusy(true)
     try {
@@ -114,25 +93,17 @@ function Barra({ status }) {
     }
     setBusy(false)
   }
-
   return (
-    <header className="nav">
-      <span className="brand">
-        <Eight className="nav-eight" mode={status === 'conectado' || status === 'demo' ? 'mirar' : 'sinconexion'} fg={BLANCO} cut={COBALTO} label="8" />
-        <span className="word">Priv8</span>
-        <span className="producto">Consola</span>
-      </span>
-      <span className={`conexion t-${tono}`} role="status"><i aria-hidden="true" />{texto}</span>
-      <span className="sp" />
+    <span className="verificar">
       {check && (
         <span className={`verificado ${check.ok ? 'ok' : 'mal'}`} role="status">
           {check.ok ? `Registro íntegro | ${check.lines} líneas` : `Registro no válido: ${limpio(check.error)}`}
         </span>
       )}
-      <button className="pill" onClick={verify} disabled={busy || DEMO} title={DEMO ? 'No disponible en la reproducción' : 'Comprueba la cadena de hashes y la firma'}>
+      <button className="btn primario" onClick={verify} disabled={busy || DEMO} title={DEMO ? 'No disponible en la reproducción' : 'Comprueba la cadena de hashes y la firma'}>
         {busy ? 'Verificando…' : 'Verificar registro'}
       </button>
-    </header>
+    </span>
   )
 }
 
@@ -142,62 +113,59 @@ function Barra({ status }) {
 function Titular({ texto }) {
   const i = texto.indexOf(' - ')
   if (i < 0) return texto
-  return <>{texto.slice(0, i)}<span className="soft segunda">{texto.slice(i + 3)}</span></>
+  return <>{texto.slice(0, i)} <span className="soft">{texto.slice(i + 3)}</span></>
 }
 
-function EnDirecto({ audit, pending, status, etiquetas, valores, alerts, enClaro, fin, ahora }) {
+function EnDirecto({ audit, pending, status, etiquetas, valores, enClaro, fin, ahora, rep }) {
   const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
   const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}|${crudo.detalle ?? ''}`)
   const t = useMemo(() => tareaActual(audit), [audit])
   const bloqueos = audit.filter((x) => x.kind === 'blocked').length
-  const sinRevisar = alerts.filter((a) => !a.revisada).length
   const segundos = t ? Math.max(0, Math.round(((t.terminada ? t.fin : ahora) - t.inicio) / 1000)) : 0
   const fondo = SIN_PROTOCOLO ? NOCHE : COBALTO
+  // Lo que ves (valores reales, solo en local) o lo que ve 8 (tokens). En las reproducciones, lo que ve 8.
+  const [modo, setModo] = useState(FEED ? 'ocho' : 'tu')
 
   return (
     <section className={`directo ${FEED ? `modo ${SIN_PROTOCOLO ? 'sin' : 'con'}` : ''}`} aria-label="8 en directo">
-      <div className="directo-cab">
-        {FEED ? (
-          <div className="modo-texto">
-            <p className="eyebrow">{SIN_PROTOCOLO ? 'El mismo trámite, sin Priv8' : 'El mismo trámite, con Priv8'}</p>
-            <h1>{SIN_PROTOCOLO ? <>Sin protocolo: <span className="soft">el modelo recibe esto.</span></> : <>Con protocolo: <span className="soft">el modelo recibe tokens.</span></>}</h1>
-          </div>
-        ) : (
-          <p className="eyebrow"><i className="vivo" aria-hidden="true" />En directo</p>
-        )}
-      </div>
-
-      <div className="directo-cuerpo" aria-live="polite">
+      <header className="directo-cab" aria-live="polite">
         <Eight className="directo-eight" mode={e.modo} fg={BLANCO} cut={fondo} label={`8: ${e.titulo}`} />
         <div className="directo-texto">
+          {FEED
+            ? <p className="eyebrow modo-texto">{SIN_PROTOCOLO ? <>Sin protocolo <span className="clave">el modelo recibe los datos reales</span></> : <>Con Priv8 <span className="clave">el modelo solo recibe tokens</span></>}</p>
+            : <p className="eyebrow"><i className="vivo" aria-hidden="true" />En directo</p>}
           <h2><Titular texto={e.titulo} /></h2>
-          {e.detalle && <p className="detalle"><Tokens text={limpio(e.detalle)} valores={valores} mostrar="real" /></p>}
+          {e.detalle && <p className="detalle"><Tokens text={limpio(e.detalle)} valores={valores} mostrar={modo === 'tu' ? 'real' : 'token'} /></p>}
         </div>
+        <span className="sp" />
+        <div className="directo-lado">
+          <div className="conmutador" role="tablist" aria-label="Qué se muestra">
+            <button role="tab" aria-selected={modo === 'tu'} onClick={() => setModo('tu')}>Lo que ves</button>
+            <button role="tab" aria-selected={modo === 'ocho'} onClick={() => setModo('ocho')}>{SIN_PROTOCOLO ? 'Lo que recibe el modelo' : 'Lo que ve 8'}</button>
+          </div>
+          {t && (
+            <span className="tarea" aria-label="Encargo actual">
+              <span>{t.terminada ? 'Terminado' : 'En curso'}</span>
+              <span>Paso {t.pasos}</span>
+              <span>{mmss(segundos)}</span>
+            </span>
+          )}
+        </div>
+      </header>
+
+      <div className="directo-vivo">
+        <PantallaDe8 rep={rep} modo={modo} valores={valores} sin={SIN_PROTOCOLO} />
+        <Razonamiento rep={rep} modo={modo} valores={valores} />
       </div>
 
-      <footer className="directo-pie">
-        {FEED ? (
-          <>
-            <span className={`cifra ${SIN_PROTOCOLO ? 'mala' : ''}`}><b>{enClaro}</b> valores reales enviados al modelo</span>
-            {!SIN_PROTOCOLO && <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'acción bloqueada' : 'acciones bloqueadas'}</span>}
-            {fin && SIN_PROTOCOLO && <span className="cifra fin">Ningún bloqueo, ninguna confirmación</span>}
-          </>
-        ) : (
-          <>
-            <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'bloqueo' : 'bloqueos'}</span>
-            <span className={`cifra ${pending.length ? 'atencion' : ''}`}><b>{pending.length}</b> por confirmar</span>
-            <span className={`cifra ${sinRevisar ? 'atencion' : ''}`}><b>{sinRevisar}</b> {sinRevisar === 1 ? 'alarma' : 'alarmas'}</span>
-          </>
-        )}
-        <span className="sp" />
-        {t && (
-          <span className="tarea" aria-label="Encargo actual">
-            <span>{t.terminada ? 'Terminado' : 'En curso'}</span>
-            <span>Paso {t.pasos}</span>
-            <span>{mmss(segundos)}</span>
-          </span>
-        )}
-      </footer>
+      {FEED && (
+        <footer className="directo-pie">
+          <span className={`cifra ${SIN_PROTOCOLO ? 'mala' : ''}`}><b>{enClaro}</b> valores reales enviados al modelo</span>
+          {!SIN_PROTOCOLO && <span className="cifra"><b>{bloqueos}</b> {bloqueos === 1 ? 'acción bloqueada' : 'acciones bloqueadas'}</span>}
+          {!SIN_PROTOCOLO && <span className="cifra"><b>{pending.length}</b> por confirmar</span>}
+          {fin && SIN_PROTOCOLO && <span className="cifra fin">Ningún bloqueo, ninguna confirmación</span>}
+        </footer>
+      )}
     </section>
   )
 }
@@ -396,14 +364,6 @@ function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
 
 // ---------------------------------------------------------------- pantalla actual
 
-function Real({ real, observado }) {
-  if (real == null) return <span className="vacio">sin texto</span>
-  if (real === '') return <span className="vacio">vacío</span>
-  const trozos = alinear(real, observado)
-  if (!trozos) return real
-  return trozos.map((t, i) => (t.token ? <mark key={i} className="dato">{t.texto}</mark> : t.texto))
-}
-
 function Celda({ children, largo }) {
   const [abierta, setAbierta] = useState(false)
   if (!largo) return <div className="valor-celda">{children}</div>
@@ -549,6 +509,8 @@ function Actividad({ audit, etiquetas, valores }) {
           <p className="eyebrow">{SIN_PROTOCOLO ? 'Sin registro firmado' : 'Registro firmado'}</p>
           <h2>Actividad</h2>
         </div>
+        <span className="sp" />
+        <Verificar />
       </header>
       <div className="filtros" role="tablist" aria-label="Filtrar actividad">
         {FILTROS.map(([k, t]) => (
@@ -591,30 +553,43 @@ function Actividad({ audit, etiquetas, valores }) {
 // ---------------------------------------------------------------- app
 
 export default function App() {
-  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir } = useEvents()
+  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea } = useEvents()
   const ahora = useAhora()
-  const atencion = pending.length + alerts.filter((a) => !a.revisada).length
+  // La reproducción vive aquí para que no se pierda al cambiar de pestaña.
+  const rep = useReproduccion(linea, valores)
+  const [vista, ir] = useVista()
+  const sinRevisar = alerts.filter((a) => !a.revisada).length
+  const bloqueos = audit.filter((x) => x.kind === 'blocked').length
+  const atencion = pending.length + sinRevisar
 
   useEffect(() => {
     document.title = `${atencion ? `(${atencion}) ` : ''}Priv8 - Consola`
   }, [atencion])
 
+  const avisos = {
+    directo: { n: pending.length, tono: 'aviso', texto: `${pending.length} por confirmar` },
+    alarmas: { n: sinRevisar, tono: 'bloqueo', texto: `${sinRevisar} sin revisar` },
+    registro: { n: bloqueos, tono: 'neutro', texto: `${bloqueos} bloqueos` },
+  }
+
   return (
     <div className={`app ${SIN_PROTOCOLO ? 'sin-protocolo' : ''} ${FEED ? 'en-feed' : ''}`}>
-      <Barra status={status} />
-      <div className="arriba">
-        <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} valores={valores} alerts={alerts} enClaro={enClaro} fin={fin} ahora={ahora} />
-        <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
-      </div>
-      <div className="layout">
-        <main className="principal">
-          <Alarmas alerts={alerts} review={review} comentario={comentarioDe8(audit)} valores={valores} compacta={!!FEED} />
-          <Pantalla screen={screen} status={status} valores={valores} />
+      <Barra status={status} vista={vista} ir={ir} avisos={avisos} />
+      {vista === 'directo' && (
+        <div className="vista-directo">
+          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} valores={valores} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} />
+          <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
+        </div>
+      )}
+      {vista === 'alarmas' && (
+        <main className="vista">
+          {alerts.length
+            ? <Alarmas alerts={alerts} review={review} comentario={comentarioDe8(audit)} valores={valores} />
+            : <section className="panel vacio-panel"><h2>Sin alarmas</h2><p>Si un correo pide cambiar una cuenta, da órdenes a la IA o el núcleo bloquea algo, aparecerá aquí.</p></section>}
         </main>
-        <aside className="lateral">
-          <Actividad audit={audit} etiquetas={etiquetas} valores={valores} />
-        </aside>
-      </div>
+      )}
+      {vista === 'pantalla' && <main className="vista"><Pantalla screen={screen} status={status} valores={valores} /></main>}
+      {vista === 'registro' && <main className="vista"><Actividad audit={audit} etiquetas={etiquetas} valores={valores} /></main>}
     </div>
   )
 }
