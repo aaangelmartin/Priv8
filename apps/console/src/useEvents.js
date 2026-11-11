@@ -2,9 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { alertaDeBloqueo, alertasDePantalla } from './alertas.js'
 import { valoresDe } from './tokens.js'
 import { textoDeSegmentos } from './directo.js'
+import { conFotogramas, urlsDe } from './frame.js'
 
-export const WS_URL = 'ws://127.0.0.1:8700/events'
-export const VERIFY_URL = 'http://127.0.0.1:8700/verify'
+// ?ws=ws://127.0.0.1:8790/events escucha otro núcleo (PRIV8_EVENTS_PORT) sin tocar la demo.
+const URLS = urlsDe(window.location.search)
+export const WS_URL = URLS.ws
+export const VERIFY_URL = URLS.verify
 
 // ?demo reproduce public/demo.json: mensajes reales del núcleo en el flujo de la factura
 // con la trampa del IBAN, capturados sin llamar a la IA. Sirve para ensayar y para el vídeo.
@@ -51,6 +54,8 @@ export function useEvents() {
   const [session, setSession] = useState('b2b')
   // Pantallas y eventos de auditoría en el orden en que llegan, para la pantalla de 8 en directo.
   const [linea, setLinea] = useState([])
+  // El último fotograma de la pantalla real (#147): píxeles con valores reales, solo en memoria.
+  const [frame, setFrame] = useState(null)
   const wsRef = useRef(null)
   const sendRef = useRef(null)
   const sessionRef = useRef('b2b')
@@ -131,6 +136,10 @@ export function useEvents() {
     }
 
     const handle = (m) => {
+      if (m.type === 'frame') {
+        if (typeof m.img === 'string' && m.w > 0 && m.h > 0) setFrame({ ...m, recibido: Date.now() })
+        return
+      }
       if (m.type === 'screen') {
         usarSesion(m.session)
         setScreen({ ...m, recibida: new Date() })
@@ -206,7 +215,7 @@ export function useEvents() {
 
     const connect = () => {
       setStatus('conectando')
-      const ws = new WebSocket(WS_URL)
+      const ws = new WebSocket(conFotogramas(WS_URL))
       wsRef.current = ws
       ws.onopen = () => { tries = 0; setStatus('conectado') }
       ws.onmessage = (e) => {
@@ -216,6 +225,7 @@ export function useEvents() {
       }
       ws.onclose = () => {
         if (closed) return
+        setFrame(null) // sin núcleo, la pantalla real no está al día: vuelve el esquema
         setStatus('reconectando')
         timer = setTimeout(connect, Math.min(500 * 2 ** tries++, 5000))
       }
@@ -253,5 +263,5 @@ export function useEvents() {
     setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
   }, [])
 
-  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea }
+  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame }
 }

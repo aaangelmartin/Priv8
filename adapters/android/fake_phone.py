@@ -46,6 +46,8 @@ def _el(i: int, role: str, sel: str | None, text: str | None = None, label: str 
         e["sel"] = sel
     if actions:
         e["actions"] = actions
+    # Screen pixels of a 1080x2400 phone, one row per element (the real phone sends its own).
+    e["bounds"] = [48, 160 + i * 84, 1032, 228 + i * 84]
     e.update(kw)
     return e
 

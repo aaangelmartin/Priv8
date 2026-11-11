@@ -16,6 +16,13 @@ pasa por una cola.
     from adapters.web import WebAdapter
     web = WebAdapter(start="inbox")      # abre Chromium con una pestaña por app
     core.connect("b2b", web)
+
+Pantalla real en la consola (#147): mientras una consola mira (core.connect
+pone `watching` y `on_frame`), la pestaña activa se emite con CDP
+Page.startScreencast (JPEG, hasta FRAME_FPS por segundo) junto con las cajas de
+los elementos del último snapshot, medidas en vivo. Todo ocurre en el hilo del
+navegador entre una llamada y la siguiente: snapshot() y perform() no esperan a
+ningún fotograma. Sin nadie mirando, no se captura nada. PRIV8_FRAMES=0 lo apaga.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ import os
 import queue
 import re
 import threading
+import time
 import urllib.request
 from collections.abc import Callable
 from concurrent.futures import Future
@@ -51,6 +59,34 @@ def cursor_enabled(default: bool) -> bool:
     if v is None or not v.strip():
         return default
     return v.strip().lower() not in ("0", "off", "false", "no")
+
+
+# Pantalla real (#147): fotogramas por segundo como mucho, ancho máximo y calidad JPEG.
+FRAME_FPS = 12
+FRAME_MAX_W, FRAME_MAX_H = 1100, 900
+FRAME_QUALITY = 62
+FRAME_TICK_MS = 15      # sin trabajos, cada cuánto atiende el navegador los fotogramas
+BOXES_EVERY_S = 0.25    # cada cuánto se vuelven a medir las cajas (desplazamientos, animaciones)
+
+# Cajas de los elementos marcados en el último snapshot, en px CSS de la ventana.
+_BOXES_JS = r"""
+(extra) => {
+  const out = {};
+  const caja = (id, el) => {
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) out[id] = [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)];
+  };
+  for (const el of document.querySelectorAll('[data-p8-ref]')) caja(el.getAttribute('data-p8-ref'), el);
+  for (const [id, sel] of Object.entries(extra || {})) caja(id, document.querySelector(sel));
+  return out;
+}
+"""
+
+
+def frames_enabled() -> bool:
+    v = os.environ.get("PRIV8_FRAMES", "").strip().lower()
+    return v not in ("0", "off", "false", "no")
 
 
 HOME: dict[str, str] = {"alba-core": "/facturas/alta", "inbox": "/bandeja"}
@@ -208,6 +244,18 @@ class WebAdapter:
         self._timeout = timeout_ms
         self.profile = Path(profile) if profile else None  # None: contexto de usar y tirar
         self._jobs: queue.Queue[tuple[Callable[[], Any], Future] | None] = queue.Queue()
+        # Pantalla real (#147). core.connect pone on_frame y watching; sin núcleo no se emite.
+        self.on_frame: Callable[[dict[str, Any]], Any] | None = None
+        self.watching: Callable[[], int] = lambda: 0
+        self.frames = frames_enabled()
+        self.frames_sent = 0
+        self._cast: tuple[Any, Any] | None = None   # (página, sesión CDP) que se está emitiendo
+        self._frame: tuple[str, int, int] | None = None  # último fotograma sin enviar
+        self._last_img: tuple[str, int, int] | None = None  # último que llegó del navegador
+        self._frame_at = 0.0
+        self._boxes: dict[str, list[int]] = {}
+        self._boxes_at = 0.0
+        self._extra_sel: dict[str, dict[str, str]] = {}  # por app: id de un campo del PDF -> selector
         self._ready: Future = Future()
         self._thread = threading.Thread(target=self._run, args=(start, headless, slow_mo_ms),
                                         name="priv8-web", daemon=True)
@@ -232,12 +280,30 @@ class WebAdapter:
             self._ready.set_exception(e)
             return
         self._ready.set_result(True)
-        while (job := self._jobs.get()) is not None:
+        while True:
+            if self._streaming():
+                try:
+                    job = self._jobs.get_nowait()
+                except queue.Empty:
+                    self._stream_tick()
+                    continue
+            else:
+                self._stop_cast()
+                try:
+                    job = self._jobs.get(timeout=0.4)
+                except queue.Empty:
+                    continue
+            if job is None:
+                break
             fn, fut = job
             try:
                 fut.set_result(fn())
             except BaseException as e:  # noqa: BLE001
                 fut.set_exception(e)
+            if self._cast is not None:  # tras una acción o una lectura, las cajas pueden haber cambiado:
+                self._boxes_at = 0.0     # se miden y el último fotograma se vuelve a mandar con ellas
+                self._frame = self._frame or self._last_img
+        self._stop_cast()
         self._ctx.close()
         if self._browser is not None:
             self._browser.close()
@@ -284,6 +350,8 @@ class WebAdapter:
             page.wait_for_load_state("domcontentloaded")
             dom = page.evaluate(_SNAPSHOT_JS)
             elements = dom["elements"] + self._pdf_elements(page.url, dom)
+            self._extra_sel[self.app] = {e["id"]: e["sel"] for e in elements[len(dom["elements"]):]}
+            self._boxes_at = 0.0
             self.seq += 1
             return {"source": "web", "app": self.app, "screen": None, "url": page.url, "seq": self.seq,
                     "focus": dom["focus"], "system_dialog": None, "elements": elements}
@@ -371,6 +439,89 @@ class WebAdapter:
             return {"ok": False, "error": "timeout"}
         except PwError:
             return {"ok": False, "error": "otro"}
+
+    # ---- pantalla real en la consola (#147), siempre en el hilo del navegador ----
+
+    def _streaming(self) -> bool:
+        if not self.frames or self.on_frame is None:
+            return False
+        try:
+            return self.watching() > 0
+        except Exception:  # noqa: BLE001
+            return False
+
+    def _stream_tick(self) -> None:
+        """Sin trabajos pendientes y con alguien mirando: emite la pestaña activa, mide las
+        cajas de vez en cuando y deja al navegador atender los fotogramas un momento."""
+        from playwright.sync_api import Error as PwError
+
+        try:
+            page = self._page(self.app)
+            if self._cast is None or self._cast[0] is not page:
+                self._start_cast(page)
+            if time.monotonic() - self._boxes_at > BOXES_EVERY_S:
+                self._measure(page)
+            self._flush()
+            page.wait_for_timeout(FRAME_TICK_MS)
+        except PwError:
+            self._cast = None
+            time.sleep(FRAME_TICK_MS / 1000)
+
+    def _start_cast(self, page: Any) -> None:
+        self._stop_cast()
+        self._frame = self._last_img = None  # el de otra pestaña no vale
+        cdp = self._ctx.new_cdp_session(page)
+        cdp.on("Page.screencastFrame", lambda p: self._on_cast(cdp, p))
+        cdp.send("Page.startScreencast", {"format": "jpeg", "quality": FRAME_QUALITY,
+                                          "maxWidth": FRAME_MAX_W, "maxHeight": FRAME_MAX_H})
+        self._cast = (page, cdp)
+        self._boxes_at = 0.0
+
+    def _stop_cast(self) -> None:
+        if self._cast is None:
+            return
+        _, cdp = self._cast
+        self._cast = None
+        try:
+            cdp.send("Page.stopScreencast")
+            cdp.detach()
+        except Exception:  # noqa: BLE001 - la pestaña ya no está
+            pass
+
+    def _on_cast(self, cdp: Any, p: dict[str, Any]) -> None:
+        try:
+            cdp.send("Page.screencastFrameAck", {"sessionId": p["sessionId"]})
+        except Exception:  # noqa: BLE001
+            return
+        if self._cast is None or self._cast[1] is not cdp:
+            return
+        meta = p.get("metadata") or {}
+        self._frame = self._last_img = (p["data"], int(meta.get("deviceWidth") or 0), int(meta.get("deviceHeight") or 0))
+        self._flush()
+
+    def _measure(self, page: Any) -> None:
+        self._boxes = page.evaluate(_BOXES_JS, self._extra_sel.get(self.app, {})) or {}
+        self._boxes_at = time.monotonic()
+
+    def _flush(self) -> None:
+        """Envía el último fotograma si toca (FRAME_FPS como mucho): gana el último."""
+        if self._frame is None or self._cast is None or self.on_frame is None:
+            return
+        now = time.monotonic()
+        if now - self._frame_at < 1 / FRAME_FPS:
+            return
+        img, w, h = self._frame
+        if not w or not h:
+            return
+        self._frame, self._frame_at = None, now
+        page = self._cast[0]
+        app = next((k for k, p in self._pages.items() if p is page), self.app)  # la de la pestaña emitida
+        try:
+            self.on_frame({"app": app, "w": w, "h": h, "img": img, "mime": "image/jpeg",
+                           "boxes": dict(self._boxes) if app == self.app else {}, "where": {"url": page.url}})
+            self.frames_sent += 1
+        except Exception:  # noqa: BLE001 - la consola nunca para al agente
+            pass
 
     # ---- cursor de 8 (#135) ----
 

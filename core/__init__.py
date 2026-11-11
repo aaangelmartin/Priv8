@@ -14,6 +14,8 @@ Y para quien monta el proceso:
     tokenize_text(session, text)    orden de la persona → texto con tokens
     trust([(tipo, valor), ...])     valores de confianza (seed) que se buscan siempre
     say(session, text)              lo que dice 8 (tokens), en voz mixta, al canal de eventos y al móvil
+    frame(session, f)               fotograma de la pantalla real, con las cajas de la última
+                                    observación, solo a la consola local (#147)
 
 Tareas que llegan mientras el agente corre (#47: app 8 o dictado con Whisper):
 
@@ -71,6 +73,11 @@ def _ms(t0: float) -> int:
 
 def connect(session: str, adapter: Adapter) -> None:
     SESSIONS.get(session).adapter = adapter
+    # Pantalla real en la consola (#147): el adaptador que sabe capturar recibe dónde
+    # mandar los fotogramas y cómo saber si alguien mira.
+    if hasattr(adapter, "on_frame"):
+        adapter.on_frame = lambda f, s=session: frame(s, f)
+        adapter.watching = events.frame_watchers
 
 
 def trust(known: list[tuple[str, str]]) -> None:
@@ -88,6 +95,58 @@ def tokenize_text(session: str, text: str, origen: str = "titular") -> str:
     vault = SESSIONS.get(session).vault
     out, red = _replace_spans(text, _detector(session)(text), vault, origen)
     return out if not red else "[la persona dijo un dato que nunca sale]"
+
+
+# ---- pantalla real en la consola (#147) ----
+
+def frame(session: str, f: dict[str, Any]) -> dict[str, Any] | None:
+    """Un fotograma de la pantalla real, al canal local de fotogramas (nunca a la auditoría).
+
+    f lo da el adaptador: {app, w, h, img (base64), mime, boxes: {id: [l, t, r, b]},
+    where: {campo: valor}}. w y h son el espacio de las cajas (px CSS en web, px del
+    móvil en Android), no el tamaño de la imagen. `where` dice en qué pantalla está
+    (url en web; app y screen en Android): si coincide con la última observación, las
+    cajas llevan la clase y los tokens que vio el modelo; si no, `fresh` es false y la
+    consola tapa la pantalla entera en «lo que ve 8» (aún no la ha leído)."""
+    sess = SESSIONS.get(session)
+    sess.extra["frame_in"] = f  # para volver a mandarlo cuando 8 lea la pantalla (una página quieta no repinta)
+    obs, seen = sess.last_obs, sess.extra.get("obs_where") or {}
+    where = f.get("where") or {}
+    fresh = bool(obs and obs.get("app") == f.get("app")
+                 and all(seen.get(k) == v for k, v in where.items()))
+    rects: list[dict[str, Any]] = []
+    if fresh:
+        boxes = f.get("boxes") or {}
+        for el in obs.get("elements", []):
+            b = boxes.get(el.get("id"))
+            if not b or len(b) != 4 or b[2] <= b[0] or b[3] <= b[1]:
+                continue
+            toks = el.get("tokens") or []
+            rects.append({"id": el["id"], "x": int(b[0]), "y": int(b[1]), "w": int(b[2] - b[0]),
+                          "h": int(b[3] - b[1]), "cls": el.get("cls", "verde"),
+                          "token": toks[0] if toks else None,
+                          # lo que leyó el modelo de ese elemento: tokens, nunca valores
+                          "text": None if el.get("cls") == "rojo" else
+                          (el.get("text") if el.get("text") is not None else el.get("label"))})
+    msg = {"type": "frame", "session": session, "app": f.get("app") or "",
+           "screen": obs.get("screen") if fresh else None,
+           "paused": (obs.get("paused") if fresh else None), "fresh": fresh,
+           "w": int(f["w"]), "h": int(f["h"]), "mime": f.get("mime", "image/jpeg"),
+           "img": f["img"], "rects": rects}
+    events.publish_frame(msg)  # solo local, como screen.raw
+    return msg
+
+
+def _seen(sess: Any, raw: dict[str, Any], obs: dict[str, Any]) -> None:
+    """La última pantalla que vio el modelo y dónde estaba, para casar los fotogramas."""
+    sess.last_obs = obs
+    sess.extra["obs_where"] = {k: raw.get(k) for k in ("app", "url", "screen")}
+    f = sess.extra.get("frame_in")
+    if f is not None and events.frame_watchers():  # la consola ve la censura al momento
+        try:
+            frame(sess.id, f)
+        except Exception:  # noqa: BLE001 - la consola nunca para al agente
+            pass
 
 
 # ---- tareas de la persona (#47) ----
@@ -245,6 +304,7 @@ def observe(session: str) -> dict[str, Any]:
                "seq": raw.get("seq", 0), "paused": paused, "elements": [], "budget_left": sess.budget_left}
         record({"session": session, "kind": "paused", "app": raw.get("app"), "screen": raw.get("screen"),
                 "detail": paused, "ms": {"core": _ms(t0) - adapter_ms, "adapter": adapter_ms, "model": None}})
+        _seen(sess, raw, obs)
         return obs
     screen = policies().screen_for(raw)
     recover = getattr(sess.adapter, "recover", None)
@@ -257,7 +317,7 @@ def observe(session: str) -> dict[str, Any]:
         adapter_ms += _ms(ta)
         screen = None if pause_before_policy(raw) else policies().screen_for(raw)
     if screen is None:
-        sess.last_raw, sess.last_screen = None, None
+        sess.last_raw, sess.last_screen, sess.last_obs = None, None, None
         record({"session": session, "kind": "blocked", "reason": "sin_regla", "app": raw.get("app"),
                 "model_saw": None, "detail": "pantalla sin política: no sale",
                 "ms": {"core": _ms(t0), "adapter": adapter_ms, "model": None}})
@@ -265,12 +325,13 @@ def observe(session: str) -> dict[str, Any]:
     obs, counts = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session))
     verdict = check(json.dumps(obs, ensure_ascii=False))
     if not verdict["allowed"]:
-        sess.last_raw, sess.last_screen = None, None
+        sess.last_raw, sess.last_screen, sess.last_obs = None, None, None
         record({"session": session, "kind": "blocked", "reason": "fuga", "app": raw.get("app"),
                 "screen": screen.id, "detail": "observe: " + ", ".join(verdict["findings"]),
                 "ms": {"core": _ms(t0), "adapter": adapter_ms, "model": None}})
         return {"denied": "fuga", "detail": "La pantalla tenía datos sin tokenizar y no sale"}
     sess.last_raw, sess.last_screen, sess.last_paused = raw, screen, obs["paused"]
+    _seen(sess, raw, obs)
     events.publish({"type": "screen", "session": session, "raw": raw, "observed": obs})  # solo local
     toks = sorted({t for e in obs["elements"] for t in e.get("tokens", [])})
     record({"session": session, "kind": "observe_sent", "app": raw.get("app"), "screen": screen.id,

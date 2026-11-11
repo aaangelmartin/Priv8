@@ -21,6 +21,7 @@ class Session:
     last_raw: dict[str, Any] | None = None
     last_screen: Screen | None = None
     last_paused: str | None = None
+    last_obs: dict[str, Any] | None = None  # última observación enviada (para los fotogramas, #147)
     budget_left: int = DEFAULT_BUDGET
     extra: dict[str, Any] = field(default_factory=dict)  # para #10, #11 y #12
 

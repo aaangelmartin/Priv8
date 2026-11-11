@@ -1,0 +1,44 @@
+{
+  "type": "frame",
+  "session": "b2b",
+  "app": "alba-core",
+  "screen": "alta_factura",
+  "paused": null,
+  "fresh": true,
+  "w": 1100,
+  "h": 760,
+  "mime": "image/jpeg",
+  "img": "/9j/4AAQSkZJRgABAQ==",
+  "rects": [
+    {
+      "id": "e4",
+      "x": 40,
+      "y": 220,
+      "w": 320,
+      "h": 40,
+      "cls": "ambar",
+      "token": "‹IBAN_1-maestro›",
+      "text": "‹IBAN_1-maestro›"
+    },
+    {
+      "id": "e9",
+      "x": 40,
+      "y": 300,
+      "w": 320,
+      "h": 40,
+      "cls": "rojo",
+      "token": null,
+      "text": null
+    },
+    {
+      "id": "e1",
+      "x": 24,
+      "y": 20,
+      "w": 400,
+      "h": 30,
+      "cls": "verde",
+      "token": null,
+      "text": "Alta de factura"
+    }
+  ]
+}

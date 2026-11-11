@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, useEvents } from './useEvents.js'
+import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, WS_URL, useEvents } from './useEvents.js'
 import { comentarioDe8 } from './alertas.js'
 import { partesDeToken } from './tokens.js'
 import { estadoDe8, mmss, nombreApp, nombrePantalla, tareaActual } from './directo.js'
 import { EnClaro, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
 import { PantallaDe8, Razonamiento, useReproduccion } from './Vivo.jsx'
+import { PantallaReal } from './PantallaReal.jsx'
 import Eight from './eight/Eight.jsx'
 import ochoAvatar from '../../../brand/logo/8-reposo-cobalto.svg'
 
@@ -116,7 +117,7 @@ function Titular({ texto }) {
   return <>{texto.slice(0, i)} <span className="soft">{texto.slice(i + 3)}</span></>
 }
 
-function EnDirecto({ audit, pending, status, etiquetas, valores, enClaro, fin, ahora, rep }) {
+function EnDirecto({ audit, pending, status, etiquetas, valores, enClaro, fin, ahora, rep, frame }) {
   const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
   const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}|${crudo.detalle ?? ''}`)
   const t = useMemo(() => tareaActual(audit), [audit])
@@ -154,7 +155,10 @@ function EnDirecto({ audit, pending, status, etiquetas, valores, enClaro, fin, a
       </header>
 
       <div className="directo-vivo">
-        <PantallaDe8 rep={rep} modo={modo} valores={valores} sin={SIN_PROTOCOLO} />
+        {/* La pantalla real cuando el núcleo manda fotogramas; si no (reproducciones, sin núcleo), el esquema. */}
+        {frame && !DEMO
+          ? <PantallaReal frame={frame} rep={rep} modo={modo} valores={valores} />
+          : <PantallaDe8 rep={rep} modo={modo} valores={valores} sin={SIN_PROTOCOLO} />}
         <Razonamiento rep={rep} modo={modo} valores={valores} />
       </div>
 
@@ -387,7 +391,7 @@ function Pantalla({ screen, status, valores }) {
         <h2>{esperando ? 'Esperando al núcleo' : 'Esperando la primera pantalla'}</h2>
         <p>
           {esperando
-            ? <>La consola escucha en <code>127.0.0.1:8700</code>. Arranca el agente con <code>make agent-web</code>, o abre la <a href="?demo">demo con mensajes grabados</a>.</>
+            ? <>La consola escucha en <code>{WS_URL.replace(/^ws:\/\//, '').replace(/\/events$/, '')}</code>. Arranca el agente con <code>make agent-web</code>, o abre la <a href="?demo">demo con mensajes grabados</a>.</>
             : 'En cuanto 8 lea una pantalla, aquí verás lo que hay en ella y lo que le llega a la IA.'}
         </p>
       </section>
@@ -553,7 +557,7 @@ function Actividad({ audit, etiquetas, valores }) {
 // ---------------------------------------------------------------- app
 
 export default function App() {
-  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea } = useEvents()
+  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame } = useEvents()
   const ahora = useAhora()
   // La reproducción vive aquí para que no se pierda al cambiar de pestaña.
   const rep = useReproduccion(linea, valores)
@@ -573,11 +577,11 @@ export default function App() {
   }
 
   return (
-    <div className={`app ${SIN_PROTOCOLO ? 'sin-protocolo' : ''} ${FEED ? 'en-feed' : ''}`}>
+    <div className={`app ${vista === 'directo' ? 'en-directo' : ''} ${SIN_PROTOCOLO ? 'sin-protocolo' : ''} ${FEED ? 'en-feed' : ''}`}>
       <Barra status={status} vista={vista} ir={ir} avisos={avisos} />
       {vista === 'directo' && (
         <div className="vista-directo">
-          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} valores={valores} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} />
+          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} valores={valores} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} />
           <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
         </div>
       )}

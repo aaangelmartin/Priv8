@@ -9,6 +9,8 @@ from pathlib import Path
 # Tests that load the real core never write the repo's audit log or key.
 os.environ.setdefault("PRIV8_AUDIT", "off")
 os.environ.setdefault("PRIV8_AUDIT_KEY", os.path.join(tempfile.mkdtemp(prefix="priv8-"), "priv8.key"))
+# No screenshots of a real emulator from the tests (#147).
+os.environ.setdefault("PRIV8_FRAMES", "0")
 
 import pytest
 

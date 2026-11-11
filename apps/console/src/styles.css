@@ -104,8 +104,13 @@ mark.fuga { background: var(--bad-soft); color: var(--bad-text); font-weight: 60
 
 /* ------------------------------------------------------------ vista principal: 8 en directo y el chat */
 .vista-directo {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); gap: 20px;
-  height: clamp(620px, calc(100vh - 104px), 980px);
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(300px, 25vw, 390px); gap: 16px;
+  min-height: 0;
+}
+/* En directo cabe en la ventana: la página no se desplaza, solo los paneles de dentro. */
+.app.en-directo {
+  height: 100vh; height: 100dvh; overflow: hidden;
+  grid-template-rows: auto minmax(0, 1fr); gap: 14px; padding-bottom: 14px;
 }
 .vista { display: grid; gap: 20px; min-width: 0 }
 .vista > .panel, .vista > .alarmas { max-width: 1240px; width: 100%; margin: 0 auto }
@@ -160,7 +165,81 @@ mark.fuga { background: var(--bad-soft); color: var(--bad-text); font-weight: 60
 .tarea span { font: 500 .76rem/1 var(--f-mono); padding: 7px 11px; border-radius: 999px; background: rgba(255, 255, 255, .12); color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap }
 .tarea span:first-child { background: rgba(255, 255, 255, .22) }
 
-.directo-vivo { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(260px, 1fr); gap: 14px }
+.directo-vivo { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) clamp(220px, 19vw, 300px); gap: 12px }
+
+/* la pantalla real (#147): el fotograma de la pestaña o del móvil, con la censura encima */
+.real-escenario { align-items: center; justify-content: center; position: relative }
+.real-ventana { flex: none; max-width: 100% }
+.real-ventana .ventana-cab { height: 40px; padding: 0 12px 0 14px }
+.real-lienzo { position: relative; overflow: hidden; background: #fff; flex: none }
+.real-canvas { display: block }
+.real-chip {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font: 500 11px/1 var(--f-mono); color: var(--ink-2); background: #fff; padding: 6px 10px; border-radius: 999px;
+}
+.real-chip.ocho { color: #1f33b0; background: var(--tok-bg) }
+.tapa {
+  position: absolute; display: flex; align-items: center; min-width: 0; overflow: hidden; white-space: nowrap;
+  padding: 0 .45em; line-height: 1.3; font-family: var(--f-body); font-weight: 500; color: #1f33b0;
+  background: #e4e9fd; box-shadow: inset 0 0 0 1px rgba(45, 69, 214, .38), 0 1px 2px rgba(11, 27, 51, .12);
+  animation: tapa .22s var(--ease) both;
+}
+.tapa-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis }
+.tapa-vacio { font: 400 .92em/1 var(--f-mono); color: #7d8bd6 }
+.tapa .tok { font-size: 1em; padding: .05em .35em; border-radius: 5px; background: #fff; color: #1f33b0 }
+.tapa.varias { align-items: flex-start; white-space: normal; padding: .4em .55em; overflow-wrap: anywhere }
+.tapa.varias .tapa-txt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 8 }
+.tapa.t-nunca {
+  justify-content: center; color: var(--bad-text);
+  background: repeating-linear-gradient(135deg, #fbe5e3 0 6px, #f7d7d3 6px 12px);
+  box-shadow: inset 0 0 0 1px rgba(194, 58, 46, .45);
+}
+.tapa.t-nunca em { font: 600 1em/1 var(--f-mono); font-style: normal; white-space: nowrap }
+@keyframes tapa { from { opacity: 0; transform: scale(.96) } to { opacity: 1; transform: none } }
+.real-velo {
+  position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px;
+  padding: 24px; text-align: center; color: var(--ink);
+}
+.real-velo b { font: 700 1.15rem/1.2 var(--f-display); letter-spacing: -.025em }
+.real-velo span { max-width: 42ch; font-size: .86rem; line-height: 1.5; color: var(--ink-2) }
+.real-velo-eight { width: 76px; aspect-ratio: 46 / 32 }
+.real-velo-eight svg { width: 100%; height: 100%; display: block; overflow: visible }
+.real-foco {
+  position: absolute; z-index: 2; pointer-events: none; border-radius: 10px;
+  box-shadow: 0 0 0 2.5px var(--band), 0 0 0 7px rgba(45, 69, 214, .16);
+  transition: left .45s cubic-bezier(.3, .9, .25, 1), top .45s cubic-bezier(.3, .9, .25, 1), width .45s cubic-bezier(.3, .9, .25, 1), height .45s cubic-bezier(.3, .9, .25, 1), box-shadow .3s ease;
+}
+.real-foco.t-bloqueo { box-shadow: 0 0 0 2.5px var(--bad), 0 0 0 7px rgba(194, 58, 46, .18) }
+.real-foco.t-aviso { box-shadow: 0 0 0 2.5px var(--warn), 0 0 0 7px rgba(168, 100, 0, .18); animation: pulso-ambar 1.6s ease-in-out infinite }
+.real-foco.t-seguro { box-shadow: 0 0 0 2.5px var(--ok), 0 0 0 7px rgba(31, 138, 91, .18) }
+.real-foco .aviso-foco { left: 0 }
+.real-foco.arriba .aviso-foco { top: auto; bottom: calc(100% + 8px) }
+.real-foco.t-bloqueo .cursor8, .real-foco.t-bloqueo .aviso-foco { background: var(--bad) }
+.real-foco.t-aviso .cursor8, .real-foco.t-aviso .aviso-foco { background: var(--warn) }
+.real-foco.t-seguro .cursor8, .real-foco.t-seguro .aviso-foco { background: var(--ok) }
+.real-paso {
+  position: absolute; z-index: 3; left: 12px; bottom: 12px; max-width: calc(100% - 24px);
+  display: flex; align-items: baseline; gap: 8px; min-width: 0;
+  padding: 7px 13px; border-radius: 999px; font-size: .8rem; line-height: 1.3;
+  background: rgba(11, 27, 51, .84); color: #fff; box-shadow: 0 6px 18px rgba(11, 27, 51, .22);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: entra .3s var(--ease) both;
+}
+.real-paso b { font-weight: 600; white-space: nowrap }
+.real-paso span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--on-band) }
+.real-paso .tok { font-size: .9em; background: rgba(255, 255, 255, .92); color: #1f33b0 }
+.real-paso .local { background: rgba(255, 255, 255, .16); color: #fff }
+.real-paso.t-bloqueo { background: rgba(194, 58, 46, .94) }
+.real-paso.t-aviso { background: rgba(138, 82, 0, .94) }
+.real-paso.t-seguro { background: rgba(24, 115, 76, .94) }
+.real-paso.t-cobalto { background: rgba(31, 51, 176, .92) }
+.movil-real-escenario { flex-direction: column; gap: 10px }
+.movil-real {
+  flex: none; padding: 10px; border-radius: 38px; background: var(--night);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .22), 0 30px 60px rgba(11, 27, 51, .35);
+}
+.movil-real .real-lienzo { border-radius: 28px }
+.movil-real .real-paso { left: 8px; right: 8px; bottom: 10px; max-width: none; border-radius: 16px; flex-wrap: wrap }
+.movil-leyenda { font: 500 11px/1.2 var(--f-mono); color: var(--on-band); text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 
 /* la pantalla de 8: ventana de escritorio o móvil */
 .escenario { min-width: 0; min-height: 0; display: flex }
@@ -496,6 +575,7 @@ mark.dato.escrito { background: var(--accent-soft); color: var(--ink) }
 
 /* ------------------------------------------------------------ pantallas más estrechas */
 @media (max-width: 1180px) {
+  .app.en-directo { height: auto; overflow: visible; grid-template-rows: none; padding-bottom: 40px }
   .vista-directo { grid-template-columns: minmax(0, 1fr); height: auto }
   .directo { height: 760px }
   .chat { height: 560px }
