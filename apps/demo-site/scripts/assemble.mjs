@@ -2,6 +2,9 @@
 // dentro de apps/demo-site: se copia en cada build.
 //
 //   /consola/              build estática de apps/console con BASE_PATH=/consola/ (?feed=sin-protocolo, ?feed=con-protocolo, ?demo)
+//   /correo/               build estática de apps/inbox-sim (la bandeja), con BASE_PATH=/correo/
+//   /erp/                  build estática de apps/erp-sim (Alba Core) con la sesión de la demo ya abierta
+//   /equipo/<usuario>.png  foto de perfil de GitHub de cada persona del equipo (si no hay red, iniciales)
 //   /docs/entregables/     PDF de una cara, diapositivas (HTML y PDF), sus fuentes y los vídeos
 //   /brand/logo/           logos que usan las diapositivas y la página en HTML (rutas ../../brand/logo/)
 //   /apk/                  APK de depuración: app Priv8 y los tres bancos (./gradlew assembleDebug)
@@ -23,14 +26,23 @@ const run = (cmd, cwd, env = {}) => execSync(cmd, { cwd, stdio: 'inherit', env: 
 
 if (!existsSync(join(DIST, 'index.html'))) throw new Error('Falta dist/index.html: ejecuta antes `vite build`.');
 
-// 1. consola bajo /consola/
-const CONSOLE = join(ROOT, 'apps/console');
-if (!existsSync(join(CONSOLE, 'node_modules'))) run('pnpm install --frozen-lockfile', CONSOLE);
-run(`pnpm exec vite build --outDir "${join(DIST, 'consola')}" --emptyOutDir`, CONSOLE, { BASE_PATH: '/consola/' });
+// 1. las tres apps web bajo su ruta. Sin agente detrás: son las mismas pantallas, para verlas y usarlas a mano.
+const APPS = [
+  ['apps/console', 'consola', {}],
+  ['apps/inbox-sim', 'correo', {}],
+  ['apps/erp-sim', 'erp', { VITE_ALBA_DEMO: '1', VITE_ALBA_SESION: 'admin.alba' }],
+];
+for (const [dir, ruta, env] of APPS) {
+  const cwd = join(ROOT, dir);
+  if (!existsSync(join(cwd, 'node_modules'))) run('pnpm install --frozen-lockfile', cwd);
+  run(`pnpm exec vite build --outDir "${join(DIST, ruta)}" --emptyOutDir`, cwd, { BASE_PATH: `/${ruta}/`, ...env });
+  log(`${dir} en /${ruta}/`);
+}
 for (const f of ['sin-protocolo.json', 'con-protocolo.json', 'demo.json']) {
   if (!existsSync(join(DIST, 'consola', f))) throw new Error(`La consola no trae ${f}`);
 }
-log('consola en /consola/');
+// Las rutas profundas (/correo/bandeja, /erp/facturas...) las sirve el middleware con el index.html de su app
+// (functions/_middleware.js): _redirects no vale porque se aplicaría también a los archivos.
 
 // 2. entregables y logos
 cpSync(join(ROOT, 'docs/entregables'), join(DIST, 'docs/entregables'), { recursive: true });
@@ -57,14 +69,25 @@ for (const [dir, out, name] of APKS) {
   else log(`AVISO: falta ${dir}/${out}; la tarjeta saldrá como «No incluido en esta build»`);
 }
 
-// 4. tamaños para las tarjetas y comprobación del límite por archivo
+// 4. fotos del equipo, copiadas para no enlazar a GitHub desde la página
+const EQUIPO = ['aaangelmartin', 'rrojjo', 'alvaarocl', 'marcoobarroso'];
+mkdirSync(join(DIST, 'equipo'), { recursive: true });
+for (const u of EQUIPO) {
+  try {
+    const r = await fetch(`https://github.com/${u}.png?size=200`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok || !(r.headers.get('content-type') || '').startsWith('image/')) throw new Error(String(r.status));
+    writeFileSync(join(DIST, 'equipo', `${u}.png`), Buffer.from(await r.arrayBuffer()));
+  } catch (e) { log(`AVISO: sin foto de ${u} (${e.message}); salen sus iniciales`); }
+}
+
+// 5. tamaños para las tarjetas y comprobación del límite por archivo
 const sizes = {};
 const walk = (d) => readdirSync(d).forEach((n) => {
   const p = join(d, n); const s = statSync(p);
   if (s.isDirectory()) return walk(p);
   const rel = relative(DIST, p).split('\\').join('/');
   if (s.size > MAX) throw new Error(`${rel} pesa más de 25 MiB, el límite de Cloudflare Pages`);
-  if (rel.startsWith('apk/') || rel.startsWith('docs/')) sizes[rel] = s.size;
+  if (/^(apk|docs|equipo)\//.test(rel)) sizes[rel] = s.size;
 });
 walk(DIST);
 writeFileSync(join(DIST, 'archivos.json'), JSON.stringify(sizes, null, 2));
