@@ -25,6 +25,8 @@ class Dictador(
     private val onAviso: (String) -> Unit,
 ) {
     private var recognizer: SpeechRecognizer? = null
+    /** Stopped by the person: the recognizer's error after cancel() is not a failure. */
+    private var parado = false
     var escuchando = false
         private set
 
@@ -47,6 +49,7 @@ class Dictador(
             recognizer = it
         }
         escuchando = true
+        parado = false
         Log.i(TAG, "dictado: listening on-device")
         onParcial("Te escucho…")
         rec.startListening(ConfirmActivity.recognizerIntent())
@@ -55,7 +58,9 @@ class Dictador(
     fun parar() {
         if (!escuchando) return
         escuchando = false
+        parado = true
         recognizer?.cancel()
+        onAviso("Vale, dejo de escuchar.")
     }
 
     fun destroy() {
@@ -92,6 +97,7 @@ class Dictador(
 
         override fun onError(error: Int) {
             escuchando = false
+            if (parado) return
             Log.i(TAG, "dictado: recognizer error $error")
             onAviso(
                 when {
