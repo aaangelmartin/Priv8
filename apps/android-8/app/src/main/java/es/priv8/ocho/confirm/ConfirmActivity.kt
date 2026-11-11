@@ -18,6 +18,8 @@ import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import es.priv8.ocho.OjosView
+import es.priv8.ocho.SalidaTts
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -54,6 +56,9 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
     private var voiceErrors = 0
     private var closed = false
 
+    /** 8 while it asks: «hablar» follows the TextToSpeech output and «escuchar» the microphone (#42). */
+    private lateinit var ojos: OjosView
+    private lateinit var salida: SalidaTts
     private lateinit var summary: TextView
     private lateinit var status: TextView
     private lateinit var countdown: TextView
@@ -64,6 +69,7 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(buildLayout())
+        salida = SalidaTts(this) { ojos.voz(it) }
         tts = TextToSpeech(this, ::onTtsInit)
         ConfirmFlow.attach(this)
     }
@@ -78,6 +84,8 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         main.removeCallbacksAndMessages(null)
         recognizer?.destroy()
         tts?.shutdown()
+        salida.fin()
+        ojos.destroy()
         super.onDestroy()
     }
 
@@ -90,6 +98,7 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         val r = Renderer.render(request.segments) { LocalValues.get(request.session, it) }
         rendered = r
         summary.text = r.screen
+        ojos.cara("esperar")
         confirm.isEnabled = r.missing == 0
         startedAt = SystemClock.elapsedRealtime()
         tick()
@@ -117,6 +126,8 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         answered = true
         stopListening()
         tts?.stop()
+        salida.fin()
+        ojos.cara(if (ok) "asentir" else "negar")
         status.text = if (ok) "Confirmado." else "Cancelado."
         confirm.isEnabled = false
         cancel.isEnabled = false
@@ -158,12 +169,16 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         }
         engine.voice = embedded
         engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(id: String?) {}
+            override fun onStart(id: String?) = salida.inicio()
+            override fun onRangeStart(id: String?, start: Int, end: Int, frame: Int) = salida.palabra(start, end)
+            override fun onStop(id: String?, interrupted: Boolean) = salida.fin()
             override fun onDone(id: String?) {
+                salida.fin()
                 main.post { if (id == request?.id) onSpoken() }
             }
             @Deprecated("Deprecated in Java")
             override fun onError(id: String?) {
+                salida.fin()
                 main.post { if (id == request?.id) onSpoken() }
             }
         })
@@ -187,6 +202,7 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         val params = Bundle().apply {
             putString(TextToSpeech.Engine.KEY_FEATURE_NETWORK_SYNTHESIS, "false")
             putString(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS, "true")
+            salida.parametros(this)
         }
         stopListening()
         val rc = tts?.speak(text, TextToSpeech.QUEUE_FLUSH, params, r.id)
@@ -268,7 +284,7 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
     private val listener = object : RecognitionListener {
         override fun onReadyForSpeech(params: Bundle?) {}
         override fun onBeginningOfSpeech() {}
-        override fun onRmsChanged(rmsdB: Float) {}
+        override fun onRmsChanged(rmsdB: Float) = ojos.microfono(rmsdB)
         override fun onBufferReceived(buffer: ByteArray?) {}
         override fun onEndOfSpeech() {}
         override fun onEvent(eventType: Int, params: Bundle?) {}
@@ -310,6 +326,10 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
             setPadding(pad, dp(64), pad, pad)
             setBackgroundColor(NIEBLA)
         }
+        ojos = OjosView(this)
+        root.addView(ojos, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(OJOS_DP)).apply {
+            bottomMargin = dp(16)
+        })
         root.addView(TextView(this).apply {
             text = "8 necesita tu confirmación"
             textSize = 16f
@@ -373,6 +393,7 @@ class ConfirmActivity : Activity(), ConfirmFlow.Screen {
         private const val MAX_VOICE_ERRORS = 3
         private const val SPEECH_GRACE_MS = 1_500L
         private const val SPEECH_MS_PER_CHAR = 90L
+        private const val OJOS_DP = 160
         // Brand (brand/tokens.css).
         private val COBALTO = Color.parseColor("#2D45D6")
         private val NOCHE = Color.parseColor("#0B1B33")

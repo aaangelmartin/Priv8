@@ -121,6 +121,14 @@ class MixedVoicePlayer(
         fun onSegmentStart(utteranceId: String, index: Int, voice: Voice) {}
         /** The gap before a segment is known. Drive the eyes' "hablar" state from these. */
         fun onGap(utteranceId: String, transition: Transition) {}
+        /**
+         * Loudness of the cloud PCM as it goes into the AudioTrack: linear RMS,
+         * 1 = full scale, once per write (it leads the speaker by about one
+         * buffer, ~100 ms). On the feeder thread. In apps/android-8 pass it to
+         * OjosView.voz(Nivel.salidaRms(rms)) so «hablar» follows the audio (#42);
+         * local segments get theirs from SalidaTts.
+         */
+        fun onLevel(utteranceId: String, rms: Float) {}
         fun onUtteranceDone(report: GapReport) {}
         fun onError(utteranceId: String?, index: Int, message: String) {}
     }
@@ -289,7 +297,7 @@ class MixedVoicePlayer(
 
     private fun prime(r: Run, i: Int): CloudTrack? {
         val seg = r.segments.getOrNull(i) as? VoiceSegment.Cloud ?: return null
-        return r.tracks[i] ?: CloudTrack(seg.audio, attributes).also {
+        return r.tracks[i] ?: CloudTrack(seg.audio, attributes) { listener.onLevel(r.id, it) }.also {
             r.tracks[i] = it
             it.startFeeding()
         }
@@ -347,7 +355,11 @@ class MixedVoicePlayer(
      * with one buffer of silence so a clip shorter than the start threshold
      * still plays, then waits for release() and releases the track itself.
      */
-    private class CloudTrack(private val source: PcmSource, attributes: AudioAttributes) {
+    private class CloudTrack(
+        private val source: PcmSource,
+        attributes: AudioAttributes,
+        private val onLevel: (Float) -> Unit,
+    ) {
         private val bufferBytes: Int
         private val track: AudioTrack
         private val releaseLatch = CountDownLatch(1)
@@ -409,7 +421,8 @@ class MixedVoicePlayer(
                     framesWritten += even / BYTES_PER_FRAME
                 }
                 feedingDone = true
-                writeFully(ByteArray(bufferBytes), bufferBytes)
+                writeFully(ByteArray(bufferBytes), bufferBytes, levels = false)
+                onLevel(0f)
                 releaseLatch.await()
             } catch (e: InterruptedException) {
                 // release() while waiting for audio: nothing to report
@@ -421,14 +434,28 @@ class MixedVoicePlayer(
         }
 
         /** Non-blocking writes, so release() never waits on a full buffer. */
-        private fun writeFully(data: ByteArray, size: Int) {
+        private fun writeFully(data: ByteArray, size: Int, levels: Boolean = true) {
             var off = 0
             while (off < size && !released) {
                 val n = track.write(data, off, size - off, AudioTrack.WRITE_NON_BLOCKING)
                 if (n < 0) throw IllegalStateException("AudioTrack.write error $n")
+                if (levels && n > 0) onLevel(rms16(data, off, n))
                 off += n
                 if (n == 0) Thread.sleep(WRITE_RETRY_MS)
             }
+        }
+
+        /** Linear RMS of 16-bit LE mono PCM (same as Nivel.rmsPcm16 in apps/android-8). */
+        private fun rms16(pcm: ByteArray, offset: Int, size: Int): Float {
+            val n = size / BYTES_PER_FRAME
+            if (n <= 0) return 0f
+            var sum = 0.0
+            for (k in 0 until n) {
+                val i = offset + k * BYTES_PER_FRAME
+                val s = ((pcm[i + 1].toInt() shl 8) or (pcm[i].toInt() and 0xFF)).toShort().toInt()
+                sum += s.toDouble() * s
+            }
+            return (Math.sqrt(sum / n) / 32768.0).toFloat()
         }
     }
 
