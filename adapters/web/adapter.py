@@ -31,10 +31,28 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
+# PRIV8_ALBA_URL y PRIV8_INBOX_URL apuntan a otra copia de las apps (tests sin tocar la demo).
 APPS: dict[str, str] = {
-    "alba-core": "http://127.0.0.1:5173",
-    "inbox": "http://127.0.0.1:5174",
+    "alba-core": os.environ.get("PRIV8_ALBA_URL", "http://127.0.0.1:5173").rstrip("/"),
+    "inbox": os.environ.get("PRIV8_INBOX_URL", "http://127.0.0.1:5174").rstrip("/"),
 }
+
+# Cursor de 8 (#135): capa visible en la ventana de Chromium. PRIV8_CURSOR=0 la apaga.
+_CURSOR_JS = (Path(__file__).with_name("cursor8.js")).read_text(encoding="utf-8")
+# Tecleo visible: hasta TYPE_VISIBLE caracteres a ritmo humano y el resto de golpe, para que
+# el retraso añadido por acción (deslizamiento hasta 0,5 s más tecleo) quede por debajo de 0,8 s.
+TYPE_VISIBLE = 16
+TYPE_BUDGET_MS = 220
+
+
+def cursor_enabled(default: bool) -> bool:
+    """PRIV8_CURSOR=0|off|false lo apaga, 1|on lo enciende; sin la variable, `default`."""
+    v = os.environ.get("PRIV8_CURSOR")
+    if v is None or not v.strip():
+        return default
+    return v.strip().lower() not in ("0", "off", "false", "no")
+
+
 HOME: dict[str, str] = {"alba-core": "/facturas/alta", "inbox": "/bandeja"}
 # Nombres con los que el agente puede pedir cada app en open_app (minúsculas, sin espacios ni guiones).
 ALIASES: dict[str, str] = {
@@ -96,7 +114,7 @@ _SNAPSHOT_JS = r"""
   const out = [];
   let n = 0;
   for (const el of document.querySelectorAll('[data-p8]')) {
-    if (!visible(el)) continue;
+    if (!visible(el) || el.closest('[data-p8-ignore]')) continue;  // la capa del cursor de 8 no entra
     const ref = 'e' + (++n);
     el.setAttribute('data-p8-ref', ref);
     const role = el.dataset.p8;
@@ -168,8 +186,12 @@ class WebAdapter:
 
     def __init__(self, apps: dict[str, str] | None = None, start: str = "inbox", *,
                  headless: bool = False, on_call: Callable[[str], bool] | None = None,
-                 timeout_ms: int = 5000, slow_mo_ms: int = 0, profile: str | Path | None = None) -> None:
+                 timeout_ms: int = 5000, slow_mo_ms: int = 0, profile: str | Path | None = None,
+                 cursor: bool | None = None) -> None:
         self.apps = dict(apps or APPS)
+        # Con ventana, la persona ve a 8 mover el cursor; sin ventana (tests) no hace falta.
+        self.cursor = cursor_enabled(not headless) if cursor is None else cursor
+        self._cursor_pos: dict[str, tuple[int, int]] = {}
         if start not in self.apps:
             raise ValueError(f"app desconocida: {start}")
         self.on_call = on_call or self._llamada_simulada
@@ -314,14 +336,19 @@ class WebAdapter:
             if el.count() != 1:
                 return {"ok": False, "error": "target_no_encontrado"}
             if op in ("tap", "send"):
+                self._cursor(page, "tap", target, "pulsa")
                 el.click()
                 return {"ok": True}
             if op == "type":
                 if not el.is_editable():
                     return {"ok": False, "error": "no_permitido"}
-                el.fill(text)
+                if self._cursor(page, "type", target, "escribe"):
+                    self._type_visible(el, text)
+                el.fill(text)  # el valor final es siempre el mismo, con cursor o sin él
+                self._cursor(page, "done")
                 return {"ok": True}
             if op == "call":
+                self._cursor(page, "tap", target, "llama a")
                 numero = text or (el.input_value() if el.is_editable() else el.inner_text())
                 self.calls.append(numero)
                 return {"ok": bool(self.on_call(numero))}
@@ -330,6 +357,42 @@ class WebAdapter:
             return {"ok": False, "error": "timeout"}
         except PwError:
             return {"ok": False, "error": "otro"}
+
+    # ---- cursor de 8 (#135) ----
+
+    def _cursor(self, page: Any, op: str, target: str | None = None, verb: str | None = None) -> bool:
+        """Lleva el cursor de 8 hasta `target` (o lo recoge con op='done'). Solo es pantalla:
+        si algo falla, la acción sigue igual que sin cursor."""
+        if not self.cursor:
+            return False
+        from playwright.sync_api import Error as PwError
+
+        try:
+            if target:
+                page.locator(f'[data-p8-ref="{target}"]').scroll_into_view_if_needed(timeout=1000)
+            pos = self._cursor_pos.get(self.app)
+            done = page.evaluate(_CURSOR_JS, {"op": op, "ref": target, "verb": verb,
+                                              "from": list(pos) if pos else None})
+            if isinstance(done, list):
+                self._cursor_pos[self.app] = (done[0], done[1])
+            return bool(done)
+        except PwError:
+            return False
+
+    @staticmethod
+    def _type_visible(el: Any, text: str) -> None:
+        """Teclea el principio de `text` letra a letra para que se vea escribir. Para en el primer
+        salto de línea (un Enter podría enviar el formulario); fill() pone luego el valor entero."""
+        from playwright.sync_api import Error as PwError
+
+        visible = text.split("\n", 1)[0][:TYPE_VISIBLE]
+        if not visible:
+            return
+        try:
+            el.fill("")
+            el.press_sequentially(visible, delay=max(8, min(45, TYPE_BUDGET_MS // len(visible))))
+        except PwError:
+            pass
 
     # ---- utilidades ----
 

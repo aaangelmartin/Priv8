@@ -34,6 +34,8 @@ class Priv8AccessibilityService : AccessibilityService() {
     private lateinit var bridge: BridgeClient
     private lateinit var performer: Performer
     private val builder = SnapshotBuilder()
+    /** 8's cursor drawn over the screen it drives (#135); null if the overlay was refused. */
+    private var cursor: CursorOverlay? = null
 
     // Touched from the main thread (events) and read from the worker.
     @Volatile private var lastChangeAt = 0L
@@ -54,7 +56,8 @@ class Priv8AccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         workerThread = HandlerThread("priv8-bridge").also { it.start() }
         worker = Handler(workerThread.looper)
-        performer = Performer(this, { id -> lastNodes[id] }, ::firstScrollable)
+        cursor = CursorOverlay(this).takeIf { it.attach() }
+        performer = Performer(this, { id -> lastNodes[id] }, ::firstScrollable, cursor)
         bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage, ConfirmFlow::onConnected)
         bridge.start()
         ConfirmFlow.init(this) { bridge.send(it) }
@@ -63,6 +66,8 @@ class Priv8AccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        cursor?.detach()
+        cursor = null
         voz?.close()
         voz = null
         if (::bridge.isInitialized) bridge.stop()
@@ -268,6 +273,8 @@ class Priv8AccessibilityService : AccessibilityService() {
      * into observe paused and the app 8 into «mirar a otro lado».
      */
     private fun updatePause(next: Pause?, app: String?) {
+        // 8 looks away (PIN, OTP, fingerprint, system dialog) or shows its own screen: no cursor.
+        cursor?.setVisible(CursorMotion.visible(next?.reason, ConfirmFlow.isActive))
         val prev = pause
         if (next == prev) return
         pause = next
