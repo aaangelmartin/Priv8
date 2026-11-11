@@ -2,8 +2,8 @@
 
 Stands in for the core on the laptop so the device side can be tested on its
 own: it accepts the connection from 8's accessibility service, validates every
-message in both directions against the v1 contracts, and can ask for
-snapshots and send performs. It is a dev tool; the real core side is not this.
+message in both directions against bridge.schema.json (contracts v1.1), and
+can ask for snapshots, send performs and push confirmations. It is a dev tool; the real core side is not this.
 
 Usage (Python 3.12, from the repository root):
 
@@ -25,10 +25,14 @@ Interactive commands (one per line), or a script with --run "cmd; cmd; ...":
                              push a confirmation request to 8 and wait for
                              its approval_result (defaults: "200,00 €",
                              "Nimbo Bróker", 300 s). Sends render_values first
-                             (proposed: the token values for the session),
-                             then confirm_request; both and the answer are
-                             validated against confirm.schema.json. Does
+                             (the token values for the session), then
+                             confirm_request; both and the answer are
+                             validated against bridge.schema.json. Does
                              not block: other commands keep working
+    resend [ID]              send confirm_request ID again with the same id
+                             (default: the last one), as the core does after
+                             a hello; 8 must answer the same approval_result
+                             without asking again if it was already answered
     await                    wait for the pending approval_results
     wait  SECONDS            pause (lets the screen settle between steps)
     quit
@@ -60,27 +64,9 @@ from websockets.exceptions import ConnectionClosed
 
 BASE_URI = "https://priv8.dev/contracts/"
 REPLY_TIMEOUT_S = 15.0
-# Message type -> definition in bridge.schema.json.
-# Not in bridge.schema.json v1, validated against confirm.schema.json instead
-# (confirm_request, approval_result) or the proposal below (render_values).
-CONFIRM_DEFS = {"confirm_request": "request", "approval_result": "approval_result"}
-# Proposed bridge message: token -> real value for a session, so the device can
-# render the summary of a confirmation locally. Both ends are in the trust zone.
-RENDER_VALUES = {
-    "type": "object",
-    "required": ["type", "session", "values"],
-    "additionalProperties": False,
-    "properties": {
-        "type": {"const": "render_values"},
-        "session": {"$ref": f"{BASE_URI}common.schema.json#/$defs/session"},
-        "values": {
-            "type": "object",
-            "propertyNames": {"$ref": f"{BASE_URI}common.schema.json#/$defs/token"},
-            "additionalProperties": {"type": "string"},
-            "minProperties": 1,
-        },
-    },
-}
+# Message type -> its branch of the oneOf in bridge.schema.json, to report the
+# errors of the right one. confirm_request and approval_result are refs to
+# confirm.schema.json (contracts v1.1).
 DEFS = {
     "hello": "hello",
     "snapshot.request": "snapshot_request",
@@ -88,7 +74,13 @@ DEFS = {
     "perform": "perform",
     "result": "result",
     "event": "event",
+    "render_values": "render_values",
+    "voice": "voice",
+    "voice.audio": "voice_audio",
+    "voice.audio.end": "voice_audio_end",
+    "voice.done": "voice_done",
 }
+CONFIRM_DEFS = {"confirm_request": "request", "approval_result": "approval_result"}
 
 
 def load_validator(contracts: Path) -> Draft202012Validator:
@@ -113,8 +105,14 @@ def log(arrow: str, text: str) -> None:
 class Session:
     """One connected device."""
 
-    def __init__(self, ws: ServerConnection, validator: Draft202012Validator, args: argparse.Namespace):
+    def __init__(self, ws: ServerConnection, validator: Draft202012Validator, args: argparse.Namespace,
+                 confirms: dict[str, dict[str, Any]], unanswered: set[str]):
         self.ws = ws
+        # Shared by all connections, like the core: every confirm_request sent
+        # (to resend it by id) and the ids still without an approval_result,
+        # which are sent again after each hello (contracts v1.1).
+        self.confirms = confirms
+        self.unanswered = unanswered
         self.validator = validator
         self.args = args
         self.pending: dict[str, asyncio.Future[dict[str, Any]]] = {}
@@ -129,23 +127,15 @@ class Session:
 
     def check(self, msg: Any) -> str | None:
         """Returns None if msg is valid, else a short description of the first error."""
-        kind = msg.get("type") if isinstance(msg, dict) else None
-        if kind in CONFIRM_DEFS or kind == "render_values":
-            schema = RENDER_VALUES if kind == "render_values" else {
-                "$ref": f"{BASE_URI}confirm.schema.json#/$defs/{CONFIRM_DEFS[kind]}"
-            }
-            error = next(iter(self.validator.evolve(schema=schema).iter_errors(msg)), None)
-            if error is None:
-                return None
-            path = "/".join(str(p) for p in error.absolute_path) or "(root)"
-            return f"{path}: {error.message}"
         if self.validator.is_valid(msg):
             return None
         # The schema is a oneOf; report the errors of the branch for this type.
-        branch = DEFS.get(msg.get("type")) if isinstance(msg, dict) else None
+        kind = msg.get("type") if isinstance(msg, dict) else None
         validator = self.validator
-        if branch:
-            validator = self.validator.evolve(schema={"$ref": f"{BASE_URI}bridge.schema.json#/$defs/{branch}"})
+        if kind in CONFIRM_DEFS:
+            validator = self.validator.evolve(schema={"$ref": f"{BASE_URI}confirm.schema.json#/$defs/{CONFIRM_DEFS[kind]}"})
+        elif kind in DEFS:
+            validator = self.validator.evolve(schema={"$ref": f"{BASE_URI}bridge.schema.json#/$defs/{DEFS[kind]}"})
         error = next(iter(validator.iter_errors(msg)), None)
         if error is None:
             return "does not match bridge.schema.json"
@@ -171,6 +161,8 @@ class Session:
                 log("<-", f"hello device={msg.get('device')!r} version={msg.get('version')} [{status}]")
                 if not self.hello.done():
                     self.hello.set_result(msg)
+                for cid in sorted(self.unanswered):
+                    await self.resend(cid, after_hello=True)
             elif kind == "snapshot":
                 self.snap_count += 1
                 self.last = msg.get("raw")
@@ -185,8 +177,13 @@ class Session:
             elif kind == "approval_result":
                 reason = f" reason={msg['reason']}" if "reason" in msg else ""
                 log("<-", f"approval_result {msg.get('id')} ok={msg.get('ok')} via={msg.get('via')} "
-                          f"by={msg.get('by')}{reason} [{status} against confirm.schema.json]")
+                          f"by={msg.get('by')}{reason} [{status}]")
+                self.unanswered.discard(str(msg.get("id")))
                 self.resolve(msg)
+            elif kind == "voice.done":
+                gap = msg.get("gap_ms") or {}
+                log("<-", f"voice.done {msg.get('utterance')} ok={msg.get('ok')} "
+                          f"gap_max={gap.get('max', '-')} gap_mean={gap.get('mean', '-')} [{status}]")
             elif kind == "event":
                 detail = f" detail={msg['detail']!r}" if "detail" in msg else ""
                 log("<-", f"event {msg.get('kind')} app={msg.get('app')}{detail} [{status}]")
@@ -320,6 +317,12 @@ class Session:
             await self.perform(msg)
         elif cmd == "confirm":
             await self.confirm(*rest[:3])
+        elif cmd == "resend":
+            cid = rest[0] if rest else next(reversed(self.confirms), None)
+            if cid is None:
+                log("  ", "resend: no confirm_request sent yet")
+            else:
+                await self.resend(cid)
         elif cmd == "await":
             if self.waiting:
                 await asyncio.gather(*self.waiting)
@@ -332,8 +335,8 @@ class Session:
 
     async def confirm(self, amount: str = "200,00 €", name: str = "Nimbo Bróker", expires: str = "300") -> None:
         """Pushes a confirmation like the core would and waits for the person's answer."""
-        n = next(self.ids)
-        cid, session = f"c{n}", "s1"
+        # Unique across connections: confirms outlives each Session.
+        cid, session = f"c{len(self.confirms) + 1}", "s1"
         importe, destino = "‹IMPORTE_1›", "‹PROVEEDOR_1·propio›"
         values = {"type": "render_values", "session": session, "values": {importe: amount, destino: name}}
         request = {
@@ -358,15 +361,30 @@ class Session:
                 log("->", f"NOT SENT, invalid {msg['type']}: {error}")
                 return
         shown = {k: (v if self.args.show_values else f"<{len(v)} chars>") for k, v in values["values"].items()}
-        log("->", f"render_values session={session} values={json.dumps(shown, ensure_ascii=False)} [valid, proposed]")
+        log("->", f"render_values session={session} values={json.dumps(shown, ensure_ascii=False)} [valid]")
         await self.ws.send(json.dumps(values, ensure_ascii=False))
+        self.confirms[cid] = request
+        self.unanswered.add(cid)
+        await self.send_confirm(cid, int(expires) + 15)
+
+    async def send_confirm(self, cid: str, timeout: int, note: str = "") -> None:
+        request = self.confirms[cid]
         fut = asyncio.get_running_loop().create_future()
         self.pending[cid] = fut
-        log("->", f"confirm_request {cid} kind=transferir expires_s={expires} [valid against confirm.schema.json]")
+        log("->", f"confirm_request {cid} kind={request['kind']} expires_s={request['expires_s']}{note} [valid]")
         await self.ws.send(json.dumps(request, ensure_ascii=False))
         # Wait in the background so other commands (snap, tap...) still run
         # while the confirmation is open; `await` waits for the answer.
-        self.waiting.append(asyncio.create_task(self.approval(cid, fut, int(expires) + 15)))
+        self.waiting.append(asyncio.create_task(self.approval(cid, fut, timeout)))
+
+    async def resend(self, cid: str, after_hello: bool = False) -> None:
+        """Sends confirm_request cid again with the same id, as the core does after a hello."""
+        if cid not in self.confirms:
+            self.failures += 1
+            log("  ", f"resend: no confirm_request {cid}")
+            return
+        why = "pending after hello" if after_hello else ("unanswered" if cid in self.unanswered else "already answered")
+        await self.send_confirm(cid, self.confirms[cid]["expires_s"] + 15, f" again ({why})")
 
     async def approval(self, cid: str, fut: asyncio.Future[dict[str, Any]], timeout: int) -> None:
         try:
@@ -409,10 +427,12 @@ async def main(args: argparse.Namespace) -> int:
         log("  ", f"adb reverse tcp:{args.port} tcp:{args.port}")
     done = asyncio.get_running_loop().create_future()
     sessions: list[Session] = []
+    confirms: dict[str, dict[str, Any]] = {}
+    unanswered: set[str] = set()
 
     async def handler(ws: ServerConnection) -> None:
         log("  ", f"device connected from {ws.remote_address}")
-        session = Session(ws, validator, args)
+        session = Session(ws, validator, args, confirms, unanswered)
         sessions.append(session)
         reader = asyncio.create_task(session.reader())
         try:

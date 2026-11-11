@@ -14,6 +14,7 @@ import org.json.JSONObject
 import es.priv8.ocho.confirm.ConfirmFlow
 import es.priv8.ocho.confirm.ConfirmRequest
 import es.priv8.ocho.confirm.LocalValues
+import es.priv8.ocho.voz.VozMixta
 
 /**
  * 8's Android adapter: reads the active window as a raw snapshot, runs
@@ -46,19 +47,24 @@ class Priv8AccessibilityService : AccessibilityService() {
     private var reportedScreen: String? = null
     /** Current pause, as last reported to the core with events. */
     private var pause: Pause? = null
+    /** Plays the core's `voice` messages (8's answers) and sends voice.done. */
+    private var voz: VozMixta? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         workerThread = HandlerThread("priv8-bridge").also { it.start() }
         worker = Handler(workerThread.looper)
         performer = Performer(this, { id -> lastNodes[id] }, ::firstScrollable)
-        bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage)
+        bridge = BridgeClient(BuildConfig.BRIDGE_URL, deviceName(), worker, ::onBridgeMessage, ConfirmFlow::onConnected)
         bridge.start()
         ConfirmFlow.init(this) { bridge.send(it) }
+        voz = VozMixta(this) { bridge.send(it) }
         Log.i(TAG, "service connected")
     }
 
     override fun onDestroy() {
+        voz?.close()
+        voz = null
         if (::bridge.isInitialized) bridge.stop()
         if (::workerThread.isInitialized) workerThread.quitSafely()
         super.onDestroy()
@@ -118,7 +124,11 @@ class Priv8AccessibilityService : AccessibilityService() {
                 // While the person authenticates, a system dialog is open or
                 // 8 is asking for a confirmation, the agent does not touch
                 // the screen: nothing it could tap there is its business.
+                // One exception: with 8's own screen in front (not a confirmation), the core
+                // may open another app, so 8 can go from talking to the person to the bank
+                // and back after a confirmation. Nothing on 8's screen is touched.
                 val held = rootInActiveWindow?.let(::currentPause)
+                    ?.takeUnless { it == Pause.OWN_APP && op == "open_app" }
                 val outcome = if (held != null) Performer.NOT_ALLOWED else performWithTimeout(op, target, text, direction)
                 lastPerformAt = SystemClock.uptimeMillis()
                 val result = JSONObject().put("type", "result").put("id", id)
@@ -132,15 +142,15 @@ class Priv8AccessibilityService : AccessibilityService() {
                 Log.i(TAG, "perform $id: op=$op target=${target ?: "-"} -> ${if (outcome is Performer.Outcome.Error) outcome.code else "ok"}$why")
             }
             "confirm_request" -> {
-                // Not in bridge.schema.json v1: confirm.schema.json#/$defs/request
-                // over the bridge (proposed). Values are rendered on the device.
+                // confirm.schema.json#/$defs/request over the bridge (contracts
+                // v1.1). Values are rendered on the device.
                 val request = ConfirmRequest.parse(msg)
                 if (request == null) Log.w(TAG, "confirm_request: does not follow confirm.schema.json, ignored")
                 else ConfirmFlow.submit(request)
             }
             "render_values" -> {
-                // Proposed, not in contract v1: token -> value table for a
-                // session, so the device can render a summary. Never logged.
+                // Token -> value table for a session (bridge.schema.json v1.1),
+                // so the device can render a summary. Never logged.
                 val session = msg.optString("session")
                 val values = msg.optJSONObject("values")
                 if (session.isEmpty() || values == null) {
@@ -149,6 +159,10 @@ class Priv8AccessibilityService : AccessibilityService() {
                     LocalValues.put(session, values.keys().asSequence().associateWith { values.getString(it) })
                     Log.i(TAG, "render_values: session=$session tokens=${values.length()}")
                 }
+            }
+            "voice" -> {
+                // What 8 says (bridge.schema.json v1.1): the core sent render_values just before.
+                if (voz?.play(msg) != true) Log.w(TAG, "voice: does not follow voice.schema.json, ignored")
             }
             else -> Log.w(TAG, "bridge: unexpected message type '$type', ignored")
         }
@@ -249,15 +263,15 @@ class Priv8AccessibilityService : AccessibilityService() {
     /**
      * Reports pause changes with the bridge events of the contract:
      * focus_password (detail clave|otp) when a rojo field takes the focus and
-     * focus_password with detail "fin" when it loses it; system_dialog
-     * (detail biometria|permiso) and system_dialog_closed. The core turns them
+     * focus_left when it loses it; system_dialog (detail
+     * biometria|permiso|oculta) and system_dialog_closed (contracts v1.1). The core turns them
      * into observe paused and the app 8 into «mirar a otro lado».
      */
     private fun updatePause(next: Pause?, app: String?) {
         val prev = pause
         if (next == prev) return
         pause = next
-        if (prev?.reason == Pause.AUTH && next != prev) sendEvent("focus_password", app, Pause.END)
+        if (prev?.reason == Pause.AUTH && next != prev) sendEvent("focus_left", app, null)
         if (prev?.reason == Pause.DIALOG && next != prev) sendEvent("system_dialog_closed", app, null)
         when (next?.reason) {
             Pause.AUTH -> sendEvent("focus_password", app, next.detail)

@@ -1,0 +1,22 @@
+{
+  "type": "audit",
+  "event": {
+    "seq": 3,
+    "ts": "2026-11-11T17:05:12.480Z",
+    "session": "b2c",
+    "kind": "blocked",
+    "reason": "asesoria",
+    "model_saw": null,
+    "tokens": [],
+    "approved_by": null,
+    "detail": "8 ejecuta, no asesora · la petición no llega al modelo",
+    "ms": {
+      "core": null,
+      "adapter": null,
+      "model": null
+    },
+    "prev": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "sig": "ed25519:QUJDRA=="
+  }
+}

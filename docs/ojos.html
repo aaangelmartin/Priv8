@@ -354,6 +354,9 @@ code{font-family:var(--f-mono);font-size:.85em}
      dibujo (0,5 a 120 Hz). Así el movimiento es igual de suave a 60, 120 o con un fotograma
      tardío, sin acelerarse ni dar saltos. Se integra en pasos de medio fotograma. */
   var FDT=1;
+  /* Nivel real de la voz (P8.nivel, de 0 a 1): el micrófono al escuchar y la salida de audio
+     al hablar. Solo lo usa el 8 grande. Si no llega nada en NIVEL_MS, vuelve a su ritmo propio. */
+  var NIVEL={v:0,at:-1e9}, NIVEL_MS=400;
   function spring(cur, vel, target, k, d){
     var n=Math.max(1,Math.ceil(FDT/0.5)), h=FDT/n;
     for(var i=0;i<n;i++){ vel=vel*Math.pow(d,h)+(target-cur)*k*h; cur+=vel*h; }
@@ -396,6 +399,11 @@ code{font-family:var(--f-mono);font-size:.85em}
     if(prev && prev!==m && !kick){ s.svx+=0.03; s.svy-=0.05; }
     if(prev && prev!==m && ['nove','nuncasale','risa','dormir','agradecer','saludar'].indexOf(m)<0) this.blinkSoon=true;
     this.idle=null; this.nextIdle=performance.now()+5000+Math.random()*5000;
+  };
+  /* El nivel real suavizado (sube rápido, baja más despacio), o null si no hay o no es el 8 grande. */
+  Eight.prototype.vivo=function(now){
+    if(this!==BIG || STILL || now-NIVEL.at>NIVEL_MS){ this.lv=0; return null; }
+    var lv=this.lv||0, a=NIVEL.v>lv?0.55:0.18; this.lv=lv+(NIVEL.v-lv)*Math.min(1,a*FDT); return this.lv;
   };
   Eight.prototype.endIdle=function(now){ this.idle=null; this.nextIdle=now+7000+Math.random()*7000; };
   Eight.prototype.tick=function(now){
@@ -487,8 +495,8 @@ code{font-family:var(--f-mono);font-size:.85em}
         if(e1<0.6){ size=[1.12,1.12]; s.tx=0; s.ty=0; sc=0.95; oy=0.8; if(!this.kicked){ s.svx=0.07; s.svy=-0.1; this.kicked=1; } }
         else { s.tx=0; s.ty=-0.08; tilt=5; size=[1.05,1.05]; }
         bob=0; break; }
-      case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=(amp*0.004)*FDT; break; }
-      case 'hablar': { var syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=(syl*0.012)*FDT; s.svx-=(syl*0.006)*FDT; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
+      case 'escuchar': { s.tx=Math.sin(t*0.7)*0.12; s.ty=-0.08; var amp=this.vivo(now); if(amp===null) amp=Math.abs(Math.sin(t*7.3))*Math.pow(Math.sin(t*1.9),2); size=[1+0.16*amp,1+0.16*amp]; tilt=5; bob=0; s.svy+=(amp*0.004)*FDT; break; }
+      case 'hablar': { var syl=this.vivo(now); if(syl===null) syl=Math.max(0,Math.sin(t*10.5))*(0.6+0.4*Math.sin(t*2.3)); s.svy+=(syl*0.012)*FDT; s.svx-=(syl*0.006)*FDT; lid=[0.1,0.1]; low=[0.14,0.14]; break; }
       case 'pensar': { if(now>this.nextLook){ var q=[[-0.8,-0.65],[0.8,-0.6],[0.45,-0.95],[-0.35,-0.95],[0.9,-0.25],[-0.9,-0.3]][Math.floor(Math.random()*6)]; s.tx=q[0]; s.ty=q[1]; this.nextLook=now+220+Math.random()*380; this.tiltT=q[0]*5; } lid=[0.22,0.22]; tilt=this.tiltT||0; break; }
       case 'leer': { var u=(t*0.55)%1, line=Math.floor(u*3), fr=(u*3)%1; s.tx=fr<0.85?-0.75+1.5*(fr/0.85):0.75-1.5*((fr-0.85)/0.15); s.ty=-0.5+line*0.5; k=0.32; d=0.55; lid=[0.14,0.14]; break; }
       case 'cargando': {
@@ -592,7 +600,9 @@ code{font-family:var(--f-mono);font-size:.85em}
        P8.definir(json)   valida y registra una expresión; devuelve {expresion, avisos}
        P8.poner(id|json)  pone una expresión (definida o del juego cerrado) en el 8 grande
        P8.mezclar(a,b,t)  mezcla dos expresiones a medida (t de 0 a 1) en una nueva
-       P8.estados         lista de estados del juego cerrado
+       P8.nivel(v)        nivel real de la voz, de 0 a 1 (micrófono al escuchar, salida al hablar);
+                          unas 30 veces por segundo mientras suena; sin nivel, ritmo propio
+       P8.estados        lista de estados del juego cerrado
        P8.rangos          rangos válidos de cada valor */
   window.P8={
     definir:definir,
@@ -603,6 +613,7 @@ code{font-family:var(--f-mono);font-size:.85em}
         parpados:LP(A.parpados,B.parpados), ceno:LP(A.ceno,B.ceno), sonrisa:LP(A.sonrisa,B.sonrisa), pupilas:LP(A.pupilas,B.pupilas),
         inclinacion:L(A.inclinacion,B.inclinacion), acercamiento:L(A.acercamiento,B.acercamiento), desplazamiento:{x:L(A.desplazamiento.x,B.desplazamiento.x),y:L(A.desplazamiento.y,B.desplazamiento.y)},
         movimientos:(t<0.5?A:B).movimientos, parpadeo:(t<0.5?A:B).parpadeo}); },
+    nivel:function(v){ if(typeof v!=='number'||!isFinite(v)) return false; NIVEL.v=clamp(v,0,1); NIVEL.at=performance.now(); return true; },
     estados:EMO.map(function(e){ return {id:e.k, nombre:e.n, cuando:e.use}; }),
     rangos:RANGOS, movimientos:MOVS
   };

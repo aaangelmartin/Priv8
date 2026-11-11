@@ -3,7 +3,7 @@
 App Android de 8 (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad `Priv8AccessibilityService`, que es el adaptador Android del núcleo.
 
 - **Snapshot** (`SnapshotBuilder.kt`): convierte el árbol de accesibilidad de la ventana activa en un snapshot crudo según `docs/contracts/snapshot.schema.json`. Ids `n1`, `n2`… en preorden, estables dentro de un snapshot; `role` por clase de vista; `label` de `contentDescription`, `labelFor` o la pista; `sel` es el `viewIdResourceName` sin el paquete de la app (`id/iban_destino`); `screen` sale de la vista raíz `screen_<nombre>` si existe. Los campos rojos (`RojoField.kt`: `isPassword`, tipo de entrada de contraseña como `numberPassword` de los OTP, o un campo editable cuyo id, pista o etiqueta nombra un secreto: otp, pin, clave, código...) llevan `password: true` y su texto va enmascarado ya en el dispositivo; 8 no escribe en ellos. Antes de leer espera a que la ventana se asiente: 300 ms sin cambios, la reacción a la última acción y que la ventana activa sea la del último `TYPE_WINDOW_STATE_CHANGED`.
-- **Puente** (`BridgeClient.kt`): cliente WebSocket a `ws://127.0.0.1:8765` (por `adb reverse`), mensajes de `docs/contracts/bridge.schema.json`. Envía `hello` al conectar, responde a `snapshot.request` y `perform`, y emite los eventos `focus_password`, `system_dialog`, `system_dialog_closed`, `screen_changed` y `app_changed`. Si se cae, reintenta con espera exponencial de 1 a 30 s.
+- **Puente** (`BridgeClient.kt`): cliente WebSocket a `ws://127.0.0.1:8765` (por `adb reverse`), mensajes de `docs/contracts/bridge.schema.json` (contratos v1.1). Envía `hello` al conectar, responde a `snapshot.request` y `perform`, y emite los eventos `focus_password`, `focus_left`, `system_dialog`, `system_dialog_closed`, `screen_changed` y `app_changed`. Si se cae, reintenta con espera exponencial de 1 a 30 s.
 - **Acciones** (`Performer.kt`): `tap`, `type` (`ACTION_SET_TEXT`), `back`, `open_app` (paquete en `text`), `scroll` (con o sin `target`) y `key` (`enter`, `back`, `home`) sobre el id del último snapshot. Errores del contrato: `target_no_encontrado` (id inexistente o vista que ya no está), `no_permitido` (escribir en un campo de contraseña, operación que no corresponde a la pantalla), `timeout` (más de 5 s) y `otro`.
 
 Logcat (etiqueta `Priv8A11y`) solo recibe tipos de mensaje, ids, recuentos y códigos de error, nunca el contenido de la pantalla ni los valores que manda el núcleo. El volcado crudo del árbol existe para depurar, pero solo se compila activado con `-Ppriv8.a11yDump=true`; nunca con datos reales.
@@ -14,7 +14,7 @@ Mientras un campo rojo tiene el foco (la persona escribe su clave o el OTP), hay
 
 | Situación | Snapshot | Evento |
 |---|---|---|
-| Foco en campo rojo | un solo elemento `n1`, `password: true`, `text: null`; `focus: "n1"`; `screen` sí | `focus_password` con `detail` `clave` u `otp`; al salir, `focus_password` con `detail: "fin"` |
+| Foco en campo rojo | un solo elemento `n1`, `password: true`, `text: null`; `focus: "n1"`; `screen` sí | `focus_password` con `detail` `clave` u `otp`; al salir, `focus_left` |
 | Diálogo del sistema | `system_dialog` (`biometria`, `permiso`, u `oculta` si 8 no puede leer la ventana: en Android 14 el diálogo de permisos está oculto a los servicios que no son herramientas de accesibilidad), sin elementos, `app: "desconocida"` si es oculta | `system_dialog` / `system_dialog_closed` |
 | Confirmación de 8 | `screen: "confirmacion"`, sin elementos | ninguno (el núcleo ya la tiene pendiente) |
 
@@ -24,10 +24,11 @@ Con eso el núcleo pone `paused: autenticacion`, `dialogo_sistema` o `confirmaci
 
 Paquete `es.priv8.ocho.confirm`, aislado para que la app (#39) y el diseño (#36) lo vistan:
 
-- El núcleo manda por el puente `render_values` (tabla token → valor de la sesión, propuesto, no está en el contrato v1) y `confirm_request` (`confirm.schema.json`). La tabla vive solo en memoria y nunca va al registro.
+- El núcleo manda por el puente `render_values` (tabla token → valor de la sesión) y `confirm_request` (`confirm.schema.json`), los dos en `bridge.schema.json` desde v1.1. La tabla vive solo en memoria y nunca va al registro.
 - `ConfirmActivity` muestra la frase con los valores («200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?») y la dice con TextToSpeech es-ES, solo con una voz instalada (sin síntesis en red), con las cifras ya en palabras («Doscientos euros…», `Verbalizer.kt`, port de `voice/verbalize.py`).
 - Escucha «confirmo» o «cancela» con el reconocedor en el dispositivo (`createOnDeviceSpeechRecognizer`). Si no hay reconocedor local, permiso de micrófono o modelo es-ES, lo dice en pantalla y quedan los botones. La app pide el modelo es-ES al abrirla, nunca en mitad de una confirmación.
 - `emu.sh --headless` arranca el emulador con `-no-audio`: ahí la voz no suena ni hay micrófono, el reconocedor solo oye silencio y se responde con los botones. Para probar la voz, arrancarlo con ventana (con audio). Si el motor no avisa del final de la frase, 8 empieza a escuchar tras un margen calculado por longitud.
+- 8 está arriba y se mueve con el volumen real (#42): «hablar» sigue a la salida de TextToSpeech y «escuchar» al micrófono (`onRmsChanged`). La salida se mide con `Visualizer` sobre una sesión de audio propia (necesita `RECORD_AUDIO`, el mismo permiso que el micrófono); si no se puede, con una envolvente por palabras (`onRangeStart`). Solo se mide el volumen, nunca el audio. Unas 30 veces por segundo, por `OjosView.microfono`/`voz` → `Ocho.nivel` → `P8.nivel` (`docs/ojos.html`).
 - Botones Confirmar y Cancelar. Si falta el valor de algún token, Confirmar no se ofrece.
 - Una respuesta por petición: `approval_result` con `by: persona` y `via: voz|pantalla`, o `caducado` (`via` y `by` `sistema`) a los `expires_s` (300 por defecto).
 - El agente no puede leer ni tocar esta pantalla: snapshot vacío y `perform` rechazado mientras está delante.
@@ -70,6 +71,8 @@ scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.a
 
 `emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
 
+Todo el lado del móvil en un comando (issue #48): `scripts/movil.sh` compila la app 8 y los tres bancos (Alcor, Brezo, Nimbo), llama a `emu.sh` con las cuatro APK y abre los puertos 8765 (puente) y 8700 (eventos). Con `--no-build` instala lo ya compilado; `--headless` pasa a `emu.sh`. Necesita `JAVA_HOME` con un JDK 17.
+
 ## Probar el puente sin el núcleo
 
 `adapters/android/bridge_dev_server.py` hace de núcleo: acepta la conexión, valida cada mensaje en los dos sentidos contra los contratos y pide snapshots o manda acciones. Es una herramienta de desarrollo; el lado real es del núcleo.
@@ -95,3 +98,76 @@ Probado en la issue #26 sobre Android 14 (API 34):
 
 - **Instalado con `adb install`:** no hay restricción. El servicio se activa por `adb shell settings` y también desde Ajustes › Accesibilidad.
 - **Instalado desde un archivo o el navegador:** Ajustes muestra el servicio en gris con «Restricted setting», y el sistema descarta el valor de `enabled_accessibility_services` puesto por adb. Se desbloquea con «Allow restricted settings» en Información de la app, o con `adb shell appops set es.priv8.ocho ACCESS_RESTRICTED_SETTINGS allow`. `emu.sh` ya lo hace antes de activar el servicio.
+
+## Los ojos de 8 (issue #39)
+
+La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos del núcleo (`ws://127.0.0.1:8700/events`, `docs/contracts/events.schema.json`).
+
+- **`OjosView.kt`**: WebView con `assets/ocho/app.html`. Todo se sirve desde el APK (`https://appassets.androidplatform.net/assets/`); la página no sale a la red: la petición a Google Fonts de `ojos.html` se responde con la Sora incluida (`assets/ocho/fonts/`, OFL) y cualquier otra recibe un 403.
+- **`docs/ojos.html` es la única fuente de los ojos.** El build lo copia sin tocarlo a `build/generated/ojos/ocho/ojos.html` (tarea `copyOjos`). `app.html` lo carga en un iframe, deja visible solo el 8 grande y lo mueve con `P8.poner()`.
+- **`EventsClient.kt`**: cliente WebSocket del canal de eventos, con reconexión de 1 a 30 s. Descarta `screen` (lleva la pantalla real para la consola) antes de que llegue a la interfaz y solo registra tipos de mensaje.
+- **`assets/ocho/estados.js`**: de evento a cara. Función pura, con tests en `dev/test_estados.mjs`.
+
+| Evento | Cara |
+|---|---|
+| conexión abierta / perdida | saludar / sin conexión |
+| `audit` `task` | pensar |
+| `audit` `observe_sent` | leer; después asteriscos (`nove`) si hubo datos ámbar o ojos cerrados (`nuncasale`) si hubo rojos |
+| `audit` `act`, `oracle` | cargando |
+| `audit` `held` | esperar |
+| `audit` `paused` | mirar a otro lado (`apartar`), hasta el siguiente evento |
+| `audit` `approval` | confirmado (`asentir`) o cancelado (`negar`) |
+| `audit` `blocked` | `rojo`: nunca sale · `asesoria`: no puedo · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
+| `audit` `call` | hablar |
+| `voice` | hablar, con una duración aproximada hasta que la voz mixta avise del final |
+| `confirm_request` | llamar (`atencion`) y luego esperar |
+| `approval_result` | confirmado o cancelado |
+| `screen`, `audit` `voice_out` | no cambian la cara |
+
+Los gestos de una vez duran 2,8 s (`--p8-dur-gesto`) y vuelven a reposo (`mirar`). En los builds de depuración se ve abajo el estado de la conexión y la cara actual.
+
+### Probar sin el núcleo
+
+`dev/events_dev_server.py` hace de canal de eventos: valida cada mensaje contra los contratos antes de mandarlo y reproduce tres escenas (`saldo`, `transferencia`, `bloqueos`). También sirve una vista previa para el navegador.
+
+```sh
+uv run --python 3.12 --with websockets==15.0.1 --with jsonschema==4.25.1 \
+  python apps/android-8/dev/events_dev_server.py --run "wait 3; todo" --loop
+# navegador: http://127.0.0.1:8710/ocho/app.html?debug
+# emulador:
+~/Library/Android/sdk/platform-tools/adb reverse tcp:8700 tcp:8700
+```
+
+Tests de la tabla de caras: `node apps/android-8/dev/test_estados.mjs`.
+
+## Renderizador local (issue #40)
+
+Lo que dice 8 sale debajo de los ojos con los valores reales puestos en el móvil.
+
+- El mensaje `voice` del canal de eventos solo trae tokens: «Entre tus tres cuentas tienes ‹SUMA_1›».
+- Los valores llegan antes o justo después por el puente, con `render_values` (`bridge.schema.json` v1.1), y los guarda `LocalValues`: solo en memoria, sin registrar.
+- `Frase.kt` lee el `voice` y lo pinta con el mismo `Renderer` de las confirmaciones habladas. Rechaza un token en un segmento `cloud`.
+- `Subtitulo.kt` lo enseña. Si todavía falta algún valor, lo reintenta durante unos 2 s y mientras tanto enseña el token, nunca un valor inventado. El texto no se registra ni sale del dispositivo.
+- Es un aspecto provisional (Sora blanca sobre cobalto) hasta el diseño de la app (#36).
+
+Tests: `./gradlew testDebugUnitTest` (`FraseTest`, con los ejemplos de `docs/contracts/examples`).
+
+## Dictado (issue #47)
+
+Toca a 8 y dile la tarea: «¿Cuánto tengo entre mis bancos?». El texto sale en el subtítulo. Vuelve a tocar para dejar de escuchar.
+
+Dos caminos, decididos por Ángel en la #47. En los dos el audio no sale del móvil o del portátil: nunca hay un reconocedor en la nube.
+
+- **Móvil real (A).** `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. El texto va al núcleo en un `task_request` por el canal de eventos (`events.schema.json` v1.2); el núcleo lo tokeniza antes de que llegue al modelo. Sin conexión, la tarea espera y sale al reconectar.
+- **Emulador (B).** Su reconocedor no funciona, así que la app manda `dictation_start` y el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`, `make dictado-install`). El núcleo devuelve `dictation` con el texto, que sale en el subtítulo, y encola la tarea él mismo.
+- **Cuál se usa:** `auto` elige B en el emulador (`Build.FINGERPRINT`, `Build.HARDWARE`...) y A en un móvil. Un móvil sin reconocedor en el dispositivo, sin es-ES o con un error del reconocedor pasa también a B. Para forzarlo: `./gradlew assembleDebug -Ppriv8.dictado=portatil` (o `movil`), o `--es dictado portatil` en el `am start`. La sesión es `b2c` (`-Ppriv8.session=...`).
+- **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra la longitud de la tarea. El texto de `dictation` no llega al WebView de los ojos.
+
+Probar en el emulador, sin tocar la pantalla (con el núcleo corriendo y `adb reverse tcp:8700 tcp:8700`):
+
+```bash
+adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true
+adb logcat -s Priv8Dictado   # «dictado: listening on the laptop», luego «laptop task (N chars)»
+```
+
+Para probar el reconocedor del emulador (A) en vez de Whisper: `adb emu avd hostmicon` y `--es dictado movil`.

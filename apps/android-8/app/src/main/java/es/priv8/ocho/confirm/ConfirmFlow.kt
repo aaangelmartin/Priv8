@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import org.json.JSONObject
 
@@ -19,6 +20,18 @@ import org.json.JSONObject
  *
  * One request at a time, in arrival order. State lives on the main thread.
  * Results go through [sender] (the bridge); values are never logged.
+ *
+ * After each hello the core re-sends the pending confirm_request with the
+ * same id (contracts v1.1). A request is the same only if session, id and
+ * the hash of the whole request match ([ConfirmRequest.fingerprint]): ids
+ * restart at c1 when the core restarts, so a reused id alone means nothing.
+ *  - The same request on screen or queued is ignored.
+ *  - The same request already answered gets the same approval_result again
+ *    ([AnsweredCache]), so an answer lost while the bridge was down still
+ *    arrives and the person is never asked twice.
+ *  - A different request with a reused id is new: the stale one (from a
+ *    previous core) is dropped without sending anything, since its id now
+ *    belongs to the new request, and the person is asked.
  */
 object ConfirmFlow {
 
@@ -36,6 +49,12 @@ object ConfirmFlow {
     private var screen: Screen? = null
     private var timeout: Runnable? = null
 
+    /** Answers already given, tied to the exact request. */
+    private val answered = AnsweredCache(clock = SystemClock::elapsedRealtime)
+
+    /** When each pending request arrived (elapsedRealtime), by fingerprint. */
+    private val arrived = HashMap<String, Long>()
+
     /** The request on screen, or null. Main thread. */
     var active: ConfirmRequest? = null
         private set
@@ -51,24 +70,60 @@ object ConfirmFlow {
         }
     }
 
+    /**
+     * A new bridge connection, right after hello. The hello carries no core
+     * instance id, so answers already delivered are forgotten (see
+     * [AnsweredCache.onConnected]). Call it from the bridge thread before
+     * handling that connection's messages: both go through the main looper
+     * in order.
+     */
+    fun onConnected() {
+        main.post {
+            answered.onConnected()
+            Log.i(TAG, "bridge connected: ${answered.size} answer(s) still owed to the core")
+        }
+    }
+
     /** From the bridge, any thread. */
     fun submit(request: ConfirmRequest) = main.post {
-        if (active?.id == request.id || queue.any { it.id == request.id }) {
-            Log.w(TAG, "confirm ${request.id}: already pending, ignored")
+        answered.onSession(request.session)
+        active?.let { a ->
+            if (sameSlot(a, request)) {
+                if (a.fingerprint == request.fingerprint) {
+                    Log.w(TAG, "confirm ${request.id}: already on screen, ignored")
+                    return@post
+                }
+                Log.w(TAG, "confirm ${request.id}: different request with the same id; the one on screen is stale, dropped")
+                drop(a)
+            }
+        }
+        if (queue.any { sameSlot(it, request) && it.fingerprint == request.fingerprint }) {
+            Log.w(TAG, "confirm ${request.id}: already queued, ignored")
             return@post
         }
+        if (queue.removeAll { sameSlot(it, request) }) {
+            Log.w(TAG, "confirm ${request.id}: different request with the same id; the queued one is stale, dropped")
+        }
+        answered.lookup(request)?.let { result ->
+            val sent = sender?.invoke(result) == true
+            if (sent) answered.delivered(request)
+            Log.i(TAG, "confirm ${request.id}: same request already answered, approval_result sent again${if (sent) "" else " (NOT SENT: bridge down)"}")
+            return@post
+        }
+        arrived[request.fingerprint] = SystemClock.elapsedRealtime()
         queue.addLast(request)
         Log.i(TAG, "confirm ${request.id}: queued (kind=${request.kind}, expires_s=${request.expiresS}, segments=${request.segments.size})")
         if (active == null) next()
     }
 
-    /** From the screen: the person answered. */
-    fun answer(id: String, ok: Boolean, via: String) = main.post {
-        if (active?.id != id) return@post
-        val result = JSONObject().put("type", "approval_result").put("id", id)
+    /** From the screen: the person answered [request], the one they saw. */
+    fun answer(request: ConfirmRequest, ok: Boolean, via: String) = main.post {
+        val a = active
+        if (a == null || !sameSlot(a, request) || a.fingerprint != request.fingerprint) return@post
+        val result = JSONObject().put("type", "approval_result").put("id", a.id)
             .put("ok", ok).put("via", via).put("by", "persona")
         if (!ok) result.put("reason", "cancelado")
-        finish(result)
+        finish(a, result)
     }
 
     fun attach(s: Screen) = main.post {
@@ -78,14 +133,17 @@ object ConfirmFlow {
 
     fun detach(s: Screen) = main.post { if (screen === s) screen = null }
 
+    private fun sameSlot(a: ConfirmRequest, b: ConfirmRequest) = a.session == b.session && a.id == b.id
+
     private fun next() {
         val request = queue.removeFirstOrNull() ?: return
         active = request
         isActive = true
         val expire = Runnable {
-            if (active?.id != request.id) return@Runnable
+            if (active !== request) return@Runnable
             Log.i(TAG, "confirm ${request.id}: no answer in ${request.expiresS} s")
             finish(
+                request,
                 JSONObject().put("type", "approval_result").put("id", request.id)
                     .put("ok", false).put("via", "sistema").put("by", "sistema").put("reason", "caducado"),
             )
@@ -104,14 +162,25 @@ object ConfirmFlow {
         }
     }
 
-    private fun finish(result: JSONObject) {
+    /** Takes [request] off the screen without answering it (stale: its id belongs to a newer request). */
+    private fun drop(request: ConfirmRequest) {
+        timeout?.let(main::removeCallbacks)
+        timeout = null
+        active = null
+        isActive = false
+        arrived.remove(request.fingerprint)
+    }
+
+    private fun finish(request: ConfirmRequest, result: JSONObject) {
         timeout?.let(main::removeCallbacks)
         timeout = null
         active = null
         isActive = false
         val sent = sender?.invoke(result) == true
+        val at = arrived.remove(request.fingerprint) ?: SystemClock.elapsedRealtime()
+        answered.put(request, result, delivered = sent, receivedAt = at)
         val reason = result.optString("reason").ifEmpty { "-" }
-        Log.i(TAG, "approval_result ${result.getString("id")}: ok=${result.getBoolean("ok")} via=${result.getString("via")} reason=$reason${if (sent) "" else " (NOT SENT: bridge down)"}")
+        Log.i(TAG, "approval_result ${request.id}: ok=${result.getBoolean("ok")} via=${result.getString("via")} reason=$reason${if (sent) "" else " (NOT SENT: bridge down)"}")
         if (queue.isEmpty()) screen?.close() else next()
     }
 }

@@ -35,7 +35,41 @@ act      Claude ─ act_input ─▶ núcleo ─ (políticas, procedencia, confi
 oracle   Claude ─ oracle_input ─▶ núcleo ─ oracle_result ─▶ Claude
 eventos  núcleo ─ audit · screen · voice · confirm_request ─▶ consola, app 8, agente
          app 8 o consola ─ approval_result ─▶ núcleo
+tarea    app 8 ─ task_request (texto) ─▶ núcleo ─ next_task() ─▶ agente (tokeniza antes de Claude)
+dictado  app 8 ─ dictation_start ─▶ núcleo ─ micro del portátil + Whisper local ─ dictation ─▶ app 8
+                                                                   └─ tarea en cola ─▶ next_task()
 ```
+
+## v1.2 (11 nov) · cambios aditivos
+
+Aditivo: un cliente v1.1 sigue validando.
+
+- **`task_request`** (cliente → núcleo): `{"type":"task_request","session":"b2c","text":"…"}`. La tarea de la persona en texto, dictada en el móvil real con el reconocedor del dispositivo o escrita. El núcleo la encola (`core.next_task`) y la auditoría guarda un `task` con sus tokens y su longitud, nunca el texto.
+- **`dictation_start`** (cliente → núcleo): el emulador no reconoce la voz, así que el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`). El audio no sale del portátil; no hay reconocedor en la nube.
+- **`dictation`** (núcleo → clientes): el texto entendido, para el subtítulo de la app 8. Lleva valores reales, así que solo viaja por el canal local y no se registra. Con `error` (`no_disponible`, `sin_voz`) el texto va vacío.
+- **Motivo de rechazo `asesoria`** (issue #43), solo en la auditoría: la persona pidió consejo de inversión («¿en qué fondo lo meto?») y 8 no lo da, porque ejecuta y no asesora (MiFID II). El bucle del agente lo detecta antes de llamar al modelo, así que la petición no sale. En el canal de eventos va primero un `voice` con la frase fija, toda en `cloud` porque no lleva datos, y después el `audit` `blocked` con `reason: asesoria`, que la app 8 pinta con la cara «no puedo» (`rechazar` en `docs/ojos.html`). No es un motivo de `act` ni de `oracle`. Ejemplos: `audit.blocked-asesoria.json`, `events.audit-asesoria.json`, `events.voice-no-puedo.json`.
+
+## v1.1 (10 nov) · cambios aditivos
+
+Un cliente v1 sigue validando. Salen de las notas de Ángel en #58 y #70 (issue #66).
+
+- **Puente:**
+  - `confirm_request` y `approval_result` van también por el puente.
+  - `render_values` manda al móvil los valores reales de los tokens para que los muestre y los lea en local.
+  - Mensajes de voz: `voice`, `voice.audio` y `voice.audio.end` (PCM 24 kHz en tramas binarias entre los dos) y `voice.done`, que se registra como `voice_out`.
+  - Evento `focus_left` cuando el foco sale de un campo rojo.
+  - `detail` definido: `clave`/`otp`, `permiso`/`biometria`/`oculta`, o el nombre de la pantalla.
+- **Nombres de tecla:** `key` acepta `enter`, `back` y `home`. En Android, `send`, `call` y `type` sobre una contraseña devuelven `no_permitido`.
+- **Snapshot:** solo trae lo visible. `parent` es el ancestro conservado más cercano y va vacío si no hay ventana. `system_dialog: oculta` para ventanas que no se pueden leer.
+- **Pausa antes que la política.** El núcleo mira la pausa antes de buscar política, en este orden:
+  1. `system_dialog` no nulo → `dialogo_sistema`;
+  2. `app` es `es.priv8.ocho` y `screen` es `confirmacion` → `confirmacion`;
+  3. `focus` sobre un elemento con `password: true` → `autenticacion`.
+
+  Con pausa, la observación sale sin elementos y con `screen` crudo o `null`, y `act` se rechaza hasta que acabe. Así, una ventana sin política (un diálogo del sistema, la confirmación de 8) da pausa y no `sin_regla`.
+- **Reenvío de confirmaciones.** Tras cada `hello`, el núcleo reenvía los `confirm_request` pendientes con el mismo `id`. Si el móvil ya los había respondido, contesta otra vez con el mismo `approval_result`.
+- **Motivo de rechazo `adaptador`:** el adaptador no pudo ejecutar la acción. Vale en `act` y en la auditoría.
+- **Ejemplos:** paquete real `es.priv8.banks.alcor`; el campo de contraseña no ofrece `type`; `hello.device` como lo manda el emulador.
 
 ## Qué concreta respecto a la arquitectura
 

@@ -17,7 +17,13 @@ núcleo expone" in agent/README.md):
 `core` is imported lazily, only when the real core is selected, so the fake
 core and the tests never need it.
 
-Selection: PRIV8_CORE=fake|real (default fake until the core lands).
+Selection: PRIV8_CORE=real|fake (default real). The fake core in agent/fakes.py
+stays for the tests and for `make replay-fake`.
+
+The real core reads screens through an adapter connected per session
+(`core.connect`). Until the web adapter and the Android bridge are wired into
+this process, `mount_scene` connects one of the in-memory demo scenes of
+core/scenes.py, so the server and the agent loop have a screen to work on.
 """
 
 from __future__ import annotations
@@ -34,7 +40,10 @@ CORE_MODULE = "core"
 REQUIRED = ("observe", "act", "oracle", "check", "record")
 ENV_VAR = "PRIV8_CORE"
 CHOICES = ("fake", "real")
-DEFAULT_CHOICE = "fake"
+DEFAULT_CHOICE = "real"
+# In-memory demo screens of core/scenes.py (b2b: supplier invoice, b2c: balance and transfer).
+SCENES = ("b2b", "b2c")
+DEFAULT_SCENE = "b2b"
 
 
 class RealCoreUnavailable(RuntimeError):
@@ -93,6 +102,15 @@ class _LeakCheck:
                            matched=tuple(str(f) for f in findings))
 
 
+class _Voice:
+    def __init__(self, fn: Any) -> None:
+        self._say = fn
+
+    def say(self, session: str, text: str) -> JSON | None:
+        out = self._say(session, text)
+        return None if out is None else dict(out)
+
+
 class _Audit:
     def __init__(self, fn: Any) -> None:
         self._record = fn
@@ -133,11 +151,178 @@ def build_real_core(module: str = CORE_MODULE) -> Core:
         oracle=_Oracle(mod.oracle),
         leak=_LeakCheck(mod.check),
         audit=_Audit(mod.record),
+        voice=_Voice(mod.say) if callable(getattr(mod, "say", None)) else None,
     )
 
 
+def mount_scene(session: str, name: str = DEFAULT_SCENE, *, simulated_persona: bool = False,
+                module: str = CORE_MODULE) -> Any:
+    """Connect a demo scene of core/scenes.py to `session` in the real core and return it.
+
+    With `simulated_persona`, a simulated person approves every held action before the
+    next screen read, as in `make demo`. Only for recorded replays and tests: in a live
+    run the person approves from app 8 or the console.
+    """
+    if name not in SCENES:
+        raise ValueError(f"scene {name!r}: expected one of {', '.join(SCENES)}")
+    mod = _load(module)
+    try:
+        scenes = importlib.import_module(f"{module}.scenes")
+    except ImportError as e:
+        raise RealCoreUnavailable(module, ("scenes",), cause=f"import failed: {e}") from e
+    scene = scenes.SCENES[name]()
+    if simulated_persona:
+        def approve_pending() -> None:
+            for req in mod.pending(session):
+                mod.approve({"type": "approval_result", "id": req["id"], "ok": True,
+                             "via": "pantalla", "by": "persona"})
+        scene.before_snapshot = approve_pending
+    mod.connect(session, scene)
+    return scene
+
+
+def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
+              events: bool = True) -> Any:
+    """Connect the real Alba Core and mailbox (adapters/web, Playwright) to `session`.
+
+    Unlike the scenes, the screens are the apps of apps/erp-sim and apps/inbox-sim, which
+    must be running (ports 5173 and 5174). The seed values are trusted so the final block
+    looks for them in everything that goes out, and the events WebSocket (:8700) starts so
+    the audit console can show the screens and the person can approve held actions there.
+    """
+    import sys
+    from pathlib import Path
+
+    from adapters.web import WebAdapter
+
+    mod = _load(module)
+    data = Path(__file__).resolve().parent.parent / "data"
+    sys.path.insert(0, str(data))
+    from check_seed import known
+
+    mod.trust(known())
+    from voice.call import make_on_call  # llamada de verificación al teléfono de la ficha (#23)
+
+    web = WebAdapter(start=start, on_call=make_on_call(session))
+    print("priv8: entra en Alba Core en la ventana de Chromium (usuario y clave de prueba en data/seed.json)", file=sys.stderr)
+    if not web.wait_until_logged_in("alba-core"):
+        raise TimeoutError("nadie entró en Alba Core en 5 minutos")
+    mod.connect(session, web)
+    if events:
+        importlib.import_module(f"{module}.server").start()
+    return web
+
+
+ANDROID_SESSION = "b2c"
+ANDROID_START_APP = "es.priv8.banks.alcor"
+
+
+def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = ANDROID_START_APP,
+                  simulated_persona: bool = False, module: str = CORE_MODULE, events: bool = True,
+                  device_timeout: float = 120, login_timeout: float = 300, bridge: Any = None) -> Any:
+    """Serve the Android bridge (:8765) and connect the phone to `session` in the real core.
+
+    The emulator's accessibility service (apps/android-8) connects as the client; run
+    `scripts/movil.sh` first so `adb reverse` opens 8765 and 8700. Held actions go to the
+    phone as spoken confirmations (render_values, then confirm_request), and the events
+    WebSocket (:8700) starts so app 8 moves its eyes and shows what it says. With
+    `simulated_persona` (replays, tests) a simulated person approves instead of the phone.
+
+    Before the agent starts, the harness (not the agent) opens `start_app` and waits until
+    the person is past its login: the login is always the person's.
+    """
+    import sys
+    from pathlib import Path
+
+    from adapters.android.bridge import AndroidBridge
+
+    mod = _load(module)
+    data = Path(__file__).resolve().parent.parent / "data"
+    sys.path.insert(0, str(data))
+    from check_seed import known
+
+    mod.trust(known())
+    import time
+
+    # App 8 keeps the answers it gave by request id and repeats them (contracts v1.1), so ids
+    # must not repeat across runs of the core: c1 of this run is not c1 of the last one.
+    if callable(getattr(getattr(mod, "CONFIRM", None), "number_from", None)):
+        mod.CONFIRM.number_from((int(time.time()) % 1_000_000) * 1000 + 1)
+    say = lambda m: print(f"priv8: {m}", file=sys.stderr, flush=True)  # noqa: E731
+    if bridge is None:
+        bridge = AndroidBridge(session, core=mod, push_confirms=not simulated_persona).start()
+    if events:
+        importlib.import_module(f"{module}.server").start()
+    if simulated_persona:
+        def approve_pending() -> None:
+            for req in mod.pending(session):
+                mod.approve({"type": "approval_result", "id": req["id"], "ok": True,
+                             "via": "pantalla", "by": "persona"})
+        bridge.before_snapshot = approve_pending
+    say("esperando al móvil en ws://127.0.0.1:8765 (scripts/movil.sh abre adb reverse)")
+    if not bridge.wait_for_device(device_timeout):
+        bridge.stop()
+        raise TimeoutError(f"ningún móvil se conectó al puente en {device_timeout:.0f} s")
+    if start_app:
+        try:
+            in_front = bridge.snapshot().get("app") == start_app
+        except Exception:  # noqa: BLE001 - open it anyway
+            in_front = False
+        if not in_front and not bridge.open_app(start_app):  # again in front: back to its login
+            say(f"el móvil no dejó abrir {start_app}: ábrela tú")
+        say("si la app pide entrar, hazlo en el emulador: el login siempre es de la persona")
+        past_login = lambda raw: (raw.get("app") == start_app and raw.get("screen") not in (None, "login")  # noqa: E731
+                                  and not mod.pause_before_policy(raw))
+        if not bridge.wait_for_screen(past_login, login_timeout):
+            bridge.stop()
+            raise TimeoutError(f"nadie entró en {start_app} en {login_timeout:.0f} s")
+    mod.connect(session, bridge)
+    return bridge
+
+
+def wait_for_approvals(session: str, timeout_s: float = 300, module: str = CORE_MODULE,
+                       log: Any = None) -> bool:
+    """Keeps the process (core, bridge) up while held actions wait for the person, who
+    answers on the phone. True when nothing is pending any more."""
+    import time
+
+    mod = _load(module)
+    say = log or (lambda *_: None)
+    if mod.pending(session):
+        say("priv8: hay acciones retenidas; 8 las está pidiendo en el móvil")
+    end = time.monotonic() + timeout_s
+    while mod.pending(session) and time.monotonic() < end:
+        mod.expire_due()
+        time.sleep(0.5)
+    if mod.pending(session):
+        say("priv8: sin respuesta de la persona; las acciones retenidas no se ejecutan")
+        return False
+    return True
+
+
+def has_dictation(module: str = CORE_MODULE) -> bool:
+    """Whether the core receives dictated tasks (core.next_task, issue #47)."""
+    return callable(getattr(_load(module), "next_task", None))
+
+
+def next_dictated_task(session: str, timeout: float | None = None, module: str = CORE_MODULE) -> str | None:
+    """The next task the person dictated for `session` (app 8 or Whisper, task_request on
+    :8700), real text that stays local; None on timeout. Raises NotImplementedError while
+    the core has no `next_task` (issue #47)."""
+    fn = getattr(_load(module), "next_task", None)
+    if not callable(fn):
+        raise NotImplementedError("el núcleo aún no recibe tareas dictadas (core.next_task, #47): usa --task")
+    task = fn(session, timeout)
+    return None if task is None else str(task)
+
+
+def tokenize_task(session: str, text: str, module: str = CORE_MODULE) -> str:
+    """What the person asked, with their data replaced by tokens of `session`, before it goes to Claude."""
+    return str(_load(module).tokenize_text(session, text))
+
+
 def core_choice(env: Mapping[str, str] | None = None) -> str:
-    """The value of PRIV8_CORE (fake by default). Anything else is an error."""
+    """The value of PRIV8_CORE (real by default). Anything else is an error."""
     env = os.environ if env is None else env
     choice = (env.get(ENV_VAR) or DEFAULT_CHOICE).strip().lower()
     if choice not in CHOICES:

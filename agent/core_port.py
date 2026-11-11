@@ -106,19 +106,44 @@ class AuditPort(Protocol):
         The caller gives session, kind and any of reason, app, screen,
         model_saw, tokens, confirm, approved_by, counts, detail, ms; the audit
         adds seq, ts, prev, hash and sig. No other keys.
+
+        One owner per event, so nothing appears twice in the log:
+        - The core records its own work on each call: observe_sent, act, held,
+          approval, oracle, and blocked for the denials it decides.
+        - The MCP server (agent/server.py) records only blocked events the core
+          never sees: unknown tool, invalid input, a real value in the input,
+          and a core result held back by the server's final block.
+        - The agent loop (agent/agent.py) records task events (start, each
+          model step with ms.model, end, errors) and blocked for a request to
+          Claude held back by the final block.
+        """
+        ...
+
+
+@runtime_checkable
+class VoicePort(Protocol):
+    def say(self, session: str, text: str) -> JSON | None:
+        """Publish a fixed sentence with no data (one cloud segment, voice.schema.json).
+
+        Used by the agent loop only, for 8's fixed sentences (the «no puedo» of
+        agent/asesoria.py). Returns the utterance, or None if the final block held it.
         """
         ...
 
 
 @dataclass
 class Core:
-    """The five ports the MCP layer needs, bundled. Nothing else is reachable."""
+    """The five ports the MCP layer needs, bundled. Nothing else is reachable.
+
+    `voice` is optional and never reaches the MCP server: the fake core has none.
+    """
 
     screen: ScreenPort
     actor: ActPort
     oracle: OraclePort
     leak: LeakCheckPort
     audit: AuditPort
+    voice: VoicePort | None = None
 
 
 def tokens_in(text: str) -> list[str]:

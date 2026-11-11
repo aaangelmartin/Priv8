@@ -337,8 +337,46 @@ class FakeCore:
         for key, (tipo, etiqueta) in SEED_TYPES.items():
             self.vault.tokenize(SEED[key], tipo, etiqueta)
 
-    # -- observe: adapter.snapshot() -> policy -> tokenizer -> (final block in the server)
+    # Like the real core, the fake records its own work on each call (see AuditPort):
+    # observe_sent, act, held, approval, oracle, and blocked for its own denials.
     def observe(self, session: str) -> JSON:
+        result = self._observe(session)
+        if "denied" in result:
+            self.audit.record({"session": session, "kind": "blocked", "reason": result["denied"],
+                               "app": "alba-core", "model_saw": None, "detail": result["detail"]})
+            return result
+        toks = list(dict.fromkeys(t for e in result["elements"] for t in e.get("tokens", [])))
+        counts = {c: sum(1 for e in result["elements"] if e["cls"] == c) for c in ("verde", "ambar", "rojo")}
+        self.audit.record({"session": session, "kind": "observe_sent", "app": result["app"],
+                           "screen": result["screen"], "model_saw": f"observe {result['screen']}",
+                           "tokens": toks, "counts": counts})
+        return result
+
+    def act(self, session: str, op: str, target: str | None = None, text: str | None = None,
+            direction: str | None = None) -> JSON:
+        screen = self.adapter.screen
+        result = self._act(session, op, target, text, direction)
+        base: JSON = {"session": session, "app": "alba-core", "screen": screen,
+                      "model_saw": " ".join(x for x in ("act", op, target, text, direction) if x),
+                      "tokens": tokens_in(text or "")}
+        if "denied" in result:
+            self.audit.record({**base, "kind": "blocked", "reason": result["denied"], "detail": result["detail"]})
+        elif "held" not in result:  # held, approval and the approved act are recorded in _act
+            self.audit.record({**base, "kind": "act"})
+        return result
+
+    def oracle(self, session: str, op: str, args: list[str]) -> JSON:
+        result = self._oracle(session, op, args)
+        base: JSON = {"session": session, "model_saw": f"oracle {op} " + " ".join(args),
+                      "tokens": [a for a in args if TOKEN_RE.fullmatch(a)]}
+        if "denied" in result:
+            self.audit.record({**base, "kind": "blocked", "reason": result["denied"], "detail": result["detail"]})
+        else:
+            self.audit.record({**base, "kind": "oracle", "detail": str(result.get("tramo") or result["result"])})
+        return result
+
+    # -- observe: adapter.snapshot() -> policy -> tokenizer -> (final block in the server)
+    def _observe(self, session: str) -> JSON:
         raw = self.adapter.snapshot()
         if raw["screen"] not in KNOWN_SCREENS:
             return _denied("sin_regla", "No hay política para esta pantalla")
@@ -372,7 +410,7 @@ class FakeCore:
         return text
 
     # -- act: policy -> provenance -> confirmation -> executor -> adapter.perform()
-    def act(self, session: str, op: str, target: str | None = None, text: str | None = None,
+    def _act(self, session: str, op: str, target: str | None = None, text: str | None = None,
             direction: str | None = None) -> JSON:
         fields = self.adapter.fields
         if self._pending:
@@ -421,6 +459,9 @@ class FakeCore:
                 self.audit.record({"session": session, "kind": "approval", "confirm": confirm_id,
                                    "approved_by": "persona", "detail": "pantalla"})
                 self.adapter.perform(action)
+                self.audit.record({"session": session, "kind": "act", "confirm": confirm_id,
+                                   "approved_by": "persona", "app": "alba-core",
+                                   "model_saw": f"act {op} {target}"})
             else:
                 self._pending = confirm_id
             return {"held": {"confirm": confirm_id}}
@@ -430,7 +471,7 @@ class FakeCore:
         return {"ok": True}
 
     # -- oracle: budget -> vault -> answer by ranges or a new token
-    def oracle(self, session: str, op: str, args: list[str]) -> JSON:
+    def _oracle(self, session: str, op: str, args: list[str]) -> JSON:
         if self.oracle_budget <= 0:
             return _denied("presupuesto", "sin presupuesto de oráculo en esta sesión")
         values = [self.vault.value(a) for a in args]

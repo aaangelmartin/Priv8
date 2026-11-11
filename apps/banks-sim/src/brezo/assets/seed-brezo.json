@@ -1,0 +1,85 @@
+{
+  "_nota": "Datos inventados para la demo. Copia de data/seed.json (bancos.brezo, PR #90 / issue #15): login, clave, OTP, cuenta, IBAN y saldo coinciden con ese archivo. Contactos y movimientos son propios de esta app; reutilizan IBAN ya existentes en el seed. Códigos de entidad 9100 (Alcor), 9200 (Brezo) y 9300 (Nimbo) inventados; todos los IBAN pasan mod-97.",
+  "bank": {
+    "id": "brezo",
+    "name": "Brezo Banco"
+  },
+  "user": {
+    "login": "lferrer",
+    "password": "Brezo-2026",
+    "name": "Lucía Ferrer",
+    "otp": "730518"
+  },
+  "accounts": [
+    {
+      "id": "online",
+      "alias": "Cuenta online",
+      "iban": "ES8992000003785500667788",
+      "balance_cents": 187540
+    }
+  ],
+  "contacts": [
+    {
+      "id": "alcor",
+      "name": "Lucía Ferrer · Banca Alcor",
+      "iban": "ES4391000001574012345678",
+      "own": true
+    },
+    {
+      "id": "nimbo",
+      "name": "Lucía Ferrer · Nimbo Bróker",
+      "iban": "ES0893000001052200334455",
+      "own": true
+    },
+    {
+      "id": "marta",
+      "name": "Marta Ruiz Gil",
+      "iban": "ES4891000004963300998877",
+      "own": false
+    }
+  ],
+  "movements": [
+    {
+      "account": "online",
+      "date": "2026-11-08",
+      "concept": "Librería Carbayón",
+      "counterparty": "Librería Carbayón",
+      "amount_cents": -2390
+    },
+    {
+      "account": "online",
+      "date": "2026-11-04",
+      "concept": "Suscripción música",
+      "counterparty": "Sonata Digital",
+      "amount_cents": -1099
+    },
+    {
+      "account": "online",
+      "date": "2026-11-02",
+      "concept": "Bizum de Marta: entradas concierto",
+      "counterparty": "Marta Ruiz Gil",
+      "amount_cents": 3800
+    },
+    {
+      "account": "online",
+      "date": "2026-10-30",
+      "concept": "Compra online",
+      "counterparty": "Mercado Brisa",
+      "amount_cents": -6450
+    },
+    {
+      "account": "online",
+      "date": "2026-10-15",
+      "concept": "Traspaso desde Banca Alcor",
+      "counterparty": "Lucía Ferrer",
+      "amount_cents": 50000
+    },
+    {
+      "account": "online",
+      "date": "2026-10-12",
+      "concept": "Restaurante El Hórreo",
+      "counterparty": "El Hórreo",
+      "amount_cents": -4260
+    }
+  ]
+}

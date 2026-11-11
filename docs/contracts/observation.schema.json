@@ -4,23 +4,48 @@
   "title": "Observación tokenizada",
   "description": "La pantalla ya procesada por el núcleo (políticas, detector, tokenizador y bloqueo final). Es lo que devuelve la herramienta observe y lo único de la pantalla que llega al modelo. No contiene valores ámbar ni rojos.",
   "type": "object",
-  "required": ["session", "app", "screen", "seq", "paused", "elements", "budget_left"],
+  "required": [
+    "session",
+    "app",
+    "screen",
+    "seq",
+    "paused",
+    "elements",
+    "budget_left"
+  ],
   "additionalProperties": false,
   "properties": {
-    "session": { "$ref": "common.schema.json#/$defs/session" },
-    "app": { "type": "string" },
-    "screen": {
-      "description": "Pantalla según la política. Si no hay política para la pantalla, observe no devuelve esto sino denied: sin_regla.",
+    "session": {
+      "$ref": "common.schema.json#/$defs/session"
+    },
+    "app": {
       "type": "string"
     },
-    "seq": { "type": "integer", "minimum": 0 },
+    "screen": {
+      "description": "Pantalla según la política. En pausa sale sin consultar la política: el screen crudo o null.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
     "paused": {
-      "description": "Motivo por el que el agente debe esperar (la persona se está autenticando, diálogo del sistema, confirmación pendiente), o null.",
-      "enum": [null, "autenticacion", "dialogo_sistema", "confirmacion"]
+      "description": "Motivo por el que el agente debe esperar, o null. Se decide antes que la política y en este orden: system_dialog no nulo → dialogo_sistema; app es.priv8.ocho y screen confirmacion → confirmacion; focus sobre un elemento con password: true → autenticacion. Con pausa, elements va vacío. Una pantalla cuya política marca pausa (p. ej. la autenticación de un banco) puede dar autenticacion con elementos.",
+      "enum": [
+        null,
+        "autenticacion",
+        "dialogo_sistema",
+        "confirmacion"
+      ]
     },
     "elements": {
       "type": "array",
-      "items": { "$ref": "#/$defs/element" }
+      "items": {
+        "$ref": "#/$defs/element"
+      }
     },
     "budget_left": {
       "description": "Preguntas que le quedan al agente con el oráculo en esta sesión.",
@@ -31,34 +56,80 @@
   "$defs": {
     "element": {
       "type": "object",
-      "required": ["id", "role", "cls"],
+      "required": [
+        "id",
+        "role",
+        "cls"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id": { "$ref": "common.schema.json#/$defs/element_id" },
-        "role": { "$ref": "common.schema.json#/$defs/role" },
+        "id": {
+          "$ref": "common.schema.json#/$defs/element_id"
+        },
+        "role": {
+          "$ref": "common.schema.json#/$defs/role"
+        },
         "label": {
           "description": "Etiqueta, con tokens si la etiqueta contenía datos.",
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "text": {
           "description": "Texto con los datos sustituidos por tokens. null si el elemento es rojo.",
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
-        "cls": { "$ref": "common.schema.json#/$defs/cls" },
+        "cls": {
+          "$ref": "common.schema.json#/$defs/cls"
+        },
         "tokens": {
           "description": "Tokens que aparecen en label o text, por comodidad del renderizador y la consola.",
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/token" },
+          "items": {
+            "$ref": "common.schema.json#/$defs/token"
+          },
           "uniqueItems": true
         },
         "actions": {
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/op" },
+          "items": {
+            "$ref": "common.schema.json#/$defs/op"
+          },
           "uniqueItems": true
         }
       },
-      "if": { "properties": { "cls": { "const": "rojo" } } },
-      "then": { "properties": { "text": { "const": null } } }
+      "if": {
+        "properties": {
+          "cls": {
+            "const": "rojo"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "text": {
+            "const": null
+          }
+        }
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "paused": {
+        "const": null
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "screen": {
+        "type": "string"
+      }
     }
   }
 }

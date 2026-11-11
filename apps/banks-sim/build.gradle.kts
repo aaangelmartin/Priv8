@@ -23,16 +23,16 @@ android {
             applicationId = "es.priv8.banks.alcor"
             buildConfigField("String", "SEED_ASSET", "\"seed-alcor.json\"")
         }
-        // create("brezo") {
-        //     dimension = "bank"
-        //     applicationId = "es.priv8.banks.brezo"
-        //     buildConfigField("String", "SEED_ASSET", "\"seed-brezo.json\"")
-        // }
-        // create("nimbo") {
-        //     dimension = "bank"
-        //     applicationId = "es.priv8.banks.nimbo"
-        //     buildConfigField("String", "SEED_ASSET", "\"seed-nimbo.json\"")
-        // }
+        create("brezo") {
+            dimension = "bank"
+            applicationId = "es.priv8.banks.brezo"
+            buildConfigField("String", "SEED_ASSET", "\"seed-brezo.json\"")
+        }
+        create("nimbo") {
+            dimension = "bank"
+            applicationId = "es.priv8.banks.nimbo"
+            buildConfigField("String", "SEED_ASSET", "\"seed-nimbo.json\"")
+        }
     }
 
     buildTypes {

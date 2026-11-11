@@ -1,15 +1,21 @@
 """Priv8 CUA MCP server: exactly three closed tools, observe, act and oracle.
 
 No other tool, no resources, no prompts. Every result goes through the core's
-leak check (the final block) before it is returned, and every call leaves an
-audit event (audit.schema.json).
+leak check (the final block) before it is returned.
+
+Audit ownership (one owner per event, audit.schema.json): the core records what
+it does on each call (observe_sent, act, held, approval, oracle, and blocked
+for its own denials). This server records only what the core never sees: calls
+it refuses before reaching the core (unknown tool, invalid input, a real value
+in the input) and core results its final block holds back. See AuditPort.
 
     python -m agent.server                     # streamable HTTP on 127.0.0.1:8701/mcp
     python -m agent.server --transport stdio   # stdio, for MCP hosts that spawn it
 
 Follows contracts v1 (docs/contracts/tools.schema.json, PR #58). The core runs
-in this same process: PRIV8_CORE=fake (default, `fakes.FakeCore`) or
-PRIV8_CORE=real (`core/`, wired by `core_adapter.build_real_core`).
+in this same process: PRIV8_CORE=real (default, `core/`, wired by
+`core_adapter.build_real_core`, with a demo scene of core/scenes.py as the
+screen: --scene b2b|b2c) or PRIV8_CORE=fake (`fakes.FakeCore`).
 """
 
 from __future__ import annotations
@@ -27,7 +33,7 @@ import mcp_types as types
 from jsonschema import Draft202012Validator
 from mcp.server import Server
 
-from agent.core_port import JSON, NO_SESSION, Core, tokens_in
+from agent.core_port import JSON, NO_SESSION, Core
 
 log = logging.getLogger("priv8.mcp")
 
@@ -88,42 +94,18 @@ class ToolGateway:
             result = self.core.oracle.oracle(args["session"], args["op"], list(args["args"]))
         core_ms = round((time.perf_counter() - t0) * 1000)
 
+        # The core has already recorded this call (observe_sent, act, held, oracle or
+        # blocked). Recording it here too would duplicate it in the signed log.
         payload = json.dumps(result, ensure_ascii=False)
         verdict = self.core.leak.check(payload)
         if not verdict.ok:
             self._audit(session, "blocked", reason="fuga", model_saw=f"{name} respuesta retenida",
                         detail="patrón: " + ", ".join(verdict.matched), ms={"core": core_ms})
             return dict(LEAK_BLOCKED)
-
-        denied = result.get("denied")
-        if name == "observe" and not denied:
-            counts = {c: sum(1 for e in result["elements"] if e["cls"] == c) for c in ("verde", "ambar", "rojo")}
-            self._audit(session, "observe_sent", app=result["app"], screen=result["screen"],
-                        model_saw=f"observe {result['screen']}", tokens=_unique_tokens(payload),
-                        counts=counts, ms={"core": core_ms})
-        else:
-            said = " ".join(str(x) for x in (name, args.get("op"), args.get("target"), args.get("text"),
-                                              args.get("direction"), *(args.get("args") or [])) if x)
-            self._audit(session, "blocked" if denied else name, reason=denied, model_saw=said,
-                        tokens=_unique_tokens(said + " " + payload),
-                        detail=result.get("detail") if denied else _summary(result), ms={"core": core_ms})
         return result
 
     def _audit(self, session: str, kind: str, **fields: Any) -> None:
         self.core.audit.record({"session": session, "kind": kind, **fields})
-
-
-def _unique_tokens(text: str) -> list[str]:
-    return list(dict.fromkeys(tokens_in(text)))
-
-
-def _summary(result: JSON) -> str:
-    """One line for audit.detail: tokens and green words only."""
-    if "held" in result:
-        return f"held {result['held']['confirm']}"
-    if "result" in result:
-        return " ".join(str(result[k]) for k in ("result", "tramo") if k in result)
-    return "ok"
 
 
 def build_server(core: Core, *, name: str = "priv8-cua") -> Server[Any]:
@@ -151,7 +133,7 @@ def build_server(core: Core, *, name: str = "priv8-cua") -> Server[Any]:
 
 
 def default_core() -> Core:
-    """The in-process core the server runs over, chosen by PRIV8_CORE=fake|real (default fake)."""
+    """The in-process core the server runs over, chosen by PRIV8_CORE=real|fake (default real)."""
     from agent.core_adapter import select_core
 
     return select_core()
@@ -188,13 +170,25 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--transport", choices=["http", "stdio"], default="http")
     p.add_argument("--host", default=DEFAULT_HOST)
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
+    p.add_argument("--scene", choices=["b2b", "b2c"], default=None,
+                   help="PRIV8_CORE=real: demo screen of core/scenes.py mounted on the session (default b2b)")
+    p.add_argument("--session", default=None, help="session the scene is mounted on (default: the scene name)")
+    p.add_argument("--simulated-persona", action="store_true",
+                   help="a simulated person approves held actions (replays and tests only)")
     a = p.parse_args(argv)
     # stdout is the protocol channel on stdio: logs go to stderr.
     logging.basicConfig(stream=sys.stderr, level=logging.INFO)
-    from agent.core_adapter import RealCoreUnavailable
+    from agent.core_adapter import DEFAULT_SCENE, RealCoreUnavailable, core_choice, mount_scene
 
     try:
+        real = core_choice() == "real"
+        if (a.scene or a.simulated_persona) and not real:
+            raise ValueError("--scene and --simulated-persona need PRIV8_CORE=real")
         core = default_core()
+        if real:
+            scene = a.scene or DEFAULT_SCENE
+            mount_scene(a.session or scene, scene, simulated_persona=a.simulated_persona)
+            log.info("real core · scene %s on session %s", scene, a.session or scene)
     except (RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
         sys.exit(f"priv8: {e}")
     server = build_server(core)

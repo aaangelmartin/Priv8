@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nimbo Bróker: marca inventada. Pizarra y naranja ámbar sobre gris niebla; no se parece a Priv8 a propósito. -->
+<resources>
+    <color name="bank_primary">#2F3B4C</color>
+    <color name="bank_primary_dark">#1F2733</color>
+    <color name="bank_on_primary">#FFFFFF</color>
+    <color name="bank_accent">#E0892B</color>
+    <color name="bank_background">#F2F4F6</color>
+    <color name="bank_surface">#FFFFFF</color>
+    <color name="bank_text">#1B2027</color>
+    <color name="bank_text_secondary">#58606B</color>
+    <color name="bank_line">#DCE1E6</color>
+    <color name="bank_positive">#2F7A3E</color>
+    <color name="bank_error">#B3261E</color>
+</resources>

@@ -29,7 +29,7 @@ from .segmenter import LeakBlocked, Segment, Utterance
 
 DEFAULT_MODEL_ID = "eleven_flash_v2_5"  # lowest latency; accepts language_code
 # Raw 16-bit little-endian mono PCM at 24 kHz: the phone writes it straight
-# into an AudioTrack, with no decoder in the way (see android/MixedVoicePlayer.kt).
+# into an AudioTrack, with no decoder in the way (see apps/android-8/.../voz/MixedVoicePlayer.kt).
 DEFAULT_OUTPUT_FORMAT = "pcm_24000"
 DEFAULT_LANGUAGE = "es"
 

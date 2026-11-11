@@ -21,13 +21,17 @@ REAL_IBAN = "ES9121000418450200051332"
 
 
 def make_stub_core(*, without: tuple[str, ...] = ()) -> types.ModuleType:
-    """A minimal `core` with the five functions of 'Lo que el núcleo expone'."""
+    """A minimal `core` with the five functions of 'Lo que el núcleo expone'.
+
+    Like the real core, it records its own event for each observe, act and oracle.
+    """
     mod = types.ModuleType("core")
     mod.calls = []
     mod.log = []
 
     def observe(session):
         mod.calls.append(("observe", session))
+        record({"session": session, "kind": "observe_sent", "screen": "factura"})
         return {"session": session, "app": "erp", "screen": "factura", "seq": 1, "paused": False,
                 "budget_left": 5,
                 "elements": [{"id": "e1", "role": "input", "label": "IBAN", "text": "‹IBAN_1·maestro›",
@@ -38,13 +42,16 @@ def make_stub_core(*, without: tuple[str, ...] = ()) -> types.ModuleType:
     def act(session, op, target=None, text=None, direction=None):
         mod.calls.append(("act", session, op, target, text, direction))
         if op == "send":
+            record({"session": session, "kind": "held", "confirm": "c1"})
             return {"held": {"confirm": "c1"}}
+        record({"session": session, "kind": "act"})
         if op == "tap" and target == "leak":
             return {"ok": True, "echo": REAL_IBAN}  # a buggy core: the final block must stop it
         return {"ok": True}
 
     def oracle(session, op, args):
         mod.calls.append(("oracle", session, op, tuple(args)))
+        record({"session": session, "kind": "oracle"})
         return {"result": "igual", "budget_left": 4}
 
     def check(payload):
@@ -73,10 +80,10 @@ def stub_core(monkeypatch):
 
 # ------------------------------------------------------------ selector
 
-def test_choice_defaults_to_fake():
-    assert core_choice({}) == "fake"
-    assert core_choice({"PRIV8_CORE": ""}) == "fake"
-    assert core_choice({"PRIV8_CORE": " Real "}) == "real"
+def test_choice_defaults_to_real():
+    assert core_choice({}) == "real"
+    assert core_choice({"PRIV8_CORE": ""}) == "real"
+    assert core_choice({"PRIV8_CORE": " Fake "}) == "fake"
 
 
 def test_choice_rejects_unknown_values():
@@ -97,9 +104,9 @@ def test_select_real_core_uses_core_module(stub_core):
 
 
 def test_default_core_reads_env(monkeypatch, stub_core):
-    monkeypatch.delenv("PRIV8_CORE", raising=False)
+    monkeypatch.setenv("PRIV8_CORE", "fake")
     assert isinstance(server_mod.default_core().screen, FakeCore)
-    monkeypatch.setenv("PRIV8_CORE", "real")
+    monkeypatch.delenv("PRIV8_CORE", raising=False)  # default: real
     server_mod.default_core().screen.observe("s9")
     assert stub_core.calls == [("observe", "s9")]
 
@@ -149,8 +156,8 @@ def test_ports_wire_through(stub_core):
     assert core.leak.check("nada") == LeakVerdict(ok=True)
     assert core.leak.check(REAL_IBAN) == LeakVerdict(ok=False, reason="fuga", matched=("IBAN",))
     stored = core.audit.record({"session": "s1", "kind": "task"})
-    assert stored["prev"] == "0" * 64 and "hash" in stored
-    assert core.audit.events == [stored]
+    assert stored["prev"] == stub_core.log[-2]["hash"] and "hash" in stored
+    assert core.audit.events == [stored]  # the mirror holds only what the agent recorded
 
 
 def test_unreadable_verdict_fails_closed(monkeypatch):
@@ -169,8 +176,10 @@ def test_gateway_over_real_core(stub_core):
     # A leaking core result is stopped by the final block.
     assert gw.call("act", {"session": "s1", "op": "tap", "target": "leak"})["denied"] == "fuga"
     assert not any(c[0] == "act" and c[4] == REAL_IBAN for c in stub_core.calls)
+    # Each call leaves exactly one event: the core's, or the server's when the core never saw it
+    # (input leak) or its result was held back (output leak, after the core recorded the act).
     kinds = [e["kind"] for e in stub_core.log]
-    assert kinds == ["observe_sent", "act", "blocked", "blocked"]
+    assert kinds == ["observe_sent", "held", "blocked", "act", "blocked"]
     assert all(e["prev"] == p["hash"] for p, e in zip(stub_core.log, stub_core.log[1:]))
 
 

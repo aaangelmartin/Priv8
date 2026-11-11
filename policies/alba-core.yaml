@@ -1,0 +1,101 @@
+# ERP Alba Core (Camino 2). Selectores del DOM real de apps/erp-sim (#19).
+version: 1
+app: alba-core
+source: web
+screens:
+  - id: factura.alta
+    url_re: /facturas/alta
+    rules:
+      - match: {sel: "#proveedor"}
+        cls: ambar
+        tipo: PROVEEDOR
+        origen: maestro
+        campo: factura.proveedor
+        acepta: [maestro]
+      - match: {sel: "#cif"}
+        cls: ambar
+        tipo: CIF
+        origen: maestro
+      - match: {sel: "#num-factura"}
+        cls: ambar
+        tipo: FACTURA
+        campo: factura.numero
+        acepta: [correo, maestro]
+      - match: {sel: "#importe"}
+        cls: ambar
+        tipo: IMPORTE
+        rasgo_signo: true
+        campo: factura.importe
+        acepta: [correo, maestro]
+      - match: {sel: "#pago-iban"}
+        cls: ambar
+        tipo: IBAN
+        origen: maestro
+        campo: pago.iban
+        acepta: [maestro]
+      - match: {sel: "#pedido"}
+        cls: ambar
+        tipo: FACTURA
+        origen: maestro
+      - match: {sel: "#importe-pedido"}
+        cls: ambar
+        tipo: IMPORTE
+        origen: maestro
+        rasgo_signo: true
+      - match: {sel: "#registrar"}
+        cls: verde
+        critica: firmar
+        resumen: ["#num-factura", "#importe", "#pago-iban"]
+      - {match: {sel_re: '^#(ver-proveedor|aviso)$'}, cls: verde}
+  - id: proveedor.ficha
+    url_re: /proveedores/\d+
+    rules:
+      - match: {sel: "#nombre"}
+        cls: ambar
+        tipo: PROVEEDOR
+        origen: maestro
+      - match: {sel: "#iban"}
+        cls: ambar
+        tipo: IBAN
+        origen: maestro
+        campo: proveedor.iban
+        acepta: [maestro]
+      - match: {sel: "#cif-prov"}
+        cls: ambar
+        tipo: CIF
+        origen: maestro
+      - match: {sel: "#telefono"}
+        cls: ambar
+        tipo: TEL
+        origen: maestro
+      - match: {sel: "#email"}
+        cls: ambar
+        tipo: EMAIL
+        origen: maestro
+      - match: {sel: "#guardar"}
+        cls: verde
+        critica: firmar
+      - {match: {sel: "#volver"}, cls: verde}
+  - id: login
+    url_re: /login
+    detector: false
+    rules:
+      - match: {sel: "#usuario"}
+        cls: rojo
+      - match: {sel: "#clave"}
+        cls: rojo
+  - id: facturas.lista
+    url_re: /facturas/?$
+    rules:
+      # Cada fila es una factura con número, proveedor, pedido e importe: entera ámbar.
+      - match: {sel_re: '^#factura-\d+$'}
+        cls: ambar
+        tipo: FACTURA
+        origen: maestro
+  - id: proveedores.lista
+    url_re: /proveedores/?$
+    rules:
+      - match: {sel_re: '^#prov-\d+$'}
+        cls: ambar
+        tipo: PROVEEDOR
+        origen: maestro

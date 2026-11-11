@@ -1,1 +1,0 @@
-Copy of the voice contract from contracts v1 (`docs/contracts/`, PR #58, commit `cf36619`), so the tests validate against it before that PR is merged. Once `docs/contracts/voice.schema.json` is on main, the tests use it instead and this folder can be deleted.

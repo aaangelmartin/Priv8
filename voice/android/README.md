@@ -2,7 +2,7 @@
 
 `MixedVoicePlayer.kt` plays one utterance of mixed voice on the phone: cloud segments as PCM streamed from ElevenLabs, local segments through `android.speech.tts.TextToSpeech` in es-ES, back to back, measuring the gap at every switch.
 
-It is a single self-contained source file. It lives here until `apps/android-8/` (branch `feat/android-skeleton`) is on main; then it moves to that app and this folder goes away.
+The file now lives in the app: `apps/android-8/app/src/main/java/es/priv8/ocho/voz/MixedVoicePlayer.kt`. `VozMixta.kt` next to it plays every `voice` message that reaches the accessibility service over the bridge. Until the core relays ElevenLabs PCM, cloud sentences are read by the local voice too. This README keeps the design notes.
 
 ## Requirements
 
@@ -15,14 +15,14 @@ Checked by compiling the file with Kotlin 2.1.21 against `android.jar` of API 35
 ## Integration
 
 1. Copy the file into the app module (package `ai.priv8.voice`, or change the package line).
-2. When a `voice` event arrives (`docs/contracts/voice.schema.json`, contracts v1), turn every segment into a `VoiceSegment`:
+2. When a `voice` message arrives over the bridge (`{"type":"voice","utterance":...}` in `bridge.schema.json` v1.1, the utterance per `voice.schema.json`), turn every segment into a `VoiceSegment`:
    - `{"voice":"cloud","text":...}` → `VoiceSegment.Cloud(QueuePcmSource(24_000))`. Push the PCM chunks that the core relays from ElevenLabs into it as they arrive and call `end()` after the last one (`fail(e)` on error). The phone never sends the text anywhere.
-   - `{"voice":"local","token":...,"say_as":...}` → `VoiceSegment.Local(spoken)`, where `spoken` is the real value as the local voice must say it. The contract carries only the token: the app's local renderer resolves it, and the Spanish spelling-out (`"1.234,56 €"` → "mil doscientos treinta y cuatro euros con cincuenta y seis") is `voice/verbalize.py` on the core, so either the core sends `Segment.spoken` over the trusted bridge or the rules are ported to Kotlin. To be decided at integration.
+   - `{"voice":"local","token":...,"say_as":...}` → `VoiceSegment.Local(spoken)`, where `spoken` is the real value as the local voice must say it. The utterance carries only the token: the core sends its value first with `render_values` over the trusted bridge, and the app spells it out in Spanish (`"1.234,56 €"` → "mil doscientos treinta y cuatro euros con cincuenta y seis") with `Verbalizer.kt` in `apps/android-8`, the port of `voice/verbalize.py`.
    - `{"voice":"local","text":...}` → `VoiceSegment.Local(text)`: a sentence the final block kept on the device.
 3. Call `player.play(utteranceId, segments)` as soon as the utterance arrives: the first cloud clip starts playing while its later chunks are still streaming.
-4. Use `Listener.onSegmentStart` and `onGap` to drive 8's "hablar" state, and send `onUtteranceDone(report)` back to the core so it lands in the audit log as a `voice_out` event.
+4. Use `Listener.onSegmentStart` and `onGap` to drive 8's "hablar" state, and send `onUtteranceDone(report)` back to the core as `{"type":"voice.done","utterance":"u18","ok":true,"gap_ms":{"max":180,"mean":95}}` (whole milliseconds) so it lands in the audit log as a `voice_out` event.
 
-Bridge framing for the PCM is not in `bridge.schema.json` (contracts v1) yet. Proposal for `docs/contracts/`: one text frame `{"type":"voice.audio","utterance":"u18","index":0,"format":"pcm_24000"}`, then binary frames with the PCM, then `{"type":"voice.audio.end","utterance":"u18","index":0}`.
+Bridge framing for the PCM (`bridge.schema.json`, contracts v1.1): one text frame `{"type":"voice.audio","utterance":"u18","index":0,"format":"pcm_24000"}`, then binary frames with the PCM, then `{"type":"voice.audio.end","utterance":"u18","index":0}`.
 
 ## How it chains the voices
 

@@ -18,6 +18,8 @@ data class ConfirmRequest(
     val channels: Set<String>,
     val sca: String?,
     val expiresS: Int,
+    /** SHA-256 (hex) of the whole canonical confirm_request: tells a true re-send from a new request with a reused id. */
+    val fingerprint: String,
 ) {
     companion object {
         private val ID = Regex("^c[0-9]+$")
@@ -47,7 +49,28 @@ data class ConfirmRequest(
             if (channels.isEmpty() || !channels.all { it == "voz" || it == "pantalla" }) return null
             val sca = if (msg.isNull("sca")) null else msg.optString("sca")
             val expires = msg.optInt("expires_s", DEFAULT_EXPIRES_S).takeIf { it >= 1 } ?: return null
-            return ConfirmRequest(id, session, kind, segments, channels, sca, expires)
+            return ConfirmRequest(id, session, kind, segments, channels, sca, expires, fingerprint(msg))
+        }
+
+        /**
+         * SHA-256 of [msg] in canonical form: object keys sorted at every
+         * level, no whitespace. Covers every field, including `action`, so
+         * two requests match only if the core sent the very same request.
+         */
+        fun fingerprint(msg: JSONObject): String {
+            val bytes = java.security.MessageDigest.getInstance("SHA-256")
+                .digest(canonical(msg).toByteArray(Charsets.UTF_8))
+            return bytes.joinToString("") { "%02x".format(it) }
+        }
+
+        internal fun canonical(v: Any?): String = when (v) {
+            null, JSONObject.NULL -> "null"
+            is JSONObject -> v.keys().asSequence().toList().sorted()
+                .joinToString(",", "{", "}") { JSONObject.quote(it) + ":" + canonical(v.opt(it)) }
+            is org.json.JSONArray -> (0 until v.length()).joinToString(",", "[", "]") { canonical(v.opt(it)) }
+            is String -> JSONObject.quote(v)
+            is Number -> JSONObject.numberToString(v)
+            else -> v.toString()
         }
     }
 }
@@ -68,13 +91,22 @@ object Renderer {
         val screen = mutableListOf<String>()
         val spoken = mutableListOf<String>()
         var missing = 0
+        var afterToken = false
         for (s in segments) {
             if (s.token == null) {
                 val text = s.text.orEmpty().trim()
+                // The segmenter drops the full stop after a token («‹SUMA_1›. Te he…» gives
+                // a token and then «Te he…»): a capital right after a value starts a sentence.
+                if (afterToken && text.firstOrNull()?.isUpperCase() == true) {
+                    closeLast(screen)
+                    closeLast(spoken)
+                }
                 screen += text
                 spoken += text
+                afterToken = false
                 continue
             }
+            afterToken = true
             val value = valueOf(s.token)
             if (value == null) {
                 missing++
@@ -86,6 +118,11 @@ object Renderer {
             }
         }
         return Rendered(sentence(screen), sentence(spoken), missing)
+    }
+
+    private fun closeLast(pieces: MutableList<String>) {
+        val last = pieces.lastOrNull() ?: return
+        if (last.isNotEmpty() && last.last() !in ".,;:?!…") pieces[pieces.size - 1] = "$last."
     }
 
     /** Joins the pieces with spaces, closes a sentence before «¿» or «¡», and capitalizes the start. */
@@ -105,8 +142,8 @@ object Renderer {
 /**
  * Token → value table for the sessions the core shares with the device.
  * In memory only: never written to disk, never logged, gone when the process
- * dies. The core sends it over the bridge (render_values, proposed: not in
- * contract v1), which is inside the trust zone.
+ * dies. The core sends it over the bridge (render_values, bridge.schema.json
+ * v1.1), which is inside the trust zone.
  */
 object LocalValues {
     private val bySession = HashMap<String, Map<String, String>>()
