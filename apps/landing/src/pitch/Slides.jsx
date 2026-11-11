@@ -616,45 +616,76 @@ function Cierre() {
 }
 
 /* ---------------------------------------------------------------- anexo */
+/* cada entrada: [pregunta, respuesta, apoyo visual]. Tipos de apoyo: nums, flow, table, toks, eight */
 const QA1 = [
-  ['¿Y si el modelo adivina la cifra a base de preguntas?', 'El oráculo tiene un presupuesto de preguntas por sesión y responde por tramos, nunca con la cifra.'],
-  ['¿Qué pasa con un dato en texto libre?', 'En modo estricto, el de serie, al modelo solo llega lo que cubre una regla del sitio. Además, patrones validados (IBAN mod-97, DNI, Luhn) y la bóveda local. Si algo se escapa, el bloqueo final retiene la petición.'],
-  ['¿Un token sigue siendo un dato personal?', 'Es seudonimización: la tabla token-valor no sale de la máquina. El RGPD sigue aplicando y el registro sirve de evidencia; no decimos que certifique nada.'],
-  ['¿Por qué no usar la API del ERP?', 'Porque muchos no la tienen, o integrarla cuesta meses. Priv8 trabaja sobre las pantallas que ya existen.'],
-  ['¿Y la inyección de instrucciones en un correo?', 'No dependemos de que el modelo la ignore: la procedencia impide por diseño que un dato del correo entre en un campo de pago, y la consola avisa de posible fraude.'],
-  ['¿Cuánto añade de latencia y de coste?', 'El núcleo corre en local, en el mismo proceso; la consola mide la latencia de cada paso. El coste es el del modelo que elija el cliente, sin llamadas extra.'],
+  ['¿Y si el modelo adivina la cifra a base de preguntas?', 'El oráculo calcula sin revelar: sum, compare y matches. Tiene presupuesto por sesión y por token, y responde por tramos o con una palabra, nunca con la cifra. Una búsqueda binaria no la reconstruye.',
+    { t: 'flow', steps: [['oracle(sum)', 'pide el modelo'], ['Presupuesto', 'por sesión y token'], ['‹SUMA_1›', 'y su tramo'], ['Sin presupuesto', 'denied'] ] }],
+  ['¿Qué pasa con un dato en texto libre?', 'En modo estricto, el de serie, al modelo solo llega lo que cubre una regla del sitio. Además, patrones validados y la bóveda local. Si algo se escapa, el bloqueo final retiene la petición.',
+    { t: 'flow', steps: [['Reglas del sitio', 'selectores'], ['Patrones validados', 'IBAN mod-97, DNI, Luhn'], ['Bóveda local', 'valores conocidos'], ['Bloqueo final', 'la petición no sale'] ] }],
+  ['¿Un token sigue siendo un dato personal?', 'Es seudonimización: la tabla token-valor no sale de la máquina. El RGPD sigue aplicando y el registro sirve de evidencia; no decimos que certifique nada.',
+    { t: 'table', head: ['Token', 'Valor real'], rows: [['‹IBAN_1-propio›', 'solo en local'], ['‹IMPORTE_3-positivo›', 'solo en local'], ['‹NOMBRE_2›', 'solo en local']], foot: 'La tabla vive en el entorno de confianza' }],
+  ['¿Por qué no usar la API del ERP?', 'Porque muchos no la tienen, o integrarla cuesta meses. Priv8 trabaja sobre las pantallas que ya existen, leyendo el DOM y el árbol de accesibilidad, no píxeles.',
+    { t: 'nums', items: [['0', 'cambios en el ERP'], ['0', 'APIs nuevas'], ['DOM', 'y accesibilidad, no píxeles']] }],
+  ['¿Y la inyección de instrucciones en un correo?', 'No dependemos de que el modelo la ignore: la procedencia impide por diseño que un dato del correo entre en un campo de pago, y la consola avisa de posible fraude.',
+    { t: 'flow', steps: [['Correo', 'IBAN nuevo'], ['Procedencia', 'origen: correo'], ['Campo de pago', 'rechazo: destino'], ['8 llama', 'al número de la ficha']], bad: 2 }],
+  ['¿Cuánto añade de latencia y de coste?', 'El núcleo corre en local, en el mismo proceso que el servidor MCP; la consola mide la latencia de cada paso. El coste es el del modelo que elija el cliente, sin llamadas extra.',
+    { t: 'nums', items: [['Local', 'mismo proceso'], ['0', 'llamadas extra al modelo'], ['Medida', 'latencia por paso en la consola']] }],
 ];
 const QA2 = [
-  ['¿Funciona con cualquier modelo?', 'Sí. El modelo solo recibe tokens y tiene tres herramientas cerradas: observe, act y oracle. Ni navegador, ni sistema, ni código propio.'],
-  ['¿Y la autenticación del banco (PSD2)?', 'La hace siempre la persona. Mientras pone huella, clave u OTP, 8 no recibe nada y mira a otro lado.'],
-  ['¿El agente da consejos de inversión?', 'No. El asesoramiento está regulado: 8 ejecuta lo que la persona elige y dice «no puedo» si le piden consejo.'],
-  ['¿Cuánto cobraréis?', 'Licencia anual por proceso más un precio por documento. La cifra saldrá del coste por tarea que ya medimos y del ahorro frente a hacerlo a mano.'],
-  ['¿Qué os diferencia de Tsinghua?', 'Su trabajo valida la idea en un emulador. Nosotros añadimos procedencia, oráculo con presupuesto, confirmación y registro firmado, y lo llevamos a un producto.'],
-  ['¿Qué haríais con un piloto?', 'Un proceso de cuentas a pagar en 4 semanas, sobre el ERP del cliente, midiendo datos expuestos, fraudes bloqueados y horas ahorradas.'],
+  ['¿Funciona con cualquier modelo?', 'Sí. El modelo solo recibe tokens y tiene tres herramientas cerradas. Ni navegador, ni sistema, ni código propio: sin eval, sin CDP, sin adb.',
+    { t: 'toks', items: ['observe', 'act', 'oracle'], cap: 'Las tres únicas herramientas del agente' }],
+  ['¿Y la autenticación del banco (PSD2)?', 'La hace siempre la persona. Mientras pone huella, clave u OTP, 8 no recibe nada y mira a otro lado.',
+    { t: 'eight', mode: 'apartar', cap: 'Mirar a otro lado: huella, clave u OTP' }],
+  ['¿El agente da consejos de inversión?', 'No. El asesoramiento está regulado: 8 ejecuta lo que la persona elige y dice «no puedo» si le piden consejo.',
+    { t: 'eight', mode: 'rechazar', cap: 'No puedo: asesoría de inversión' }],
+  ['¿Cuánto cobraréis?', 'Licencia anual por proceso más un precio por documento. La cifra sale del coste por tarea que ya medimos y del ahorro frente a hacerlo a mano.',
+    { t: 'nums', items: [['0,50 €', 'por documento'], ['+ licencia', 'anual por proceso']] }],
+  ['¿Qué os diferencia de Tsinghua?', 'Su trabajo valida la idea en un emulador. Nosotros añadimos lo que hace falta para un producto.',
+    { t: 'table', head: ['', 'Tsinghua', 'Priv8'], rows: [['Tokens en pantalla', 'Sí', 'Sí'], ['Procedencia', 'No', 'Sí'], ['Oráculo con presupuesto', 'No', 'Sí'], ['Confirmación y registro firmado', 'No', 'Sí'], ['Producto', 'Investigación', 'B2B y app']] }],
+  ['¿Qué haríais con un piloto?', 'Un proceso de cuentas a pagar sobre el ERP del cliente, midiendo datos expuestos, fraudes bloqueados y horas ahorradas.',
+    { t: 'nums', items: [['4 semanas', 'un proceso real'], ['0', 'datos expuestos, el objetivo'], ['Medido', 'fraudes bloqueados y horas']] }],
 ];
 const QA3 = [
-  ['¿Cómo lo vendéis?', 'Venta directa a bancos y brókers, y a departamentos financieros, con un piloto de 4 semanas sobre un proceso real. Después, a través de integradores de ERP y empresas de BPO. La app del móvil se vende directa a las personas.'],
-  ['¿Cuánto cuesta?', 'Unos 0,50 € por documento, con una cuota mínima por proceso. Hoy una factura cuesta de media 9,84 $ en cuentas a pagar (Ardent Partners, 2025). En el móvil, la persona paga una suscripción de unos 6 € al año. Estimación propia.'],
-  ['¿Cuál es el modelo de negocio?', 'Suscripción en los dos: licencia por proceso para empresas y app de pago para personas. El núcleo es el mismo en los dos productos: cada proceso o banco nuevo cuesta reglas de sitio, no un producto nuevo.'],
-  ['¿Sale a cuenta?', 'El núcleo corre en la máquina del cliente: no tenemos coste de cómputo por tarea. El coste del modelo lo elige y lo paga el cliente; nosotros cobramos por el proceso que ya no se hace a mano.'],
-  ['¿Quién decide la compra?', 'Dirección financiera y de operaciones, con el visto bueno de protección de datos y seguridad. El registro firmado es lo que les deja decir que sí.'],
-  ['¿Qué pasa tras el piloto?', 'Medimos datos expuestos (cero), fraudes bloqueados y horas ahorradas. Con eso se amplía a otros procesos del mismo cliente.'],
+  ['¿Cómo lo vendéis?', 'Venta directa a bancos, brókers y departamentos financieros, con un piloto de 4 semanas. Después, integradores de ERP y empresas de BPO. La app del móvil, directa a las personas.',
+    { t: 'flow', steps: [['Piloto', '4 semanas'], ['Venta directa', 'bancos y finanzas'], ['Canal', 'integradores y BPO'], ['App', 'directa a personas']] }],
+  ['¿Cuánto cuesta?', 'Unos 0,50 € por documento, con una cuota mínima por proceso. Hoy una factura cuesta de media 9,84 $ en cuentas a pagar (Ardent Partners, 2025). En el móvil, unos 6 € al año. Estimación propia.',
+    { t: 'vs', a: ['9,84 $', 'por factura hoy'], b: ['0,50 €', 'por documento con Priv8'], foot: 'Móvil: unos 6 € al año' }],
+  ['¿Cuál es el modelo de negocio?', 'Suscripción en los dos: licencia por proceso para empresas y app de pago para personas. Cada proceso o banco nuevo cuesta reglas de sitio, no un producto nuevo.',
+    { t: 'table', head: ['', 'Empresas', 'Personas'], rows: [['Producto', 'Priv8 para empresas', '8 en tu móvil'], ['Cobro', 'Licencia por proceso + documento', 'Suscripción'], ['Núcleo', 'Priv8 CUA', 'Priv8 CUA']] }],
+  ['¿Sale a cuenta?', 'El núcleo corre en la máquina del cliente: no tenemos coste de cómputo por tarea. El modelo lo elige y lo paga el cliente; cobramos por el proceso que ya no se hace a mano.',
+    { t: 'nums', items: [['0 €', 'de cómputo nuestro por tarea'], ['Cliente', 'elige y paga el modelo']] }],
+  ['¿Quién decide la compra?', 'Dirección financiera y de operaciones, con el visto bueno de protección de datos y seguridad. El registro firmado es lo que les deja decir que sí.',
+    { t: 'flow', steps: [['Finanzas y operaciones', 'quieren automatizar'], ['Protección de datos', 'revisa'], ['Seguridad', 'revisa'], ['Registro firmado', 'evidencia para el sí']] }],
+  ['¿Qué pasa tras el piloto?', 'Medimos datos expuestos, fraudes bloqueados y horas ahorradas. Con eso se amplía a otros procesos del mismo cliente.',
+    { t: 'nums', items: [['0', 'datos expuestos'], ['Fraudes', 'bloqueados'], ['Horas', 'ahorradas']] }],
 ];
 const QA4 = [
-  ['¿Cumple el RGPD?', 'Es seudonimización (art. 4.5): el token sigue siendo dato personal, pero la tabla token-valor no sale de tu máquina. El RGPD sigue aplicando; el registro sirve de evidencia. No certificamos nada.'],
-  ['¿Y PSD2 o PSD3?', 'La autenticación reforzada la hace siempre la persona. 8 no recibe la clave, la huella ni el OTP, y mira a otro lado mientras se ponen.'],
-  ['¿Y la ley europea de IA?', 'Un asistente que ejecuta lo que pide el usuario no es, en principio, de alto riesgo. Aplicamos transparencia: 8 dice siempre que es una IA.'],
-  ['¿Y el secreto bancario?', 'El dato del cliente no llega al proveedor del modelo: solo tokens. Por eso un banco puede usar un modelo externo en procesos que hoy no puede.'],
-  ['¿Qué límites tiene la seguridad?', 'En modo estricto solo llega al modelo lo que marca una regla del sitio. La excepción es el cuerpo del correo: se tokeniza por patrones, bóveda y nombres, y un bloqueo final retiene lo que se escape.'],
-  ['¿Cuánto cuesta integrarlo?', 'Unas reglas por pantalla (selectores) y el adaptador web o móvil que ya existe. Sin tocar el ERP ni pedir una API.'],
+  ['¿Cumple el RGPD?', 'Es seudonimización (art. 4.5): el token sigue siendo dato personal, pero la tabla token-valor no sale de tu máquina. El RGPD sigue aplicando; el registro sirve de evidencia. No certificamos nada.',
+    { t: 'toks', items: ['‹IBAN_1-propio›', '‹DNI_1›', '‹IMPORTE_3-positivo›'], cap: 'Lo que ve el modelo. El valor real se queda en local.' }],
+  ['¿Y PSD2 o PSD3?', 'La autenticación reforzada la hace siempre la persona. 8 no recibe la clave, la huella ni el OTP, y mira a otro lado mientras se ponen.',
+    { t: 'eight', mode: 'nuncasale', cap: 'Nunca sale: clave, huella y OTP' }],
+  ['¿Y la ley europea de IA?', 'Un asistente que ejecuta lo que pide el usuario no es, en principio, de alto riesgo. Aplicamos transparencia: 8 dice siempre que es una IA.',
+    { t: 'eight', mode: 'hablar', cap: '8 dice siempre que es una IA' }],
+  ['¿Y el secreto bancario?', 'El dato del cliente no llega al proveedor del modelo: solo tokens. Por eso un banco puede usar un modelo externo en procesos que hoy no puede.',
+    { t: 'flow', steps: [['Pantalla del banco', 'datos reales'], ['Priv8 local', 'tokeniza'], ['Modelo externo', 'solo tokens']] }],
+  ['¿Qué límites tiene la seguridad?', 'En modo estricto solo llega al modelo lo que marca una regla del sitio. La excepción es el cuerpo del correo: se tokeniza por patrones, bóveda y nombres, y un bloqueo final retiene lo que se escape.',
+    { t: 'table', head: ['Fuente', 'Cómo se protege'], rows: [['Campos de pantalla', 'Regla del sitio (estricto)'], ['Cuerpo del correo', 'Patrones, bóveda y nombres'], ['Lo que se escape', 'Bloqueo final']] }],
+  ['¿Cuánto cuesta integrarlo?', 'Unas reglas por pantalla (selectores) y el adaptador web o móvil que ya existe. Sin tocar el ERP ni pedir una API.',
+    { t: 'flow', steps: [['Reglas por pantalla', 'selectores'], ['Adaptador', 'web o móvil, ya existe'], ['ERP intacto', 'sin API']] }],
 ];
 const QA5 = [
-  ['¿Por qué ahora?', 'Los modelos ya usan pantallas y los bancos ya prueban agentes. Lo que frena es qué ven. Visa y Google resolvieron cómo paga un agente; nadie, qué ve mientras trabaja.'],
-  ['¿Qué riesgos veis?', 'Que un dato se escape en texto libre (por eso el modo estricto y el bloqueo final), que el modelo falle una tarea (por eso tu «sí») y ciclos de venta largos en banca (por eso el piloto corto).'],
-  ['¿Y si un gran proveedor lo hace?', 'Un proveedor de modelos no puede ser a la vez quien no ve los datos. Somos neutrales: funcionamos con cualquier modelo.'],
-  ['¿Hoja de ruta?', 'Primer piloto de cuentas a pagar, más pantallas con reglas listas (ERP habituales), la app de 8 en las tiendas y certificaciones (ISO 27001, SOC 2).'],
-  ['¿Puede el equipo sacarlo?', 'Cuatro personas han construido en tres días el núcleo, la consola, el ERP simulado, tres bancos y la app Android, todo funcionando.'],
-  ['¿Funciona hoy?', 'Sí: demo.priv8.es tiene las grabaciones reales y mcp.priv8.es lo conecta a tu asistente con tu modelo y tu clave.'],
+  ['¿Por qué ahora?', 'Los modelos ya usan pantallas y los bancos ya prueban agentes. Lo que frena es qué ven.',
+    { t: 'table', head: ['Quién', 'Qué resuelve'], rows: [['Visa TAP, Google AP2', 'Cómo paga un agente'], ['Skyflow, Basis Theory', 'Bóveda o tarjeta, sin pantallas'], ['Priv8', 'Qué ve mientras trabaja']] }],
+  ['¿Qué riesgos veis?', 'Cada riesgo tiene su respuesta en el diseño o en la venta.',
+    { t: 'table', head: ['Riesgo', 'Respuesta'], rows: [['Dato en texto libre', 'Modo estricto y bloqueo final'], ['El modelo falla una tarea', 'Tu «sí» antes de ejecutar'], ['Venta larga en banca', 'Piloto de 4 semanas']] }],
+  ['¿Y si un gran proveedor lo hace?', 'Un proveedor de modelos no puede ser a la vez quien no ve los datos. Somos neutrales: funcionamos con cualquier modelo.',
+    { t: 'eight', mode: 'curiosidad', cap: 'Neutral: cualquier modelo' }],
+  ['¿Hoja de ruta?', 'Primer piloto, más pantallas con reglas listas, la app en las tiendas y certificaciones.',
+    { t: 'flow', steps: [['Piloto', 'cuentas a pagar'], ['Reglas listas', 'ERP habituales'], ['App de 8', 'en las tiendas'], ['Certificaciones', 'ISO 27001, SOC 2']] }],
+  ['¿Puede el equipo sacarlo?', 'Cuatro personas han construido en tres días el núcleo, la consola, el ERP simulado, tres bancos y la app Android, todo funcionando.',
+    { t: 'nums', items: [['4', 'personas'], ['3', 'días'], ['3', 'bancos simulados']] }],
+  ['¿Funciona hoy?', 'Sí. Las grabaciones reales están publicadas y el servidor MCP lo conecta a tu asistente, con tu modelo y tu clave.',
+    { t: 'toks', items: ['demo.priv8.es', 'mcp.priv8.es'], cap: 'Grabaciones reales y servidor MCP' }],
 ];
 const GROUPS = [
   ['Negocio', QA3],
@@ -663,7 +694,7 @@ const GROUPS = [
   ['Producto y regulación', QA2],
   ['Mercado, riesgos y equipo', QA5],
 ];
-const QS = GROUPS.flatMap(([g, qa]) => qa.map(([q, a]) => ({ g, q, a })));
+const QS = GROUPS.flatMap(([g, qa]) => qa.map(([q, a, v]) => ({ g, q, a, v })));
 /* el anexo va justo después de las diapositivas principales: índice y luego una pregunta por diapositiva */
 const ANNEX_AT = () => SLIDES.findIndex((x) => x.annex) + 1;
 const qHref = (i) => `#${ANNEX_AT() + 1 + i}`;
@@ -684,14 +715,76 @@ function Indice() {
     </div>
   );
 }
+/* texto con tokens ‹…›: los pinta como chip */
+const TokText = ({ s }) => (/^‹.*›$/.test(s) ? <Tok>{s}</Tok> : s);
+function Visual({ v }) {
+  if (!v) return null;
+  if (v.t === 'nums') {
+    return (
+      <div className="qv qv-nums">
+        {v.items.map(([n, t]) => <div key={n + t} className="qv-num"><b>{n}</b><span>{t}</span></div>)}
+      </div>
+    );
+  }
+  if (v.t === 'vs') {
+    return (
+      <div className="qv qv-vs">
+        <div className="qv-num was"><b>{v.a[0]}</b><span>{v.a[1]}</span></div>
+        <i className="qv-arrow" />
+        <div className="qv-num now"><b>{v.b[0]}</b><span>{v.b[1]}</span></div>
+        {v.foot && <p className="qv-foot">{v.foot}</p>}
+      </div>
+    );
+  }
+  if (v.t === 'flow') {
+    return (
+      <ol className="qv qv-flow">
+        {v.steps.map(([h, t], j) => (
+          <li key={h} className={j === v.bad ? 'bad' : ''}><b><TokText s={h} /></b><span>{t}</span></li>
+        ))}
+      </ol>
+    );
+  }
+  if (v.t === 'table') {
+    return (
+      <div className="qv qv-table">
+        <table>
+          <thead><tr>{v.head.map((h, j) => <th key={j}>{h}</th>)}</tr></thead>
+          <tbody>{v.rows.map((r) => <tr key={r[0]}>{r.map((c, j) => <td key={j} className={c === 'Sí' ? 'yes' : c === 'No' ? 'no' : ''}><TokText s={c} /></td>)}</tr>)}</tbody>
+        </table>
+        {v.foot && <p className="qv-foot">{v.foot}</p>}
+      </div>
+    );
+  }
+  if (v.t === 'toks') {
+    return (
+      <div className="qv qv-toks">
+        <div>{v.items.map((x) => <Tok key={x}>{x}</Tok>)}</div>
+        {v.cap && <p className="qv-foot">{v.cap}</p>}
+      </div>
+    );
+  }
+  if (v.t === 'eight') {
+    return (
+      <div className="qv qv-eight">
+        <E mode={v.mode} on="paper" className="e-qv" />
+        {v.cap && <p className="qv-foot">{v.cap}</p>}
+      </div>
+    );
+  }
+  return null;
+}
 function Pregunta({ i }) {
-  const { g, q, a } = QS[i];
+  const { g, q, a, v } = QS[i];
   return (
-    <div className="in qa qone">
+    <div className={'in qa qone' + (v ? ' qhas' : '')}>
       <Head eyebrow={`${g} - Pregunta ${i + 1} de ${QS.length}`}>{q}</Head>
-      <R d={3} as="p" className="qans">{a}</R>
-      <R d={4} as="a" className="qback" href={`#${ANNEX_AT()}`}>Volver al índice de preguntas</R>
-      <E mode="duda" on="paper" className="e-qa rv" />
+      <div className="qbody">
+        <R d={3} as="p" className="qans">{a}</R>
+        <R d={4} className="qvis"><Visual v={v} /></R>
+      </div>
+      <R d={5} as="a" className="qback" href={`#${ANNEX_AT()}`}>Volver al índice de preguntas</R>
+      {(!v || v.t !== 'eight') && <E mode="duda" on="paper" className="e-qa rv" />}
       <Foot />
     </div>
   );
