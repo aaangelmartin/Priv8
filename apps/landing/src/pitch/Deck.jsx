@@ -27,7 +27,7 @@ function fromHash() {
 export function label(i) {
   const s = SLIDES[i];
   if (!s) return '';
-  if (s.annex) return `Anexo ${i - MAIN + 1}`;
+  if (s.annex) return i === MAIN ? 'Anexo' : `Anexo ${i - MAIN}`;
   return `${i + 1} / ${MAIN}`;
 }
 function fmt(ms) {
