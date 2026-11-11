@@ -17,12 +17,22 @@ pasa por una cola.
     web = WebAdapter(start="inbox")      # abre Chromium con una pestaña por app
     core.connect("b2b", web)
 
-Pantalla real en la consola (#147): mientras una consola mira (core.connect
-pone `watching` y `on_frame`), la pestaña activa se emite con CDP
-Page.startScreencast (JPEG, hasta FRAME_FPS por segundo) junto con las cajas de
-los elementos del último snapshot, medidas en vivo. Todo ocurre en el hilo del
-navegador entre una llamada y la siguiente: snapshot() y perform() no esperan a
-ningún fotograma. Sin nadie mirando, no se captura nada. PRIV8_FRAMES=0 lo apaga.
+Vista de 8 en la consola (#147, #154): mientras una consola mira (core.connect
+pone `watching` y `on_frame`), el adaptador mantiene una página espejo en un
+Chromium sin ventana (vista.py) con la pestaña de 8 censurada en el DOM: cada valor
+ámbar lleva su token y cada rojo «nunca sale» antes de escribirse en el espejo, y
+lo que no ha leído el modelo sale como marcador neutro. Lo que se emite (CDP
+Page.startScreencast, hasta FRAME_FPS por segundo) es ese espejo: los píxeles de la
+pestaña real ya no salen del adaptador. Se sincroniza en el hilo del navegador entre
+una llamada y la siguiente (cambios del DOM, desplazamiento, foco), así que
+snapshot() y perform() no esperan a ningún fotograma. Sin nadie mirando, no se copia
+ni se captura nada. PRIV8_FRAMES=0 lo apaga.
+
+8 en la ventana (#135, #154): el cursor son los ojos de 8 (el motor de la web) con
+su cara según lo que hace (lee, piensa, escribe, espera, se enfada, termina) y
+bocadillos con lo que razona y hace. Lo mueve el canal de eventos del núcleo, en el
+mismo proceso (on_core_event); en la ventana real el bocadillo puede llevar valores
+(es la pantalla de la persona) y en la vista de 8 el mismo bocadillo lleva tokens.
 """
 
 from __future__ import annotations
@@ -45,8 +55,9 @@ APPS: dict[str, str] = {
     "inbox": os.environ.get("PRIV8_INBOX_URL", "http://127.0.0.1:5174").rstrip("/"),
 }
 
+from .vista import CALL_JS, CENSOR_JS, INIT_SCRIPT, INSTALL_JS, Vista8, obs_map, secrets_of
+
 # Cursor de 8 (#135): capa visible en la ventana de Chromium. PRIV8_CURSOR=0 la apaga.
-_CURSOR_JS = (Path(__file__).with_name("cursor8.js")).read_text(encoding="utf-8")
 # Tecleo visible: hasta TYPE_VISIBLE caracteres a ritmo humano y el resto de golpe, para que
 # el retraso añadido por acción (deslizamiento hasta 0,5 s más tecleo) quede por debajo de 0,8 s.
 TYPE_VISIBLE = 16
@@ -61,27 +72,52 @@ def cursor_enabled(default: bool) -> bool:
     return v.strip().lower() not in ("0", "off", "false", "no")
 
 
-# Pantalla real (#147): fotogramas por segundo como mucho, ancho máximo y calidad JPEG.
-FRAME_FPS = 12
-FRAME_MAX_W, FRAME_MAX_H = 1100, 900
-FRAME_QUALITY = 62
+# Vista de 8 (#147, #154): fotogramas por segundo como mucho, tamaño máximo y calidad JPEG.
+FRAME_FPS = 10
+FRAME_MAX_W, FRAME_MAX_H = 1650, 1140
+FRAME_QUALITY = 70
 FRAME_TICK_MS = 15      # sin trabajos, cada cuánto atiende el navegador los fotogramas
-BOXES_EVERY_S = 0.25    # cada cuánto se vuelven a medir las cajas (desplazamientos, animaciones)
+SYNC_EVERY_S = 0.1      # cada cuánto se mira si la pestaña ha cambiado (debounce de los cambios)
+VIEWPORT = {"width": 1100, "height": 760}
 
-# Cajas de los elementos marcados en el último snapshot, en px CSS de la ventana.
-_BOXES_JS = r"""
-(extra) => {
-  const out = {};
-  const caja = (id, el) => {
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0) out[id] = [Math.round(r.left), Math.round(r.top), Math.round(r.right), Math.round(r.bottom)];
-  };
-  for (const el of document.querySelectorAll('[data-p8-ref]')) caja(el.getAttribute('data-p8-ref'), el);
-  for (const [id, sel] of Object.entries(extra || {})) caja(id, document.querySelector(sel));
-  return out;
+# Lo que dice 8 en el bocadillo: corto, una frase, sin markdown.
+BLOQUEO = {
+    "destino": "Ese dato del correo no entra en ese campo.",
+    "fuga": "Esa petición llevaba un dato sin tapar: no sale.",
+    "rojo": "Ese dato nunca sale.",
+    "presupuesto": "El oráculo no responde más.",
+    "asesoria": "No doy consejo de inversión.",
+    "caducado": "La confirmación ha caducado.",
+    "cancelado": "Acción cancelada.",
+    "sin_regla": "Esta pantalla no tiene regla: vuelvo.",
+    "token_desconocido": "Ese token no existe en la sesión.",
+    "adaptador": "La pantalla no ha respondido.",
 }
-"""
+
+
+_ES_LLAMADA = re.compile(r'^\s*(observe|act|oracle)\b|\{"')  # un paso con herramientas, no una respuesta
+
+
+def _firma(raw: dict[str, Any]) -> tuple:
+    """Qué pantalla es y qué elementos tiene (sin sus textos): misma firma, mismos ids."""
+    return (raw.get("app"), raw.get("url"),
+            tuple((e.get("id"), e.get("role"), e.get("sel"), e.get("label")) for e in raw.get("elements", [])))
+
+
+def corto(texto: str | None, maximo: int = 150) -> str:
+    """La primera frase de un texto del modelo, sin markdown, para un bocadillo."""
+    s = re.sub(r"\*\*|__|`+|^#+\s*", "", str(texto or ""), flags=re.M)
+    s = re.sub(r"^\s*(?:\d+[.)]|[-*•])\s+", "", s, flags=re.M)
+    s = " ".join(s.split())
+    m = re.match(r"^(.{20,}?[.:;!?])(?:\s|$)", s)
+    if m and len(m.group(1)) <= maximo:
+        return m.group(1)
+    if len(s) <= maximo:
+        return s
+    cut = s[:maximo].rsplit(" ", 1)[0]
+    if cut.count("‹") > cut.count("›"):  # sin partir un token
+        cut = cut[:cut.rindex("‹")].rstrip()
+    return cut + "…"
 
 
 def frames_enabled() -> bool:
@@ -235,7 +271,6 @@ class WebAdapter:
         self.known = known
         # Con ventana, la persona ve a 8 mover el cursor; sin ventana (tests) no hace falta.
         self.cursor = cursor_enabled(not headless) if cursor is None else cursor
-        self._cursor_pos: dict[str, tuple[int, int]] = {}
         if start not in self.apps:
             raise ValueError(f"app desconocida: {start}")
         self.on_call = on_call or self._llamada_simulada
@@ -244,17 +279,27 @@ class WebAdapter:
         self._timeout = timeout_ms
         self.profile = Path(profile) if profile else None  # None: contexto de usar y tirar
         self._jobs: queue.Queue[tuple[Callable[[], Any], Future] | None] = queue.Queue()
-        # Pantalla real (#147). core.connect pone on_frame y watching; sin núcleo no se emite.
+        # Vista de 8 (#147, #154). core.connect pone on_frame, watching, session y lo que sigue;
+        # sin núcleo no se emite nada.
         self.on_frame: Callable[[dict[str, Any]], Any] | None = None
         self.watching: Callable[[], int] = lambda: 0
+        self.session: str | None = None
+        self.p8_render: Callable[[str], str | None] | None = None  # token -> valor (solo local)
+        self.p8_render_text: Callable[[str], str] | None = None    # texto con tokens -> texto real
+        self.p8_secrets: Callable[[], list[str]] = lambda: []     # valores de la bóveda y de confianza
+        self.p8_check: Callable[[str], dict[str, Any]] | None = None  # el bloqueo final del núcleo
         self.frames = frames_enabled()
         self.frames_sent = 0
-        self._cast: tuple[Any, Any] | None = None   # (página, sesión CDP) que se está emitiendo
-        self._frame: tuple[str, int, int] | None = None  # último fotograma sin enviar
-        self._last_img: tuple[str, int, int] | None = None  # último que llegó del navegador
+        self._vista: Vista8 | None = None
+        self._frame: tuple[str, int, int] | None = None  # último fotograma del espejo sin enviar
+        self._last_img: tuple[str, int, int] | None = None
         self._frame_at = 0.0
-        self._boxes: dict[str, list[int]] = {}
-        self._boxes_at = 0.0
+        self._sync_at = 0.0
+        self._sync_force = True
+        self._raw: dict[str, Any] | None = None        # último snapshot (valores reales, solo aquí)
+        self._observed: dict[str, Any] | None = None   # lo que vio el modelo de él (tokens)
+        self._refs_ok = False                          # los data-p8-ref de la página son los de ese snapshot
+        self._over: dict[str, str] = {}                # lo que escribe 8 ahora, con tokens, por elemento
         self._extra_sel: dict[str, dict[str, str]] = {}  # por app: id de un campo del PDF -> selector
         self._ready: Future = Future()
         self._thread = threading.Thread(target=self._run, args=(start, headless, slow_mo_ms),
@@ -271,6 +316,8 @@ class WebAdapter:
             self._pw = sync_playwright().start()
             self._ctx = self._open_context(headless, slow_mo_ms)
             self._ctx.set_default_timeout(self._timeout)
+            if self.cursor:  # los ojos de 8 en cada página que se cargue
+                self._ctx.add_init_script(script=INIT_SCRIPT)
             self._pages: dict[str, Any] = {}
             self.app = start
             for app in self.apps:  # una pestaña por app desde el principio (la persona entra en el ERP)
@@ -300,10 +347,10 @@ class WebAdapter:
                 fut.set_result(fn())
             except BaseException as e:  # noqa: BLE001
                 fut.set_exception(e)
-            if self._cast is not None:  # tras una acción o una lectura, las cajas pueden haber cambiado:
-                self._boxes_at = 0.0     # se miden y el último fotograma se vuelve a mandar con ellas
-                self._frame = self._frame or self._last_img
+            self._sync_force = True  # tras una acción o una lectura, la vista de 8 se vuelve a copiar
         self._stop_cast()
+        if self._vista is not None:
+            self._vista.close()
         self._ctx.close()
         if self._browser is not None:
             self._browser.close()
@@ -312,7 +359,7 @@ class WebAdapter:
     def _open_context(self, headless: bool, slow_mo_ms: int) -> Any:
         """Con perfil, uno persistente: la sesión de Alba Core sigue en la siguiente ejecución.
         Si el perfil está en uso (otro agente abierto), uno de usar y tirar."""
-        opts = {"viewport": {"width": 1100, "height": 760}, "locale": "es-ES"}
+        opts = {"viewport": dict(VIEWPORT), "locale": "es-ES"}
         self._browser = None
         if self.profile is not None:
             try:
@@ -348,13 +395,23 @@ class WebAdapter:
         def job() -> dict[str, Any]:
             page = self._page(self.app)
             page.wait_for_load_state("domcontentloaded")
+            self._ocho_todos("modo", "leer")
             dom = page.evaluate(_SNAPSHOT_JS)
             elements = dom["elements"] + self._pdf_elements(page.url, dom)
             self._extra_sel[self.app] = {e["id"]: e["sel"] for e in elements[len(dom["elements"]):]}
-            self._boxes_at = 0.0
             self.seq += 1
-            return {"source": "web", "app": self.app, "screen": None, "url": page.url, "seq": self.seq,
-                    "focus": dom["focus"], "system_dialog": None, "elements": elements}
+            raw = {"source": "web", "app": self.app, "screen": None, "url": page.url, "seq": self.seq,
+                   "focus": dom["focus"], "system_dialog": None, "elements": elements}
+            # La observación de este snapshot llega por on_core_event; hasta entonces, marcadores.
+            # Si es la misma pantalla con los mismos elementos (p. ej. la lectura que hace la
+            # confirmación), sigue valiendo la observación anterior: solo lleva tokens.
+            misma = self._raw is not None and _firma(self._raw) == _firma(raw)
+            if not misma:
+                self._observed, self._over = None, {}
+            elif self._observed is not None:
+                self._observed = {**self._observed, "seq": raw["seq"]}
+            self._raw, self._refs_ok = raw, True
+            return raw
         return self._call(job)
 
     def _pdf_elements(self, url: str, dom: dict[str, Any]) -> list[dict[str, Any]]:
@@ -418,19 +475,19 @@ class WebAdapter:
             if el.count() != 1:
                 return {"ok": False, "error": "target_no_encontrado"}
             if op in ("tap", "send"):
-                self._cursor(page, "tap", target, "pulsa")
+                self._cursor(page, "tap", target, "Pulso")
                 el.click()
                 return {"ok": True}
             if op == "type":
                 if not el.is_editable():
                     return {"ok": False, "error": "no_permitido"}
-                if self._cursor(page, "type", target, "escribe"):
+                if self._cursor(page, "type", target, "Escribo en"):
                     self._type_visible(el, text)
                 el.fill(text)  # el valor final es siempre el mismo, con cursor o sin él
                 self._cursor(page, "done")
                 return {"ok": True}
             if op == "call":
-                self._cursor(page, "tap", target, "llama a")
+                self._cursor(page, "tap", target, "Llamo a")
                 numero = text or (el.input_value() if el.is_editable() else el.inner_text())
                 self.calls.append(numero)
                 return {"ok": bool(self.on_call(numero))}
@@ -440,7 +497,7 @@ class WebAdapter:
         except PwError:
             return {"ok": False, "error": "otro"}
 
-    # ---- pantalla real en la consola (#147), siempre en el hilo del navegador ----
+    # ---- vista de 8 en la consola (#147, #154), siempre en el hilo del navegador ----
 
     def _streaming(self) -> bool:
         if not self.frames or self.on_frame is None:
@@ -451,61 +508,81 @@ class WebAdapter:
             return False
 
     def _stream_tick(self) -> None:
-        """Sin trabajos pendientes y con alguien mirando: emite la pestaña activa, mide las
-        cajas de vez en cuando y deja al navegador atender los fotogramas un momento."""
+        """Sin trabajos pendientes y con alguien mirando: copia la pestaña activa, censurada, en
+        la vista de 8 si ha cambiado, emite el espejo y deja al navegador atender un momento."""
         from playwright.sync_api import Error as PwError
 
         try:
             page = self._page(self.app)
-            if self._cast is None or self._cast[0] is not page:
-                self._start_cast(page)
-            if time.monotonic() - self._boxes_at > BOXES_EVERY_S:
-                self._measure(page)
+            if self._vista is None:
+                self._vista = Vista8(self._pw, VIEWPORT)
+            if not self._vista.casting:
+                self._frame = self._last_img = None
+                self._vista.start_cast(self._on_cast, FRAME_QUALITY, FRAME_MAX_W, FRAME_MAX_H)
+                self._sync_force = True
+            if self._sync_force or time.monotonic() - self._sync_at > SYNC_EVERY_S:
+                self._sync(page)
             self._flush()
             page.wait_for_timeout(FRAME_TICK_MS)
         except PwError:
-            self._cast = None
             time.sleep(FRAME_TICK_MS / 1000)
 
-    def _start_cast(self, page: Any) -> None:
-        self._stop_cast()
-        self._frame = self._last_img = None  # el de otra pestaña no vale
-        cdp = self._ctx.new_cdp_session(page)
-        cdp.on("Page.screencastFrame", lambda p: self._on_cast(cdp, p))
-        cdp.send("Page.startScreencast", {"format": "jpeg", "quality": FRAME_QUALITY,
-                                          "maxWidth": FRAME_MAX_W, "maxHeight": FRAME_MAX_H})
-        self._cast = (page, cdp)
-        self._boxes_at = 0.0
+    def _vista_activa(self) -> bool:
+        return self._vista is not None and self._vista.casting
+
+    def _sync(self, page: Any, force: bool = False) -> None:
+        """Copia la pestaña de 8 en la vista de 8, censurada en el DOM (vista8.js) y tras el
+        bloqueo final (vista.guard). Sin cambios en la página ni en la observación, no hace nada."""
+        if self._vista is None:
+            return
+        force = force or self._sync_force
+        self._sync_force = False
+        self._sync_at = time.monotonic()
+        obs = self._observed if (self._refs_ok and self._observed
+                                 and (self._raw or {}).get("app") == self.app) else None
+        args = {"force": force,
+                "key": f"{self.app}|{(obs or {}).get('seq')}|{sorted(self._over.items())}",
+                "obs": obs_map(obs), "sel": self._extra_sel.get(self.app, {}) if obs else {},
+                "over": dict(self._over) if obs else {}}
+        doc = page.evaluate(CENSOR_JS, args)
+        if doc is None:
+            return
+        try:
+            extra = list(self.p8_secrets() or [])
+        except Exception:  # noqa: BLE001
+            extra = []
+        secrets = secrets_of(self._raw, obs, self._valor, extra)
+        if not self._vista.write(doc, secrets, self.p8_check) and obs:
+            # Algo no ha pasado el bloqueo final: otra vez solo con marcadores. Si tampoco pasa,
+            # la vista se queda como estaba.
+            doc = page.evaluate(CENSOR_JS, {**args, "force": True, "obs": {}, "sel": {}, "over": {}})
+            if doc is not None:
+                self._vista.write(doc, secrets, self.p8_check)
+        paused = (obs or {}).get("paused")
+        self._vista.call("velo", {"titulo": "8 mira a otro lado", "modo": "apartar",
+                                  "texto": "Aquí escribes tú: la clave o el código no llegan al modelo."}
+                         if paused else None)
+        self._vista.call("aviso", None if obs else "8 aún no ha leído esta pantalla")
+
+    def _valor(self, token: str) -> str | None:
+        if self.p8_render is None:
+            return None
+        try:
+            return self.p8_render(token)
+        except Exception:  # noqa: BLE001
+            return None
 
     def _stop_cast(self) -> None:
-        if self._cast is None:
-            return
-        _, cdp = self._cast
-        self._cast = None
-        try:
-            cdp.send("Page.stopScreencast")
-            cdp.detach()
-        except Exception:  # noqa: BLE001 - la pestaña ya no está
-            pass
+        if self._vista is not None:
+            self._vista.stop_cast()
 
-    def _on_cast(self, cdp: Any, p: dict[str, Any]) -> None:
-        try:
-            cdp.send("Page.screencastFrameAck", {"sessionId": p["sessionId"]})
-        except Exception:  # noqa: BLE001
-            return
-        if self._cast is None or self._cast[1] is not cdp:
-            return
-        meta = p.get("metadata") or {}
-        self._frame = self._last_img = (p["data"], int(meta.get("deviceWidth") or 0), int(meta.get("deviceHeight") or 0))
+    def _on_cast(self, img: str, w: int, h: int) -> None:
+        self._frame = self._last_img = (img, w, h)
         self._flush()
 
-    def _measure(self, page: Any) -> None:
-        self._boxes = page.evaluate(_BOXES_JS, self._extra_sel.get(self.app, {})) or {}
-        self._boxes_at = time.monotonic()
-
     def _flush(self) -> None:
-        """Envía el último fotograma si toca (FRAME_FPS como mucho): gana el último."""
-        if self._frame is None or self._cast is None or self.on_frame is None:
+        """Envía el último fotograma del espejo si toca (FRAME_FPS como mucho): gana el último."""
+        if self._frame is None or not self._vista_activa() or self.on_frame is None:
             return
         now = time.monotonic()
         if now - self._frame_at < 1 / FRAME_FPS:
@@ -514,33 +591,141 @@ class WebAdapter:
         if not w or not h:
             return
         self._frame, self._frame_at = None, now
-        page = self._cast[0]
-        app = next((k for k, p in self._pages.items() if p is page), self.app)  # la de la pestaña emitida
+        page = self._pages.get(self.app)
         try:
-            self.on_frame({"app": app, "w": w, "h": h, "img": img, "mime": "image/jpeg",
-                           "boxes": dict(self._boxes) if app == self.app else {}, "where": {"url": page.url}})
+            self.on_frame({"app": self.app, "w": w, "h": h, "img": img, "mime": "image/jpeg", "vista": "8",
+                           "where": {"url": page.url if page is not None else None}})
             self.frames_sent += 1
         except Exception:  # noqa: BLE001 - la consola nunca para al agente
             pass
 
-    # ---- cursor de 8 (#135) ----
+    # ---- 8 en la ventana y en la vista de 8 (#135, #154) ----
 
-    def _cursor(self, page: Any, op: str, target: str | None = None, verb: str | None = None) -> bool:
-        """Lleva el cursor de 8 hasta `target` (o lo recoge con op='done'). Solo es pantalla:
-        si algo falla, la acción sigue igual que sin cursor."""
-        if not self.cursor:
-            return False
+    def _ocho(self, page: Any, method: str, args: Any) -> Any:
+        """window.__p8ocho[method](args) en una página real (lo instala si aún no está)."""
+        r = page.evaluate(CALL_JS, [method, args])
+        if r == "falta":
+            page.evaluate(INSTALL_JS)
+            r = page.evaluate(CALL_JS, [method, args])
+        return r
+
+    def _ocho_todos(self, method: str, real: Any, vista: Any = None) -> None:
+        """Lo mismo en la ventana real (con `real`) y en la vista de 8 (con `vista`, o `real`).
+        Solo es pantalla: si falla, sigue todo igual."""
         from playwright.sync_api import Error as PwError
 
+        if self.cursor:
+            try:
+                self._ocho(self._page(self.app), method, real)
+            except PwError:
+                pass
+        if self._vista_activa():
+            try:
+                self._vista.call(method, real if vista is None else vista)
+            except PwError:
+                pass
+
+    def note_action(self, a: dict[str, Any]) -> None:
+        """Lo que escribió el modelo para la acción que viene (con tokens), antes de perform():
+        la vista de 8 enseña eso en el campo, nunca el valor rehidratado."""
+        if a.get("op") == "type" and a.get("target") and a.get("text") is not None:
+            self._over[str(a["target"])] = str(a["text"])
+            self._sync_force = True
+
+    def on_core_event(self, msg: dict[str, Any]) -> None:
+        """Canal de eventos del núcleo (en el mismo proceso): la observación de cada snapshot
+        y lo que hace 8, para su cara y sus bocadillos. Nunca para al núcleo."""
+        try:
+            self._on_core_event(msg)
+        except Exception:  # noqa: BLE001
+            pass
+
+    def _on_core_event(self, msg: dict[str, Any]) -> None:
+        kind = msg.get("type")
+        if kind == "screen" and msg.get("session") == self.session:
+            obs, raw = msg.get("observed") or {}, msg.get("raw") or {}
+            if raw.get("source") == "web" and raw.get("seq") == self.seq:
+                self._observed = obs
+                self._sync_force = True
+            return
+        if kind != "audit":
+            return
+        ev = msg.get("event") or {}
+        if ev.get("session") != self.session:
+            return
+        k, d, saw = ev.get("kind"), ev.get("detail") or "", ev.get("model_saw")
+        paso = re.search(r"paso\s+\d+", d)
+        if k == "observe_sent":
+            self._later(lambda: self._ocho_todos("modo", "pensar"))
+        elif k == "task":
+            if saw and "razona" in d:
+                self._decir(corto(saw), "8 piensa", "neutro", "hablar", 5200)
+            elif saw and paso and not _ES_LLAMADA.match(saw):
+                self._decir(corto(saw, 170), "8 responde", "seguro", "listo", 7000)
+            elif re.match(r"^fin\b", d):
+                self._later(lambda: self._ocho_todos("modo", "listo"))
+            elif "inicio" in d and not paso:
+                self._later(lambda: self._ocho_todos("modo", "saludar"))
+        elif k == "blocked":
+            self._decir(BLOQUEO.get(ev.get("reason") or "", "No puedo hacer eso."), "Bloqueado", "bloqueo", "enfado", 5200)
+        elif k == "held":
+            self._decir("Espero tu confirmación en la consola.", "Antes de seguir", "aviso", "esperar", 9000)
+        elif k == "approval":
+            ok = bool(ev.get("approved_by"))
+            self._decir("Aprobado. Sigo." if ok else "Rechazado. No lo hago.", None,
+                        "seguro" if ok else "bloqueo", "asentir" if ok else "negar", 2600)
+        elif k == "paused":
+            self._later(lambda: self._ocho_todos("modo", "apartar"))
+
+    def _decir(self, texto: str, eyebrow: str | None, tono: str, modo: str, ms: int) -> None:
+        """Un bocadillo: en la ventana real con los valores (es la pantalla de la persona),
+        en la vista de 8 con los tokens."""
+        if not texto:
+            return
+        real = texto
+        if self.p8_render_text is not None:
+            try:
+                real = self.p8_render_text(texto)
+            except Exception:  # noqa: BLE001
+                real = texto
+
+        def job() -> None:
+            self._ocho_todos("modo", modo)
+            self._ocho_todos("di", {"texto": real, "eyebrow": eyebrow, "tono": tono, "ms": ms},
+                             {"texto": texto, "eyebrow": eyebrow, "tono": tono, "ms": ms})
+        self._later(job)
+
+    def _later(self, fn: Callable[[], Any]) -> None:
+        """Al hilo del navegador sin esperar (desde él mismo, ahora)."""
+        if threading.current_thread() is self._thread:
+            fn()
+        else:
+            self._jobs.put((fn, Future()))
+
+    def _cursor(self, page: Any, op: str, target: str | None = None, verb: str | None = None) -> bool:
+        """Lleva el cursor de 8 hasta `target` (o lo recoge con op='done'), en la ventana y en la
+        vista de 8. Solo es pantalla: si algo falla, la acción sigue igual que sin cursor."""
+        from playwright.sync_api import Error as PwError
+
+        vista = self._vista_activa()
+        if not self.cursor and not vista:
+            return False
         try:
             if target:
                 page.locator(f'[data-p8-ref="{target}"]').scroll_into_view_if_needed(timeout=1000)
-            pos = self._cursor_pos.get(self.app)
-            done = page.evaluate(_CURSOR_JS, {"op": op, "ref": target, "verb": verb,
-                                              "from": list(pos) if pos else None})
-            if isinstance(done, list):
-                self._cursor_pos[self.app] = (done[0], done[1])
-            return bool(done)
+            if op == "done":
+                self._ocho_todos("done", None)
+                return True
+            if vista:  # el espejo al día antes de que su cursor vaya a un elemento suyo
+                self._sync(page, force=True)
+                try:
+                    self._vista.call("go", {"op": op, "ref": target, "verb": verb, "nowait": True,
+                                            "escribe": self._over.get(target or "") if op == "type" else None})
+                except PwError:
+                    pass
+            if not self.cursor:
+                return False
+            return bool(self._ocho(page, "go", {"op": op, "ref": target, "verb": verb}))
         except PwError:
             return False
 
@@ -576,6 +761,8 @@ class WebAdapter:
             return True
         # Mismo recorrido que snapshot(), sin contar seq: los ids del DOM no cambian.
         elements = page.evaluate(_SNAPSHOT_JS)["elements"]
+        if app == (self._raw or {}).get("app"):
+            self._refs_ok = False  # los ids de la página ya no son los del último snapshot
         return bool(elements) and bool(self.known({"source": "web", "app": app, "screen": None,
                                                    "url": page.url, "elements": elements}))
 
@@ -588,7 +775,6 @@ class WebAdapter:
             page.wait_for_selector("[data-p8]", timeout=self._timeout)
         except Exception:  # noqa: BLE001  la pantalla saldrá como esté
             pass
-        self._cursor_pos.pop(app, None)
 
     def recover(self) -> bool:
         """El núcleo no tiene política para la pantalla: si la pestaña activa no está en una

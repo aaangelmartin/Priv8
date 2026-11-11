@@ -1,149 +1,320 @@
-// Cursor de 8 (#135): la persona que mira la ventana de Chromium ve a 8 moverse, pulsar y escribir.
+// 8 en la ventana de Chromium (#135, #154): su cursor son sus ojos, vivos, y habla en bocadillos.
 //
-// Se evalúa con page.evaluate(src, args) antes de cada acción del adaptador. Vive en un
-// shadow root colgado de <html>, fuera de #root: querySelectorAll('[data-p8]') del snapshot
-// no entra en él, y además lleva data-p8-ignore y aria-hidden. Sin eventos de puntero, así
-// que no cambia qué recibe el clic ni lo que lee el modelo.
+// adapter.py lo instala en cada página (add_init_script) con el motor de los ojos de la web
+// (apps/console/src/eight/engine.js) y las fuentes de la marca: (createEngine, FONTS) => {...}.
+// Deja window.__p8ocho con:
 //
-// args: {op: 'move' | 'tap' | 'type' | 'done' | 'hide', ref (data-p8-ref) o x e y, verb, from: [x, y] | null}
-// verb pone la etiqueta «8 <verb> «<etiqueta del elemento>»»; label la da tal cual.
-// Devuelve una promesa que se resuelve al acabar el deslizamiento con la posición [x, y] del
-// cursor (true en done y hide, false si no encuentra el destino).
-async (a) => {
-  const ID = 'p8-cursor-8';
-  const COBALTO = '#2D45D6';
-  let host = document.getElementById(ID);
-  if (!host) {
-    host = document.createElement('div');
-    host.id = ID;
-    host.setAttribute('data-p8-ignore', '');
-    host.setAttribute('aria-hidden', 'true');
-    host.setAttribute('role', 'presentation');
-    host.style.cssText = 'all:initial;position:fixed;inset:0;pointer-events:none;z-index:2147483647;';
-    const sh = host.attachShadow({ mode: 'open' });
-    sh.innerHTML = `
-<style>
-  * { pointer-events: none; box-sizing: border-box; }
-  .cur { position: fixed; left: 0; top: 0; width: 44px; height: 32px; margin: -16px 0 0 -22px;
-         filter: drop-shadow(0 2px 4px rgba(11,27,51,.28)); will-change: transform; opacity: 0;
-         transition: opacity .18s ease; }
-  .cur.on { opacity: 1; }
-  .cur svg { display: block; width: 44px; height: 32px; overflow: visible; }
-  .lab { position: absolute; left: 40px; top: 26px; white-space: nowrap; max-width: 280px;
-         overflow: hidden; text-overflow: ellipsis; padding: 3px 8px; border-radius: 6px;
-         background: ${COBALTO}; color: #fff; font: 500 12px/16px 'IBM Plex Sans', system-ui, sans-serif;
-         box-shadow: 0 1px 3px rgba(11,27,51,.25); }
-  .lab:empty { display: none; }
-  .ring { position: fixed; border-radius: 8px; opacity: 0; transition: opacity .2s ease;
-          box-shadow: 0 0 0 2px ${COBALTO}, 0 0 0 6px rgba(45,69,214,.18); }
-  .ring.on { opacity: 1; }
-  .rip { position: fixed; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
-         border: 2px solid ${COBALTO}; background: rgba(45,69,214,.14); }
-</style>
+//   go({op: 'move'|'tap'|'type', ref | x, y, verb, label, escribe, from, nowait})
+//        lleva el cursor al elemento (data-p8-ref) o al punto; con verb dice «Pulso «Registrar»».
+//        escribe: en la vista de 8, el texto (con tokens) que va apareciendo en el campo.
+//        Devuelve [x, y] al llegar (o enseguida con nowait), false si no encuentra el destino.
+//   modo(m)        cara de 8: leer, pensar, hablar, esperar, enfado, listo, apartar, mirar…
+//   di({texto, eyebrow, tono, ms})   bocadillo como el de 8 en el chat de la consola, tecleado;
+//                  los tokens ‹…› van en su chip. Uno cada vez: el nuevo sustituye al anterior.
+//   done()  hide()  velo({titulo, texto} | null)  aviso(texto | null)
+//
+// Vive en un shadow root colgado de <html>, fuera de #root, con data-p8-ignore y aria-hidden:
+// el snapshot no entra en él y la vista de 8 lo quita de la copia. Sin eventos de puntero.
+(createEngine, FONTS) => {
+  if (window.__p8ocho) return true
+  const COB = '#2D45D6'
+  const NIEBLA = '#EEF2F8'
+  const MODOS = new Set(['mirar', 'leer', 'pensar', 'hablar', 'esperar', 'enfado', 'listo', 'apartar', 'asentir', 'negar',
+    'cargando', 'saludar', 'atencion', 'duda', 'sorpresa', 'tristeza', 'disculpa', 'alegria', 'curiosidad', 'rechazar'])
+  const st = { pos: null, modo: 'mirar', bt: 0, tt: 0, quita: 0, eng: null, ojos: null, velo: null }
+  let host = null
+  let sh = null
+  let fuentes = null
+
+  const cargarFuentes = () => {
+    if (fuentes) return fuentes
+    const caras = []
+    try {
+      for (const [fam, peso, b64] of FONTS || []) {
+        const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+        const ff = new FontFace(fam, bin, { weight: String(peso) })
+        document.fonts.add(ff)
+        caras.push(ff.loaded)
+      }
+    } catch { /* sin fuentes: las del sistema */ }
+    fuentes = Promise.race([Promise.all(caras), new Promise((r) => setTimeout(r, 1500))]).catch(() => {})
+    return fuentes
+  }
+
+  const CSS = `
+:host { all: initial }
+* { box-sizing: border-box; pointer-events: none }
+.cur { position: fixed; left: 0; top: 0; width: 60px; height: 42px; margin: -21px 0 0 -30px; border-radius: 21px;
+       background: ${COB}; box-shadow: 0 0 0 2.5px #fff, 0 8px 22px rgba(45, 69, 214, .38), 0 2px 6px rgba(11, 27, 51, .25);
+       opacity: 0; transition: opacity .2s ease; will-change: transform }
+.cur.on { opacity: 1 }
+.ojos { position: absolute; left: 2px; top: -7px; width: 56px; height: 56px }
+.ojos svg { display: block; width: 100%; height: 100%; overflow: visible }
+.bub { position: absolute; left: 44px; bottom: 26px; width: max-content; max-width: 340px; padding: 11px 15px;
+       border-radius: 20px; border-bottom-left-radius: 6px; background: #fff; color: #0B1B33;
+       font: 400 14px/1.5 "P8 Plex Sans", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+       overflow-wrap: anywhere; box-shadow: 0 0 0 1px rgba(11, 27, 51, .07), 0 12px 32px rgba(11, 27, 51, .2);
+       opacity: 0; transform: translateY(4px) scale(.98); transform-origin: 0 100%;
+       transition: opacity .18s ease, transform .25s cubic-bezier(.2, .8, .2, 1) }
+.bub.on { opacity: 1; transform: none }
+.bub.izq { left: auto; right: 44px; border-bottom-left-radius: 20px; border-bottom-right-radius: 6px; transform-origin: 100% 100% }
+.bub.abajo { bottom: auto; top: 26px; border-bottom-left-radius: 20px; border-top-left-radius: 6px; transform-origin: 0 0 }
+.bub.izq.abajo { border-top-left-radius: 20px; border-top-right-radius: 6px; transform-origin: 100% 0 }
+.eb { display: block; margin-bottom: 3px; font: 500 11px/1.3 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace; color: ${COB} }
+.eb:empty { display: none }
+.bub.t-bloqueo .eb { color: #A83228 }
+.bub.t-aviso .eb { color: #8A5200 }
+.bub.t-seguro .eb { color: #18734C }
+.tok { font: 600 .86em/1.4 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace; background: #E4E9FD; color: #2236B5;
+       border-radius: 8px; padding: .12em .5em; white-space: nowrap }
+.caret { display: inline-block; width: 2px; height: 1em; margin-left: 1px; vertical-align: -2px; background: ${COB};
+         animation: parpadeo 1s steps(1) infinite }
+@keyframes parpadeo { 50% { opacity: 0 } }
+.ring { position: fixed; border-radius: 8px; opacity: 0; transition: opacity .2s ease;
+        box-shadow: 0 0 0 2px ${COB}, 0 0 0 6px rgba(45, 69, 214, .18) }
+.ring.on { opacity: 1 }
+.rip { position: fixed; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
+       border: 2px solid ${COB}; background: rgba(45, 69, 214, .14) }
+.velo { position: fixed; inset: 0; display: none; place-content: center; justify-items: center; gap: 10px; text-align: center;
+        background: rgba(238, 242, 248, .94); color: #0B1B33; font: 400 15px/1.5 "P8 Plex Sans", "IBM Plex Sans", system-ui, sans-serif }
+.velo.on { display: grid }
+.velo .grande { width: 120px; height: 120px }
+.velo .grande svg { display: block; width: 100%; height: 100%; overflow: visible }
+.velo b { font: 700 24px/1.2 "P8 Sora", Sora, system-ui, sans-serif; letter-spacing: -.02em }
+.velo span { max-width: 44ch; color: #4E5A72 }
+.aviso { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); display: none; padding: 8px 16px; border-radius: 999px;
+         background: ${COB}; color: #fff; font: 500 13px/1.2 "P8 Plex Sans", "IBM Plex Sans", system-ui, sans-serif;
+         box-shadow: 0 8px 22px rgba(45, 69, 214, .3) }
+.aviso.on { display: block }
+`
+
+  const crear = () => {
+    if (host && host.isConnected) return
+    host = document.getElementById('p8-cursor-8')
+    if (!host) {
+      host = document.createElement('div')
+      host.id = 'p8-cursor-8'
+      host.setAttribute('data-p8-ignore', '')
+      host.setAttribute('aria-hidden', 'true')
+      host.setAttribute('role', 'presentation')
+      host.style.cssText = 'all:initial;position:fixed;inset:0;pointer-events:none;z-index:2147483647;'
+      host.attachShadow({ mode: 'open' })
+      host.shadowRoot.innerHTML = `<style>${CSS}</style>
+<div class="velo"><div class="grande"></div><b></b><span></span></div>
+<div class="aviso"></div>
 <div class="ring"></div>
-<div class="cur">
-  <svg viewBox="52 52 200 146" aria-hidden="true">
-    <ellipse cx="114.3" cy="125.3" rx="26" ry="32" fill="#fff"/>
-    <ellipse cx="190.1" cy="125.3" rx="26" ry="32" fill="#fff"/>
-    <path fill="${COBALTO}" stroke="#fff" stroke-width="9" paint-order="stroke" stroke-linejoin="round" d="M244.2 125.52Q244.2 145.14 238.4 159.75Q232.6 174.35 221.46 182.49Q210.31 190.63 194.26 190.63Q184 190.63 176.08 187.28Q168.17 183.94 162.59 177.81Q157.02 171.67 153.9 163.42H150.49Q147.37 171.67 141.8 177.81Q136.22 183.94 128.31 187.28Q120.39 190.63 110.14 190.63Q94.08 190.63 82.94 182.49Q71.79 174.35 65.99 159.75Q60.19 145.14 60.19 125.52Q60.19 105.68 65.99 91.07Q71.79 76.47 82.94 68.33Q94.08 60.19 110.14 60.19Q120.39 60.19 128.31 63.54Q136.22 66.88 141.8 73.13Q147.37 79.37 150.49 87.62H153.9Q157.02 79.37 162.59 73.13Q168.17 66.88 176.08 63.54Q184 60.19 194.26 60.19Q210.31 60.19 221.46 68.33Q232.6 76.47 238.4 91.07Q244.2 105.68 244.2 125.52ZM90.29 125.52Q90.29 134.44 92.97 141.24Q95.64 148.04 101.11 151.61Q106.57 155.17 114.37 155.17Q122.18 155.17 127.42 151.61Q132.66 148.04 135.44 141.24Q138.23 134.44 138.23 125.52Q138.23 116.38 135.44 109.58Q132.66 102.78 127.42 99.1Q122.18 95.42 114.37 95.42Q106.57 95.42 101.11 99.21Q95.64 103 92.97 109.69Q90.29 116.38 90.29 125.52ZM214.1 125.52Q214.1 116.38 211.42 109.69Q208.75 103 203.29 99.21Q197.82 95.42 190.02 95.42Q182.22 95.42 176.98 99.1Q171.74 102.78 168.95 109.58Q166.16 116.38 166.16 125.52Q166.16 134.44 168.95 141.24Q171.74 148.04 176.98 151.61Q182.22 155.17 190.02 155.17Q197.82 155.17 203.29 151.61Q208.75 148.04 211.42 141.24Q214.1 134.44 214.1 125.52Z"/>
-    <path class="pupilas" fill="${COBALTO}" d="M125.69 113.95C129.66 118.49 129.74 124.91 125.87 128.3C121.99 131.69 115.63 130.76 111.66 126.22C107.69 121.69 107.61 115.26 111.48 111.87C115.36 108.48 121.72 109.41 125.69 113.95ZM200.77 113.95C204.74 118.49 204.82 124.91 200.95 128.3C197.07 131.69 190.71 130.76 186.74 126.22C182.77 121.69 182.69 115.26 186.56 111.87C190.44 108.48 196.8 109.41 200.77 113.95Z"/>
-  </svg>
-  <span class="lab"></span>
-</div>`;
-    document.documentElement.appendChild(host);
-  }
-  const sh = host.shadowRoot;
-  const cur = sh.querySelector('.cur');
-  const lab = sh.querySelector('.lab');
-  const ring = sh.querySelector('.ring');
-  const pupilas = sh.querySelector('.pupilas');
-  const at = (x, y, rot = 0) => `translate(${x}px, ${y}px) rotate(${rot}deg)`;
-  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-
-  if (a.op === 'hide') {
-    cur.classList.remove('on');
-    ring.classList.remove('on');
-    return true;
-  }
-  if (a.op === 'done') {
-    ring.classList.remove('on');
-    lab.textContent = '';
-    return true;
-  }
-
-  // Destino: el elemento del último snapshot (data-p8-ref) o un punto dado.
-  let x = a.x, y = a.y, rect = null, nombre = null;
-  const el = a.ref ? document.querySelector(`[data-p8-ref="${CSS.escape(a.ref)}"]`) : null;
-  if (el) {
-    const r = el.getBoundingClientRect();
-    rect = [r.left, r.top, r.right, r.bottom];
-    x = r.left + r.width / 2;
-    y = r.top + r.height / 2;
-    if (a.op === 'type') {  // al escribir, justo debajo de donde empieza el texto, sin taparlo
-      x = Math.min(x, r.left + 40);
-      y = Math.min(r.bottom, r.top + 40) + 14;
+<div class="cur"><div class="ojos"></div><div class="bub"><span class="eb"></span><span class="tx"></span></div></div>`
+      document.documentElement.appendChild(host)
     }
-    const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
-    const lf = el.id && document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
-    nombre = clean(el.dataset.p8Label || el.getAttribute('aria-label') || (lf && lf.textContent)
-                   || el.getAttribute('placeholder') || el.innerText);
-    if (nombre.length > 32) nombre = nombre.slice(0, 31) + '…';
+    sh = host.shadowRoot
+    cargarFuentes().then(() => {
+      try {
+        if (!st.eng) st.eng = createEngine()
+        if (!st.ojos) {
+          st.ojos = st.eng.mount(sh.querySelector('.ojos'), { mode: st.modo, col: { fg: '#FFFFFF', cut: COB } })
+          st.ojos.forced = [-0.3, 0.35, 0]
+        }
+      } catch { /* sin motor: el óvalo cobalto sigue ahí */ }
+    })
   }
-  if (x == null || y == null) return false;
-  x = Math.round(x); y = Math.round(y);
-  if (a.verb) a.label = nombre ? `8 ${a.verb} «${nombre}»` : `8 ${a.verb}`;
-  const from = a.from || host.__p8pos || [Math.round(innerWidth / 2), Math.round(innerHeight * 0.85)];
-  lab.textContent = a.label || '';
-  // Cerca del borde derecho la etiqueta va a la izquierda del cursor.
-  const izq = x > innerWidth - 320;
-  lab.style.left = izq ? 'auto' : '40px';
-  lab.style.right = izq ? '40px' : 'auto';
-  ring.classList.remove('on');
-  cur.classList.add('on');
+  const q = (s) => sh.querySelector(s)
+  const at = (x, y, rot = 0) => `translate(${x}px, ${y}px) rotate(${rot}deg)`
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms))
 
-  // Deslizamiento de 350 a 500 ms según la distancia, con una leve inclinación hacia donde va.
-  const dx = x - from[0], dy = y - from[1];
-  const dist = Math.hypot(dx, dy);
-  const dur = Math.round(Math.min(500, 350 + dist / 6));
-  const tilt = Math.max(-8, Math.min(8, dx / 40));
-  // Las pupilas miran hacia el destino mientras viaja.
-  const px = dist ? (dx / dist) * 5 : 0, py = dist ? (dy / dist) * 4 : 0;
-  pupilas.style.transition = 'transform .15s ease';
-  pupilas.style.transform = `translate(${px}px, ${py}px)`;
-  if (dist > 2 && cur.animate) {
-    const anim = cur.animate(
-      [{ transform: at(from[0], from[1]) },
-       { transform: at(from[0] + dx * 0.6, from[1] + dy * 0.6, tilt), offset: 0.6 },
-       { transform: at(x, y) }],
-      { duration: dur, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' });
-    // Una pestaña en segundo plano puede no avanzar la animación: nunca se espera de más.
-    await Promise.race([anim.finished.catch(() => {}), wait(dur + 120)]);
-    anim.cancel();
+  const pintar = (nodo, texto) => {
+    nodo.replaceChildren()
+    const s = String(texto ?? '')
+    let pos = 0
+    for (const m of s.matchAll(/‹[^›]{1,80}›/g)) {
+      if (m.index > pos) nodo.append(s.slice(pos, m.index))
+      const t = document.createElement('span')
+      t.className = 'tok'
+      t.textContent = m[0]
+      nodo.append(t)
+      pos = m.index + m[0].length
+    }
+    if (pos < s.length) nodo.append(s.slice(pos))
   }
-  cur.style.transform = at(x, y);
-  host.__p8pos = [x, y];
-  pupilas.style.transform = 'translate(0, 0)';
 
-  clearTimeout(host.__p8quita);
-  if (a.op === 'tap') {
-    host.__p8quita = setTimeout(() => { lab.textContent = ''; }, 1800);  // la etiqueta no se queda
-    const rip = document.createElement('div');
-    rip.className = 'rip';
-    rip.style.left = x + 'px';
-    rip.style.top = y + 'px';
-    sh.appendChild(rip);
-    const r = rip.animate([{ transform: 'scale(.3)', opacity: 1 }, { transform: 'scale(1.5)', opacity: 0 }],
-                          { duration: 520, easing: 'ease-out', fill: 'forwards' });
-    r.finished.catch(() => {}).then(() => rip.remove());
-    setTimeout(() => rip.remove(), 900);
-    cur.animate([{ transform: at(x, y) }, { transform: at(x, y) + ' scale(.86)' }, { transform: at(x, y) }],
-                { duration: 180, easing: 'ease-out' });
+  // El bocadillo, a un lado del cursor según dónde quede sitio.
+  const colocar = () => {
+    const b = q('.bub')
+    const [x, y] = st.pos || [innerWidth / 2, innerHeight * 0.8]
+    b.classList.toggle('izq', x > innerWidth - 400)
+    b.classList.toggle('abajo', y < 150)
   }
-  if (a.op === 'type' && rect) {
-    const [l, t, rr, b] = rect;
-    Object.assign(ring.style, { left: (l - 3) + 'px', top: (t - 3) + 'px',
-                                width: (rr - l + 6) + 'px', height: (b - t + 6) + 'px' });
-    ring.classList.add('on');
+
+  const mostrar = () => {
+    crear()
+    if (!st.pos) {
+      st.pos = [Math.round(innerWidth * 0.5), Math.round(innerHeight * 0.82)]
+      q('.cur').style.transform = at(st.pos[0], st.pos[1])
+    }
+    q('.cur').classList.add('on')
   }
-  return [x, y];
+
+  const modo = (m) => {
+    crear()
+    const k = MODOS.has(m) ? m : 'mirar'
+    st.modo = k
+    if (st.ojos && st.ojos.mode !== k) st.ojos.setMode(k)
+    if (k === 'leer' || k === 'pensar') st.ojos && (st.ojos.forced = null)
+    else if (st.ojos) st.ojos.forced = [-0.3, 0.35, 0]
+    return true
+  }
+
+  const di = (a) => {
+    crear()
+    mostrar()
+    colocar()
+    const b = q('.bub')
+    const tx = q('.tx')
+    q('.eb').textContent = a.eyebrow || ''
+    b.className = `bub on t-${a.tono || 'neutro'}${b.classList.contains('izq') ? ' izq' : ''}${b.classList.contains('abajo') ? ' abajo' : ''}`
+    clearInterval(st.tt)
+    clearTimeout(st.bt)
+    const full = String(a.texto || '')
+    const paso = Math.max(1, Math.ceil(full.length / 45))
+    let i = 0
+    const caret = document.createElement('i')
+    caret.className = 'caret'
+    tx.replaceChildren(caret)
+    st.tt = setInterval(() => {
+      i += paso
+      if (i >= full.length) { clearInterval(st.tt); pintar(tx, full); return }
+      tx.replaceChildren(full.slice(0, i), caret)
+    }, 20)
+    st.bt = setTimeout(() => b.classList.remove('on'), a.ms || 5200)
+    return true
+  }
+
+  const nombreDe = (el) => {
+    const clean = (s) => (s || '').replace(/\s+/g, ' ').trim()
+    const lf = el.id && document.querySelector(`label[for="${window.CSS.escape(el.id)}"]`)
+    // En la vista de 8, lo que el modelo no leyó es un marcador (.p8-x): no es un nombre.
+    const texto = (n) => { const c = n.cloneNode(true); c.querySelectorAll('.p8-x').forEach((x) => x.remove()); return c.textContent }
+    let n = clean(el.dataset.p8Label || el.getAttribute('aria-label') || (lf && texto(lf)) || el.getAttribute('placeholder') || texto(el))
+    if (n.length > 34) n = n.slice(0, 33) + '…'
+    return n
+  }
+
+  const go = async (a) => {
+    crear()
+    let x = a.x
+    let y = a.y
+    let rect = null
+    let nombre = null
+    const el = a.ref ? document.querySelector(`[data-p8-ref="${window.CSS.escape(a.ref)}"]`) : null
+    if (el) {
+      const r = el.getBoundingClientRect()
+      rect = [r.left, r.top, r.right, r.bottom]
+      x = r.left + r.width / 2
+      y = r.top + r.height / 2
+      if (a.op === 'type') { x = Math.min(x, r.left + 40); y = Math.min(r.bottom, r.top + 40) + 14 }
+      nombre = nombreDe(el)
+    }
+    if (x == null || y == null) return false
+    x = Math.round(x)
+    y = Math.round(y)
+    const from = a.from || st.pos || [Math.round(innerWidth / 2), Math.round(innerHeight * 0.85)]
+    const cur = q('.cur')
+    const ring = q('.ring')
+    ring.classList.remove('on')
+    mostrar()
+    if (a.verb) di({ texto: nombre ? `${a.verb} «${nombre}»` : a.verb, ms: a.op === 'type' ? 3200 : 2400 })
+    else if (a.label) di({ texto: a.label, ms: 2400 })
+    modo(a.op === 'type' ? 'hablar' : 'mirar')
+
+    // Desliza de 350 a 500 ms según la distancia; la mirada va por delante, hacia el destino.
+    const dx = x - from[0]
+    const dy = y - from[1]
+    const dist = Math.hypot(dx, dy)
+    const dur = Math.round(Math.min(500, 350 + dist / 6))
+    const tilt = Math.max(-8, Math.min(8, dx / 40))
+    if (st.ojos && dist > 2) st.ojos.forced = [Math.max(-1, Math.min(1, dx / Math.max(dist, 1))), Math.max(-1, Math.min(1, dy / Math.max(dist, 1))), tilt]
+    st.pos = [x, y]
+    colocar()
+    const llegar = async () => {
+      if (dist > 2 && cur.animate) {
+        const anim = cur.animate(
+          [{ transform: at(from[0], from[1]) },
+            { transform: at(from[0] + dx * 0.6, from[1] + dy * 0.6, tilt), offset: 0.6 },
+            { transform: at(x, y) }],
+          { duration: dur, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' })
+        await Promise.race([anim.finished.catch(() => {}), wait(dur + 120)])
+        anim.cancel()
+      }
+      cur.style.transform = at(x, y)
+      if (st.ojos) st.ojos.forced = a.op === 'type' ? [-0.5, 0.6, -6] : [-0.3, 0.45, 0]
+      clearTimeout(st.quita)
+      if (a.op === 'tap') {
+        const rip = document.createElement('div')
+        rip.className = 'rip'
+        rip.style.left = x + 'px'
+        rip.style.top = y + 'px'
+        sh.appendChild(rip)
+        const r = rip.animate([{ transform: 'scale(.3)', opacity: 1 }, { transform: 'scale(1.5)', opacity: 0 }],
+          { duration: 520, easing: 'ease-out', fill: 'forwards' })
+        r.finished.catch(() => {}).then(() => rip.remove())
+        setTimeout(() => rip.remove(), 900)
+        cur.animate([{ transform: at(x, y) }, { transform: at(x, y) + ' scale(.86)' }, { transform: at(x, y) }],
+          { duration: 180, easing: 'ease-out' })
+      }
+      if (a.op === 'type' && rect) {
+        const [l, t, rr, b] = rect
+        Object.assign(ring.style, { left: (l - 3) + 'px', top: (t - 3) + 'px', width: (rr - l + 6) + 'px', height: (b - t + 6) + 'px' })
+        ring.classList.add('on')
+        // En la vista de 8 el campo va mostrando lo que escribe 8: sus tokens, nunca el valor.
+        if (a.escribe != null && el && 'value' in el) {
+          const s = String(a.escribe)
+          let i = 0
+          const paso = Math.max(1, Math.ceil(s.length / 16))
+          const id = setInterval(() => { i += paso; el.value = s.slice(0, i); if (i >= s.length) clearInterval(id) }, 30)
+        }
+      }
+      return [x, y]
+    }
+    if (a.nowait) { llegar(); return [x, y] }
+    return llegar()
+  }
+
+  const done = () => {
+    crear()
+    q('.ring').classList.remove('on')
+    modo('mirar')
+    return true
+  }
+  const hide = () => {
+    crear()
+    q('.cur').classList.remove('on')
+    q('.ring').classList.remove('on')
+    return true
+  }
+  // Toda la pantalla tapada (8 mira a otro lado), con sus ojos en grande.
+  const velo = (v) => {
+    crear()
+    const el = q('.velo')
+    if (!v) { el.classList.remove('on'); return true }
+    el.querySelector('b').textContent = v.titulo || ''
+    el.querySelector('span').textContent = v.texto || ''
+    el.classList.add('on')
+    if (!st.velo && st.eng) {
+      try { st.velo = st.eng.mount(el.querySelector('.grande'), { mode: 'apartar', col: { fg: COB, cut: NIEBLA } }) } catch { /* sin motor */ }
+    }
+    if (st.velo) st.velo.setMode(v.modo || 'apartar')
+    return true
+  }
+  const aviso = (t) => {
+    crear()
+    const el = q('.aviso')
+    el.textContent = t || ''
+    el.classList.toggle('on', !!t)
+    return true
+  }
+
+  Object.defineProperty(window, '__p8ocho', {
+    value: { go, modo, di, done, hide, velo, aviso, pos: () => st.pos },
+    configurable: true,
+  })
+  return true
 }

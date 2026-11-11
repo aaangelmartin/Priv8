@@ -305,7 +305,7 @@ def test_cursor_no_entra_en_el_snapshot(web, web_cursor):
     assert hay  # la capa está y se ve
     assert by_sel(con)["#texto"]["text"] == "Recibida, gracias."
     assert con["elements"] == sin["elements"] and con["focus"] == sin["focus"]
-    assert "8 escribe" not in json.dumps(con, ensure_ascii=False)
+    assert "Escribo en" not in json.dumps(con, ensure_ascii=False)
     # Lo que cuelga de data-p8-ignore no entra aunque lleve data-p8 y se vea.
     web_cursor._call(lambda: page.evaluate(
         "() => { const w = document.createElement('div'); w.setAttribute('data-p8-ignore', '');"
@@ -325,7 +325,7 @@ def test_cursor_apagado_con_priv8_cursor(monkeypatch):
     assert cursor_enabled(True) is True and cursor_enabled(False) is False
 
 
-# ---------------------------------------------------------------- pantalla real (#147)
+# ---------------------------------------------------------------- vista de 8 (#147, #154)
 
 def _wait(cond, timeout=5.0):
     end = time.monotonic() + timeout
@@ -336,10 +336,15 @@ def _wait(cond, timeout=5.0):
     return False
 
 
-def test_pantalla_real_solo_mientras_alguien_mira(web, core, monkeypatch):
-    """Con una consola mirando llegan fotogramas JPEG de la pestaña activa, con las cajas de la
-    última observación; sin nadie, no se captura nada. Nunca pasan por el registro."""
+def test_vista_de_8_solo_mientras_alguien_mira(web, core, monkeypatch):
+    """Con una consola mirando llegan fotogramas JPEG de la vista de 8: la página espejo,
+    censurada en el DOM. En su HTML no hay ningún valor de la semilla, solo tokens; sin nadie
+    mirando no se copia ni se captura nada. Nunca pasan por el registro (#147, #154)."""
     import base64
+    import sys
+
+    sys.path.insert(0, str(ROOT / "data"))
+    from check_seed import known
 
     monkeypatch.setattr(web, "frames", True)  # otras suites ponen PRIV8_FRAMES=0 en el proceso
     web.goto("inbox", "/reset")
@@ -349,32 +354,59 @@ def test_pantalla_real_solo_mientras_alguien_mira(web, core, monkeypatch):
     monkeypatch.setattr(core.AUDIT, "record", lambda ev: recorded.append(ev) or real_record(ev))
     seen = []
     obs = core.observe("b2b")
-    assert web._cast is None  # nadie mira todavía
+    assert not web._vista_activa()  # nadie mira todavía
     unsub = core.events.subscribe_frames(seen.append)
     try:
-        assert _wait(lambda: any(m["fresh"] and m["rects"] for m in seen))
-        fresh = next(m for m in seen if m["fresh"] and m["rects"])
+        assert _wait(lambda: any(m["fresh"] and m.get("vista") == "8" for m in seen), timeout=10)
+        fresh = next(m for m in seen if m["fresh"])
         assert fresh["app"] == "inbox" and fresh["w"] == 1100 and fresh["mime"] == "image/jpeg"
+        assert fresh["rects"] == []  # la censura ya va en la imagen
         assert base64.b64decode(fresh["img"])[:2] == b"\xff\xd8"  # un JPEG de verdad
-        cls = {e["id"]: e["cls"] for e in obs["elements"]}
-        assert all(cls[r["id"]] == r["cls"] for r in fresh["rects"])
-        assert any(r["cls"] == "ambar" and r["token"] for r in fresh["rects"])
-        assert not any(IBAN_TRAMPA in (r.get("text") or "") for r in fresh["rects"])
+        tokens = {t for e in obs["elements"] for t in e.get("tokens", [])}
+        assert _wait(lambda: any(t in web._call(web._vista.html) for t in tokens))
+        html = web._call(web._vista.html)
+        leaks = [v for t, v in known() if len(v) >= 6 and v in html]
+        assert leaks == [] and IBAN_TRAMPA not in html and IBAN_TRAMPA.replace(" ", "") not in html
+        assert web._vista.writes > 0 and web._vista.blocked == 0
         # Mirando, leer la pantalla sigue siendo rápido.
         t0 = time.monotonic()
         web.snapshot()
         assert time.monotonic() - t0 < 0.5
-        # Otra pantalla que 8 aún no ha leído: sin cajas.
+        # Otra pantalla que 8 aún no ha leído: marcadores, y el fotograma no casa.
         web.goto("inbox", "/bandeja")
         assert _wait(lambda: not seen[-1]["fresh"])
-        assert seen[-1]["rects"] == []
+        html = web._call(web._vista.html)
+        assert "8 aún no ha leído" not in html  # el aviso va en la capa de 8, no en la copia
+        assert not [v for t, v in known() if len(v) >= 6 and v in html]
     finally:
         unsub()
-    assert _wait(lambda: web._cast is None)
+    assert _wait(lambda: not web._vista_activa())
     n = len(seen)
     time.sleep(0.6)
     assert len(seen) == n  # sin nadie mirando no hay fotogramas
     assert recorded and all("img" not in json.dumps(ev) for ev in recorded)
+
+
+def test_vista_de_8_escribe_tokens(web, core, monkeypatch):
+    """Mientras 8 escribe un valor rehidratado en el ERP, la vista de 8 enseña el token."""
+    monkeypatch.setattr(web, "frames", True)
+    web.goto("alba-core", "/reset")
+    _login(web)
+    web.goto("alba-core", "/facturas/alta")
+    unsub = core.events.subscribe_frames(lambda m: None)
+    try:
+        alta = core.observe("b2b")
+        assert _wait(web._vista_activa, timeout=10)
+        tok = next(t for e in alta["elements"] for t in e.get("tokens", []) if t.startswith("‹IMPORTE_"))
+        assert core.act("b2b", "type", target=_id(alta, "Importe"), text=tok) == {"ok": True}
+        assert by_sel(web.snapshot())["#importe"]["text"] != tok  # en la pestaña real, el valor
+        core.observe("b2b")
+        assert _wait(lambda: web._call(lambda: web._vista.page.evaluate(
+            "() => document.querySelector('#importe')?.value")) == tok)
+        html = web._call(web._vista.html)
+        assert IBAN_MAESTRO not in html and IBAN_MAESTRO.replace(" ", "") not in html
+    finally:
+        unsub()
 
 
 # ---------------------------------------------------------------- pantallas conocidas (#148)
