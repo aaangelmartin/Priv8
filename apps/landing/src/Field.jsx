@@ -96,17 +96,17 @@ export default function Field() {
         const narrow = W < 700 ? 0.35 + 0.65 * ik : 1;
         const base = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4));
         const fade = (base + (0.9 - base) * ik) * Math.min(1, y / 90) * narrow;
-        /* el dato se apaga y en su sitio aparece el token, sin que se monten los dos */
-        const t = it.t, aReal = 1 - sstep(t * 2), aTok = sstep(t * 2 - 1);
-        if (aReal > 0.01) {
-          ctx.fillStyle = `rgba(215,223,255,${0.32 * fade * aReal})`;
+        /* el dato se convierte en su token en el sitio, sin desaparecer nunca: cambia el texto a mitad de camino
+           y el brillo pasa poco a poco del tenue del dato al blanco del token */
+        const t = it.t;
+        if (t < 0.5) {
+          ctx.fillStyle = `rgba(${Math.round(215 + 40 * t)},${Math.round(223 + 32 * t)},255,${(0.32 + 0.63 * t) * fade})`;
           ctx.textAlign = 'left';
           ctx.fillText(it.real, it.x, y);
-        }
-        if (aTok > 0.01) {
-          ctx.fillStyle = `rgba(255,255,255,${0.95 * fade * aTok})`;
+        } else {
+          ctx.fillStyle = `rgba(255,255,255,${(0.32 + 0.63 * t) * fade})`;
           ctx.textAlign = 'center';
-          ctx.fillText(it.tok, cx, y + (1 - aTok) * 3);
+          ctx.fillText(it.tok, cx, y);
         }
       }
       ctx.textAlign = 'left';
