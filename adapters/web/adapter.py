@@ -430,7 +430,13 @@ class WebAdapter:
     def _open_context(self, headless: bool, slow_mo_ms: int) -> Any:
         """Con perfil, uno persistente: la sesión de Alba Core sigue en la siguiente ejecución.
         Si el perfil está en uso (otro agente abierto), uno de usar y tirar."""
-        opts = {"viewport": dict(VIEWPORT), "locale": "es-ES"}
+        # Con ventana, la página sigue al tamaño de la ventana (pantalla completa en la demo); sin
+        # ventana, el tamaño fijo de siempre. La vista de 8 copia el tamaño real de la página.
+        if headless:
+            opts: dict[str, Any] = {"viewport": dict(VIEWPORT), "locale": "es-ES"}
+        else:
+            opts = {"no_viewport": True, "locale": "es-ES",
+                    "args": [f"--window-size={VIEWPORT['width']},{VIEWPORT['height'] + 90}"]}
         self._browser = None
         if self.profile is not None:
             try:
@@ -442,7 +448,8 @@ class WebAdapter:
                 print(f"priv8: perfil de Chromium {self.profile} no disponible ({type(e).__name__}); "
                       "sesión sin recordar", file=sys.stderr)
                 self.profile = None
-        self._browser = self._pw.chromium.launch(headless=headless, slow_mo=slow_mo_ms)
+        args = opts.pop("args", [])
+        self._browser = self._pw.chromium.launch(headless=headless, slow_mo=slow_mo_ms, args=args)
         return self._browser.new_context(**opts)
 
     def _call(self, fn: Callable[[], Any]) -> Any:

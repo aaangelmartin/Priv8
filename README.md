@@ -56,7 +56,7 @@ Solo para el modo en vivo: `cp .env.example .env` y rellena la clave.
 | Variable | Para qué | Por defecto |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Agente en vivo con Claude | - |
-| `PRIV8_MODEL` | Modelo del agente; uno más barato para pruebas, p. ej. `claude-sonnet-5-5` | `claude-opus-5-5` |
+| `PRIV8_MODEL` | Modelo del agente; `.env.example` trae `claude-haiku-5-5`, el de la demo | `claude-opus-5-5` |
 | `PRIV8_EFFORT` | Esfuerzo de razonamiento (`low` para pruebas) | `high` |
 | `PRIV8_TASK_BUDGET_USD` | Límite de gasto por encargo, en dólares | `0.05` |
 | `PRIV8_SESSION_BUDGET_USD` | Límite de gasto de la sesión (el proceso del agente) | `0.50` |
@@ -71,10 +71,22 @@ Al llegar a un límite, 8 para y lo dice en la consola. `make demo-b2b` lee el `
 
 | | Modo | Comando | Clave | Primera vez |
 |---|---|---|---|---|
+| 0 | La demo en directo, con un botón | Doble clic en `Demo Priv8.command` (o `make panel`) | Sí | 5-15 min |
 | 1 | Las dos escenas, grabadas | `make demo` | No | 1 min |
 | 2 | B2B en vivo: ERP, correo y consola | `make demo-b2b` | Sí | 3-5 min |
 | 3 | B2C en el emulador | `scripts/movil.sh` y `make agent-android` | Sí (`-replay`: no) | 10-15 min |
 | 4 | Priv8 en tu Claude Code | `make mcp-web` o el instalador de [mcp.priv8.es](https://mcp.priv8.es) | No | 5 min |
+
+### 0. La demo en directo, con doble clic
+
+En macOS, doble clic en **`Demo Priv8.command`** (raíz del repositorio). Se abre un panel en http://127.0.0.1:5170:
+
+| Botón | Qué deja listo | Después |
+|---|---|---|
+| Preparar B2B | Alba Core con sesión, correo, consola y 8 esperando | "Abrir la consola" y "Ver las pantallas" (Chromium a pantalla completa) |
+| Preparar B2C | App Priv8 y bancos instalados, emulador y 8 escuchando | "Ver el móvil" |
+
+Antes, una vez: `cp .env.example .env` con tu `ANTHROPIC_API_KEY`. Si macOS no lo abre: clic derecho, Abrir (o `chmod +x "Demo Priv8.command"` tras descomprimir el ZIP). Cerrar el Terminal lo para todo.
 
 ### 1. Sin claves
 

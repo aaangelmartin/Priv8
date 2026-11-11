@@ -54,6 +54,13 @@ mcp-site:
 demo-b2b:
 	scripts/demo_b2b.sh
 
+# Panel de la demo en directo (#169): una página local en :5170 con un botón para B2B y otro
+# para B2C. Es lo mismo que el doble clic en «Demo Priv8.command».
+.PHONY: panel
+panel:
+	cd apps/panel && ([ -d node_modules ] || pnpm install) && pnpm -s build
+	uv run python scripts/panel.py
+
 # Alba Core (:5173), the mailbox (:5174) and the audit console (:5175). First time: make web-install.
 web:
 	(cd apps/erp-sim && pnpm dev) & (cd apps/inbox-sim && pnpm dev) & (cd apps/console && pnpm dev) & wait
