@@ -11,6 +11,7 @@ El agente 8: un bucle con Claude que solo ve tres herramientas, `observe`, `act`
 | `core_adapter.py` | Conecta los puertos al núcleo real (`build_real_core()`), elige núcleo con `PRIV8_CORE` (`select_core()`), monta escenas, el adaptador web (`mount_web`) o el puente Android (`mount_android`) y tokeniza la orden (`tokenize_task()`) |
 | `fakes.py` | Núcleo falso en memoria con datos inventados, para los tests y `make replay-fake` |
 | `server.py` | Servidor MCP (SDK oficial `mcp`): streamable HTTP en `127.0.0.1:8701/mcp` o stdio |
+| `static_apps.py` | Sirve en 127.0.0.1 las builds estáticas de Alba Core, el correo y la consola para el paquete `priv8-mcp` (`--serve-apps`) |
 | `asesoria.py` | Guarda de «no puedo» (#43): detecta peticiones de consejo de inversión y responde con la frase fija sin llamar al modelo |
 | `agent.py` | Bucle con el SDK oficial `anthropic` (`claude-opus-5-5`, pensamiento adaptativo), límite de pasos, auditoría por paso, replay y grabación |
 | `replays/` | Respuestas grabadas: `registrar_factura.json`, `b2b_web.json`, `b2c_android.json` |
@@ -73,7 +74,10 @@ uv run python -m agent.server --web --transport stdio     # para un host que lo 
 - `act` devuelve lo retenido tal cual (`{"held": {"confirm": "c3"}}`) y una frase que dice dónde se aprueba (la consola o el móvil). Cada `observe` añade los ids pendientes y caduca los vencidos (`core.expire_due`).
 - `instructions` de `initialize` repite las reglas del prompt de sistema de 8 (`SYSTEM` en `agent.py`).
 - Con stdio, `claim_stdout()` reserva el stdout real para las tramas MCP y manda el resto a stderr.
+- Paquete `priv8-mcp` (#157, mcp.priv8.es): `--serve-apps DIR` sirve las builds estáticas de Alba Core, el correo y la consola (`static_apps.py`, solo en 127.0.0.1) en los puertos que aún no responden, antes de abrir Chromium; `--open-console` abre la consola cuando Alba Core está conectado. `PRIV8_CONSOLE_URL` cambia la dirección de la consola que se da al host. El lanzador `scripts/mcp_bundle/priv8-mcp` los usa con `--web --transport stdio`.
 - No cubre: lo que la persona escribe en el chat del host llega a su modelo sin tokenizar, y el registro firmado guarda las tres herramientas, no los turnos del host.
+
+**Encargos con instrucciones fijas (#162).** «registrar factura» y cualquier petición de registrar la factura («Registra la factura de Suministros Lumen») reciben las instrucciones completas de `TASKS` en `agent.py` (`expand_task`), que no nombran a nadie: así el nombre de una empresa en la petición no acaba como un token ajeno.
 
 **Formato de replay (`priv8-replay/1`).** Un JSON con las respuestas del modelo en orden, una por paso. El bucle las devuelve tal cual y ejecuta las herramientas de verdad, así que el resultado depende del núcleo, no del archivo.
 

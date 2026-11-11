@@ -44,22 +44,27 @@
   const CSS = `
 :host { all: initial }
 * { box-sizing: border-box; pointer-events: none }
-.cur { position: fixed; left: 0; top: 0; width: 60px; height: 42px; margin: -21px 0 0 -30px; border-radius: 21px;
-       background: ${COB}; box-shadow: 0 0 0 2.5px #fff, 0 8px 22px rgba(45, 69, 214, .38), 0 2px 6px rgba(11, 27, 51, .25);
+/* 8 tal cual (el cursor de #143): el 8 cobalto con un borde fino blanco y los ojos con su fondo,
+   sin píldora alrededor; ahora vivo con el motor de los ojos. */
+.cur { position: fixed; left: 0; top: 0; width: 48px; height: 34px; margin: -17px 0 0 -24px;
        opacity: 0; transition: opacity .2s ease; will-change: transform }
 .cur.on { opacity: 1 }
-.ojos { position: absolute; left: 2px; top: -7px; width: 56px; height: 56px }
+.ojos { position: absolute; left: -11px; top: -18px; width: 70px; height: 70px;
+        filter: drop-shadow(0 0 .8px #fff) drop-shadow(0 0 .8px #fff) drop-shadow(0 0 .6px #fff) drop-shadow(0 2px 4px rgba(11, 27, 51, .3)) }
 .ojos svg { display: block; width: 100%; height: 100%; overflow: visible }
-.bub { position: absolute; left: 44px; bottom: 26px; width: max-content; max-width: 340px; padding: 11px 15px;
+/* El bocadillo de 8 de la web (apps/landing, Companion): blanco, esquinas redondas y la que da a 8
+   más cerrada, sin cola; a su lado y por encima de los ojos; el texto entra letra a letra. */
+.bub { position: absolute; left: 50px; bottom: 14px; width: max-content; max-width: 280px; padding: 11px 15px;
        border-radius: 20px; border-bottom-left-radius: 6px; background: #fff; color: #0B1B33;
-       font: 400 14px/1.5 "P8 Plex Sans", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-       overflow-wrap: anywhere; box-shadow: 0 0 0 1px rgba(11, 27, 51, .07), 0 12px 32px rgba(11, 27, 51, .2);
-       opacity: 0; transform: translateY(4px) scale(.98); transform-origin: 0 100%;
-       transition: opacity .18s ease, transform .25s cubic-bezier(.2, .8, .2, 1) }
+       font: 400 15px/1.5 "P8 Plex Sans", "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+       overflow-wrap: anywhere; box-shadow: inset 0 0 0 1px #DDE3F3, 0 1px 2px rgba(11, 27, 51, .05), 0 10px 28px rgba(11, 27, 51, .14);
+       opacity: 0; transform: translateY(6px); transition: opacity .3s cubic-bezier(.2, .8, .2, 1), transform .3s cubic-bezier(.2, .8, .2, 1) }
 .bub.on { opacity: 1; transform: none }
-.bub.izq { left: auto; right: 44px; border-bottom-left-radius: 20px; border-bottom-right-radius: 6px; transform-origin: 100% 100% }
-.bub.abajo { bottom: auto; top: 26px; border-bottom-left-radius: 20px; border-top-left-radius: 6px; transform-origin: 0 0 }
-.bub.izq.abajo { border-top-left-radius: 20px; border-top-right-radius: 6px; transform-origin: 100% 0 }
+.bub.izq { left: auto; right: 50px; border-bottom-left-radius: 20px; border-bottom-right-radius: 6px }
+.bub.abajo { bottom: auto; top: 24px; border-bottom-left-radius: 20px; border-top-left-radius: 6px; transform: translateY(-6px) }
+.bub.abajo.on { transform: none }
+.bub.izq.abajo { border-top-left-radius: 20px; border-top-right-radius: 6px }
+.bub .tx span.fant { visibility: hidden }
 .eb { display: block; margin-bottom: 3px; font: 500 11px/1.3 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace; color: ${COB} }
 .eb:empty { display: none }
 .bub.t-bloqueo .eb { color: #A83228 }
@@ -111,7 +116,7 @@
       try {
         if (!st.eng) st.eng = createEngine()
         if (!st.ojos) {
-          st.ojos = st.eng.mount(sh.querySelector('.ojos'), { mode: st.modo, col: { fg: '#FFFFFF', cut: COB } })
+          st.ojos = st.eng.mount(sh.querySelector('.ojos'), { mode: st.modo, col: { fg: COB, cut: '#FFFFFF' } })
           st.ojos.forced = [-0.3, 0.35, 0]
         }
       } catch { /* sin motor: el óvalo cobalto sigue ahí */ }
@@ -169,20 +174,22 @@
     colocar()
     const b = q('.bub')
     const tx = q('.tx')
-    q('.eb').textContent = a.eyebrow || ''
-    b.className = `bub on t-${a.tono || 'neutro'}${b.classList.contains('izq') ? ' izq' : ''}${b.classList.contains('abajo') ? ' abajo' : ''}`
+    q('.eb').textContent = ''
+    b.className = `bub on${b.classList.contains('izq') ? ' izq' : ''}${b.classList.contains('abajo') ? ' abajo' : ''}`
     clearInterval(st.tt)
     clearTimeout(st.bt)
+    // Como en la web: el texto que falta ocupa ya su sitio (invisible), así el bocadillo no crece a saltos.
     const full = String(a.texto || '')
-    const paso = Math.max(1, Math.ceil(full.length / 45))
+    const paso = Math.max(1, Math.ceil(full.length / 60))
     let i = 0
-    const caret = document.createElement('i')
-    caret.className = 'caret'
-    tx.replaceChildren(caret)
+    const fant = document.createElement('span')
+    fant.className = 'fant'
+    const pon = () => { fant.textContent = full.slice(i); tx.replaceChildren(full.slice(0, i), fant) }
+    pon()
     st.tt = setInterval(() => {
       i += paso
       if (i >= full.length) { clearInterval(st.tt); pintar(tx, full); return }
-      tx.replaceChildren(full.slice(0, i), caret)
+      pon()
     }, 20)
     st.bt = setTimeout(() => b.classList.remove('on'), a.ms || 5200)
     return true

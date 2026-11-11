@@ -39,6 +39,15 @@ mcp-web:
 mcp-android:
 	uv run python -m agent.server --android
 
+# The priv8-mcp bundle (dist/priv8-mcp-<version>.tar.gz) and the mcp.priv8.es site with it
+# (apps/mcp-site/dist), #157. Nothing is deployed: see docs/despliegue-subdominios.md.
+.PHONY: mcp-bundle mcp-site
+mcp-bundle:
+	scripts/build_mcp_bundle.sh
+
+mcp-site:
+	scripts/build_mcp_site.sh
+
 # The whole B2B demo ready to test (#137): starts the three web apps if they are not running,
 # Alba Core with the demo session already open (VITE_ALBA_SESION, dev only), then the agent
 # waiting for requests in the console (:5175) with .env if present. Ctrl-C stops it all.

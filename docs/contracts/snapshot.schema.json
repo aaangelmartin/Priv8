@@ -131,6 +131,10 @@
             "$ref": "common.schema.json#/$defs/op"
           },
           "uniqueItems": true
+        },
+        "extra": {
+          "description": "Solo web (#154): texto visible fuera de lo marcado con data-p8 (títulos, menús, etiquetas, cuerpo). De solo lectura: sin acciones. El núcleo le aplica las reglas del sitio y, sin regla, siempre el detector.",
+          "type": "boolean"
         }
       }
     }

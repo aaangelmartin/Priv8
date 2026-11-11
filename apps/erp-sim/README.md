@@ -39,6 +39,6 @@ Desde la raíz (también entra en `make test`). El comportamiento con el agente 
 
 ## Detalles
 
-- **Sesión ya abierta (#137).** Con `VITE_ALBA_SESION=admin.alba pnpm dev` (lo hace `make demo-b2b`) Alba Core abre con esa sesión, como el ordenador de una empresa. Solo en desarrollo. Si la persona pulsa «Cerrar sesión», queda cerrada hasta que vuelve a entrar con su clave.
+- **Sesión ya abierta (#137).** Con `VITE_ALBA_SESION=admin.alba pnpm dev` (lo hace `make demo-b2b`) Alba Core abre con esa sesión, como el ordenador de una empresa. Solo en desarrollo; una build la lleva únicamente con `VITE_ALBA_SESION_BUILD=1` (lo hace `scripts/build_mcp_bundle.sh` para el paquete `priv8-mcp`). Si la persona pulsa «Cerrar sesión», queda cerrada hasta que vuelve a entrar con su clave.
 - **Contrato con el adaptador web.** Solo entra en el snapshot lo que lleva `data-p8="<role>"` (roles de `docs/contracts/common.schema.json`). El selector es `#id`, que es lo que casan `policies/alba-core.yaml` y la escena `b2b` de `core/scenes.py`. `data-p8-label` da la etiqueta; `data-p8-actions` sustituye a las acciones por defecto del rol (`""` sin acciones, `call` en el teléfono de la ficha).
 - Las facturas registradas se guardan en `localStorage`.

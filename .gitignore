@@ -10,7 +10,7 @@ __pycache__/
 *.egg-info/
 build/
 
-# Node y builds de las apps web
+# Node y builds (apps web y paquete priv8-mcp de scripts/build_mcp_bundle.sh)
 node_modules/
 dist/
 .vite/

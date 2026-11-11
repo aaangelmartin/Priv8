@@ -13,7 +13,7 @@ El núcleo de Priv8 CUA: una librería de Python que corre en el mismo proceso q
 | `vault.py` | Bóveda por sesión: token → valor real; lo rojo no entra nunca |
 | `policies.py` | Políticas YAML por sitio (`policies/*.yaml`): pantallas, clase y tipo de cada elemento, acciones críticas |
 | `detect/` | Detector del perfil Finanzas: IBAN mod-97, DNI/NIE, CIF, Luhn, importes, teléfonos, correos, OTP, nombres (`validators.py`) |
-| `screen.py` | Snapshot crudo → observación tokenizada |
+| `screen.py` | Snapshot crudo → observación tokenizada; también los textos visibles sin marcar (`extra`, ids `t1`...), clasificados después de lo marcado |
 | `oraculo.py` | Oráculo `sum`, `compare`, `matches` con presupuesto por sesión y por token |
 | `executor.py` | Ejecutor: comprueba, rehidrata en local y llama a `adapter.perform()` |
 | `provenance.py` | Procedencia y política de destino: un IBAN visto solo en un correo no llega al campo de pago |
@@ -50,4 +50,5 @@ uv run pytest core/tests
 - **Oráculo.** Cada pregunta gasta una del presupuesto de la sesión (30 por defecto) y cada token entra en un número limitado de `compare` o `matches`, para que el agente no reconstruya una cifra por búsqueda binaria.
 - **Auditoría.** Cada línea lleva `prev`, `hash` y `sig`; una línea alterada, quitada o reordenada rompe la cadena. Clave en `PRIV8_AUDIT_KEY` (por defecto `audit/priv8.key`, se crea si no existe, con la pública al lado). Registro en `PRIV8_AUDIT` (por defecto `audit/priv8.jsonl`); `PRIV8_AUDIT=off` lo deja solo en memoria.
 - **Canal de eventos.** Solo escucha en 127.0.0.1, porque el mensaje `screen` lleva la pantalla real. Acepta `approval_result`, `task_request` y `dictation_start` (Whisper en local, `voice/dictado.py`). Los fotogramas de la pantalla real van por un canal aparte que no pasa por la auditoría ni por el puente.
+- **Vista de 8.** `preview` clasifica una pantalla igual que `observe` sin mandarla a ningún sitio, y `mask_text` tapa solo lo sensible de un texto suelto. Los usa la vista de 8 del adaptador web (`adapters/web/vista.py`).
 - El estado vive en el proceso y no se persiste.

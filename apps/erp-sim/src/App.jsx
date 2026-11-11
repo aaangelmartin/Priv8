@@ -12,8 +12,10 @@ import { cerrarSesion, entrarComo, sesionInicial, trasReset } from './sesion.js'
 
 const ERP = seed.erp
 const KEY = 'alba-core'
-// Sesión ya abierta de la demo (make demo-b2b, solo en desarrollo): ver sesion.js.
-const SESION_DEMO = (import.meta.env.DEV && import.meta.env.VITE_ALBA_SESION) || ''
+// Sesión ya abierta de la demo (make demo-b2b, solo en desarrollo): ver sesion.js. Una build
+// solo la lleva si se pide a propósito con VITE_ALBA_SESION_BUILD=1 (el paquete priv8-mcp, #157).
+const CON_SESION = import.meta.env.DEV || import.meta.env.VITE_ALBA_SESION_BUILD === '1'
+const SESION_DEMO = (CON_SESION && import.meta.env.VITE_ALBA_SESION) || ''
 
 function load() {
   try {

@@ -50,7 +50,7 @@ Cuatro formas de ejecutar Priv8 desde el código, de menos a más montaje:
 | 1. Las dos escenas sin claves | `make demo` | uv | No | 1 min la primera vez (`uv sync`); después, segundos |
 | 2. B2B en vivo: ERP, correo y consola | `make demo-b2b` | uv, Node 20+, pnpm | Sí | 3-5 min la primera vez (`make web-install`); después, 30 s |
 | 3. B2C en el emulador | `scripts/movil.sh` y `make agent-android` | Android Studio, AVD Android 14, JDK 17 | Sí (`make agent-android-replay`: no) | 10-15 min la primera vez (compilar e instalar); después, 2 min |
-| 4. Priv8 con tu Claude Code | `make mcp-web` | uv, Node 20+, pnpm, Claude Code | No: el modelo lo pone tu Claude Code | 5 min |
+| 4. Priv8 con tu Claude Code | `make mcp-web`, o sin clonar: el instalador de [mcp.priv8.es](https://mcp.priv8.es) | uv y Claude Code (desde el código, además Node 20+ y pnpm) | No: el modelo lo pone tu Claude Code | 5 min |
 
 Todos parten de una copia del repositorio o del ZIP descargado con "Download ZIP".
 
@@ -110,6 +110,15 @@ claude mcp add --transport http priv8 http://127.0.0.1:8701/mcp
 ```
 
 Después, pídelo en lenguaje normal: «Usa priv8 para registrar en Alba Core la factura que ha llegado por correo». Para el móvil: `scripts/movil.sh --no-build` y `make mcp-android`. No lo lances a la vez que `make agent-web` o `make agent-android`, porque comparten los puertos 8700, 8701 y 8765.
+
+**Sin clonar el repositorio.** [mcp.priv8.es](https://mcp.priv8.es) instala un paquete con todo lo necesario, sin Node ni el repositorio (#157). Necesita uv y Claude Code, y tarda unos 5 minutos:
+
+```bash
+curl -fsSL https://mcp.priv8.es/instalar.sh | bash   # Priv8 en ~/.priv8/mcp, registrado en Claude Code
+claude                                                # «Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen»
+```
+
+El instalador descarga el paquete y comprueba su SHA-256. Después instala las dependencias con uv y el Chromium de Playwright. Si encuentra `claude` y priv8 no está registrado, ejecuta `claude mcp add --scope user priv8 -- ~/.priv8/mcp/priv8-mcp mcp`; se deshace con `claude mcp remove priv8 --scope user`, y `PRIV8_NO_REGISTRAR=1` se salta ese paso. Se puede lanzar otra vez para actualizar. `priv8-mcp mcp` arranca él mismo las tres apps ya construidas, Chromium y la consola. El paquete se construye con `make mcp-bundle` y el sitio con `make mcp-site`; cómo se publica, en [`docs/despliegue-subdominios.md`](docs/despliegue-subdominios.md).
 
 Priv8 protege lo que el agente lee y escribe en la pantalla, pero no el chat del host. Lo que escribes en Claude Code llega al modelo tal cual, así que no pegues ahí un IBAN, un DNI ni un importe. Más detalle, incluido el modo stdio, en [`agent/README.md`](agent/README.md).
 
@@ -182,9 +191,10 @@ apps/erp-sim/    Alba Core, el ERP antiguo simulado
 apps/inbox-sim/  Bandeja de correo simulada con la factura del proveedor
 apps/console/    Consola de auditoría: lo que ve 8, lo retenido y el chat con 8
 apps/landing/    Web priv8.es
+apps/mcp-site/   Web mcp.priv8.es, con el instalador del paquete priv8-mcp
 metrics/         Métricas B2B y B2C con y sin protocolo
 data/            Datos inventados de la demo (seed.json) y su validación
-scripts/         Emulador, demo B2B en un comando, factura en PDF y vídeos de la consola
+scripts/         Emulador, demo B2B en un comando, paquete priv8-mcp, factura en PDF y vídeos de la consola
 docs/            Especificación, contratos, arquitectura, plan, marca, 8 y entregables
 brand/           Logos, banner, icono, variables de marca y esquema de expresiones de 8
 bases/           Bases y rúbrica oficiales de la hackathon
@@ -203,6 +213,7 @@ reports/         Informe que llevó a la decisión de producto
 | `docs/marca.html` | Guía de marca |
 | `docs/ojos.html` | 8 en vivo, con sus estados y el código de animación |
 | `docs/entregables/` | PDF de una cara, diapositivas y vídeos de la consola con y sin protocolo |
+| [`docs/despliegue-subdominios.md`](docs/despliegue-subdominios.md) | Cómo se publica mcp.priv8.es en Cloudflare Pages |
 | `docs/archivo/` | Exploraciones sustituidas que se conservan como registro |
 
 ## Equipo
