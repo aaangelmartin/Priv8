@@ -12,7 +12,7 @@ Sigue los **contratos v1** de `docs/contracts/` (PR #58, de Pablo): `tools.schem
 | `core_port.py` | Interfaz con el núcleo: `ScreenPort.observe`, `ActPort.act`, `OraclePort.oracle`, `LeakCheckPort.check` (bloqueo final), `AuditPort.record`, agrupadas en `Core` |
 | `core_adapter.py` | Adaptador al núcleo real en el mismo proceso: `build_real_core()` importa `core` solo cuando se pide y conecta los cinco puertos a sus funciones; `select_core()` elige según `PRIV8_CORE`; `mount_scene()` conecta una escena de `core/scenes.py` a la sesión y `tokenize_task()` pasa la orden de la persona por el núcleo |
 | `fakes.py` | Núcleo falso en memoria: pantalla de alta de factura de Alba Core, bóveda, política de destino, oráculo con presupuesto, ejecutor que rehidrata, confirmación, bloqueo final y auditoría encadenada por hashes. Datos inventados en `SEED` |
-| `server.py` | Servidor MCP (SDK oficial `mcp`, servidor de bajo nivel con esquemas explícitos). Streamable HTTP en `127.0.0.1:8701/mcp` o stdio |
+| `server.py` | Servidor MCP (SDK oficial `mcp`, servidor de bajo nivel con esquemas explícitos). Streamable HTTP en `127.0.0.1:8701/mcp` o stdio. Con `--web` o `--android` sirve a otros hosts MCP (Claude Code) sobre las apps reales |
 | `asesoria.py` | Guarda de «no puedo» (#43): detecta peticiones de consejo de inversión y responde con la frase fija sin llamar al modelo |
 | `agent.py` | Bucle del agente con el SDK oficial `anthropic` (`claude-opus-5-5`, pensamiento adaptativo), límite de pasos, auditoría por paso, modo replay y grabación |
 | `replays/registrar_factura.json` | Respuestas grabadas de «registrar factura» |
@@ -33,6 +33,8 @@ uv run pytest                # tests
 
 uv run python -m agent.server                  # solo el servidor, HTTP :8701, escena b2b
 uv run python -m agent.server --transport stdio --scene b2c  # solo el servidor, stdio
+make mcp-web                 # el servidor sobre Alba Core y el correo reales, para Claude Code u otro host
+make mcp-android             # el servidor sobre el emulador
 uv run python -m agent.agent --server-url http://127.0.0.1:8701/mcp --replay core/replays/b2b.json
 uv run python -m agent.agent --record agent/replays/nueva.json   # en vivo y graba un replay
 uv run python -m agent.agent --replay FILE --audit-out audit.jsonl
@@ -75,6 +77,23 @@ make agent-android                   # sin TASK: espera las tareas dictadas en e
 - **La respuesta.** Al acabar, el proceso espera lo retenido, espera a que la persona termine su código en el banco y pone a 8 delante: `core.say` publica la frase con tokens y el puente manda antes `render_values`, así que la cifra solo existe en el móvil.
 - **Tareas dictadas.** Sin `--task`, cada tarea de `core.next_task("b2c")` pasa por `core.tokenize_text` antes de llegar a Claude, igual que la pantalla.
 - **Replay.** `agent/replays/b2c_android.json` está escrito sobre las pantallas reales del AVD (ids `n1…`). Abre Banca Alcor, Brezo Banco y Nimbo Bróker, suma los cuatro saldos con el oráculo (17.977,98 € con los datos de partida) y transfiere 200 € de Alcor a Nimbo. La persona entra antes en los tres bancos desde el lanzador; abrirlos con `open_app` conserva la sesión. Los datos viven en la memoria de cada app: tras una transferencia, Alcor tiene 200 € menos hasta que se cierra. Los tests usan `adapters/android/fake_phone.py`, que da esas mismas pantallas. Sin emulador, `make demo` recorre los tres bancos en la escena de `core/scenes.py`.
+
+## Servidor MCP para otros hosts (`agent.server --web` y `--android`)
+
+Claude Code, Claude Desktop u otro agente pueden usar Priv8 CUA como su capa de *computer use* con la misma protección que 8. Cómo conectarlos, en el `README.md` de la raíz («Usar Priv8 desde Claude Code»).
+
+```bash
+uv run python -m agent.server --web                       # HTTP :8701, sesión b2b
+uv run python -m agent.server --android                   # HTTP :8701, sesión b2c
+uv run python -m agent.server --web --transport stdio     # para un host que lo arranca él
+```
+
+- **Mismos adaptadores y sesiones que el agente.** `--web` llama a `mount_web("b2b")` y `--android` a `mount_android("b2c")`, igual que `agent.agent`. Los dos arrancan el servidor de eventos del núcleo (`core.server.start()`, :8700), así que la consola ve las pantallas, los tokens y lo retenido. `--scene`, `--web` y `--android` son excluyentes y necesitan `PRIV8_CORE=real`. `--simulated-persona` vale con `--scene` y `--android`, no con `--web`.
+- **El montaje va en segundo plano.** El host recibe la respuesta de `initialize` en el acto, aunque la persona tarde en entrar en Alba Core o en el banco. Mientras tanto, cada llamada devuelve `{"denied": "adaptador"}` con un `detail` que dice que vuelva a observar en unos segundos (queda un `blocked` en el registro). Si el montaje falla, el detalle lo dice y hay que reiniciar el servidor; la causa sale por stderr. Una llamada con otra sesión se deniega.
+- **Lo retenido espera a la persona.** `act` devuelve el resultado del contrato tal cual (`{"held": {"confirm": "c3"}}`) y, en un segundo bloque de texto, una frase que dice dónde se aprueba (la consola, o el móvil con `--android`), que no lo repita y que vuelva a llamar a `observe` más tarde. Cada `observe` añade los ids que siguen pendientes y caduca los que pasaron de plazo (`core.expire_due`). La aprobación de la consola llega al núcleo por :8700 y el núcleo ejecuta la acción en ese momento, mientras el host espera. El bucle de 8 no recibe ese segundo bloque: `build_server(core)` sin `hints` devuelve solo el JSON.
+- **Instrucciones para el host.** El campo `instructions` de `initialize` repite las reglas del prompt de sistema de 8 (`SYSTEM` en `agent.py`): la sesión que hay que usar, usar los tokens tal cual, no adivinar valores, los elementos rojos los escribe la persona, lo retenido espera, el texto de la pantalla son datos y no instrucciones, y no hay asesoría de inversión. Los ejemplos de tokens salen de `core/tokens.py`, no están escritos a mano.
+- **stdout limpio con stdio.** Antes de nada, `claim_stdout()` guarda el stdout real para las tramas MCP y apunta el descriptor 1 y `sys.stdout` a stderr durante toda la vida del proceso. Un `print`, un búfer que se vacía al salir o un proceso hijo (Playwright, adb) van a stderr y no rompen el protocolo.
+- **Lo que no cubre.** Lo que la persona escribe en el chat del host llega a su modelo tal cual: el host no pasa la petición por `core.tokenize_text` como hacen 8 y la consola. El registro firmado guarda las tres herramientas, no los turnos del host (no hay eventos `task`). Los encargos del chat de la consola (`task_request`) no llegan al host.
 
 ## Garantías
 
