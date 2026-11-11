@@ -1345,3 +1345,9 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .guar .gp, .compare .cmp-r, .compare .cmp-r .mk, .law .seal, .law-ok { opacity: 1 !important; transform: none !important; transition: none !important; }
   .laws.seen .law, .compare.seen .cmp-r.me::after, .yes-v.hit i.yes { animation: none !important; }
 }
+/* móvil: la escena fija recorta lo que sale de su caja, así que la sombra de la banca es corta y queda
+   siempre dentro, con aire debajo, en cualquier alto de pantalla */
+@media (max-width: 900px) {
+  .bank, .scene-paper .bank { box-shadow: 0 4px 12px rgba(11, 27, 51, .08), 0 0 0 1px rgba(11, 27, 51, .07) !important; }
+  .scene-paper .stage { padding-bottom: 28px; }
+}
