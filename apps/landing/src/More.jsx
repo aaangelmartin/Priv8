@@ -23,7 +23,7 @@ const PIECES = [
   { k: 'gate', h: 'Bloqueo final', t: 'Antes de salir, cada petición se revisa. Si un IBAN, un DNI o una tarjeta se escapa sin tokenizar, la petición no sale.',
     v: (go) => <span className={'oq gate-v' + (go ? ' hit' : '')}><span className="gate-req">petición → ES71 9400 0007 …</span><b className="gate-stamp">retenida</b></span> },
   { k: 'oracle', h: 'Oráculo con límite', t: 'El modelo puede preguntar «¿cubre 200 €?» y recibir «sí» o «no», sin la cifra. Con un máximo de preguntas para que no la adivine.',
-    v: (go) => <span className={'oq oracle-v' + (go ? ' hit' : '')}>¿cubre 200 €? <b className="ans">sí</b> · quedan <V real="5" tok="4" on={go} /></span> },
+    v: (go) => <span className={'oq oracle-v' + (go ? ' hit' : '')}>¿cubre 200 €? <b className="ans">sí</b> - quedan <V real="5" tok="4" on={go} /></span> },
   { k: 'exec', h: 'Ejecutor local', t: 'El modelo escribe tokens. El ejecutor, en tu máquina, pone el valor real en la pantalla justo antes de pulsar.',
     v: (go) => <span className="oq">campo destino: <b><V real="‹IBAN_2›" tok="ES08 9300 …" on={go} /></b></span> },
   { k: 'prov', h: 'Procedencia', t: 'Cada dato recuerda de dónde viene. Uno que llega por correo o por chat no puede entrar en un campo de pago.',
@@ -31,7 +31,7 @@ const PIECES = [
   { k: 'yes', h: 'Tu «sí»', t: 'Transferir, invertir, firmar o enviar espera a una persona. La autenticación del banco la hace siempre ella.',
     v: (go) => <span className={'btns yes-v' + (go ? ' hit' : '')}><i>Cancelar</i><i className="yes"><span className="y0">Confirmar</span><span className="y1">Confirmado</span></i></span> },
   { k: 'log', h: 'Registro firmado', t: 'Qué recibió el modelo, qué se bloqueó y quién aprobó, encadenado y firmado para auditoría.',
-    v: (go) => <span className={'oq log-v' + (go ? ' hit' : '')}>09:12:31 aprobado · <V real="········" tok="3f9a·c2e1" on={go} /> <b className="signed">firmado</b></span> },
+    v: (go) => <span className={'oq log-v' + (go ? ' hit' : '')}>09:12:31 aprobado - <V real="••••••••" tok="3f9ac2e1" on={go} /> <b className="signed">firmado</b></span> },
 ];
 function Piece({ p, k }) {
   const [ref, seen] = useSeen(0.6);
@@ -75,7 +75,7 @@ function useNarrow(q = '(max-width: 760px)') {
 }
 const TRIP = [
   { at: 'screen', pk: '3.412,58 €', real: true, h: 'La pantalla tiene datos reales', t: 'El saldo, el IBAN, el titular. Todo eso está en tu pantalla.' },
-  { at: 'detect', pk: '3.412,58 € · importe', real: true, h: 'El detector los reconoce', t: 'Sabe que es un importe. Las claves y los códigos los marca para que nunca salgan.' },
+  { at: 'detect', pk: '3.412,58 € - importe', real: true, h: 'El detector los reconoce', t: 'Sabe que es un importe. Las claves y los códigos los marca para que nunca salgan.' },
   { at: 'vault', pk: '‹IMPORTE_1›', h: 'Se cambian por tokens', t: 'La tabla ‹IMPORTE_1› = 3.412,58 € se guarda en tu máquina.' },
   { at: 'gate', pk: '‹IMPORTE_1›', h: 'Solo cruzan tokens', t: 'El bloqueo final revisa cada petición. Si algo real se escapa, no sale.' },
   { at: 'model', pk: 'transferir a ‹IBAN_2›', h: 'El modelo decide con tokens', t: 'Entiende qué hay en la pantalla y qué hacer, sin ver un valor. Si necesita comparar, pregunta al oráculo.' },
@@ -107,7 +107,7 @@ export function HowArch() {
           <h2 id="h-arch">Los datos no cruzan. <span className="soft">Los tokens, sí.</span></h2>
         </div>
         <div className={'tmap' + (narrow ? ' tmap-m' : '')}>
-          <div className="tz tz-local"><span>Tu máquina · los datos reales viven aquí</span></div>
+          <div className="tz tz-local"><span>Tu máquina | los datos reales viven aquí</span></div>
           <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models" role="list" aria-label="Funciona con cualquier modelo">{MODELS.map((m) => <i key={m} role="listitem" title={m} aria-label={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' || m === 'Grok' ? 'evenodd' : undefined} /></svg></i>)}</div></div>
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -181,7 +181,7 @@ export function Developers() {
    Todas las líneas ocupan su sitio desde el principio, así nada salta. */
 const SESSION = `> observe()
 {
-  "pantalla": "Banca Alcor · transferir",
+  "pantalla": "Banca Alcor - transferir",
   "campos": [
     { "etiqueta": "Destino", "valor": "‹IBAN_2›" },
     { "etiqueta": "Importe", "valor": "‹IMPORTE_7›" },
@@ -234,7 +234,7 @@ function Terminal() {
 const COLS = ['Protege lo que el agente ve en pantalla', 'Bloquea datos inyectados por correo', 'Retiene los pagos hasta tu «sí»', 'Funciona sin integrar nada'];
 const ROWS = [
   ['Un agente normal', [0, 0, 0, 1]],
-  ['Pagos para agentes · Visa, Google', [0, 0, 1, 0]],
+  ['Pagos para agentes - Visa, Google', [0, 0, 1, 0]],
   ['Bóvedas de datos para IA', [1, 0, 0, 0]],
   ['Priv8', [1, 1, 1, 1]],
 ];
@@ -282,7 +282,7 @@ export function Compliance() {
           <p className="lead">Priv8 está diseñado para que tu equipo legal pueda decir que sí.</p>
         </div>
         <div className="laws-grid">
-          {LAWS.map(([k, sub, t], i) => (<article key={k} className="law" style={{ '--d': i }}><h3><span className="seal">{k}</span></h3><p className="law-sub">{sub}</p><p>{t}</p><p className="law-ok" aria-hidden="true">revisado · en el registro</p></article>))}
+          {LAWS.map(([k, sub, t], i) => (<article key={k} className="law" style={{ '--d': i }}><h3><span className="seal">{k}</span></h3><p className="law-sub">{sub}</p><p>{t}</p><p className="law-ok" aria-hidden="true">revisado - en el registro</p></article>))}
         </div>
         <p className="more-row"><a className="more" href="cumplimiento/">Cumplimiento en detalle</a></p>
       </div>

@@ -282,7 +282,7 @@ export function Blend({ from, to, variant = 'pixels', seed = 1, overlay = false 
 /* Página de prueba de transiciones: http://localhost:5180/#transiciones */
 export function TransitionsLab() {
   const pairs = [['--band', '--night', 'Cobalto a noche'], ['--paper', '--night', 'Blanco a noche']];
-  const variants = [['pixels', 'P · Cuadrados originales'], ['squares', 'E · Cuadrados redondeados'], ['fade', 'A · Fundido suave'], ['curve', 'B · Curva'], ['pills', 'C · Cápsulas con el radio del notch'], ['sheet', 'D · Hoja con esquinas grandes']];
+  const variants = [['pixels', 'P - Cuadrados originales'], ['squares', 'E - Cuadrados redondeados'], ['fade', 'A - Fundido suave'], ['curve', 'B - Curva'], ['pills', 'C - Cápsulas con el radio del notch'], ['sheet', 'D - Hoja con esquinas grandes']];
   return (
     <div className="lab">
       <header className="lab-head"><h1>Transiciones entre secciones</h1><p>Cuatro opciones. Dime la letra que te guste, o mezcla.</p></header>

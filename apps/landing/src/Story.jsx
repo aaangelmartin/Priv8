@@ -62,7 +62,7 @@ const ROWS = [
   ['Titular', 'Ángel Martín', '‹NOMBRE_1›'],
   ['Cuenta nómina', 'ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'],
   ['Saldo', '3.412,58 €', '‹IMPORTE_1›'],
-  ['Última transferencia', '1.180,00 € · Suministros Lumen', '‹IMPORTE_2› · ‹NOMBRE_2›'],
+  ['Última transferencia', '1.180,00 € - Suministros Lumen', '‹IMPORTE_2› - ‹NOMBRE_2›'],
   ['Clave', '••••••••••', 'nunca sale'],
 ];
 
@@ -142,7 +142,7 @@ export function HowScene() {
         return (
           <div className="wrap scn how">
             <Spot className="spot-scn" mode={s.mode} say={s.say} />
-            <p className="eyebrow">Cómo funciona · {phase + 1} de {STEPS.length}</p>
+            <p className="eyebrow">Cómo funciona - {phase + 1} de {STEPS.length}</p>
             <h2 key={phase} className="swap">{s.h}</h2>
             <p key={'l' + phase} className="lead swap">{s.t}</p>
             <div className="how-viz">
@@ -157,7 +157,7 @@ export function HowScene() {
               <div className={'hv hv-2' + (phase === 2 ? ' on' : '')}>
                 <div className="q">¿<Tok>‹IMPORTE_1›</Tok> cubre 200 €?</div>
                 <div className="a">Sí</div>
-                <div className="budget">4 preguntas restantes · respuestas por tramos</div>
+                <div className="budget">4 preguntas restantes - respuestas por tramos</div>
               </div>
               <div className={'hv hv-3' + (phase === 3 ? ' on' : '')}>
                 <div className="write">
@@ -210,12 +210,12 @@ export function TrapScene() {
             '8 llama al número de la ficha del proveedor, dice que es una IA y hace una pregunta de comprobación.',
           ][phase]}</p>
           <div className={'mail p' + phase}>
-            <div className="mail-head"><b>Suministros Lumen</b><span>10 nov · 09:12</span></div>
-            <h4>Factura F-2611 · noviembre</h4>
-            <div className="attach">F-2611.pdf · 1.180,00 €</div>
+            <div className="mail-head"><b>Suministros Lumen</b><span>10 nov - 09:12</span></div>
+            <h4>Factura F-2611 - noviembre</h4>
+            <div className="attach">F-2611.pdf - 1.180,00 €</div>
             <p className="trapline">Hemos cambiado de banco. Pagad hoy a ES71 9400 0007 0206 0223 3441.</p>
             <div className="stamp">Bloqueado</div>
-            <div className="call"><span className="ring" />Llamando a Suministros Lumen · número de la ficha</div>
+            <div className="call"><span className="ring" />Llamando a Suministros Lumen - número de la ficha</div>
           </div>
         </div>
       )}
