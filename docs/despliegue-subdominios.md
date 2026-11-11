@@ -18,12 +18,15 @@ El DNS de `priv8.es` está en Cloudflare.
 |---|---|---|
 | `/` | La página con las tarjetas | `apps/demo-site` |
 | `/consola/` | La consola de auditoría, estática. Se abre con `?feed=sin-protocolo`, `?feed=con-protocolo` o `?demo` | `apps/console` compilada con `BASE_PATH=/consola/` |
+| `/correo/` | La bandeja de correo de la demo | `apps/inbox-sim` compilada con `BASE_PATH=/correo/` |
+| `/erp/` | Alba Core, con la sesión de la demo ya abierta | `apps/erp-sim` compilada con `BASE_PATH=/erp/`, `VITE_ALBA_DEMO=1` y `VITE_ALBA_SESION=admin.alba` |
+| `/equipo/` | Fotos de perfil de GitHub del equipo (sin red, iniciales) | Se descargan al compilar |
 | `/docs/entregables/` | PDF de una cara, diapositivas (HTML y PDF), fuentes y los dos vídeos | `docs/entregables/` |
 | `/brand/logo/` | Logos que usan las diapositivas en HTML | `brand/logo/` |
 | `/apk/` | `priv8-8.apk`, `banca-alcor.apk`, `brezo-banco.apk`, `nimbo-broker.apk` | `./gradlew assembleDebug` en `apps/android-8` y `apps/banks-sim` |
 | `/archivos.json` | Tamaño de cada archivo, para las tarjetas | `scripts/assemble.mjs` |
 
-Nada de esto llama a un modelo ni a una API de pago: son archivos estáticos. **No se ofrece un agente en vivo alojado**, porque usaría nuestra clave de API y cualquiera con el enlace podría gastarla. Las demos en vivo corren en el Mac de quien presenta.
+Nada de esto llama a un modelo ni a una API de pago: son archivos estáticos. El correo, el ERP y la consola son copias sin agente detrás; guardan lo que hagas en el navegador de cada visitante (`localStorage`). **No se ofrece un agente en vivo alojado**, porque usaría nuestra clave de API y cualquiera con el enlace podría gastarla. Las demos en vivo corren en el Mac de quien presenta.
 
 Las APK no están en git: se compilan y se copian en cada build. Por eso el despliegue se hace con subida directa desde el Mac y no con una build en Cloudflare (su imagen de build no trae el SDK de Android).
 
@@ -31,7 +34,7 @@ Las APK no están en git: se compilan y se copian en cada build. Por eso el desp
 
 **Decisión: `demo.priv8.es` pide una contraseña compartida.** Es la autenticación básica de HTTP: el navegador saca su ventana de usuario y contraseña, el usuario da igual y solo cuenta la contraseña. No pide correos ni códigos. Se la damos al jurado junto con el enlace.
 
-La pone `apps/demo-site/functions/_middleware.js`, un middleware de Pages Functions que corre delante de todo el sitio, también de los archivos estáticos. Compara la contraseña con la variable `DEMO_PASSWORD` del proyecto de Pages (en tiempo constante). Si la variable no existe, el sitio queda abierto. Pruebas: `node scripts/middleware.test.mjs`.
+La pone `apps/demo-site/functions/_middleware.js`, un middleware de Pages Functions que corre delante de todo el sitio, también de los archivos estáticos. Compara la contraseña con la variable `DEMO_PASSWORD` del proyecto de Pages (en tiempo constante). Si la variable no existe, el sitio queda abierto. El mismo middleware sirve las rutas profundas de las apps (`/correo/bandeja`, `/erp/facturas/alta`) con el `index.html` de cada una; un `_redirects` no vale aquí porque Cloudflare lo aplica también a los archivos que existen. Pruebas: `node scripts/middleware.test.mjs`.
 
 Qué riesgos cubre y cuáles no:
 
@@ -59,7 +62,7 @@ pnpm build                  # PRIV8_APK=skip pnpm build reutiliza las APK ya com
 pnpm preview                # http://127.0.0.1:5302, para revisarlo antes de subir
 ```
 
-`pnpm preview` no ejecuta el middleware: en local el sitio va sin contraseña. Para probarla en local: `npx wrangler pages dev dist --binding DEMO_PASSWORD=prueba`.
+`pnpm preview` no ejecuta el middleware: en local el sitio va sin contraseña (las rutas profundas sí funcionan, con un plugin en `vite.config.js`). Para probarla en local: `npx wrangler pages dev dist --binding DEMO_PASSWORD=prueba`.
 
 **2. Crear el proyecto de Pages** (una vez, desde `apps/demo-site`)
 
@@ -104,7 +107,7 @@ La dirección `priv8-demo.pages.dev` y las de cada despliegue (`<hash>.priv8-dem
 
 - **Cambiarla:** `npx wrangler pages secret put DEMO_PASSWORD --project-name priv8-demo` con la nueva y volver a desplegar (paso 4). Los cambios de variables se aplican en el siguiente despliegue.
 - **Abrir el sitio:** borrar la variable (`npx wrangler pages secret delete DEMO_PASSWORD --project-name priv8-demo`, o en **Settings** > **Variables and Secrets**) y volver a desplegar. El middleware sigue ahí, pero deja pasar todo.
-- **Abrirlo sin gastar cuota de Functions:** desplegar desde una carpeta sin `functions/` (por ejemplo `cd dist && npx wrangler pages deploy . --project-name priv8-demo --branch main`). Los archivos estáticos no cuentan para ninguna cuota.
+- **Sin `functions/`** el sitio abre igual, pero al recargar una ruta profunda del correo o del ERP se vería la portada: mejor desplegar siempre con el middleware.
 
 ### Actualizar
 
@@ -122,5 +125,7 @@ Documentación de Cloudflare consultada el 11 de noviembre de 2026:
 - Subida directa (sin paso posterior a Git; 20.000 archivos y 25 MiB por archivo): https://developers.cloudflare.com/pages/get-started/direct-upload/
 - Dominios propios: https://developers.cloudflare.com/pages/configuration/custom-domains/
 - `_headers` no se aplica a respuestas de Functions: https://developers.cloudflare.com/pages/configuration/headers/
+- `_redirects` se aplica aunque el archivo exista y no a lo que sirve una Function: https://developers.cloudflare.com/pages/configuration/redirects/
+- `env.ASSETS.fetch()` en Functions: https://developers.cloudflare.com/pages/functions/api-reference/
 - Cuota de Functions (cuenta en la de Workers, 100.000 al día en gratis; lo estático no se mide): https://developers.cloudflare.com/pages/functions/pricing/ y https://developers.cloudflare.com/workers/platform/limits/
 - Cloudflare Access y One-time PIN (alternativa descartada): https://developers.cloudflare.com/cloudflare-one/applications/configure-apps/self-hosted-public-app/ y https://developers.cloudflare.com/cloudflare-one/integrations/identity-providers/one-time-pin/
