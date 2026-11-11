@@ -8,6 +8,7 @@ import { WhyNow, Products } from './Sections.jsx';
 import { HowArch, Guarantees, Developers, Compare, Compliance } from './More.jsx';
 import { mood, setSection } from './companion.js';
 import { PALETTE } from './useTheme.js';
+import byLaaabs from './by-laaabs.svg';
 
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
@@ -156,6 +157,10 @@ function Footer({ pal }) {
         <div className="foot-word">
           <Spot className="spot-foot" mode="mirar" />
           <span>Priv8</span>
+        </div>
+        {/* firma de quien lo hace, como en open2agents.com: el vector de laaabs, centrado y discreto */}
+        <div className="foot-by-row">
+          <a className="foot-by" href="https://laaabs.com" target="_blank" rel="noopener" aria-label="by laaabs" style={{ '--by': `url(${byLaaabs})` }} />
         </div>
       </div>
     </footer>

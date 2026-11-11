@@ -1351,3 +1351,14 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .bank, .scene-paper .bank { box-shadow: 0 4px 12px rgba(11, 27, 51, .08), 0 0 0 1px rgba(11, 27, 51, .07) !important; }
   .scene-paper .stage { padding-bottom: 28px; }
 }
+
+/* firma «by laaabs» en el pie, como en open2agents.com: el vector como máscara, en el gris del texto
+   secundario, y en cobalto al pasar por encima */
+.foot-by-row { display: flex; justify-content: center; padding-block: 8px 48px; }
+.foot-by {
+  display: block; width: 104px; height: 24px; background: var(--ink-2);
+  -webkit-mask: var(--by) center / contain no-repeat; mask: var(--by) center / contain no-repeat;
+  transition: background-color .15s ease;
+}
+.foot-by:hover, .foot-by:focus-visible { background: var(--band); }
+@media (max-width: 720px) { .foot-by-row { padding-block: 4px 40px; } }
