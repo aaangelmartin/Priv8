@@ -32,7 +32,7 @@ const CONEXION = {
   conectado: ['seguro', 'Conectado al núcleo'],
   conectando: ['aviso', 'Conectando…'],
   reconectando: ['aviso', 'Reconectando…'],
-  demo: SESION ? ['cobalto', 'Sesión real grabada'] : FEED ? ['cobalto', 'Reproducción B2B'] : ['cobalto', 'Demo grabada'],
+  demo: SESION ? ['cobalto', 'Reproducción grabada'] : FEED ? ['cobalto', 'Reproducción B2B'] : ['cobalto', 'Demo grabada'],
   'sin demo': ['bloqueo', 'Falta demo.json'],
 }
 
@@ -139,6 +139,48 @@ function useReloj() {
   return st
 }
 
+// La barra de progreso: pulsar o arrastrar salta a ese momento (al soltar), y con el teclado las
+// flechas mueven 5 s (Inicio y Fin, a los extremos). Saltar vuelve a montar la consola en ese momento.
+function Barra8({ st, pct }) {
+  const ref = useRef(null)
+  const [arrastre, setArrastre] = useState(null) // fracción mientras se arrastra
+  const fraccion = (x) => {
+    const r = ref.current.getBoundingClientRect()
+    return Math.min(1, Math.max(0, (x - r.left) / Math.max(1, r.width)))
+  }
+  const soltar = (ev) => {
+    if (arrastre == null) return
+    const f = fraccion(ev.clientX)
+    setArrastre(null)
+    reloj.saltar(f * st.duracion)
+  }
+  const tecla = (ev) => {
+    const paso = { ArrowRight: 5, ArrowUp: 5, ArrowLeft: -5, ArrowDown: -5, PageUp: 15, PageDown: -15 }[ev.key]
+    if (paso != null) { ev.preventDefault(); reloj.saltar(st.t + paso) }
+    else if (ev.key === 'Home') { ev.preventDefault(); reloj.saltar(0) }
+    else if (ev.key === 'End') { ev.preventDefault(); reloj.saltar(st.duracion) }
+  }
+  const ver = arrastre != null ? arrastre * 100 : pct
+  return (
+    <span
+      ref={ref}
+      className={`progreso buscable ${arrastre != null ? 'arrastrando' : ''}`}
+      role="slider" tabIndex={0}
+      aria-label="Momento de la reproducción"
+      aria-valuemin={0} aria-valuemax={Math.round(st.duracion)} aria-valuenow={Math.round(st.t)}
+      aria-valuetext={`${mmss(Math.floor(st.t))} de ${mmss(Math.round(st.duracion))}`}
+      onPointerDown={(ev) => { ref.current.setPointerCapture?.(ev.pointerId); setArrastre(fraccion(ev.clientX)) }}
+      onPointerMove={(ev) => { if (arrastre != null) setArrastre(fraccion(ev.clientX)) }}
+      onPointerUp={soltar}
+      onPointerCancel={() => setArrastre(null)}
+      onKeyDown={tecla}
+    >
+      <i style={{ width: `${ver}%` }} />
+      <b className="tirador" style={{ left: `${ver}%` }} aria-hidden="true" />
+    </span>
+  )
+}
+
 function Controles() {
   const st = useReloj()
   const pct = st.duracion ? Math.min(100, (st.t / st.duracion) * 100) : 0
@@ -157,7 +199,7 @@ function Controles() {
           <button key={v} role="radio" aria-checked={st.velocidad === v} onClick={() => reloj.velocidad(v)}>{v}x</button>
         ))}
       </span>
-      <span className="progreso" aria-hidden="true"><i style={{ width: `${pct}%` }} /></span>
+      <Barra8 st={st} pct={pct} />
       <span className="tiempo">{mmss(Math.floor(st.t))} / {mmss(Math.round(st.duracion))}</span>
     </div>
   )
@@ -168,8 +210,35 @@ function Controles() {
 const NOTA_REAL = SESION ? 'Datos ficticios de la demo' : 'Solo en este ordenador'
 const dosPantallas = (real) => SESION || !!real
 
-function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame, real }) {
-  const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
+// Lo último que ha dicho 8, como subtítulo, durante unos segundos (#187). Lo que se oye: la voz de la
+// nube lee las frases y la voz local las cifras y los nombres (en ámbar suave).
+function Subtitulo({ sub, valores }) {
+  const st = useReloj()
+  if (!sub) return null
+  const texto = sub.segmentos.map((x) => x.text ?? '').join(' ')
+  const limpia = (t) => String(t ?? '').replace(/\*\*|`/g, '')
+  const dura = Math.min(9, 3.5 + texto.length / 20)
+  if (st.t < sub.t || st.t > sub.t + dura) return null
+  return (
+    <p className="subtitulo" key={sub.n} aria-live="polite">
+      <b>8</b>
+      <span>
+        {sub.segmentos.map((x, i) => (
+          <span key={i}>{i > 0 && !/^[.,;:!?)»]/.test(x.text ?? '') ? ' ' : ''}{x.token
+            ? <span className="voz-local">{valores[x.token] ?? <Tokens text={x.token} valores={valores} />}</span>
+            : limpia(x.text)}</span>
+        ))}
+      </span>
+    </p>
+  )
+}
+
+function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame, real, valores, subtitulo, meta }) {
+  const leido = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
+  // La pantalla en pausa (clave, código del banco): 8 mira a otro lado hasta que lee otra.
+  const crudo = rep?.pantalla?.observed?.paused && !rep.terminado && pending.length === 0
+    ? { ...leido, modo: 'apartar', titulo: 'Miro a otro lado - el código lo pones tú' }
+    : leido
   const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}`)
   const t = useMemo(() => tareaActual(audit), [audit])
   const bloqueos = audit.filter((x) => x.kind === 'blocked').length
@@ -182,7 +251,7 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
         <Eight className="directo-eight" mode={e.modo} fg={BLANCO} cut={fondo} label={`8: ${e.titulo}`} />
         <div className="directo-texto">
           {SESION
-            ? <p className="eyebrow modo-texto">Sesión real grabada <span className="clave">el modelo solo recibe tokens</span></p>
+            ? <p className="eyebrow modo-texto">{meta?.titulo ?? (meta?.provisional ? 'Reproducción grabada' : 'Sesión real grabada')} <span className="clave">el modelo solo recibe tokens</span></p>
             : FEED
             ? <p className="eyebrow modo-texto">{SIN_PROTOCOLO ? <>Sin protocolo <span className="clave">el modelo recibe los datos reales</span></> : <>Con Priv8 <span className="clave">el modelo solo recibe tokens</span></>}</p>
             : <p className="eyebrow"><i className="vivo" aria-hidden="true" />Lo que ve 8, en directo</p>}
@@ -206,8 +275,9 @@ function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep
 
       <div className="directo-pantalla">
         {dosPantallas(real)
-          ? <DosPantallas frame={frame} real={real} nota={NOTA_REAL} />
+          ? <DosPantallas frame={frame} real={real} nota={NOTA_REAL} rep={rep} valores={valores} />
           : <PantallaViva frame={frame} rep={rep} demo={DEMO && !SESION} sin={SIN_PROTOCOLO} />}
+        {SESION && <Subtitulo sub={subtitulo} valores={valores} />}
       </div>
 
       {FEED && (
@@ -373,7 +443,9 @@ function Chat({ chat, confirmaciones, resolve, pedir, status, session, valores, 
         {chat.length === 0 && (
           <li className="msg ocho">
             <img className="avatar" src={ochoAvatar} alt="" />
-            <div className="burbuja">Hola. Dime qué hago en Alba Core o en el correo. Antes de enviar, transferir o llamar te pido confirmación.</div>
+            <div className="burbuja">{session === 'b2c'
+              ? 'Hola. Dime qué miro o qué preparo en tus bancos. Antes de transferir te pido confirmación, y la clave y los códigos los pones tú.'
+              : 'Hola. Dime qué hago en Alba Core o en el correo. Antes de registrar o enviar te pido confirmación.'}</div>
           </li>
         )}
         {orden.map((m) => <Mensaje key={m.id} m={m} confirmaciones={confirmaciones} resolve={resolve} valores={valores} ahora={ahora} />)}
@@ -396,7 +468,7 @@ function Chat({ chat, confirmaciones, resolve, pedir, status, session, valores, 
         />
         <button className="btn primario" type="submit" disabled={!activo || !texto.trim()}>Enviar</button>
       </form>
-      {!activo && <p className="nota-chat">{SESION ? 'Reproducción de una sesión real grabada.' : DEMO ? 'Es una reproducción grabada: aquí no se pueden enviar encargos.' : 'Sin conexión con el núcleo: arranca el agente con make agent-web.'}</p>}
+      {!activo && <p className="nota-chat">{SESION ? 'Reproducción grabada: aquí no se pueden enviar encargos.' : DEMO ? 'Es una reproducción grabada: aquí no se pueden enviar encargos.' : 'Sin conexión con el núcleo: arranca el agente con make agent-web.'}</p>}
       {aviso && activo && <p className="nota-chat mala">{aviso}</p>}
     </section>
   )
@@ -458,7 +530,7 @@ function Celda({ children, largo }) {
   )
 }
 
-function Pantalla({ screen, status, valores, frame, real }) {
+function Pantalla({ screen, status, valores, frame, real, rep }) {
   const obs = screen?.observed
   const reales = useMemo(() => new Map((screen?.raw?.elements ?? []).map((e) => [e.id, e])), [screen])
 
@@ -498,7 +570,7 @@ function Pantalla({ screen, status, valores, frame, real }) {
         )}
       </header>
       {dosPantallas(real) && (
-        <div className="pantalla-dos"><DosPantallas frame={frame} real={real} nota={NOTA_REAL} /></div>
+        <div className="pantalla-dos"><DosPantallas frame={frame} real={real} nota={NOTA_REAL} rep={rep} valores={valores} /></div>
       )}
       <div className="tabla" role="table" aria-label="Lo que ves frente a lo que ve la IA">
         <div className="fila cabecera" role="row">
@@ -639,7 +711,7 @@ function Actividad({ audit, etiquetas, valores }) {
 // ---------------------------------------------------------------- app
 
 export default function App() {
-  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real } = useEvents()
+  const { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real, subtitulo, meta } = useEvents()
   const ahora = useAhora()
   // La reproducción vive aquí para que no se pierda al cambiar de pestaña.
   const rep = useReproduccion(linea, valores)
@@ -663,7 +735,7 @@ export default function App() {
       <Barra status={status} vista={vista} ir={ir} avisos={avisos} />
       {vista === 'directo' && (
         <div className="vista-directo">
-          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} real={real} />
+          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} real={real} valores={valores} subtitulo={subtitulo} meta={meta} />
           <aside className="lado" aria-label="Razonamiento y chat">
             <Razonamiento rep={rep} />
             <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
@@ -677,7 +749,7 @@ export default function App() {
             : <section className="panel vacio-panel"><h2>Sin alarmas</h2><p>Si un correo pide cambiar una cuenta, da órdenes a la IA o el núcleo bloquea algo, aparecerá aquí.</p></section>}
         </main>
       )}
-      {vista === 'pantalla' && <main className="vista"><Pantalla screen={screen} status={status} valores={valores} frame={frame} real={real} /></main>}
+      {vista === 'pantalla' && <main className="vista"><Pantalla screen={screen} status={status} valores={valores} frame={frame} real={real} rep={rep} /></main>}
       {vista === 'registro' && <main className="vista"><Actividad audit={audit} etiquetas={etiquetas} valores={valores} /></main>}
     </div>
   )

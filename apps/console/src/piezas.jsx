@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { TOKEN_RE, alinear } from './tokens.js'
 import { bloques } from './md.js'
+import { SESION, ahoraMs } from './useEvents.js'
 
 // Los textos del núcleo usaban el punto medio (U+00B7) como separador; en la consola se ve « | ». Los tokens
 // antiguos no llevan espacios alrededor del punto y no se tocan.
@@ -64,9 +65,10 @@ export function EnClaro({ text, valores }) {
   return text.split(re).map((p, i) => (i % 2 ? <mark key={i} className="fuga">{p}</mark> : p))
 }
 
+// La hora de la consola; en una sesión grabada, la de la reproducción (sigue la pausa y los saltos).
 export function useAhora(ms = 1000) {
-  const [t, setT] = useState(Date.now())
-  useEffect(() => { const id = setInterval(() => setT(Date.now()), ms); return () => clearInterval(id) }, [ms])
+  const [t, setT] = useState(ahoraMs)
+  useEffect(() => { const id = setInterval(() => setT(ahoraMs()), SESION ? Math.min(ms, 250) : ms); return () => clearInterval(id) }, [ms])
   return t
 }
 

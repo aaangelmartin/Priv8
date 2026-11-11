@@ -69,7 +69,7 @@ function chipDe(frame) {
   return { tono: 'cobalto', texto: 'Censurado en el DOM' }
 }
 
-export function VistaWeb({ frame, cabecera = true, real = false, rotulo = null, nota = 'Pantalla real' }) {
+export function VistaWeb({ frame, cabecera = true, real = false, rotulo = null, nota = 'Pantalla real', chip: conChip = true }) {
   const stage = useRef(null)
   const t = useTamano(stage)
   const { width, height } = encaja(frame.w, frame.h, t.w, t.h - (cabecera ? CABECERA : 0))
@@ -86,7 +86,7 @@ export function VistaWeb({ frame, cabecera = true, real = false, rotulo = null, 
               <b className="ventana-app">{nombreApp(frame.app)}</b>
               {frame.screen && <span className="ventana-pantalla">{nombrePantalla(frame.screen)}</span>}
               <span className="sp" />
-              <span className={`vista-chip t-${chip.tono}`}>{chip.texto}</span>
+              {conChip && <span className={`vista-chip t-${chip.tono}`}>{chip.texto}</span>}
             </div>
           )}
           <Lienzo frame={frame} width={width} height={height}
@@ -145,19 +145,70 @@ export function MovilDe8({ screen }) {
 // sitio a lo ancho; una encima de otra si el hueco es más alto que ancho (pantallas estrechas).
 // La real solo llega por el canal local (o, en la web de la demo, de una sesión grabada con
 // datos ficticios).
-export function DosPantallas({ frame, real, nota }) {
+export function DosPantallas({ frame, real, nota, rep, valores }) {
   const caja = useRef(null)
   const t = useTamano(caja)
-  const fila = t.w >= t.h * 1.25
+  const fila = t.w >= t.h * 1.1
+  const pantalla = rep?.pantalla
+  const movil = !!pantalla && esMovil(pantalla)
+  const pausa = !!pantalla?.observed?.paused
+  // Sin fotogramas (Android sin captura, una reproducción provisional): las dos pantallas en
+  // esquema, la de la persona con los valores y la del modelo con los tokens (#187).
+  const izquierda = real
+    ? <VistaWeb frame={{ ...real, vista: 'real' }} real nota={nota} chip={false} />
+    : pantalla
+      ? <PantallaDe8 rep={rep} modo="tu" valores={valores} />
+      : <div className="escenario real-espera"><p>Lo que ves tú aparece en cuanto 8 empieza a trabajar.</p></div>
+  const derecha = esVista8(frame)
+    ? <VistaWeb frame={frame} chip={false} />
+    : pantalla
+      ? (movil && real && cajasMovil(pantalla) ? <MovilDe8 screen={pantalla} /> : <PantallaDe8 rep={rep} modo="ocho" valores={valores} />)
+      : <div className="escenario real-espera"><p>Lo que ve el modelo aparece con la primera pantalla.</p></div>
   return (
-    <div className={`dos-pantallas ${fila ? 'en-fila' : 'en-columna'}`} ref={caja}>
-      {real
-        ? <VistaWeb frame={{ ...real, vista: 'real' }} real rotulo="Lo que ves tú" nota={nota} />
-        : <div className="escenario real-espera"><p>Lo que ves tú aparece en cuanto 8 empieza a trabajar.</p></div>}
-      {esVista8(frame)
-        ? <VistaWeb frame={frame} rotulo="Lo que ve el modelo" />
-        : <div className="escenario real-espera"><p>Lo que ve el modelo aparece con la primera pantalla.</p></div>}
+    <div className="dos-miradas">
+      <h3 className="miradas-titulo">La misma pantalla, <span>dos miradas</span></h3>
+      <div className={`dos-pantallas ${fila ? 'en-fila' : 'en-columna'} ${movil ? 'de-movil' : ''}`} ref={caja}>
+        <section className="mirada m-tu" aria-label="Lo que ves tú: datos reales">
+          <Mirada tipo="tu" nota={nota} />
+          <div className="mirada-pantalla">{izquierda}</div>
+        </section>
+        <section className="mirada m-ocho" aria-label="Lo que ve el modelo: solo tokens">
+          <Mirada tipo="ocho" />
+          <div className="mirada-pantalla">
+            {derecha}
+            {pausa && !esVista8(frame) && (
+              <div className="velo-lado" role="status">
+                <Eight className="velo-lado-eight" mode="apartar" fg={COBALTO} cut="#FFFFFF" label="8 mira a otro lado" />
+                <b>8 mira a otro lado</b>
+                <span>Mientras pones la clave o el código, no lee la pantalla.</span>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
+  )
+}
+
+// La cabecera de cada mirada (#187): quién mira y qué le llega. Tú, con los datos reales; el
+// modelo, con la cara de 8 de «tokenizado» (los ojos en dos asteriscos) y solo tokens.
+function Mirada({ tipo, nota }) {
+  if (tipo === 'tu') {
+    return (
+      <header className="mirada-cab t-tu">
+        <span className="mirada-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="currentColor" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="currentColor" /></svg>
+        </span>
+        <span className="mirada-txt"><b>Lo que ves tú</b><span>Datos reales</span></span>
+        {nota && <span className="mirada-nota">{nota}</span>}
+      </header>
+    )
+  }
+  return (
+    <header className="mirada-cab t-ocho">
+      <span className="mirada-ico" aria-hidden="true"><Eight mode="nove" fg="#FFFFFF" cut={COBALTO} label="8 con los datos tapados" /></span>
+      <span className="mirada-txt"><b>Lo que ve el modelo</b><span>Solo tokens</span></span>
+    </header>
   )
 }
 

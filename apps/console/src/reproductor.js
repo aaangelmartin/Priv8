@@ -7,7 +7,7 @@
 //
 //   { formato: 'priv8-sesion/1', duracion, eventos: [{at, msg}], real: [{at, src, w, h, app}] }
 
-export const VELOCIDADES = [1, 2]
+export const VELOCIDADES = [1, 2, 4]
 export const esSesion = (feed) => typeof feed === 'string' && /^sesion-[a-z0-9-]+$/.test(feed)
 
 // Lo que hay que entregar entre dos momentos: los mensajes con at en (desde, hasta] en orden,
@@ -16,10 +16,11 @@ export function tramo(sesion, i, j, hasta) {
   const ev = sesion?.eventos ?? []
   const re = sesion?.real ?? []
   const msgs = []
-  while (i < ev.length && ev[i].at <= hasta) msgs.push(ev[i++].msg)
+  const ats = [] // el segundo de cada mensaje: la hora con la que lo registra la consola
+  while (i < ev.length && ev[i].at <= hasta) { ats.push(ev[i].at); msgs.push(ev[i++].msg) }
   let real = null
   while (j < re.length && re[j].at <= hasta) real = re[j++]
-  return { msgs, real, i, j }
+  return { msgs, ats, real, i, j }
 }
 
 // Fotogramas que conviene tener ya descargados: los de los próximos `s` segundos.
@@ -61,6 +62,17 @@ export function crearReloj() {
     alternar() { if (st.terminado) return this.reiniciar(); st.enMarcha = !st.enMarcha; avisar() },
     velocidad(v) { if (VELOCIDADES.includes(v)) { st.velocidad = v; avisar() } },
     reiniciar() { st.t = 0; st.terminado = false; st.enMarcha = true; st.reinicios += 1; avisar() },
+    // Salta a un momento (#187). La consola se vuelve a montar desde cero y recibe de golpe todo lo
+    // anterior a t (cuenta como un reinicio): alarmas, pantallas, registro, chat y confirmaciones
+    // quedan como estaban en ese momento. Se queda en pausa o en marcha como estaba.
+    saltar(t) {
+      const max = st.duracion || 0
+      st.t = Math.max(0, Math.min(Number(t) || 0, max))
+      st.terminado = max > 0 && st.t >= max
+      if (st.terminado) st.enMarcha = false
+      st.reinicios += 1
+      avisar()
+    },
   }
 }
 

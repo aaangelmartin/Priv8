@@ -66,4 +66,21 @@ assert.equal(reloj.t, 0)
 assert.equal(reloj.estado.enMarcha, true)
 assert.equal(reloj.estado.reinicios, antes + 1)
 
+// 4x y saltar a un momento: cuenta como reinicio y respeta la pausa
+reloj.velocidad(4)
+assert.equal(reloj.estado.velocidad, 4)
+reloj.alternar() // pausa
+const r0 = reloj.estado.reinicios
+reloj.saltar(6.5)
+assert.equal(reloj.t, 6.5)
+assert.equal(reloj.estado.enMarcha, false)
+assert.equal(reloj.estado.reinicios, r0 + 1)
+reloj.avanzar(0.2)
+assert.equal(reloj.t, 6.5, 'en pausa, el salto no avanza')
+reloj.saltar(-3)
+assert.equal(reloj.t, 0)
+reloj.saltar(99)
+assert.equal(reloj.t, 10)
+assert.equal(reloj.estado.terminado, true)
+
 console.log('reproductor: ok')

@@ -27,6 +27,14 @@ export const SESION = esSesion(FEED)
 // BASE_URL es '/' en local y '/consola/' en demo.priv8.es (BASE_PATH al compilar).
 export const BASE = import.meta.env.BASE_URL
 
+// La hora de la consola: en una sesión grabada, el reloj de la reproducción (ms), para que el tiempo
+// del encargo y la cuenta atrás de las confirmaciones sigan la pausa, la velocidad y los saltos.
+export const ahoraMs = () => (SESION ? reloj.t * 1000 : Date.now())
+// La hora de llegada de un mensaje: en una sesión grabada, su segundo en la grabación (aunque llegue
+// de golpe tras un salto), así el tiempo de cada paso y de cada confirmación es el de entonces.
+let selloSesion = null
+const sello = () => (SESION && selloSesion != null ? selloSesion * 1000 : ahoraMs())
+
 const MAX_AUDIT = 500
 const MAX_CHAT = 200
 const MAX_LINEA = 300
@@ -67,6 +75,10 @@ export function useEvents() {
   // Lo que ves tú (#170): el último fotograma de la pestaña real que maneja 8. En directo, solo por
   // el canal local; en una sesión grabada, de la grabación (datos ficticios del seed).
   const [real, setReal] = useState(null)
+  // Sesión grabada (#187): lo último que ha dicho 8, para los subtítulos, y los datos de la grabación
+  // (caso, vertical, provisional).
+  const [subtitulo, setSubtitulo] = useState(null)
+  const [meta, setMeta] = useState(null)
   const wsRef = useRef(null)
   const sendRef = useRef(null)
   const sessionRef = useRef('b2b')
@@ -156,6 +168,12 @@ export function useEvents() {
         else setFrame({ ...m, recibido: Date.now() })
         return
       }
+      if (m.type === 'render_values') {
+        // Solo en las sesiones grabadas: los valores locales de tokens que no salen en ninguna pantalla
+        // (la suma del oráculo), como los recibe el móvil para la voz local. Datos ficticios del seed.
+        if (SESION && m.values && typeof m.values === 'object') setValores((v) => ({ ...v, ...m.values }))
+        return
+      }
       if (m.type === 'task_request') {
         // Solo llega en las sesiones grabadas: lo que escribió la persona en el chat.
         if (SESION && typeof m.text === 'string') post({ k: 'tu', texto: m.text })
@@ -180,14 +198,14 @@ export function useEvents() {
       } else if (m.type === 'audit') {
         // En los feeds, la hora es la de la reproducción (las grabadas son todas del mismo segundo).
         if (FEED) m = { ...m, event: { ...m.event, ts: new Date().toISOString() } }
-        const ev = { ...m.event, _rx: Date.now() } // _rx: hora local de llegada, para el tiempo del encargo
+        const ev = { ...m.event, _rx: sello() } // _rx: hora local de llegada, para el tiempo del encargo
         usarSesion(ev.session)
         setAudit((a) => [...a, ev].slice(-MAX_AUDIT))
         alaLinea({ k: 'audit', ev })
         addAlerts([alertaDeBloqueo(ev)])
         alChat(ev)
       } else if (m.type === 'confirm_request') {
-        const req = { ...m, recibida: Date.now() }
+        const req = { ...m, recibida: sello() }
         usarSesion(m.session)
         setPending((p) => (p.some((x) => x.id === m.id) ? p : [...p, req]))
         setConfirmaciones((c) => (c[m.id] ? c : { ...c, [m.id]: { ...req, estado: 'pendiente' } }))
@@ -207,6 +225,7 @@ export function useEvents() {
         respuesta = null
         usarSesion(u.session)
         post({ k: '8', segmentos: u.segments })
+        if (SESION) setSubtitulo({ segmentos: u.segments, n: (nMsg += 1), t: sello() / 1000 })
       }
     }
 
@@ -234,7 +253,8 @@ export function useEvents() {
         const r = tramo(sesion, i, j, t)
         i = r.i
         j = r.j
-        r.msgs.forEach(handle)
+        r.msgs.forEach((m, k) => { selloSesion = r.ats[k]; handle(m) })
+        selloSesion = null
         if (r.real) setReal(r.real)
         precargar(proximos(sesion, t))
         if (reloj.estado.terminado) window.__p8FeedFin = true
@@ -245,6 +265,8 @@ export function useEvents() {
           if (closed) return
           if (!valida(d)) { setStatus('sin demo'); return }
           sesion = d
+          setMeta({ caso: d.caso ?? null, vertical: d.vertical ?? (d.nombre?.includes('b2c') ? 'b2c' : 'b2b'), titulo: d.titulo ?? null,
+            provisional: d.provisional === true, encargos: d.encargos ?? [] })
           reloj.cargar(d.duracion)
           precargar(proximos(d, -1))
         })
@@ -329,5 +351,5 @@ export function useEvents() {
     setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
   }, [])
 
-  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real }
+  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea, frame, real, subtitulo, meta }
 }
