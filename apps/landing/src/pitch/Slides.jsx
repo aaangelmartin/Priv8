@@ -13,7 +13,7 @@ import marco from './img/marco.png';
 /* Las diapositivas del pitch: 15 y el anexo de preguntas del jurado. */
 export const SlideCtx = createContext({ live: false, active: false, moving: false, phase: 'final', printing: false, n: '', annex: false });
 
-const COL = { band: { fg: '#FFFFFF', cut: '#2D45D6' }, paper: { fg: '#2D45D6', cut: '#FFFFFF' } };
+const COL = { band: { fg: '#FFFFFF', cut: '#2D45D6' }, paper: { fg: '#2D45D6', cut: '#FFFFFF' }, bad: { fg: '#C23A2E', cut: '#FBE5E3' } };
 
 /* 8 vivo; solo se monta en la diapositiva que se ve (y en todas al imprimir) */
 function E({ mode = 'mirar', on = 'band', className = '', seq = null, id, look = null }) {
@@ -39,17 +39,19 @@ function E({ mode = 'mirar', on = 'band', className = '', seq = null, id, look =
 const R = ({ d = 0, as: T = 'div', className = '', children, ...p }) => <T className={'rv ' + className} style={{ '--d': d }} {...p}>{children}</T>;
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 
-/* grabaciones reales de la consola (media/*.mp4 y su fotograma), si están en esta build */
-const MEDIA = import.meta.glob('./media/*.{mp4,jpg}', { eager: true, query: '?url', import: 'default' });
+/* capturas reales de las grabaciones (media/*.jpg), si están en esta build */
+const MEDIA = import.meta.glob('./media/*.jpg', { eager: true, query: '?url', import: 'default' });
 const media = (n) => MEDIA[`./media/${n}`];
-function Clip({ name, alt }) {
-  const { active, printing } = useContext(SlideCtx);
-  const src = media(name + '.mp4'), poster = media(name + '.jpg');
-  if (!src) return null;
-  if (printing) return poster ? <img className="clip" src={poster} alt={alt} /> : null;
-  return <video className="clip" src={src} poster={poster} muted loop playsInline autoPlay={active} preload="auto" aria-label={alt} ref={(v) => { if (v) { if (active) v.play().catch(() => {}); else v.pause(); } }} />;
+/* sin vídeos: enlaces a la demo en la web y a la demo local, que abre el panel */
+function Links({ d }) {
+  return (
+    <R d={d} className="dlinks">
+      <a className="dl web" href="https://demo.priv8.es" target="_blank" rel="noreferrer"><b>demo.priv8.es</b><span>Las grabaciones reales, desde cualquier navegador</span></a>
+      <a className="dl loc" href="http://127.0.0.1:5170" target="_blank" rel="noreferrer"><b>Demo local - 127.0.0.1:5170</b><span>Doble clic en «Demo Priv8.command» o <code>make panel</code>: abre el panel en tu máquina</span></a>
+    </R>
+  );
 }
-const HAS = (n) => !!media(n + '.mp4');
+const HAS = (n) => !!media(n + '.jpg');
 
 function Foot() {
   const { n, annex } = useContext(SlideCtx);
@@ -155,7 +157,7 @@ function ProblemaB2C() {
             </R>
           ))}
         </div>
-        <R d={6} className="central"><E mode="miedo" on="paper" className="e-central" /><p><b>Un asistente para todos tus bancos</b><span>hoy recibiría los saldos, movimientos y claves de todos.</span></p></R>
+        <R d={6} className="central"><E mode="miedo" on="bad" className="e-central" /><p><b>Un asistente para todos tus bancos</b><span>hoy recibiría los saldos, movimientos y claves de todos.</span></p></R>
       </div>
       <Foot />
     </div>
@@ -192,41 +194,110 @@ function Podria() {
 }
 
 /* ---------------------------------------------------------------- 4 cómo funciona */
-const HOW = [
-  ['Saldo', '12.050,00 €', '‹IMPORTE_2›'],
-  ['IBAN', 'ES91 9400 0007 0206 0223 3441', '‹IBAN_1-propio›'],
-  ['Clave', '••••••', null],
+/* la misma pantalla, real y como la ve el modelo; clase y cómo se decide */
+const SCREEN = [
+  ['Titular', 'Lucía Gómez Ruiz', '‹NOMBRE_1-titular›', 'tk', 'nombre por contexto y bóveda'],
+  ['DNI', '12345678Z', '‹DNI_1›', 'tk', 'patrón y letra de control'],
+  ['IBAN', 'ES91 2100 0418 4502 0005 1332', '‹IBAN_1-propio›', 'tk', 'patrón y mod-97'],
+  ['Saldo', '12.050,00 €', '‹IMPORTE_2-positivo›', 'tk', 'regla del sitio (selector)'],
+  ['Clave', '••••••', null, 'no', 'campo de contraseña: siempre rojo'],
+  ['Botón', 'Transferir', 'Transferir', 'ok', 'interfaz, la regla lo declara legible'],
 ];
-const CLASES = [
-  ['ok', 'Se ve', 'La interfaz: botones, etiquetas, menús.', 'Pagar a proveedor'],
-  ['tk', 'Se tokeniza', 'IBAN, DNI, nombres, importes y movimientos.', '‹IBAN_1-propio›'],
-  ['no', 'Nunca sale', 'Contraseñas, PIN, OTP, claves y tarjeta completa.', 'nunca sale'],
-];
+const CLS = { ok: 'verde', tk: 'ámbar', no: 'rojo' };
 function Como1() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 1 de 3 - Tokens">El modelo ve tokens. <span className="soft">Los datos no salen de tu máquina.</span></Head>
-      <div className="how3">
-        <div className="flow2">
-          <R d={3} className="card">
-            <p className="step"><b>1</b>Tu pantalla</p>
-            {HOW.map(([k, v]) => <div className="kv" key={k}><span>{k}</span><em className="real">{v}</em></div>)}
-            <p className="cap">El dato real, en tu máquina</p>
-          </R>
-          <R d={4} className="arrow" />
-          <R d={5} className="card ai">
-            <p className="step"><b>2</b>Lo que ve la IA <E mode="leer" on="paper" className="e-card" /></p>
-            {HOW.map(([k, , t], i) => <div className="kv" key={k}><span>{k}</span>{t ? <span className="tok morph" style={{ '--i': i }}>{t}</span> : <span className="never morph" style={{ '--i': i }}>nunca sale</span>}</div>)}
-            <p className="cap">Solo tokens y la interfaz</p>
-          </R>
-        </div>
-        <div className="clases">
-          {CLASES.map(([c, t, d, ex], i) => (
-            <R d={6 + i * 0.6} key={t} className={'clase ' + c}><b>{t}</b><span>{d}</span><code>{ex}</code></R>
-          ))}
-        </div>
+      <Head eyebrow="Cómo funciona - 1 de 5 - Qué ve el modelo">La misma pantalla, dos versiones. <span className="soft">Solo una sale de tu máquina.</span></Head>
+      <R d={3} className="twin">
+        <div className="tw-h"><span>Campo</span><span>Tu pantalla (real, en local)</span><span /><span>Lo que recibe el modelo</span><span>Clase y cómo se decide</span></div>
+        {SCREEN.map(([k, v, t, c, why], i) => (
+          <div className="tw-r rv" key={k} style={{ '--d': 3.5 + i * 0.4 }}>
+            <span className="k">{k}</span>
+            <em className={c === 'ok' ? 'ui' : 'real'}>{v}</em>
+            <i className="tw-a" />
+            {c === 'no' ? <span className="never">null - nunca sale</span> : c === 'ok' ? <span className="ui">{t}</span> : <span className="tok">{t}</span>}
+            <span className={'why ' + c}><b>{CLS[c]}</b>{why}</span>
+          </div>
+        ))}
+      </R>
+      <div className="clases row">
+        <R d={6} className="clase ok"><b>Verde - se ve</b><span>Botones, etiquetas, títulos, menús. El modelo los necesita para moverse.</span></R>
+        <R d={6.4} className="clase tk"><b>Ámbar - se tokeniza</b><span>IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos. Hacen falta para el trámite, no su valor.</span></R>
+        <R d={6.8} className="clase no"><b>Rojo - nunca sale</b><span>Contraseñas, PIN, usuario, OTP, tarjeta completa. Llegan como null y ni entran en la bóveda.</span></R>
       </div>
-      <R d={8} as="p" className="foot-note">Cada token es tipado y estable en la sesión: ‹IBAN_1› es siempre la misma cuenta. La tabla token - valor vive solo en tu máquina. Se detecta con reglas por sitio, patrones validados (IBAN mod-97, letra del DNI, Luhn), tu bóveda local y nombres de personas.</R>
+      <Foot />
+    </div>
+  );
+}
+
+const SURF = [
+  { tag: 'Web - B2B', t: 'Playwright lee el DOM', steps: [
+    ['Lee', 'El DOM de la app real (Alba Core, el correo). No píxeles.'],
+    ['Clasifica', 'Cada elemento, por la regla del sitio (selector) y los detectores.'],
+    ['Envía', 'Una instantánea con id, rol, etiqueta y tokens de cada elemento.'],
+    ['Actúa', 'tap y type: el ejecutor local escribe el valor real.'],
+  ], snap: ['e12 textbox «IBAN» ‹IBAN_1-maestro›', 'e14 textbox «Importe» ‹IMPORTE_1›', 'e19 button «Registrar factura»'], note: 'La vista de 8 de la consola es un espejo censurado del DOM: lo mismo que recibe el modelo, en su sitio.' },
+  { tag: 'Android - B2C', t: 'Un servicio de accesibilidad', steps: [
+    ['Lee', 'El AccessibilityService de la app Priv8 lee el árbol de accesibilidad de los bancos. Sin capturas.'],
+    ['Puente', 'WebSocket local en 127.0.0.1:8765 (adb reverse) hasta el núcleo, que tokeniza.'],
+    ['Actúa', 'Vuelven acciones de accesibilidad (click, setText) y se ejecutan en el móvil.'],
+    ['Pausa', 'En PIN u OTP el núcleo se para y 8 mira a otro lado.'],
+  ], snap: ['n4 text «Saldo» ‹IMPORTE_2-positivo›', 'n7 edit «Clave» null - nunca sale', 'n9 button «Transferir»'], note: 'Voz mixta: la voz local dice cifras y nombres; la de la nube, solo frases sin datos.' },
+];
+function Captura() {
+  return (
+    <div className="in how">
+      <Head eyebrow="Cómo funciona - 2 de 5 - Cómo capturamos">Leemos la estructura, no la imagen. <span className="soft">En la web y en el móvil.</span></Head>
+      <div className="surf">
+        {SURF.map((x, j) => (
+          <R d={3 + j} key={x.tag} className="sf">
+            <p className="pz-k">{x.tag}</p>
+            <h3>{x.t}</h3>
+            <ol>{x.steps.map(([k, d], i) => <li key={k}><b>{i + 1}</b><span><strong>{k}</strong>{d}</span></li>)}</ol>
+            <div className="snap"><small>lo que recibe el modelo</small>{x.snap.map((l) => <code key={l}>{l}</code>)}</div>
+            <p className="cap dark">{x.note}</p>
+          </R>
+        ))}
+      </div>
+      <R d={6} as="p" className="foot-note">En las dos superficies el modelo solo recibe resultados de <code>observe</code>, <code>act</code> y <code>oracle</code>, con tokens.</R>
+      <Foot />
+    </div>
+  );
+}
+
+const PIPE = [
+  ['Pantalla', 'DOM web o árbol de accesibilidad. Nunca píxeles.'],
+  ['Regla del sitio', 'Política por pantalla: cada selector trae clase, tipo y origen.'],
+  ['Detector', 'Patrones validados: IBAN mod-97, letra del DNI/NIE, control del CIF, Luhn.'],
+  ['Bóveda', 'Valores ya vistos y nombres de personas. Mismo valor, mismo token.'],
+  ['Bloqueo final', 'Revisa la petición entera. Si queda un valor real, no sale.'],
+];
+function Como2() {
+  return (
+    <div className="in how">
+      <Head eyebrow="Cómo funciona - 3 de 5 - Cómo se decide">Cada dato pasa cinco filtros. <span className="soft">Lo que no tiene regla, no sale.</span></Head>
+      <div className="pipe">
+        {PIPE.map(([t, d], i) => (
+          <R d={3 + i * 0.5} key={t} className={'pp' + (i === 4 ? ' last' : '')}><b>{i + 1}</b><h3>{t}</h3><p>{d}</p></R>
+        ))}
+        <R d={5.6} className="pp model"><E mode="leer" on="paper" className="e-pp" /><h3>Modelo</h3><p>Solo tokens e interfaz.</p></R>
+      </div>
+      <div className="how2b">
+        <R d={6} className="anat">
+          <p className="zone">Cómo es un token</p>
+          <div className="big-tok"><span className="t1">‹</span><span className="a">IBAN</span><span className="t1">_</span><span className="b">1</span><span className="t1">-</span><span className="c">propio</span><span className="t1">›</span></div>
+          <div className="anat-l"><span className="a"><b>Tipo</b>qué es: IBAN, DNI, IMPORTE, NOMBRE</span><span className="b"><b>Número</b>estable en la sesión: el mismo valor, siempre el mismo token</span><span className="c"><b>Etiqueta</b>lo justo para decidir: origen o signo</span></div>
+        </R>
+        <R d={6.6} className="vault">
+          <p className="zone">La bóveda - solo en tu entorno</p>
+          <table><tbody>
+            <tr><td><Tok>‹IBAN_1-propio›</Tok></td><td>ES91 2100 0418 …</td><td>origen: ficha</td></tr>
+            <tr><td><Tok>‹IBAN_2-correo›</Tok></td><td>ES76 0182 2370 …</td><td>origen: correo</td></tr>
+            <tr><td><Tok>‹IMPORTE_1›</Tok></td><td>1.254,30 €</td><td>origen: factura</td></tr>
+          </tbody></table>
+          <p className="cap dark">Una por sesión. Guarda dónde se vio cada valor: eso es la procedencia.</p>
+        </R>
+      </div>
       <Foot />
     </div>
   );
@@ -242,30 +313,34 @@ function Pieza({ d, t, k, children, ex }) {
     </R>
   );
 }
-function Como2() {
+const ACT = ['El modelo pide act con un token', '¿Token de esta sesión?', '¿Procedencia válida para ese campo?', '¿Acción crítica? Espera tu «sí»', 'Rehidrata en local y escribe'];
+function Como3() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 2 de 3 - Actuar sin ver">8 trabaja con los tokens. <span className="soft">Tu máquina pone los valores.</span></Head>
+      <Head eyebrow="Cómo funciona - 4 de 5 - Actuar sin ver">8 trabaja con tokens. <span className="soft">Tu máquina pone los valores.</span></Head>
+      <R d={3} className="actflow">
+        {ACT.map((s, i) => <span key={s} className="af rv" style={{ '--d': 3 + i * 0.3 }}><b>{i + 1}</b>{s}</span>)}
+      </R>
       <div className="pzs">
-        <Pieza d={3} k="Ejecutor" t="Escribe sin conocer el dato" ex="act(escribir, ‹IBAN_1-propio›)">El modelo pide escribir un token en un campo. El ejecutor, en tu máquina, pone el valor real en la pantalla. El modelo nunca lo recibe.</Pieza>
-        <Pieza d={4} k="Oráculo" t="Calcula sin revelar" ex="compare(‹SALDO_1›, ‹IMPORTE_1›) → mayor">Suma, compara y comprueba en local. Responde por tramos, nunca con la cifra, y con un presupuesto de preguntas: no se puede adivinar un saldo a base de comparar.</Pieza>
-        <Pieza d={5} k="Procedencia" t="Cada dato sabe de dónde viene" ex="IBAN del correo → campo de pago: bloqueado">Un IBAN que llega en un correo no puede entrar en un campo de pago. Así se para el fraude del cambio de cuenta, aunque el modelo se lo crea.</Pieza>
+        <Pieza d={5} k="Ejecutor" t="Escribe sin conocer el dato" ex="act(escribir, ‹IBAN_1-propio›)">El ejecutor cambia el token por el valor real en tu máquina y lo pone en la pantalla. Un token que no existe en la sesión no se escribe.</Pieza>
+        <Pieza d={5.5} k="Oráculo" t="Calcula sin revelar" ex="compare(‹SALDO_1›, ‹IMPORTE_1›) → mayor">sum, compare y matches, en local. sum da un ‹SUMA_n› nuevo y su tramo, nunca la cifra. Con presupuesto de preguntas: comparar a ciegas no reconstruye un saldo.</Pieza>
+        <Pieza d={6} k="Procedencia" t="Cada dato sabe de dónde viene" ex="‹IBAN_2-correo› → IBAN de pago: rechazado">Un campo solo admite tokens de su tipo vistos en un origen aceptado. El IBAN del correo no entra en el pago, y solo se llama al teléfono de la ficha.</Pieza>
       </div>
-      <R d={7} as="p" className="foot-note">El modelo solo tiene tres herramientas cerradas: <code>observe</code>, <code>act</code> y <code>oracle</code>. Sin navegador, sin acceso al sistema y sin código propio.</R>
+      <R d={7} as="p" className="foot-note">El modelo solo tiene tres herramientas cerradas: <code>observe</code>, <code>act</code> y <code>oracle</code>. Sin eval, sin CDP, sin adb y sin código propio.</R>
       <Foot />
     </div>
   );
 }
 
-function Como3() {
+function Como4() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 3 de 3 - Control">Lo importante lo decides tú. <span className="soft">Y queda escrito.</span></Head>
+      <Head eyebrow="Cómo funciona - 5 de 5 - Control">Cuatro barreras que no dependen del modelo. <span className="soft">Y todo queda escrito.</span></Head>
       <div className="pzs four">
-        <Pieza d={3} k="Tu «sí»" t="Confirmación obligatoria">Pagar, transferir, invertir, firmar o enviar un formulario espera siempre tu «sí». La huella, la clave o el OTP del banco los pones tú, y 8 mira a otro lado.</Pieza>
-        <Pieza d={4} k="Bloqueo final" t="Si algo se escapa, no sale">Antes de enviar nada al modelo, se revisa la petición entera. Si queda un IBAN, un DNI o una tarjeta sin tokenizar, la petición se retiene.</Pieza>
-        <Pieza d={5} k="Registro firmado" t="Qué vio, qué se bloqueó, quién aprobó">Cada paso queda en un registro firmado: lo que recibió el modelo, lo que se bloqueó y lo que aprobaste. Sirve de evidencia ante auditoría.</Pieza>
-        <Pieza d={6} k="Modo estricto" t="De serie, lo mínimo">Al modelo solo llega lo que marca una regla del sitio. Lo que no está previsto no sale, en lugar de confiar en detectarlo.</Pieza>
+        <Pieza d={3} k="1 - Modo estricto" t="De serie, lo mínimo" ex="sin regla → no llega">Al modelo solo llega lo que cubre una regla del sitio. Un texto sin regla no sale, aunque el detector no lo reconozca.</Pieza>
+        <Pieza d={4} k="2 - Bloqueo final" t="Si algo se escapa, no sale" ex="blocked: fuga">Cada petición al modelo o a la voz en la nube se revisa entera: patrones, datos rojos y cualquier valor de la bóveda. Falla cerrado.</Pieza>
+        <Pieza d={5} k="3 - Tu «sí»" t="Confirmación obligatoria" ex="held → caduca en 5 min">Transferir, invertir, firmar, enviar y llamar esperan tu «sí». Huella, clave u OTP los pones tú, y 8 mira a otro lado.</Pieza>
+        <Pieza d={6} k="4 - Registro firmado" t="Qué vio, qué se bloqueó, quién aprobó" ex="JSONL encadenado + ed25519">Cada línea se encadena por hashes y se firma. Si alguien altera una, la verificación lo detecta. Evidencia para auditoría.</Pieza>
       </div>
       <E mode="listo" on="band" className="e-gtm rv" />
       <Foot />
@@ -275,31 +350,41 @@ function Como3() {
 
 /* ---------------------------------------------------------------- 5 arquitectura */
 const PIECES = ['Detector', 'Tokens y bóveda', 'Procedencia', 'Oráculo', 'Ejecutor', 'Tu «sí»', 'Bloqueo final', 'Registro firmado'];
+const ROUTES = [
+  ['observe', ['pantalla', 'regla', 'detector', 'bóveda', 'bloqueo final', 'modelo']],
+  ['act', ['modelo', 'token conocido', 'procedencia', 'tu «sí»', 'rehidratar', 'pantalla']],
+  ['oracle', ['modelo', 'presupuesto', 'bóveda', '‹SUMA_n› o tramo', 'modelo']],
+];
 function Arquitectura() {
   return (
     <div className="in arch">
       <Head eyebrow="Arquitectura">Ocho piezas. <span className="soft">Ninguna depende de que el modelo obedezca.</span></Head>
       <div className="arch-row">
         <R d={3} className="trust">
-          <p className="zone">Tu entorno de confianza</p>
-          <div className="ends"><span>Web: ERP y correo</span><span>Móvil con accesibilidad</span></div>
+          <p className="zone">Tu entorno de confianza - ve valores reales</p>
+          <div className="ends"><span>Web: ERP y correo (Playwright, DOM)</span><span>Móvil (árbol de accesibilidad)</span></div>
           <div className="core">
-            <p className="core-h"><E mode="mirar" on="band" className="e-core" />Núcleo Priv8</p>
+            <p className="core-h"><E mode="mirar" on="band" className="e-core" />Núcleo Priv8 - librería Python, en el mismo proceso</p>
             <div className="pieces">
               {PIECES.map((p, i) => <span key={p} className="piece rv" style={{ '--d': 4 + i * 0.5 }}><b>{i + 1}</b>{p}</span>)}
             </div>
           </div>
-          <div className="ends"><span>Consola de auditoría</span><span>App 8 con voz local</span></div>
+          <div className="ends"><span>Consola de auditoría</span><span>App 8: renderizador y voz local</span></div>
         </R>
         <div className="wire">
           <R d={8} className="w-out"><span>solo tokens</span><i /></R>
           <R d={9} className="w-in"><i /><span><code>observe</code> <code>act</code> <code>oracle</code></span></R>
         </div>
         <R d={7} className="cloud">
-          <p className="zone">Nube</p>
-          <div className="cbox"><b>Cualquier modelo</b><span>3 herramientas cerradas. Sin navegador, sin sistema, sin código propio.</span></div>
+          <p className="zone">Nube - no ve valores</p>
+          <div className="cbox"><b>Cualquier modelo</b><span>3 herramientas cerradas por MCP. Sin navegador, sin sistema, sin código propio.</span></div>
           <div className="cbox"><b>Voz en la nube</b><span>Solo frases sin datos. Cifras y nombres, con la voz local.</span></div>
         </R>
+      </div>
+      <div className="routes">
+        {ROUTES.map(([k, st], j) => (
+          <R d={9.5 + j * 0.4} key={k} className="route"><code>{k}</code>{st.map((s, i) => <span key={i}>{s}</span>)}</R>
+        ))}
       </div>
       <Foot />
     </div>
@@ -319,15 +404,15 @@ function Demo1() {
   if (HAS('b2c')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo - Priv8 en el móvil" chip="grabación real">«¿Cuánto tengo entre mis bancos?» <span className="soft">8 suma sin ver la cifra.</span></Head>
+        <Head eyebrow="Demo - Priv8 en el móvil" chip="captura real">«¿Cuánto tengo entre mis bancos?» <span className="soft">8 suma sin ver la cifra.</span></Head>
         <div className="vrow rev">
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Recorre tus tres bancos</strong>Banca Alcor, Brezo Banco y Nimbo Bróker, por accesibilidad.</p></R>
             <R d={5} className="scap"><b>2</b><p><strong>El modelo ve <Tok>‹SUMA_1›</Tok></strong>La cifra solo suena con la voz del móvil.</p></R>
             <R d={6} className="scap"><b>3</b><p><strong>«Pasa 200 € al bróker»</strong>Lo prepara, mira a otro lado en tu huella y espera tu «sí».</p></R>
-            <R d={7} as="p" className="vlink">demo.priv8.es</R>
+            <Links d={7} />
           </div>
-          <R d={3} className="vbox"><Clip name="b2c" alt="Grabación real: 8 recorre tres bancos en el emulador Android y responde el total; el modelo solo ve tokens" /></R>
+          <R d={3} className="vbox"><img className="clip" src={media('b2c.jpg')} alt="Captura real: 8 recorre tres bancos en el emulador Android y responde el total; el modelo solo ve tokens" /></R>
         </div>
         <Foot />
       </div>
@@ -379,14 +464,14 @@ function Demo2() {
   if (HAS('b2b')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo - Priv8 para empresas" chip="grabación real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
+        <Head eyebrow="Demo - Priv8 para empresas" chip="captura real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
         <div className="vrow">
-          <R d={3} className="vbox"><Clip name="b2b" alt="Grabación real de la consola: 8 registra la factura en Alba Core con tokens y salta la alarma de posible fraude" /></R>
+          <R d={3} className="vbox"><img className="clip" src={media('b2b.jpg')} alt="Captura real de la consola: 8 registra la factura en Alba Core con tokens y salta la alarma de posible fraude" /></R>
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Lee el correo y abre Alba Core</strong>Al modelo le llegan <Tok>‹CIF_1›</Tok> e <Tok>‹IMPORTE_1›</Tok>.</p></R>
             <R d={5} className="scap"><b>2</b><p><strong>Registra la factura</strong>El ejecutor escribe los valores reales y espera tu «sí», que queda firmado.</p></R>
             <R d={6} className="scap"><b>3</b><p><strong>«Posible fraude detectado»</strong>La cuenta nueva del correo no entra en el pago.</p></R>
-            <R d={7} as="p" className="vlink">demo.priv8.es</R>
+            <Links d={7} />
           </div>
         </div>
         <Foot />
@@ -537,22 +622,29 @@ function Competencia() {
 
 /* ---------------------------------------------------------------- cómo llegamos */
 const GTM = [
-  ['1', 'Piloto', '4 semanas', 'Un banco o una empresa', 'Un proceso de cuentas a pagar sobre su ERP', 'datos expuestos, fraudes bloqueados, horas'],
-  ['2', 'Su back office', 'meses 2 a 12', 'El mismo cliente', 'Facturas, conciliación, altas', 'licencia por proceso + por documento'],
-  ['3', 'Priv8 en el móvil', 'año 1 y 2', 'Personas con varios bancos', 'La app para todas tus cuentas', 'suscripción de la persona'],
-  ['4', 'Más empresas', 'año 2 y 3', 'Integradores de ERP y BPO', 'El mismo núcleo, otros sectores', 'reparto de ingresos'],
+  ['1', 'Piloto', 'semanas 1 a 4', 'Un banco o una empresa', 'Un proceso de cuentas a pagar sobre su ERP, sin tocar el ERP', 'Datos expuestos (objetivo 0), fraudes bloqueados, horas ahorradas', 'Piloto de pago, descontable de la licencia', 'Primer caso medido'],
+  ['2', 'Su back office', 'meses 2 a 12', 'El mismo cliente', 'Facturas, conciliación y altas de clientes y proveedores', 'Procesos activos, documentos al mes, coste por tarea', 'Licencia por proceso + unos 0,50 € por documento', 'Primer contrato anual'],
+  ['3', 'Priv8 en el móvil', 'años 1 y 2', 'Personas con varios bancos', 'La app para todas tus cuentas, en las tiendas', 'Usuarios activos, bancos conectados, trámites hechos', 'Suscripción de unos 6 € al año', 'App publicada'],
+  ['4', 'Más empresas', 'años 2 y 3', 'Integradores de ERP y BPO', 'El mismo núcleo en otros procesos y sectores', 'Socios, pantallas con reglas listas, clientes por socio', 'Reparto de ingresos con el socio', 'ISO 27001 y SOC 2'],
 ];
 function Mercado() {
   return (
     <div className="in gtm">
       <Head eyebrow="Cómo llegamos">Un piloto en empresas. <span className="soft">La app, directa a las personas.</span></Head>
-      <R d={3} className="gtable">
-        <table>
-          <thead><tr><th /><th>Fase</th><th>Cuándo</th><th>Con quién</th><th>Qué hacemos</th><th>Qué medimos o cobramos</th></tr></thead>
-          <tbody>{GTM.map(([n, ...r]) => <tr key={n}><td><b className="gnum">{n}</b></td>{r.map((c, i) => <td key={i}>{c}</td>)}</tr>)}</tbody>
-        </table>
-      </R>
-      <E mode="alegria" on="band" className="e-gtm rv" />
+      <div className="tl">
+        <R d={2} className="tl-rail" />
+        {GTM.map(([n, f, w, who, what, kpi, pay, ms], i) => (
+          <R d={3 + i * 0.6} key={n} className="tl-c">
+            <p className="tl-w"><b className="gnum">{n}</b>{w}</p>
+            <h3>{f}</h3>
+            <p className="tl-who">{who}</p>
+            <p className="tl-what">{what}</p>
+            <div className="tl-k"><small>Medimos</small><span>{kpi}</span></div>
+            <div className="tl-k pay"><small>Cobramos</small><span>{pay}</span></div>
+            <p className="tl-ms">Hito: {ms}</p>
+          </R>
+        ))}
+      </div>
       <Foot />
     </div>
   );
@@ -560,25 +652,27 @@ function Mercado() {
 
 /* ---------------------------------------------------------------- 11 equipo */
 const TEAM = [
-  ['Ángel Martín', 'aaangelmartin', 'Agente, Android, voz y diseño', angel],
-  ['Álvaro Carpintero', 'alvaarocl', 'Empresa: ERP, correo y consola', alvaro],
-  ['Pablo Rojo', 'rrojjo', 'Núcleo del protocolo', pablo],
-  ['Marco Barroso', 'marcoobarroso', 'App 8 y bancos simulados', marco],
+  ['Ángel Martín', 'aaangelmartin', 'Ingeniero - diseño y producto', 'Agente, Android, voz y toda la marca', angel],
+  ['Álvaro Carpintero', 'alvaarocl', 'Ingeniero - negocio y operaciones', 'Empresa: ERP, correo, consola y telefonía', alvaro],
+  ['Pablo Rojo', 'rrojjo', 'Ingeniero - seguridad y protocolos', 'Núcleo: detector, bóveda, oráculo y auditoría', pablo],
+  ['Marco Barroso', 'marcoobarroso', 'Ingeniero - producto móvil', 'App 8, bancos simulados y dictado', marco],
 ];
 function Equipo() {
   return (
     <div className="in team">
-      <Head eyebrow="Equipo">Cuatro personas, <span className="soft">un protocolo que ya funciona.</span></Head>
+      <Head eyebrow="Equipo">Cuatro ingenieros, <span className="soft">cada uno con otra disciplina.</span></Head>
       <div className="people">
-        {TEAM.map(([n, gh, r, img], i) => (
+        {TEAM.map(([n, gh, f, r, img], i) => (
           <R d={3 + i} key={n} className="person">
             <img src={img} alt="" />
             <h3>{n}</h3>
+            <span className="field-t">{f}</span>
             <p>{r}</p>
             <code>@{gh}</code>
           </R>
         ))}
       </div>
+      <R d={7} as="p" className="team-note">Todos ingenieros. En tres días: el núcleo, la consola, un ERP simulado, tres bancos y la app Android, funcionando.</R>
       <E mode="agradecer" on="paper" className="e-team rv" />
       <Foot />
     </div>
@@ -603,13 +697,13 @@ function Cierre() {
     <div className={'in cierre' + (show ? ' live' : '')}>
       {show && <Field />}
       {show && <div className="clean" />}
-      <div className="close2">
-        <div className="cl-left">
-          <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
+      <div className="close3">
+        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
+        <div className="cl-txt">
           <R d={1} as="h2"><span className="line">El agente hace el trámite.</span><span className="line soft">Los datos se quedan contigo.</span></R>
-          <R d={2} as="p" className="cl-url">priv8.es</R>
+          <R d={2} className="cl-foot"><span className="cl-url">priv8.es</span><span className="cl-sub">demo.priv8.es - mcp.priv8.es</span></R>
         </div>
-        <R d={3} className="qr solo"><Qr rows={QR.web} label="Código QR a priv8.es" azul /></R>
+        <R d={3} className="qr solo"><Qr rows={QR.web} label="Código QR a priv8.es" azul /><small>Escanea para abrir priv8.es</small></R>
       </div>
     </div>
   );
@@ -704,8 +798,10 @@ export const SLIDES = [
   { id: 'personas', tone: 'paper', C: ProblemaB2C },
   { id: 'podria', tone: 'paper', C: Podria },
   { id: 'como', tone: 'band', C: Como1 },
+  { id: 'captura', tone: 'band', C: Captura },
   { id: 'como-2', tone: 'band', C: Como2 },
   { id: 'como-3', tone: 'band', C: Como3 },
+  { id: 'como-4', tone: 'band', C: Como4 },
   { id: 'arquitectura', tone: 'band', C: Arquitectura },
   { id: 'verticales', tone: 'paper', C: Verticales },
   { id: 'demo-empresas', tone: 'paper', C: Demo2 },
