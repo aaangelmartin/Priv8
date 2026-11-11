@@ -502,3 +502,54 @@ def test_observe_con_el_nucleo_se_recupera(web_known):
     # Tras un sin_regla sin salida, open_app sigue funcionando.
     assert c.act("b2b", "open_app", text="alba-core") == {"ok": True}
     assert c.observe("b2b")["screen"] == "factura.alta"
+
+
+# ---------------------------------------------------------------- toda la página (#154)
+
+def test_la_observacion_lleva_toda_la_pagina(web, core):
+    """Además de lo marcado (e1, e2… sin cambios), cada texto visible va como elemento de solo
+    lectura (t1, t2…), filtrado por el núcleo: la interfaz en claro y los datos con su token."""
+    web.goto("inbox", "/reset")
+    web.goto("inbox", "/correo/9")
+    raw = web.snapshot()
+    marcados = [e for e in raw["elements"] if not e.get("extra")]
+    assert [e["id"] for e in marcados] == [f"e{i}" for i in range(1, len(marcados) + 1)]
+    assert all(e["id"].startswith("t") and e["actions"] == [] for e in raw["elements"] if e.get("extra"))
+    obs = core.observe("b2b")
+    textos = {e["id"]: e for e in obs["elements"] if e["id"].startswith("t")}
+    claro = [e["text"] for e in textos.values() if e["cls"] == "verde"]
+    assert "Analizado por el antivirus" in claro and "Redactar" in claro
+    sent = json.dumps(obs, ensure_ascii=False)
+    for real in (IBAN_TRAMPA, "Suministros Lumen", "B12345674", "1.254,30", "611 222 333", "facturacion@"):
+        assert real not in sent, real
+    assert any(t.endswith("-correo›") for e in textos.values() for t in e.get("tokens", []))  # procedencia
+
+
+def test_vista_de_8_es_la_pagina_entera_filtrada(web, core, monkeypatch):
+    """La vista de 8 enseña el texto de la interfaz tal cual y los datos con su token, también
+    antes de que 8 lea la pantalla (vista previa del núcleo, sin mandarla al modelo)."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "data"))
+    from check_seed import known
+
+    monkeypatch.setattr(web, "frames", True)
+    core.trust(known())  # como mount_web: la semilla de confianza
+    _login(web)
+    web.goto("alba-core", "/facturas/alta")
+    recorded = []
+    real_record = core.AUDIT.record
+    monkeypatch.setattr(core.AUDIT, "record", lambda ev: recorded.append(ev) or real_record(ev))
+    unsub = core.events.subscribe_frames(lambda m: None)
+    try:
+        assert _wait(lambda: web._vista_activa() and "Empresa 01" in web._call(web._vista.html), timeout=10)
+        html = web._call(web._vista.html)
+        for ui in ("Alta de factura de proveedor", "Compras:", "Importe del pedido", "Número de factura",
+                   "Cerrar sesión", "Empresa 01 - Ejercicio 2026", "Registrar"):
+            assert ui in html, ui
+        assert "‹IBAN_" in html and "‹IMPORTE_" in html
+        assert not [v for t, v in known() if len(v) >= 6 and v in html]
+        assert "Álvaro" not in html  # el usuario de la barra de estado, tapado
+        assert not any(ev.get("kind") == "observe_sent" for ev in recorded)  # nada ha ido al modelo
+    finally:
+        unsub()

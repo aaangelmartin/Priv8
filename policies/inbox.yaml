@@ -40,6 +40,8 @@ screens:
       - {match: {sel: "#pdf-numero"}, cls: ambar, tipo: FACTURA, origen: correo}
       - {match: {sel: "#pdf-importe"}, cls: ambar, tipo: IMPORTE, origen: correo, rasgo_signo: true}
       - {match: {sel: "#responder"}, cls: verde}
+      # Texto suelto de la página (#154): el nombre del remitente, tapado como en la bandeja.
+      - {match: {sel: ".nombre"}, cls: ambar, tipo: PROVEEDOR, origen: correo}
   - id: correo.respuesta
     url_re: /responder/
     origen: correo
@@ -59,3 +61,4 @@ screens:
         cls: verde
         critica: enviar
         resumen: ["#para"]
+      - {match: {sel: ".nombre"}, cls: ambar, tipo: PROVEEDOR, origen: correo}

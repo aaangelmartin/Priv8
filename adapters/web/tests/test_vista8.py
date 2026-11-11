@@ -2,8 +2,10 @@
 
 Sin las apps: una página con datos de data/seed.json en todos los sitios donde pueden
 esconderse (texto marcado y sin marcar, campos, atributos, imágenes, scripts, texto
-oculto), se serializa y censura con vista8.js, se pasa el bloqueo final y se escribe en
-la página espejo. Ningún valor de la semilla aparece ni en el HTML ni en el espejo.
+oculto), se serializa, el núcleo tapa lo sensible de su texto (core.mask_text), se censura
+con vista8.js, se pasa el bloqueo final y se escribe en la página espejo. Ningún dato
+sensible de la semilla aparece ni en el HTML ni en el espejo, y el texto de interfaz
+(menús, títulos, etiquetas, botones) sale tal cual.
 """
 
 from __future__ import annotations
@@ -13,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from adapters.web.vista import CENSOR_JS, Vista8, guard, obs_map, secrets_of
+from adapters.web.vista import CENSOR_JS, Vista8, guard, obs_map, secrets_of, tapar
 
 ROOT = Path(__file__).resolve().parents[3]
 SEED = json.loads((ROOT / "data" / "seed.json").read_text(encoding="utf-8"))
@@ -26,20 +28,11 @@ CLAVE = "Clave-Secreta-2026"
 
 
 def _seed_values() -> list[str]:
-    """Todas las cadenas de la semilla que parecen datos (de 6 caracteres o más)."""
-    out: list[str] = []
-
-    def walk(x):
-        if isinstance(x, dict):
-            for v in x.values():
-                walk(v)
-        elif isinstance(x, list):
-            for v in x:
-                walk(v)
-        elif isinstance(x, str) and len(x) >= 6:
-            out.append(x)
-    walk(SEED)
-    return out
+    """Los datos sensibles de la semilla: identificadores, nombres, teléfonos, correos (check_seed)."""
+    import sys
+    sys.path.insert(0, str(ROOT / "data"))
+    from check_seed import known
+    return [v for _, v in known() if len(v) >= 6]
 
 
 PAGE = f"""<!doctype html><html lang="es"><head><title>Factura de {NOMBRE}</title>
@@ -61,6 +54,13 @@ PAGE = f"""<!doctype html><html lang="es"><head><title>Factura de {NOMBRE}</titl
   <div id="nuevo" data-p8="text">{TRAMPA}</div>
   <svg width="10" height="10"><text x="0" y="9">{CIF}</text><title>{NOMBRE}</title></svg>
   <button id="registrar" data-p8="button">Registrar</button>
+  <nav class="menu"><b>Compras:</b> <a href="/alta">Alta de factura</a> <a href="/facturas">Facturas recibidas</a>
+    <span class="off">Contabilidad</span></nav>
+  <h2>Facturas pendientes de pago</h2>
+  <label>Buscar <input id="buscar" placeholder="Buscar en el correo"></label>
+  <button>Cerrar sesión</button>
+  <footer>Empresa 01 - Ejercicio 2026</footer>
+  <p id="saldo">Total 1.254,30 €</p>
 </body></html>"""
 
 # Lo que leyó el modelo de esa pantalla (e5, #nuevo, aún no lo ha leído).
@@ -86,13 +86,34 @@ def pw():
 
 
 @pytest.fixture(scope="module")
-def doc(pw):
+def core_():
+    import importlib
+    import os
+    import sys
+    os.environ.setdefault("PRIV8_AUDIT", "off")
+    import core
+    core = importlib.reload(core)
+    sys.path.insert(0, str(ROOT / "data"))
+    from check_seed import known
+    core.trust(known())
+    return core
+
+
+@pytest.fixture(scope="module")
+def doc(pw, core_):
     browser = pw.chromium.launch(headless=True)
     page = browser.new_page()
     page.set_content(PAGE)
     page.evaluate("(refs) => { for (const [s, r] of Object.entries(refs)) document.querySelector(s).setAttribute('data-p8-ref', r) }", REFS)
     page.fill("#iban", IBAN)  # el valor vivo del campo, además del atributo
-    d = page.evaluate(CENSOR_JS, {"force": True, "key": "1", "obs": obs_map(OBSERVED), "sel": {}, "over": {}})
+    args = {"force": True, "key": "1", "obs": obs_map(OBSERVED), "sel": {}, "over": {}}
+    textos = page.evaluate(CENSOR_JS, {**args, "fase": "textos"})["textos"]
+    secretos = [IBAN, NOMBRE, CIF, TRAMPA, CLAVE]
+    mascaras = {}
+    for t in textos:
+        m = tapar(core_.mask_text("t8", t) or [["t", t]], secretos)
+        mascaras[t] = None if m == [["t", t]] else m
+    d = page.evaluate(CENSOR_JS, {**args, "fase": "copia", "mascaras": mascaras})
     browser.close()
     return d
 
@@ -111,8 +132,17 @@ def test_lleva_lo_que_vio_el_modelo(doc):
     assert "Alta de factura" in doc["body"] and "Registrar" in doc["body"]  # lo verde se ve
     assert "IBAN de pago" in doc["body"]               # texto sin marcar que el modelo recibió como etiqueta
     assert "<script" not in doc["head"] + doc["body"]
-    assert 'class="p8-x"' in doc["body"]               # lo que no recibió, marcador neutro
+    assert 'class="p8-x"' in doc["body"]               # lo sensible sin token, marcador
     assert doc["head"].count("<style") == 1
+
+
+def test_la_interfaz_sale_tal_cual(doc):
+    """Menús, títulos, etiquetas, botones y placeholders: verde, libre."""
+    for ui in ("Compras:", "Alta de factura", "Facturas recibidas", "Contabilidad", "Facturas pendientes de pago",
+               "Buscar", "Buscar en el correo", "Cerrar sesión", "Empresa 01 - Ejercicio 2026", "Escribir",
+               "Nueva cuenta:", "Saludos,", "Total"):
+        assert ui in doc["body"], ui
+    assert "1.254,30" not in doc["body"]  # el importe del texto suelto, tapado
 
 
 def test_bloqueo_final():
@@ -141,5 +171,31 @@ def test_el_espejo_solo_recibe_la_copia(pw, doc):
         assert not v.write(malo, [IBAN])
         assert IBAN not in v.html() and v.blocked == 1
         assert v.call("di", {"texto": "Pulso «Registrar»"}) is True
+    finally:
+        v.close()
+
+
+def test_un_token_nunca_se_sale_de_su_caja(pw):
+    """En una caja pequeña (un avatar redondo) el token se recorta con puntos suspensivos."""
+    page = (
+        '<!doctype html><html><head><style>.avatar { display: inline-grid; place-items: center; width: 36px;'
+        ' height: 36px; border-radius: 50%; background: #7a5bc4; color: #fff; font: 14px sans-serif }</style></head>'
+        '<body><span class="avatar" data-p8="text" data-p8-ref="e1">SL</span>'
+        '<p><b data-p8="text" data-p8-ref="e2" style="display:inline-block;width:60px">x</b></p></body></html>')
+    obs = {"e1": {"cls": "ambar", "text": "‹CODIGO_2-correo›", "label": None},
+           "e2": {"cls": "rojo", "text": None, "label": None}}
+    browser = pw.chromium.launch(headless=True)
+    p = browser.new_page()
+    p.set_content(page)
+    doc = p.evaluate(CENSOR_JS, {"fase": "copia", "obs": obs, "sel": {}, "over": {}, "mascaras": {}})
+    browser.close()
+    v = Vista8(pw, {"width": 400, "height": 200}, scale=1)
+    try:
+        assert v.write(doc, [])
+        cajas = v.page.evaluate("""() => [...document.querySelectorAll('.p8-tok, .p8-nunca')].map((t) => {
+            const a = t.getBoundingClientRect(), b = t.parentElement.getBoundingClientRect()
+            return [a.left >= b.left - 0.5 && a.right <= b.right + 0.5, getComputedStyle(t).textOverflow]
+        })""")
+        assert cajas == [[True, "ellipsis"], [True, "ellipsis"]]
     finally:
         v.close()

@@ -16,6 +16,9 @@ from .policies import Rule, Screen
 from .vault import Vault
 
 
+INICIALES = re.compile(r"[A-ZÁÉÍÓÚÑÜ]{1,3}")  # texto suelto de 1 a 3 mayúsculas: iniciales, verde
+
+
 @dataclass(frozen=True)
 class Span:
     """Un dato encontrado por el detector en un texto."""
@@ -86,6 +89,16 @@ def transform_element(el: dict[str, Any], screen: Screen, vault: Vault,
             text, red = _replace_spans(text, detect(text), vault, screen.origen)
             if red:
                 cls = "rojo"
+    elif el.get("extra"):
+        # Texto suelto de la página (#154): sin regla, siempre el detector, sea cual sea la
+        # pantalla. Lo que encuentra va con su token (ámbar) o no sale (rojo); lo demás, verde.
+        cls = "verde"
+        if text and INICIALES.fullmatch(text.strip()):
+            pass  # las iniciales de un avatar («SL», «CP») no son un dato
+        elif text:
+            text, red = _replace_spans(text, detect(text), vault, screen.origen)
+            if red:
+                cls, text = "rojo", None
     elif screen.sin_regla == "ambar":
         cls = "ambar" if text and text.strip() else "verde"
         if cls == "ambar":
@@ -124,10 +137,43 @@ def paused_reason(raw: dict[str, Any], screen: Screen) -> str | None:
 
 
 def observe_screen(raw: dict[str, Any], screen: Screen, vault: Vault, budget_left: int,
-                   detect: Detector | None = None) -> tuple[dict[str, Any], dict[str, int]]:
-    """Devuelve (observación, recuento por clase)."""
+                   detect: Detector | None = None,
+                   leak: Any = None) -> tuple[dict[str, Any], dict[str, int]]:
+    """Devuelve (observación, recuento por clase).
+
+    leak(texto) -> {"allowed": bool}: el bloqueo final por elemento para los textos sueltos
+    (#154). Uno que no lo pasa no sale (rojo, sin texto) en vez de tumbar la pantalla entera."""
     detect = detect or no_detector
-    elements = [transform_element(el, screen, vault, detect) for el in raw.get("elements", [])]
+    raws = raw.get("elements", [])
+    done: dict[int, dict[str, Any]] = {}
+    # Primero lo marcado (sus reglas llenan la bóveda: el proveedor del PDF, el IBAN del correo)
+    # y después los textos sueltos, para que el detector ya reconozca esos valores en ellos.
+    for i, el in enumerate(raws):
+        if not el.get("extra"):
+            done[i] = transform_element(el, screen, vault, detect)
+    # Lo que las reglas del sitio tapan en un elemento marcado tampoco sale suelto en otro sitio
+    # de la página (el remitente del correo repetido en la cabecera): mismo tipo de token.
+    tapados: list[tuple[str, str]] = []
+    for i, el in enumerate(raws):
+        out = done.get(i)
+        if out and out["cls"] != "verde" and el.get("text"):
+            p = T.parse((out.get("tokens") or [""])[0])
+            tapados.append((" ".join(str(el["text"]).split()).casefold(), p.tipo if p else "CODIGO"))
+    for i, el in enumerate(raws):
+        if el.get("extra"):
+            out = transform_element(el, screen, vault, detect)
+            plano = " ".join((out.get("text") or "").split())
+            if out["cls"] == "verde" and len(plano) >= 8:
+                tipo = next((t for real, t in tapados if plano.casefold() in real), None)
+                if tipo:
+                    tok = vault.tokenize(tipo, plano, screen.origen)
+                    out = {**out, "cls": "ambar", "text": tok, "tokens": [tok]}
+            if leak is not None and out["cls"] != "rojo":
+                if not leak(" ".join(x for x in (out.get("label"), out.get("text")) if x))["allowed"]:
+                    out = {**out, "cls": "rojo", "text": None, "label": None}
+                    out.pop("tokens", None)
+            done[i] = out
+    elements = [done[i] for i in range(len(raws))]
     counts = {"verde": 0, "ambar": 0, "rojo": 0}
     for e in elements:
         counts[e["cls"]] += 1
