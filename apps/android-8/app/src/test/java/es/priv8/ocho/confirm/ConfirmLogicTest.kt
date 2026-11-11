@@ -41,6 +41,20 @@ class RendererTest {
         assertEquals(0, r.missing)
     }
 
+    @Test fun fullStopAfterAValueIsKept() {
+        // core.say: «Entre tus tres bancos tienes ‹SUMA_1›. Te he preparado…» comes as three segments.
+        val said = listOf(
+            Segment("cloud", "Entre tus tres bancos tienes", null, null),
+            Segment("local", null, "‹SUMA_1›", "currency"),
+            Segment("cloud", "Te he preparado la transferencia.", null, null),
+        )
+        val r = Renderer.render(said) { "17.977,98 €" }
+        assertEquals("Entre tus tres bancos tienes 17.977,98 €. Te he preparado la transferencia.", r.screen)
+        // Lowercase after a value continues the sentence.
+        assertEquals("200,00 € a tu cuenta de Nimbo Bróker. ¿Lo confirmas?",
+            Renderer.render(summary) { mapOf("‹IMPORTE_1›" to "200,00 €", "‹PROVEEDOR_1·propio›" to "Nimbo Bróker")[it] }.screen)
+    }
+
     @Test fun missingValueIsCounted() {
         val r = Renderer.render(summary) { null }
         assertEquals(2, r.missing)

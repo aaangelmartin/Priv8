@@ -91,13 +91,22 @@ object Renderer {
         val screen = mutableListOf<String>()
         val spoken = mutableListOf<String>()
         var missing = 0
+        var afterToken = false
         for (s in segments) {
             if (s.token == null) {
                 val text = s.text.orEmpty().trim()
+                // The segmenter drops the full stop after a token («‹SUMA_1›. Te he…» gives
+                // a token and then «Te he…»): a capital right after a value starts a sentence.
+                if (afterToken && text.firstOrNull()?.isUpperCase() == true) {
+                    closeLast(screen)
+                    closeLast(spoken)
+                }
                 screen += text
                 spoken += text
+                afterToken = false
                 continue
             }
+            afterToken = true
             val value = valueOf(s.token)
             if (value == null) {
                 missing++
@@ -109,6 +118,11 @@ object Renderer {
             }
         }
         return Rendered(sentence(screen), sentence(spoken), missing)
+    }
+
+    private fun closeLast(pieces: MutableList<String>) {
+        val last = pieces.lastOrNull() ?: return
+        if (last.isNotEmpty() && last.last() !in ".,;:?!…") pieces[pieces.size - 1] = "$last."
     }
 
     /** Joins the pieces with spaces, closes a sentence before «¿» or «¡», and capitalizes the start. */
