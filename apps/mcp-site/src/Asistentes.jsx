@@ -66,7 +66,7 @@ export function RotaAsistente() {
     <span className="ia-rot" ref={box} aria-hidden="true">
       {ASISTENTES.map((a, k) => (
         <span key={a.nombre} className={'ia' + (k === i ? ' on' : '')}>
-          <i style={{ '--ico': `url(${a.icono})` }} />{a.nombre}
+          <i style={{ '--ico': `url(${a.icono})` }} />{'\u00a0'}{a.nombre}
         </span>
       ))}
     </span>
@@ -77,7 +77,7 @@ export default function Pruebalo({ className = 'btn btn-ghost', href = 'https://
   return (
     <a className={className + ' pruebalo'} href={href} target="_blank" rel="noopener"
        aria-label="Pruébalo en tu asistente: Claude Code, Codex, Gemini CLI, Grok CLI, Cursor u opencode">
-      <span aria-hidden="true">Pruébalo en tu</span>
+      <span aria-hidden="true">Pruébalo en tu{'\u00a0'}</span>
       <RotaAsistente />
     </a>
   );
