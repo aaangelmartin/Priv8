@@ -294,14 +294,21 @@ function Correlo({ archivos }) {
 
 function Enlaces() {
   return (
-    <section id="enlaces" className="dblock" data-tone="paper" aria-labelledby="h-enlaces">
+    <section id="enlaces" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-enlaces">
       <div className="wrap">
         <Head id="h-enlaces" title="Lo demás." soft="A un clic." />
-        <ul className="enl rv-in">
-          {ENLACES.map((l) => (
-            <li key={l.title}><a href={l.href} {...ext(l.href)}>{l.title}</a></li>
+        <div className="enl rv-in">
+          {ENLACES.map((g) => (
+            <div key={g.grupo} className="enl-g">
+              <h3 className="enl-h">{g.grupo}</h3>
+              <ul>
+                {g.items.map((l) => (
+                  <li key={l.title}><a href={l.href} {...ext(l.href)}><b>{l.title}</b><span>{l.note}</span></a></li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
@@ -348,8 +355,9 @@ export default function App() {
         <Casos />
         <Blend from="--paper" to="--mist" seed={2} />
         <Correlo archivos={archivos} />
-        <Blend from="--mist" to="--paper" seed={3} />
+        <Blend from="--mist" to="--band" seed={3} />
         <Enlaces />
+        <Blend from="--band" to="--paper" seed={4} />
       </main>
       <Footer />
     </>

@@ -144,12 +144,22 @@ a.apk:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .copy-ok { background: var(--ok); }
 .copy-err { background: var(--warn); }
 
-/* ---------- enlaces: una fila de píldoras grandes ---------- */
-.enl { list-style: none; margin: 0 auto; padding: 0; max-width: 980px; display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-.enl a { display: inline-flex; align-items: center; padding: 18px 26px; border-radius: 999px; background: var(--card); color: var(--ink); text-decoration: none;
-  font: 600 clamp(1.05rem, .9rem + .5vw, 1.3rem)/1 var(--f-display); letter-spacing: -.02em; transition: transform .25s var(--ease), background .2s ease, color .2s ease; }
-.enl a:hover, .enl a:focus-visible { transform: translateY(-2px); background: var(--band); color: #fff; }
-.enl li:first-child a { background: var(--band); color: #fff; }
+/* ---------- enlaces: sobre cobalto, como los bloques de la web, en tres grupos con su título ---------- */
+.dblock-cobalt { background: transparent; color: #fff; }
+.dblock-cobalt::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 50% 50% at 50% 40%, var(--band) 40%, rgba(45, 69, 214, 0) 85%); }
+.dblock-cobalt .soft { color: #c4cdff; }
+.enl { margin: 0 auto; max-width: 1080px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(24px, 3vw, 40px); align-items: start; }
+@media (max-width: 860px) { .enl { grid-template-columns: minmax(0, 1fr); max-width: 520px; } }
+.enl-g { display: grid; gap: 14px; min-width: 0; }
+.enl-h { margin: 0; padding-left: 22px; font: 600 .82rem/1 var(--f-mono); letter-spacing: .01em; color: #fff; }
+.enl ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.enl a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 14px 22px; border-radius: 999px; background: #fff; color: var(--ink); text-decoration: none;
+  transition: transform .25s var(--ease), background .2s ease, color .2s ease; }
+.enl a b { font: 600 clamp(1.02rem, .9rem + .4vw, 1.2rem)/1.1 var(--f-display); letter-spacing: -.02em; white-space: nowrap; }
+.enl a span { font-size: .84rem; line-height: 1.3; color: var(--ink-2); text-align: right; min-width: 0; }
+.enl a:hover, .enl a:focus-visible { transform: translateY(-2px); background: var(--night); color: #fff; }
+.enl a:hover span, .enl a:focus-visible span { color: #c4cdff; }
+.enl a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
 /* pie: el de la web (apps/landing). 8 va dentro del hueco del nombre, con las medidas del acompañante
    (Companion.jsx: caja cuadrada de ancho 64/46 del hueco, centrada). */

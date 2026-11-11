@@ -52,13 +52,20 @@ export const PASOS_EMPRESAS = [
 ];
 export const README_URL = `${README}ejecución`;
 
-/* Enlaces del final: una fila de píldoras. */
+/* Enlaces del final, en tres grupos: la demo, el proyecto y para probarlo. */
 export const ENLACES = [
-  { title: 'Presentación', href: 'https://priv8.es/pitch' },
-  { title: 'priv8.es', href: 'https://priv8.es' },
-  { title: 'mcp.priv8.es', href: 'https://mcp.priv8.es' },
-  { title: 'Repositorio', href: REPO },
-  { title: 'Especificación', href: `${REPO}/blob/main/docs/SPEC.md` },
-  { title: 'Alba Core', href: '/erp/' },
-  { title: 'El correo', href: '/correo/' },
+  { grupo: 'La demo', items: [
+    { title: 'Alba Core', note: 'El ERP simulado', href: '/erp/' },
+    { title: 'El correo', note: 'La bandeja del proveedor', href: '/correo/' },
+    { title: 'La consola', note: 'Lo que ve el modelo', href: '/consola/' },
+  ] },
+  { grupo: 'El proyecto', items: [
+    { title: 'priv8.es', note: 'La web', href: 'https://priv8.es' },
+    { title: 'Presentación', note: 'El pitch', href: 'https://priv8.es/pitch' },
+    { title: 'Especificación', note: 'SPEC.md', href: `${REPO}/blob/main/docs/SPEC.md` },
+  ] },
+  { grupo: 'Pruébalo', items: [
+    { title: 'mcp.priv8.es', note: 'Conecta tu agente', href: 'https://mcp.priv8.es' },
+    { title: 'Repositorio', note: 'El código en GitHub', href: REPO },
+  ] },
 ];
