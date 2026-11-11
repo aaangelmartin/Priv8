@@ -159,9 +159,9 @@ class Channel:
         if name == "saldo":
             return [
                 (A("task", detail="¿Cuánto tengo entre mis bancos?"), 2.0),
-                (A("observe_sent", model_saw="Banca Alcor · Saldo ‹IMPORTE_1·positivo›", tokens=["‹IMPORTE_1·positivo›"], counts={"verde": 9, "ambar": 4, "rojo": 0}), 4.6),
+                (A("observe_sent", model_saw="Banca Alcor - Saldo ‹IMPORTE_1·positivo›", tokens=["‹IMPORTE_1·positivo›"], counts={"verde": 9, "ambar": 4, "rojo": 0}), 4.6),
                 (A("act", model_saw="act open_app brezo"), 1.2),
-                (A("observe_sent", model_saw="Brezo Banco · Saldo ‹IMPORTE_2·positivo›", tokens=["‹IMPORTE_2·positivo›"], counts={"verde": 7, "ambar": 3, "rojo": 0}), 4.6),
+                (A("observe_sent", model_saw="Brezo Banco - Saldo ‹IMPORTE_2·positivo›", tokens=["‹IMPORTE_2·positivo›"], counts={"verde": 7, "ambar": 3, "rojo": 0}), 4.6),
                 (A("oracle", model_saw="oracle sum ‹IMPORTE_1› ‹IMPORTE_2› ‹IMPORTE_3›", tokens=["‹IMPORTE_1·positivo›", "‹IMPORTE_2·positivo›", "‹IMPORTE_3·positivo›"]), 1.8),
                 (V([{"voice": "cloud", "text": "Entre tus tres cuentas tienes"}, {"voice": "local", "token": "‹SUMA_1›", "say_as": "currency"}]), 3.5),
             ]
@@ -170,7 +170,7 @@ class Channel:
                 (A("task", detail="Pasa 200 € al bróker"), 2.0),
                 (A("act", model_saw="act tap n9 Transferir"), 1.5),
                 (A("paused", detail="autenticacion"), 3.5),
-                (A("observe_sent", model_saw="Transferencia · Importe ‹IMPORTE_4›", tokens=["‹IMPORTE_4›"], counts={"verde": 6, "ambar": 2, "rojo": 0}), 4.6),
+                (A("observe_sent", model_saw="Transferencia - Importe ‹IMPORTE_4›", tokens=["‹IMPORTE_4›"], counts={"verde": 6, "ambar": 2, "rojo": 0}), 4.6),
                 (A("held", model_saw="act tap n14 Enviar", confirm=f"c{self.confirm + 1}"), 0.3),
                 (self.confirm_request(), 4.0),
                 (self.approval(True), 0.2),
