@@ -107,7 +107,7 @@ export function HowArch() {
           <h2 id="h-arch">Los datos no cruzan. <span className="soft">Los tokens, sí.</span></h2>
         </div>
         <div className={'tmap' + (narrow ? ' tmap-m' : '')}>
-          <div className="tz tz-local"><span>Tu máquina | los datos reales viven aquí</span></div>
+          <div className="tz tz-local"><span>Tu máquina - los datos reales viven aquí</span></div>
           <div className="tz tz-cloud"><span>Proveedor del modelo</span><div className="models" role="list" aria-label="Funciona con cualquier modelo">{MODELS.map((m) => <i key={m} role="listitem" title={m} aria-label={m}><svg viewBox="0 0 24 24" aria-hidden="true"><path d={LOGOS[m]} fillRule={m === 'Mistral' || m === 'Grok' ? 'evenodd' : undefined} /></svg></i>)}</div></div>
           <div className="tline" aria-hidden="true" />
           <svg className="tpaths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
