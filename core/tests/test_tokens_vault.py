@@ -157,6 +157,7 @@ def test_pausa_con_foco_en_clave():
 
 
 def test_detector_en_pantalla_sin_regla_y_origen_correo():
+    """Modo permisivo (#154): un elemento sin regla pasa por el detector."""
     ps = load_policies()
     raw = {"source": "web", "app": "inbox", "screen": None, "url": "http://x/correo/7", "seq": 1,
            "focus": None, "system_dialog": None,
@@ -173,7 +174,7 @@ def test_detector_en_pantalla_sin_regla_y_origen_correo():
         return spans
 
     v = Vault("s1")
-    obs, _ = observe_screen(raw, ps.screen_for(raw), v, 30, detect)
+    obs, _ = observe_screen(raw, ps.screen_for(raw), v, 30, detect, estricto=False)
     by = {e["id"]: e for e in obs["elements"]}
     assert by["b"]["text"] == "Nuevo IBAN: ‹IBAN_1-correo›. Gracias"
     assert v.lookup("‹IBAN_1-correo›").origenes == {"correo"}
