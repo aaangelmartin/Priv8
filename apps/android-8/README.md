@@ -1,4 +1,62 @@
-# apps/android-8
+<img alt="App 8 para Android" src="../../brand/banner/cabeceras/apps-android-8.png" width="100%">
+
+La app **Priv8** (`es.priv8.ocho`): el asistente al que hablas o escribes y el servicio de accesibilidad que hace de adaptador Android del núcleo.
+
+| Pieza | Archivo | Qué hace |
+|---|---|---|
+| Snapshot | `SnapshotBuilder.kt` | El árbol de accesibilidad, como `snapshot.schema.json`. Los campos rojos salen ya enmascarados |
+| Puente | `BridgeClient.kt` | Cliente de `ws://127.0.0.1:8765`; se reconecta solo |
+| Acciones | `Performer.kt` | `tap`, `type`, `back`, `open_app`, `scroll`, `key` |
+| Cursor de 8 | `CursorOverlay.kt` | Los ojos de 8 se deslizan a cada acción y se ocultan en las pausas |
+| Mira a otro lado | `Pause.kt` | Con el foco en la clave u OTP, o un diálogo del sistema, no sale nada |
+| Confirmación hablada | `confirm/` | La frase con los valores, en voz local, y «confirmo» o «cancela» |
+| Asistente | `chat/` | Conversación, progreso, bloqueos y confirmaciones (#163) |
+| Ojos | `assets/ocho/` | 8 se mueve con los eventos y con el volumen real (#39, #42) |
+| Renderizador local | `Frase.kt` | Pone los valores reales en lo que dice 8, solo en el móvil (#40) |
+| Dictado | `Tareas.kt` | En el móvil, el reconocedor del dispositivo; en el emulador, Whisper en el portátil (#47) |
+
+Logcat solo recibe tipos, ids, recuentos y códigos; nunca contenido de la pantalla ni valores.
+
+## Requisitos
+
+- JDK 17.
+- Android SDK en `~/Library/Android/sdk` con `platforms;android-34`, `platform-tools`, `emulator` y `cmdline-tools;latest`.
+- AVD `priv8`: Pixel 7, `system-images;android-34;google_apis;arm64-v8a` (Android 14).
+
+Crear el AVD si no existe:
+
+```sh
+SDK=~/Library/Android/sdk
+$SDK/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;arm64-v8a" "platforms;android-34"
+echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n priv8 \
+  -k "system-images;android-34;google_apis;arm64-v8a" -d pixel_7
+```
+
+## Compilar
+
+```sh
+cd apps/android-8
+ANDROID_HOME=~/Library/Android/sdk ./gradlew assembleDebug
+```
+
+El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. La primera vez el wrapper descarga Gradle 8.14.3 y las dependencias; después funciona sin red (`--offline`).
+
+## Ejecutar
+
+Desde la raíz del repositorio:
+
+```sh
+scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.apk
+~/Library/Android/sdk/platform-tools/adb reverse tcp:8765 tcp:8765
+~/Library/Android/sdk/platform-tools/adb logcat -s Priv8A11y
+```
+
+`emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
+
+Todo el lado del móvil en un comando (issue #48): `scripts/movil.sh` compila la app 8 y los tres bancos (Alcor, Brezo, Nimbo), llama a `emu.sh` con las cuatro APK y abre los puertos 8765 (puente) y 8700 (eventos). Con `--no-build` instala lo ya compilado; `--headless` pasa a `emu.sh`. Necesita `JAVA_HOME` con un JDK 17.
+
+<details>
+<summary><b>Detalle de cada pieza</b></summary>
 
 App Android **Priv8** (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad «Priv8» (`Priv8AccessibilityService`), que es el adaptador Android del núcleo. 8 es el nombre del agente dentro de la app.
 
@@ -39,44 +97,6 @@ Paquete `es.priv8.ocho.confirm`, aislado para que la app (#39) y el diseño (#36
 
 Logcat (etiqueta `Priv8Confirm`) solo recibe ids, recuentos y resultados; nunca la frase ni lo que se oyó.
 
-## Requisitos
-
-- JDK 17.
-- Android SDK en `~/Library/Android/sdk` con `platforms;android-34`, `platform-tools`, `emulator` y `cmdline-tools;latest`.
-- AVD `priv8`: Pixel 7, `system-images;android-34;google_apis;arm64-v8a` (Android 14).
-
-Crear el AVD si no existe:
-
-```sh
-SDK=~/Library/Android/sdk
-$SDK/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;arm64-v8a" "platforms;android-34"
-echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n priv8 \
-  -k "system-images;android-34;google_apis;arm64-v8a" -d pixel_7
-```
-
-## Compilar
-
-```sh
-cd apps/android-8
-ANDROID_HOME=~/Library/Android/sdk ./gradlew assembleDebug
-```
-
-El APK queda en `app/build/outputs/apk/debug/app-debug.apk`. La primera vez el wrapper descarga Gradle 8.14.3 y las dependencias; después funciona sin red (`--offline`).
-
-## Ejecutar
-
-Desde la raíz del repositorio:
-
-```sh
-scripts/emu.sh --headless apps/android-8/app/build/outputs/apk/debug/app-debug.apk
-~/Library/Android/sdk/platform-tools/adb reverse tcp:8765 tcp:8765
-~/Library/Android/sdk/platform-tools/adb logcat -s Priv8A11y
-```
-
-`emu.sh` arranca el AVD (o reutiliza el que ya corre), espera al arranque, instala los APK y activa el servicio con `settings put secure enabled_accessibility_services`. Sin `--headless` se abre la ventana del emulador. Para pararlo: `adb emu kill`.
-
-Todo el lado del móvil en un comando (issue #48): `scripts/movil.sh` compila la app 8 y los tres bancos (Alcor, Brezo, Nimbo), llama a `emu.sh` con las cuatro APK y abre los puertos 8765 (puente) y 8700 (eventos). Con `--no-build` instala lo ya compilado; `--headless` pasa a `emu.sh`. Necesita `JAVA_HOME` con un JDK 17.
-
 ## Probar el puente sin el núcleo
 
 `adapters/android/bridge_dev_server.py` hace de núcleo: acepta la conexión, valida cada mensaje en los dos sentidos contra los contratos y pide snapshots o manda acciones. Es una herramienta de desarrollo; el lado real es del núcleo.
@@ -103,12 +123,29 @@ Probado en la issue #26 sobre Android 14 (API 34):
 - **Instalado con `adb install`:** no hay restricción. El servicio se activa por `adb shell settings` y también desde Ajustes › Accesibilidad.
 - **Instalado desde un archivo o el navegador:** Ajustes muestra el servicio en gris con «Restricted setting», y el sistema descarta el valor de `enabled_accessibility_services` puesto por adb. Se desbloquea con «Allow restricted settings» en Información de la app, o con `adb shell appops set es.priv8.ocho ACCESS_RESTRICTED_SETTINGS allow`. `emu.sh` ya lo hace antes de activar el servicio.
 
+## El asistente (issue #163)
+
+La app es un asistente al que se le escribe o se le habla, y donde se ve todo lo que hace 8.
+
+- **Pantalla:** los ojos de 8 arriba, en una cabecera cobalto compacta que sigue reaccionando a los eventos (escuchar, pensar, hablar, mirar a otro lado), con una línea de estado debajo («Leyendo el saldo en Brezo Banco», «Esperando tu confirmación», «Sin conexión»). Debajo, la conversación; abajo, el campo de texto con el micrófono y enviar.
+- **Pedir:** lo escrito, lo dictado y las sugerencias («¿Cuánto tengo entre mis bancos?», «Pasa 200 € al bróker», «¿Qué movimientos tengo esta semana?») salen como `task_request` y quedan como burbuja de la persona, en cobalto. Sin conexión, la tarea espera en la conversación («Se envía al volver la conexión») y sale sola al reconectar. El teclado no aprende lo que se escribe (`IME_FLAG_NO_PERSONALIZED_LEARNING`).
+- **8 trabajando:** líneas de progreso breves sacadas de la auditoría de la sesión de la app (`Progreso.kt`): «Abriendo Brezo Banco», «Leyendo el saldo en Banca Alcor», «Comprobando sin ver la cifra», «Pon tu clave o el código. Miro a otro lado», «Esperando tu confirmación». Solo usan el tipo, la app y la pantalla del evento, nunca `model_saw` ni `detail`. Los eventos de otra sesión (la demo B2B en el mismo núcleo) no salen.
+- **Respuestas:** cada `voice` es una burbuja blanca de 8, con los valores reales puestos en el móvil y marcados (renderizador local, #40). Se sigue oyendo con la voz mixta del servicio.
+- **Bloqueos:** tarjetas propias. «No puedo asesorarte» (ámbar) cuando la persona pide consejo de inversión; «Nunca sale», «Pago parado» y «Envío parado» (rojo) para un dato rojo, un IBAN de un correo o una fuga.
+- **Confirmaciones:** la confirmación hablada (`ConfirmActivity`) sigue igual, y además cada `confirm_request` es una tarjeta con Confirmar y Cancelar. Si es la petición que tiene `ConfirmFlow`, la tarjeta responde por el mismo camino que los botones de `ConfirmActivity` (puente, `via: pantalla`) y la cierra; si no, manda `approval_result` por el canal de eventos. La tarjeta pasa a Confirmado, Cancelado o Caducado con la respuesta, venga de donde venga.
+- **Estado:** `chat/Conversacion.kt` es un estado inmutable con su reductor, sin Android, con tests (`ConversacionTest`, `ProgresoTest`). Vive solo en memoria del proceso: sobrevive a un giro de pantalla, nunca va a disco.
+- **Accesibilidad:** cada burbuja y tarjeta se lee entera («8: Entre tus tres cuentas tienes cinco mil…», con la cifra en palabras), la línea de estado es una región viva, los botones miden al menos 48 dp y los ojos quedan fuera de TalkBack porque el micrófono hace lo mismo.
+- **Canal de eventos en segundo plano:** mientras 8 trabaja en los bancos, la app no está delante, así que el canal queda abierto hasta que la actividad se destruye y la conversación lo recoge todo. Al volver delante, `EventsClient.refresh()` abre una conexión nueva antes de cerrar la vieja: el puente (`bridge.say`) espera a ver un suscriptor nuevo antes de que 8 hable, y no se pierde ningún mensaje.
+- Depuración: `adb shell am start -n es.priv8.ocho/.MainActivity --es tarea "Pasa 200 € al bróker"` manda una tarea escrita (solo en la build de depuración).
+
+Fuentes: Sora (incluida) en titulares y botones; el texto usa la sans del sistema y las líneas de progreso la monoespaciada del sistema, porque IBM Plex solo está en `woff2` en el repositorio y Android no carga ese formato.
+
 ## Los ojos de 8 (issue #39)
 
-La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos del núcleo (`ws://127.0.0.1:8700/events`, `docs/contracts/events.schema.json`).
+8 se mueve con el canal de eventos del núcleo (`ws://127.0.0.1:8700/events`, `docs/contracts/events.schema.json`).
 
 - **`OjosView.kt`**: WebView con `assets/ocho/app.html`. Todo se sirve desde el APK (`https://appassets.androidplatform.net/assets/`); la página no sale a la red: la petición a Google Fonts de `ojos.html` se responde con la Sora incluida (`assets/ocho/fonts/`, OFL) y cualquier otra recibe un 403.
-- **`docs/ojos.html` es la única fuente de los ojos.** El build lo copia sin tocarlo a `build/generated/ojos/ocho/ojos.html` (tarea `copyOjos`). `app.html` lo carga en un iframe, deja visible solo el 8 grande y lo mueve con `P8.poner()`.
+- **`docs/ojos.html` es la única fuente de los ojos.** El build lo copia sin tocarlo a `build/generated/ojos/ocho/ojos.html` (tarea `copyOjos`). `app.html` lo carga en un iframe, deja visible solo el 8 grande y lo mueve con `P8.poner()`. El 8 no se cambia de nodo padre: se fija en el centro y el resto se oculta. El motor deja de pintar cuando su `IntersectionObserver` dice que el 8 no se ve, y en una vista baja (la cabecera, o los ojos de la confirmación) ese observador a veces no volvía a avisar, así que 8 se quedaba quieto en su primer fotograma. `OjosView` sirve `ojos.html` con una línea delante que quita `IntersectionObserver` (en la app 8 siempre está a la vista); el archivo sigue sin tocarse.
 - **`EventsClient.kt`**: cliente WebSocket del canal de eventos, con reconexión de 1 a 4 s: sin núcleo, 8 pone la cara «sin conexión» y vuelve sola al arrancarlo. Descarta `screen` (lleva la pantalla real para la consola) antes de que llegue a la interfaz y solo registra tipos de mensaje.
 - **`assets/ocho/estados.js`**: de evento a cara. Función pura, con tests en `dev/test_estados.mjs`.
 
@@ -121,7 +158,7 @@ La pantalla de la app es 8 a pantalla completa, movido por el canal de eventos d
 | `audit` `held` | esperar |
 | `audit` `paused` | mirar a otro lado (`apartar`), hasta el siguiente evento |
 | `audit` `approval` | confirmado (`asentir`) o cancelado (`negar`) |
-| `audit` `blocked` | `rojo`: nunca sale · `asesoria`: no puedo · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
+| `audit` `blocked` | `rojo`: nunca sale - `asesoria`: no puedo - `destino`, `fuga`: enfado - `caducado`, `cancelado`: cancelado - resto: tristeza |
 | `audit` `call` | hablar |
 | `voice` | hablar, con una duración aproximada hasta que la voz mixta avise del final |
 | `confirm_request` | llamar (`atencion`) y luego esperar |
@@ -146,24 +183,23 @@ Tests de la tabla de caras: `node apps/android-8/dev/test_estados.mjs`.
 
 ## Renderizador local (issue #40)
 
-Lo que dice 8 sale debajo de los ojos con los valores reales puestos en el móvil.
+Lo que dice 8 sale en la conversación con los valores reales puestos en el móvil.
 
 - El mensaje `voice` del canal de eventos solo trae tokens: «Entre tus tres cuentas tienes ‹SUMA_1›».
 - Los valores llegan antes o justo después por el puente, con `render_values` (`bridge.schema.json` v1.1), y los guarda `LocalValues`: solo en memoria, sin registrar.
 - `Frase.kt` lee el `voice` y lo pinta con el mismo `Renderer` de las confirmaciones habladas. Rechaza un token en un segmento `cloud`.
-- `Subtitulo.kt` lo enseña. Si todavía falta algún valor, lo reintenta durante unos 2 s y mientras tanto enseña el token, nunca un valor inventado. El texto no se registra ni sale del dispositivo.
-- Es un aspecto provisional (Sora blanca sobre cobalto) hasta el diseño de la app (#36).
+- `chat/ChatView.kt` lo enseña como burbuja de 8. Si todavía falta algún valor, lo vuelve a pintar durante unos 2 s y mientras tanto enseña el token, nunca un valor inventado. El texto no se registra ni sale del dispositivo.
 
 Tests: `./gradlew testDebugUnitTest` (`FraseTest`, con los ejemplos de `docs/contracts/examples`).
 
 ## Dictado (issue #47)
 
-Toca a 8 y dile la tarea: «¿Cuánto tengo entre mis bancos?». El texto sale en el subtítulo. Vuelve a tocar para dejar de escuchar.
+Toca el micrófono (o a 8) y dile la tarea: «¿Cuánto tengo entre mis bancos?». Lo que va entendiendo sale en el campo de texto y la tarea queda como burbuja tuya. Vuelve a tocar para dejar de escuchar.
 
 Dos caminos, decididos por Ángel en la #47. En los dos el audio no sale del móvil o del portátil: nunca hay un reconocedor en la nube.
 
 - **Móvil real (A).** `SpeechRecognizer.createOnDeviceSpeechRecognizer` (Android 12+), en es-ES, con la misma petición que las confirmaciones habladas. El texto va al núcleo en un `task_request` por el canal de eventos (`events.schema.json` v1.2); el núcleo lo tokeniza antes de que llegue al modelo. Sin conexión, la tarea espera y sale al reconectar.
-- **Emulador (B).** Su reconocedor no funciona, así que la app manda `dictation_start` y el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`, `make dictado-install`). El núcleo devuelve `dictation` con el texto, que sale en el subtítulo, y encola la tarea él mismo.
+- **Emulador (B).** Su reconocedor no funciona, así que la app manda `dictation_start` y el núcleo graba el micrófono del portátil y lo transcribe con Whisper en local (`voice/dictado.py`, `make dictado-install`). El núcleo devuelve `dictation` con el texto, que sale como burbuja de la persona, y encola la tarea él mismo.
 - **Cuál se usa:** `auto` elige B en el emulador (`Build.FINGERPRINT`, `Build.HARDWARE`...) y A en un móvil. Un móvil sin reconocedor en el dispositivo, sin es-ES o con un error del reconocedor pasa también a B. Para forzarlo: `./gradlew assembleDebug -Ppriv8.dictado=portatil` (o `movil`), o `--es dictado portatil` en el `am start`. La sesión es `b2c` (`-Ppriv8.session=...`).
 - **Lo oído no se escribe en logcat**: puede llevar datos. Solo se registra la longitud de la tarea. El texto de `dictation` no llega al WebView de los ojos.
 
@@ -175,3 +211,5 @@ adb logcat -s Priv8Dictado   # «dictado: listening on the laptop», luego «lap
 ```
 
 Para probar el reconocedor del emulador (A) en vez de Whisper: `adb emu avd hostmicon` y `--es dictado movil`.
+
+</details>

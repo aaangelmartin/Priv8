@@ -67,13 +67,21 @@ VISTA_CSS = """
 <style id="p8-vista">
   .p8-tok { font: 600 .86em/1.35 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace !important;
             background: #E4E9FD !important; color: #2236B5 !important; border-radius: 6px; padding: .06em .42em;
-            white-space: nowrap; letter-spacing: 0 !important; text-transform: none !important }
+            white-space: nowrap; letter-spacing: 0 !important; text-transform: none !important;
+            /* nunca se sale de su caja: en una pequeña (un avatar) se recorta con puntos suspensivos */
+            display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
+            box-sizing: border-box }
+  .p8-nunca { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: bottom;
+              box-sizing: border-box }
   .p8-nunca { font: 600 .82em/1.35 "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace !important;
               color: #A83228 !important; background: repeating-linear-gradient(135deg, #FBE5E3 0 6px, #F7D7D3 6px 12px) !important;
               border-radius: 6px; padding: .08em .5em; white-space: nowrap; text-transform: none !important }
-  .p8-x { color: transparent !important; background: rgba(90, 100, 120, .14) !important; border-radius: 5px;
-          -webkit-box-decoration-break: clone; box-decoration-break: clone; user-select: none;
-          text-shadow: none !important; -webkit-text-fill-color: transparent !important }
+  /* un dato tapado: una barra suave del color del texto, del mismo tamaño que el texto */
+  .p8-x { position: relative; display: inline-block; vertical-align: baseline; line-height: inherit; white-space: nowrap; max-width: 100%; overflow: hidden;
+          color: transparent !important; -webkit-text-fill-color: transparent !important; text-shadow: none !important;
+          background: none !important; user-select: none; letter-spacing: -.02em }
+  .p8-x::after { content: ""; position: absolute; left: 1px; right: 1px; top: 50%; height: .9em; transform: translateY(-46%);
+                 border-radius: 999px; background: var(--p8c, #0B1B33); opacity: .17 }
   .p8-media { background: rgba(90, 100, 120, .12) !important; border-radius: 6px; vertical-align: middle }
   input[data-p8-c="ambar"], textarea[data-p8-c="ambar"] { color: #2236B5 !important; background-color: #EEF1FE !important;
             font-family: "P8 Plex Mono", "IBM Plex Mono", ui-monospace, monospace !important }
@@ -109,6 +117,10 @@ APPLY_JS = r"""
     const [top, left] = el.getAttribute('data-p8-scroll').split(',').map(Number)
     el.scrollTop = top
     el.scrollLeft = left
+  }
+  // Las barras de lo tapado, del color del texto que tapan.
+  for (const x of document.querySelectorAll('.p8-x')) {
+    if (x.parentElement) x.style.setProperty('--p8c', getComputedStyle(x.parentElement).color)
   }
   return true
 }
@@ -155,6 +167,29 @@ def secrets_of(raw: dict[str, Any] | None, observed: dict[str, Any] | None,
                     out.add(v.strip())
     out.update(v.strip() for v in extra if isinstance(v, str))
     return {v for v in out if len(v) >= MIN_SECRET}
+
+
+def tapar(partes: list[list[Any]], secrets: Iterable[str]) -> list[list[Any]]:
+    """Las partes de texto de una máscara, con cada valor de `secrets` que aún contengan
+    cambiado por un marcador (lo que el detector no reconoce: el texto real de lo ámbar)."""
+    vals = sorted({v for v in secrets if len(v) >= MIN_SECRET}, key=len, reverse=True)
+    if not vals:
+        return partes
+    pat = re.compile("|".join(re.escape(v) for v in vals), re.IGNORECASE)
+    out: list[list[Any]] = []
+    for k, v in partes:
+        if k != "t":
+            out.append([k, v])
+            continue
+        pos = 0
+        for m in pat.finditer(v):
+            if m.start() > pos:
+                out.append(["t", v[pos:m.start()]])
+            out.append(["x", m.end() - m.start()])
+            pos = m.end()
+        if pos < len(v):
+            out.append(["t", v[pos:]])
+    return out
 
 
 def _squash(s: str) -> str:

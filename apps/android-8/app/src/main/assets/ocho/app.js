@@ -1,4 +1,4 @@
-/* Priv8 · app 8 · los ojos en pantalla completa y los eventos del núcleo (issue #39).
+/* Priv8 - app 8 - los ojos en pantalla completa y los eventos del núcleo (issue #39).
  *
  * Carga docs/ojos.html (copiado en el build, sin tocarlo) en un iframe, deja
  * visible solo el 8 grande y lo mueve con P8.poner() según estados.js.
@@ -49,20 +49,25 @@
     })(0);
   }
 
-  /* ---------- solo el 8 grande ---------- */
+  /* ---------- solo el 8 grande ----------
+     El 8 grande se queda en su sitio del DOM y se fija en el centro; el resto se
+     oculta sin quitarlo del flujo. No se mueve de padre: el motor deja de pintar
+     cuando su IntersectionObserver dice que el 8 no se ve, y ese observador no
+     volvía a avisar tras mover el nodo, así que en una cabecera baja (donde el
+     8 empieza fuera de la vista) los ojos se quedaban quietos. */
   var CSS =
     'html,body{margin:0;height:100%;background:#2D45D6;overflow:hidden}' +
     'body{padding:0!important}' +
-    'body>*:not(#p8-solo){display:none!important}' +
-    '#p8-solo{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}' +
-    '#p8-solo #big{width:min(78vw,78vh);max-width:none;margin:0}';
+    'body *{visibility:hidden!important}' +
+    '#big,#big *{visibility:visible!important}' +
+    '#big{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%);' +
+    'width:min(78vw,78vh)!important;max-width:none!important;margin:0!important;z-index:9}';
 
   function prepararOjos() {
     var w = marco.contentWindow, d = marco.contentDocument;
     var big = d && d.getElementById('big');
     if (!w || !w.P8 || !big || !big.querySelector('svg')) { setTimeout(prepararOjos, 50); return; }
     var st = d.createElement('style'); st.textContent = CSS; d.head.appendChild(st);
-    var solo = d.createElement('div'); solo.id = 'p8-solo'; d.body.appendChild(solo); solo.appendChild(big);
     P8 = w.P8;
     mostrar(pendiente);
   }

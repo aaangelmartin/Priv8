@@ -1,41 +1,73 @@
 // Vista de 8 (#154): la página que maneja 8, censurada en el DOM.
 //
-// Se evalúa en la pestaña real con page.evaluate(src, args). Clona el documento y, en la
-// copia (nunca en la página real), cambia cada texto por lo que leyó el modelo:
+// Se evalúa en la pestaña real con page.evaluate(src, args), en dos fases:
+//
+//   fase 'textos'   si la página ha cambiado (MutationObserver, desplazamiento, foco, teclado)
+//                   o la observación es otra, devuelve los textos visibles sin marcar (nodos de
+//                   texto, valores y placeholders de campos); si no, null. El adaptador los pasa
+//                   por el detector del núcleo (core.mask_text): solo lo sensible se tapa.
+//   fase 'copia'    clona el documento y, en la copia (nunca en la página real), cambia:
 //
 //   elemento data-p8 con observación   su texto observado: verde tal cual, ámbar con sus
 //                                      tokens ‹TIPO_n-etiqueta› y rojo «nunca sale»
-//   elemento data-p8 sin observación   un marcador neutro (aún no lo ha leído)
-//   texto sin marcar                   se queda solo si es una cadena que el modelo ya
-//                                      recibió (una etiqueta, un texto verde, o parte del
-//                                      texto observado del elemento marcado que lo
-//                                      contiene); si no, un marcador neutro
-//   campos sin marcar, imágenes,       sin valor, sin fuente: cajas vacías del mismo tamaño
-//   lienzos y vídeos
-//   atributos                          solo los de presentación (clase, estilo, svg); fuera
-//                                      title, alt, aria-*, placeholder, href, data-*…
+//   elemento data-p8 sin observación   un marcador (aún no lo ha leído)
+//   texto sin marcar                   la interfaz es libre: se queda tal cual salvo los datos
+//                                      que encuentra el núcleo (a.mascaras: su token o un
+//                                      marcador). Un texto que no está en a.mascaras (ha
+//                                      aparecido entre las dos fases) sale como marcador.
+//                                      Con a.estricto, solo lo que el modelo recibió.
+//   imágenes, lienzos y vídeos         cajas vacías del mismo tamaño
+//   atributos                          solo los de presentación y los placeholder limpios;
+//                                      fuera title, alt, aria-*, href, data-*…
 //
 // Devuelve el documento censurado como texto (head y body) y todo el texto que queda en él,
 // para que el adaptador pase el bloqueo final antes de escribirlo en la página espejo.
-// Sin cambios desde la última vez (MutationObserver, desplazamiento, foco, teclado) y con
-// la misma observación, devuelve null.
 //
-// args: {force, key, obs: {ref: {cls, text, label}}, sel: {ref: '#id'}, over: {ref: texto}}
+// args: {fase, force, key, obs: {ref: {cls, text, label}}, sel: {ref: '#id'}, over: {ref: texto},
+//        mascaras: {texto: null | [[t|tok|x, valor]]}, estricto}
 (a) => {
   const st = window.__p8v || (window.__p8v = { n: 1, sent: 0, key: null, mo: null })
   if (!st.mo) {
     const bump = () => { st.n++ }
-    st.mo = new MutationObserver(bump)
+    // Los ids que pone el propio adaptador (data-p8-ref, data-p8-pv…) no cuentan como cambio.
+    st.mo = new MutationObserver((list) => {
+      if (list.some((m) => !(m.type === 'attributes' && (m.attributeName || '').startsWith('data-p8')))) bump()
+    })
     st.mo.observe(document, { subtree: true, childList: true, characterData: true, attributes: true })
     for (const ev of ['scroll', 'input', 'change', 'focusin', 'focusout']) addEventListener(ev, bump, true)
     addEventListener('resize', bump)
   }
-  if (!a.force && st.n === st.sent && a.key === st.key) return null
-  st.sent = st.n
-  st.key = a.key
+  const IGNORA = 'script, style, noscript, template, [data-p8-ignore]'
+  if (a.fase === 'sucio') {
+    if (!a.force && st.n === st.sent && a.key === st.key) return false
+    st.sent = st.n
+    st.key = a.key
+    return true
+  }
+  if (a.fase === 'textos') {
+    const out = new Set()
+    const w = document.createTreeWalker(document.body || document.documentElement, NodeFilter.SHOW_TEXT)
+    while (w.nextNode()) {
+      const t = w.currentNode
+      if (t.nodeValue.trim() && !t.parentElement?.closest(IGNORA)) out.add(t.nodeValue)
+    }
+    for (const el of document.querySelectorAll('input, textarea')) {
+      if (el.closest('[data-p8-ignore]')) continue
+      if (el.getAttribute('value')) out.add(el.getAttribute('value'))
+      if (el.value) out.add(el.value)
+      if (el.getAttribute('placeholder')) out.add(el.getAttribute('placeholder'))
+    }
+    if (document.title) out.add(document.title)
+    return { textos: [...out].slice(0, 4000) }
+  }
+  const mascaras = a.mascaras || {}
+  const limpio = (s) => Object.prototype.hasOwnProperty.call(mascaras, s) && mascaras[s] === null
 
   const obs = a.obs || {}
   const over = a.over || {}
+  // Atributos con los ids de la observación: data-p8-ref (la del modelo) o data-p8-pv (la vista previa).
+  const REF = a.ref || 'data-p8-ref'
+  const XA = a.xattr || 'data-p8-x'
   const TOK = /‹[^›]{1,80}›/g
   const norm = (s) => String(s ?? '').replace(/\s+/g, ' ').trim()
   const tieneToken = (s) => /‹[^›]{1,80}›/.test(s || '')
@@ -110,6 +142,16 @@
     x.textContent = 'x'.repeat(Math.max(2, Math.min(18, largo || 6)))
     return x
   }
+  // Un texto con sus datos tapados por el núcleo: tokens en su chip, lo demás marcador.
+  const conMascara = (partes) => {
+    const frag = document.createDocumentFragment()
+    for (const [k, v] of partes) {
+      if (k === 't') frag.append(document.createTextNode(v))
+      else if (k === 'tok') frag.append(pintar(v))
+      else frag.append(marcador(v))
+    }
+    return frag
+  }
   const nunca = () => {
     const x = document.createElement('span')
     x.className = 'p8-nunca'
@@ -129,23 +171,27 @@
   for (const [ref, sel] of Object.entries(a.sel || {})) {
     try {
       const el = body.querySelector(sel)
-      if (el && !el.hasAttribute('data-p8-ref')) { el.setAttribute('data-p8-ref', ref); el.setAttribute('data-p8', 'text') }
+      if (el && !el.hasAttribute(REF)) { el.setAttribute(REF, ref); el.setAttribute('data-p8', 'text') }
     } catch { /* selector raro: el elemento queda sin marcar */ }
   }
-  const marcados = [...body.querySelectorAll('[data-p8], [data-p8-ref]')]
+  const MARCA = `[data-p8], [${REF}]`
+  const marcados = [...body.querySelectorAll(MARCA)]
   const hondo = (el) => { let d = 0; for (let p = el; p; p = p.parentElement) d++; return d }
   marcados.sort((x, y) => hondo(y) - hondo(x))
   const observado = new Map() // elemento de la copia -> texto observado (para el texto sin marcar de dentro)
 
   for (const el of marcados) {
-    const ref = el.getAttribute('data-p8-ref')
+    const ref = el.getAttribute(REF)
     const o = ref ? obs[ref] : null
     const cls = o ? o.cls : 'pendiente'
     el.setAttribute('data-p8-c', cls)
     let texto = null
-    if (ref && Object.prototype.hasOwnProperty.call(over, ref)) texto = over[ref]
+    const del8 = el.getAttribute('data-p8-ref') // lo que escribe 8 va por los ids del agente
+    if (del8 && Object.prototype.hasOwnProperty.call(over, del8)) texto = over[del8]
     else if (o && o.cls !== 'rojo') texto = o.text ?? null
     const tag = el.tagName
+    // Aún sin leer: como el texto sin marcar (tal cual salvo lo sensible), no un marcador entero.
+    if (cls === 'pendiente' && texto == null && !a.estricto) continue
     if (tag === 'INPUT' && !/^(checkbox|radio|range|color|file|image|hidden)$/i.test(el.type)) {
       if ((el.getAttribute('type') || '').toLowerCase() === 'password') el.setAttribute('type', 'text')
       el.setAttribute('value', cls === 'rojo' ? 'nunca sale' : cls === 'pendiente' && texto == null ? '' : (texto ?? ''))
@@ -167,7 +213,7 @@
       continue
     }
     if (texto != null) observado.set(el, norm(texto))
-    const dentro = el.querySelector('[data-p8], [data-p8-ref]')
+    const dentro = el.querySelector(MARCA)
     if (dentro) continue // contenedor: lo suyo lo resuelve el texto sin marcar, contra su texto observado
     const textos = textosDe(el)
     if (!textos.length) continue // solo iconos: no se añade texto que no había
@@ -185,7 +231,44 @@
     }
   }
 
-  // ---- el texto sin marcar
+  // ---- los textos sueltos (#154): cada uno exactamente como lo recibió el modelo, en su sitio
+  if (!a.estricto) {
+    for (const el of body.querySelectorAll(`[${XA}]`)) {
+      const ids = (el.getAttribute(XA) || '').split(',')
+      el.removeAttribute(XA)
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+        const o = obs[ids[0]]
+        if (!o) continue
+        const v = o.cls === 'rojo' ? 'nunca sale' : (o.text ?? '')
+        if (el.tagName === 'TEXTAREA') { el.textContent = v; if (el.firstChild) seguros.add(el.firstChild) } else el.setAttribute('value', v)
+        el.setAttribute('data-p8-set', '')
+        el.setAttribute('data-p8-c', o.cls)
+        if (o.label && o.cls !== 'rojo') el.setAttribute('placeholder', o.label)
+        else el.removeAttribute('placeholder')
+        el.setAttribute('data-p8-ph', '')
+        continue
+      }
+      const directos = [...el.childNodes].filter((n) => n.nodeType === 3 && n.nodeValue.trim())
+      directos.forEach((n, i) => {
+        const o = obs[ids[i]]
+        if (!o) return
+        const antes = n.nodeValue.match(/^\s*/)[0]
+        const despues = n.nodeValue.match(/\s*$/)[0]
+        const frag = document.createDocumentFragment()
+        if (antes) frag.append(antes)
+        frag.append(o.cls === 'rojo' ? nunca() : pintar(o.text ?? ''))
+        if (despues) frag.append(despues)
+        const hijos = [...frag.childNodes]
+        n.replaceWith(frag)
+        for (const h of hijos) {
+          if (h.nodeType === 3) seguros.add(h)
+          else textosDe(h).forEach((t) => seguros.add(t))
+        }
+      })
+    }
+  }
+
+  // ---- el texto que no ha llegado al modelo (fuera de pantalla, tope): solo se tapa lo sensible
   {
     const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
     const todos = []
@@ -197,20 +280,42 @@
       if (p.closest('style')) continue // CSS de la app
       const s = norm(t.nodeValue)
       if (!s) continue
-      if (p.closest('textarea')) { t.remove(); continue }
-      if (conocidas.has(s)) continue
-      const dueno = p.closest('[data-p8], [data-p8-ref]')
-      const visto = dueno ? observado.get(dueno) : null
-      if (visto && s.length >= 2 && visto.includes(s)) continue
-      if (enSvg(t)) { t.nodeValue = ''; continue }
-      t.replaceWith(marcador(s.length))
+      if (p.closest('textarea')) { if (!limpio(t.nodeValue)) t.remove(); continue }
+      if (a.estricto) {
+        if (conocidas.has(s)) continue
+        const dueno = p.closest(MARCA)
+        const visto = dueno ? observado.get(dueno) : null
+        if (visto && s.length >= 2 && visto.includes(s)) continue
+        if (enSvg(t)) { t.nodeValue = ''; continue }
+        t.replaceWith(marcador(s.length))
+        continue
+      }
+      if (limpio(t.nodeValue)) continue
+      const m = mascaras[t.nodeValue]
+      if (enSvg(t)) { t.nodeValue = m ? m.filter(([k]) => k === 't').map(([, v]) => v).join(' ') : ''; continue }
+      t.replaceWith(m ? conMascara(m) : marcador(s.length))
+    }
+    // Campos sin marcar: su valor y su placeholder, si están limpios.
+    for (const el of body.querySelectorAll('input:not([data-p8-set]), textarea:not([data-p8-set])')) {
+      const v = el.getAttribute('value')
+      if ((el.getAttribute('type') || '').toLowerCase() === 'password') { el.removeAttribute('value'); continue } // una clave nunca
+      if (v != null) {
+        if (!a.estricto && limpio(v)) el.setAttribute('data-p8-set', '')
+        else el.removeAttribute('value')
+      }
+    }
+    // Placeholders de cualquier campo, marcado o no: solo si están limpios.
+    for (const el of body.querySelectorAll('[placeholder]:not([data-p8-ph])')) {
+      const ph = el.getAttribute('placeholder')
+      if (a.estricto || !limpio(ph)) el.removeAttribute('placeholder')
     }
   }
 
   // ---- atributos: solo presentación
   const QUEDAN = new Set(['class', 'id', 'style', 'role', 'disabled', 'checked', 'selected', 'readonly', 'colspan', 'rowspan',
     'width', 'height', 'dir', 'lang', 'type', 'for', 'open', 'hidden', 'span', 'start', 'reversed', 'cols', 'rows', 'size',
-    'data-p8', 'data-p8-ref', 'data-p8-c', 'data-p8-scroll', 'data-p8-focus', 'data-p8-set', 'data-theme',
+    'placeholder',
+    'data-p8', 'data-p8-ref', 'data-p8-pv', 'data-p8-c', 'data-p8-scroll', 'data-p8-focus', 'data-p8-set', 'data-theme',
     // svg
     'viewbox', 'd', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'stroke-dasharray', 'stroke-dashoffset',
     'stroke-miterlimit', 'stroke-opacity', 'fill-rule', 'clip-rule', 'fill-opacity', 'opacity', 'transform', 'cx', 'cy', 'r', 'rx',
@@ -239,6 +344,7 @@
     const w = document.createTreeWalker(body, NodeFilter.SHOW_TEXT)
     while (w.nextNode()) { if (!w.currentNode.parentElement?.closest('style')) restos.push(w.currentNode.nodeValue) }
     for (const el of body.querySelectorAll('[value]')) restos.push(el.getAttribute('value'))
+    for (const el of body.querySelectorAll('[placeholder]')) restos.push(el.getAttribute('placeholder'))
     if (titulo) restos.push(titulo.textContent)
   }
   const attrs = (el) => Object.fromEntries([...el.attributes].map((x) => [x.name, x.value]))

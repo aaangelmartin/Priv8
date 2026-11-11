@@ -87,6 +87,8 @@ def connect(session: str, adapter: Adapter) -> None:
         adapter.p8_render_text = vault.render
         adapter.p8_secrets = lambda v=vault: [*v.values(), *(x for _, x in TRUSTED)]
         adapter.p8_check = lambda text: check(text)
+        adapter.p8_mask = lambda text, s=session: mask_text(s, text)
+        adapter.p8_preview = lambda raw, s=session: preview(s, raw)
         old = getattr(adapter, "_p8_unsubscribe", None)
         if callable(old):
             old()
@@ -101,6 +103,57 @@ def trust(known: list[tuple[str, str]]) -> None:
 
 def _detector(session: str) -> FinanceDetector:
     return FinanceDetector(known=TRUSTED, vault=SESSIONS.get(session).vault)
+
+
+def _squash(s: str) -> str:
+    return "".join(s.split()).casefold()
+
+
+def mask_text(session: str, text: str) -> list[list[Any]] | None:
+    """Texto de interfaz para la vista de 8 (#154): None si no lleva nada sensible y sale tal
+    cual; si no, sus partes [["t", texto], ["tok", token], ["x", largo]]. Cada dato que encuentra
+    el detector (IBAN, DNI/NIE, tarjeta, teléfono, correo, importes, nombres, valores de la
+    bóveda y de confianza) va como su token si la bóveda ya lo tiene, o como marcador. Si lo que
+    queda aún no pasa el bloqueo final, el texto entero es un marcador. No crea tokens."""
+    if not text or not text.strip():
+        return None
+    spans = sorted(_detector(session)(text), key=lambda s: s.start)
+    if not spans:
+        return None if check(text)["allowed"] else [["x", len(text.strip())]]
+    tokens = {_squash(e.value): e.token for e in SESSIONS.get(session).vault.entries()}
+    parts: list[list[Any]] = []
+    pos = 0
+    for s in spans:
+        if s.start < pos:
+            continue
+        if s.start > pos:
+            parts.append(["t", text[pos:s.start]])
+        tok = tokens.get(_squash(text[s.start:s.end])) if s.tipo != "ROJO" else None
+        parts.append(["tok", tok] if tok else ["x", s.end - s.start])
+        pos = s.end
+    if pos < len(text):
+        parts.append(["t", text[pos:]])
+    plain = " ".join(p[1] for p in parts if p[0] == "t")
+    if not check(plain)["allowed"]:
+        return [["x", len(text.strip())]]
+    return parts
+
+
+def preview(session: str, raw: dict[str, Any]) -> dict[str, Any] | None:
+    """Lo que vería el modelo de `raw` si 8 lo observara ahora, solo para la vista de 8 (#154):
+    la misma clasificación que observe(), sin mandarla al modelo, sin auditoría y sin tocar la
+    última observación. None si la pantalla no tiene política o no pasa el bloqueo final (la
+    vista de 8 la tapa con el detector). Con pausa, la observación vacía y su motivo."""
+    sess = SESSIONS.get(session)
+    paused = pause_before_policy(raw)
+    if paused:
+        return {"session": session, "app": raw.get("app", ""), "screen": raw.get("screen"), "seq": raw.get("seq", 0),
+                "paused": paused, "elements": [], "budget_left": sess.budget_left}
+    screen = policies().screen_for(raw)
+    if screen is None:
+        return None
+    obs, _ = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session), leak=check)
+    return obs if check(json.dumps(obs, ensure_ascii=False))["allowed"] else None
 
 
 def tokenize_text(session: str, text: str, origen: str = "titular") -> str:
@@ -341,7 +394,7 @@ def observe(session: str) -> dict[str, Any]:
                 "model_saw": None, "detail": "pantalla sin política: no sale",
                 "ms": {"core": _ms(t0), "adapter": adapter_ms, "model": None}})
         return {"denied": "sin_regla", "detail": no_policy_detail(sess.adapter)}
-    obs, counts = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session))
+    obs, counts = observe_screen(raw, screen, sess.vault, sess.budget_left, _detector(session), leak=check)
     verdict = check(json.dumps(obs, ensure_ascii=False))
     if not verdict["allowed"]:
         sess.last_raw, sess.last_screen, sess.last_obs = None, None, None

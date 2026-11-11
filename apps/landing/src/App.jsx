@@ -61,7 +61,7 @@ function Hero() {
           Cada dato sensible le llega como un token; el valor real nunca sale de tu máquina.
         </p>
         <div className="cta in-4">
-          <a className="btn btn-white" href="#contacto">Pide una demo</a>
+          <a className="btn btn-white" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a>
           <a className="btn btn-ghost" href="#problema">Mira cómo trabaja</a>
         </div>
       </div>
@@ -98,38 +98,17 @@ function Faq() {
   );
 }
 
-/* ---------------------------------------------------------------- pide una demo y pie */
-const NEEDS = ['Facturas y pagos a proveedores', 'Atención al cliente y reclamaciones', 'Agentes para los clientes de mi banco', 'Otro proceso'];
-function DemoForm({ compact = false }) {
-  const [sent, setSent] = useState(false);
-  const submit = (e) => { e.preventDefault(); setSent(true); mood('agradecer', 2600); };
-  if (sent) return (<div className="sent" role="status"><b>Gracias.</b><p>Esta versión de la web todavía no envía el formulario. Lo conectamos en cuanto tengamos dirección de contacto.</p></div>);
-  const p = compact ? 'g-' : 'f-';
-  return (
-    <form className={'lead-form' + (compact ? ' compact' : '')} onSubmit={submit}>
-      {!compact && <label htmlFor={p + 'name'}>Nombre<input id={p + 'name'} name="name" autoComplete="name" required /></label>}
-      {!compact && <label htmlFor={p + 'company'}>Empresa<input id={p + 'company'} name="company" autoComplete="organization" required /></label>}
-      <label htmlFor={p + 'email'}>Correo del trabajo<input id={p + 'email'} name="email" type="email" autoComplete="email" required placeholder={compact ? 'tu@empresa.com' : undefined} /></label>
-      {!compact && (
-        <label htmlFor={p + 'need'}>Qué quieres automatizar
-          <select id={p + 'need'} name="need" defaultValue={NEEDS[0]}>{NEEDS.map((x) => <option key={x}>{x}</option>)}</select>
-        </label>
-      )}
-      <button type="submit" className="btn btn-white">Pedir la demo</button>
-    </form>
-  );
-}
-
+/* ---------------------------------------------------------------- la demo y pie */
 function Cierre() {
   return (
     <section id="contacto" className="block block-cobalt close" aria-labelledby="h-close">
       <div className="wrap close-grid">
         <div className="block-head">
-          <Spot className="spot-inline" mode="alegria" say="¿Me enseñas tu proceso?" />
-          <h2 id="h-close">Enséñanos un proceso. <span className="soft">Te lo devolvemos hecho.</span></h2>
-          <p className="lead">Treinta minutos con tus pantallas, o con las nuestras si todavía no quieres compartir nada. Sin integrar nada y sin que la IA vea un dato.</p>
+          <Spot className="spot-inline" mode="alegria" say="¿Me ves trabajar?" />
+          <h2 id="h-close">Mírala en marcha. <span className="soft">Sin que la IA vea un dato.</span></h2>
+          <p className="lead">Los dos trámites de principio a fin: lo que ves tú y lo que ve el modelo.</p>
+          <div className="cta"><a className="btn btn-white" href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a></div>
         </div>
-        <DemoForm />
       </div>
     </section>
   );
@@ -150,7 +129,7 @@ function Footer({ pal }) {
           <nav className="foot-cols" aria-label="Pie">
             <div><b>Producto</b><a href="#problema">Qué ve</a><a href="#como">Cómo funciona</a><a href="#producto">Para empresas</a><a href="#producto">Priv8 en el móvil</a><a href="#integrar">Integración</a></div>
             <div><b>Confianza</b><a href="#garantias">Garantías</a><a href="#cumplimiento">Cumplimiento</a><a href="#faq">Preguntas</a></div>
-            <div><b>Empezar</b><a href="#contacto">Pide una demo</a><a href="#comparar">Por qué Priv8</a></div>
+            <div><b>Empezar</b><a href="https://demo.priv8.es" target="_blank" rel="noopener">Ver la demo</a><a href="#comparar">Por qué Priv8</a></div>
           </nav>
         </div>
         {/* firma de quien lo hace, como en open2agents.com: el vector de laaabs, centrado y discreto */}
@@ -196,7 +175,7 @@ export default function App() {
   }, []);
   /* aparición al entrar en pantalla, en los bloques normales */
   useEffect(() => {
-    const els = document.querySelectorAll('.block .block-head, .block .swap-in, .block .demos, .block .faq, .lead-form');
+    const els = document.querySelectorAll('.block .block-head, .block .swap-in, .block .demos, .block .faq');
     els.forEach((el) => el.classList.add('rv'));
     const io = new IntersectionObserver((en) => en.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
     els.forEach((el) => io.observe(el));

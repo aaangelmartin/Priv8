@@ -101,6 +101,7 @@ class OjosView(context: Context) : WebView(context) {
 
         private fun asset(path: String): WebResourceResponse {
             if (path.contains("..")) return blocked()
+            if (path == OJOS) return ojos()
             return try {
                 WebResourceResponse(mime(path), if (mime(path).startsWith("text/") || path.endsWith(".js")) "utf-8" else null, context.assets.open(path))
             } catch (e: IOException) {
@@ -109,7 +110,24 @@ class OjosView(context: Context) : WebView(context) {
         }
     }
 
+    /**
+     * docs/ojos.html as built, with one line in front of its scripts: no
+     * IntersectionObserver. The engine stops painting while its observer says
+     * the 8 is out of view, and in a short view (the header, the confirmation)
+     * that observer sometimes never reported it back in view after app.html
+     * placed the 8, so the eyes stayed frozen on their first frame. Here the
+     * 8 is always on screen, so it always paints. The file itself is untouched.
+     */
+    private fun ojos(): WebResourceResponse = try {
+        val html = context.assets.open(OJOS).use { it.readBytes().toString(Charsets.UTF_8) }
+        text("text/html", html.replaceFirst("<head>", "<head>$SIN_IO"))
+    } catch (e: IOException) {
+        WebResourceResponse("text/plain", "utf-8", 404, "Not Found", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+    }
+
     companion object {
+        private const val OJOS = "ocho/ojos.html"
+        private const val SIN_IO = "<script>try{delete window.IntersectionObserver}catch(e){}</script>"
         private const val ASSET_HOST = "appassets.androidplatform.net"
         private const val ORIGIN = "https://$ASSET_HOST"
         private val SORA_CSS = """

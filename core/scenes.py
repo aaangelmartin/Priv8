@@ -97,7 +97,7 @@ class FacturaProveedor(Scene):
     def __init__(self) -> None:
         super().__init__()
         self.app = "inbox"
-        self.page = "correo"  # correo | responder | enviado · alta | ficha
+        self.page = "correo"  # correo | responder | enviado - alta | ficha
         self.form = {"num": "", "importe": "", "iban": IBAN_MAESTRO}
         self.registrada = False
         self.respuesta = ""

@@ -24,7 +24,7 @@ Hay tres hallazgos que afectan a todos los conceptos:
 
 **Veredicto: KEEP WITH CHANGES.** Es el concepto que mejor encaja con los patrocinadores y con lo que el equipo ya tiene construido. Pero la novedad declarada ("traspaso prefirmado") ya no se sostiene. Lo que sigue siendo nuevo es **que la IA trabaje con la cartera del usuario sin verla, que la solicitud llegue a MyInvestor sin errores y que nadie la pueda manipular, con pruebas de todo**. Hay que recortar el alcance: fuera el traslado de cuenta, las domiciliaciones, los seguros vinculados y las llamadas de Mudanza 8. Se queda solo con fondos y planes.
 
-**Puntuación corregida:** Innovación 3,5 (Indexa y MyInvestor ya digitalizaron la solicitud; el valor está en la privacidad, la procedencia y la validación previa) · IA 3,5 (la voz sirve para confirmar y explicar, pero sigue siendo prescindible si no se mide) · UX 4 · Implementación 4,5 (Priv8 ya lee el DOM, tokeniza y retiene) · Presentación 4,5. **Ponderada: 1,05 + 0,525 + 0,6 + 1,35 + 0,45 = 3,98.**
+**Puntuación corregida:** Innovación 3,5 (Indexa y MyInvestor ya digitalizaron la solicitud; el valor está en la privacidad, la procedencia y la validación previa) - IA 3,5 (la voz sirve para confirmar y explicar, pero sigue siendo prescindible si no se mide) - UX 4 - Implementación 4,5 (Priv8 ya lee el DOM, tokeniza y retiene) - Presentación 4,5. **Ponderada: 1,05 + 0,525 + 0,6 + 1,35 + 0,45 = 3,98.**
 
 ### Hechos verificados
 - **Flujo actual de MyInvestor.** El traspaso se pide en la app, en "Traer fondos desde otra entidad", subiendo dos PDF: la "solicitud de cambio de comercializador firmada" y un "extracto o informe de posiciones de la entidad origen, firmado". El extracto tiene que tener menos de 3 meses, los titulares deben coincidir con la cuenta de destino y debe detallar fondos o planes con ISIN y participaciones. Si hay cotitulares, firman todos. El plazo "puede variar" y "suele ser de varias semanas, pudiendo extenderse a 30 días o más". Si se rechaza, la app da el motivo y deja reenviar la solicitud — [MyInvestor, landing de traspaso](https://myinvestor.es/landings/planes-pensiones/traspaso/)
@@ -71,7 +71,7 @@ Hay tres hallazgos que afectan a todos los conceptos:
 
 **Veredicto: KEEP WITH CHANGES, pero como módulo de Mandato 8 o como segunda pantalla de la demo, no como producto principal.** El problema es real y tiene fecha límite, pero la IA aporta poco (el cálculo es determinista), el sustituto de otro ISIN es una zona gris tanto fiscal como MiFID, y ya hay un roboadvisor español que lo hace.
 
-**Puntuación corregida:** Innovación 3,5 · IA 3 · UX 4 · Implementación 3,5 (lotes FIFO de varios brokers simulados y calendario de bloqueo; el plazo es justo) · Presentación 4. **Ponderada: 1,05 + 0,45 + 0,6 + 1,05 + 0,4 = 3,55** (antes 4,20).
+**Puntuación corregida:** Innovación 3,5 - IA 3 - UX 4 - Implementación 3,5 (lotes FIFO de varios brokers simulados y calendario de bloqueo; el plazo es justo) - Presentación 4. **Ponderada: 1,05 + 0,45 + 0,6 + 1,05 + 0,4 = 3,55** (antes 4,20).
 
 ### Hechos verificados
 - **Ventana de la regla.** Dos meses para valores cotizados y un año para los no cotizados (art. 33.5 f y g LIRPF) — [CNMV, guía de fiscalidad de acciones](https://www.cnmv.es/DocPortal/Publicaciones/Guias/Guia_Fiscalidad_Acciones.pdf); [AEAT, manual IRPF](https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/irpf-2022/c11-ganancias-perdidas-patrimoniales/ganancias-perdidas-patrimoniales-que-no-bi/perdidas-patrimoniales-que-no-se-tales.html)
@@ -106,7 +106,7 @@ Hay tres hallazgos que afectan a todos los conceptos:
 
 **Veredicto: DROP.** Ya hay competidores financiados en la UE. La premisa sobre Francia es falsa. Los procedimientos de Alemania y Suiza no se pueden enseñar en directo. Los importes por cliente son pequeños y el encaje con MyInvestor es débil. Lo único que merece la pena conservar es la escena del phishing que cambia el IBAN de destino, y se puede meter dentro de Mandato 8.
 
-**Puntuación corregida:** Innovación 3 · IA 3 · UX 3,5 · Implementación 3 · Presentación 3,5. **Ponderada: 0,9 + 0,45 + 0,525 + 0,9 + 0,35 = 3,13** (antes 4,05).
+**Puntuación corregida:** Innovación 3 - IA 3 - UX 3,5 - Implementación 3 - Presentación 3,5. **Ponderada: 0,9 + 0,45 + 0,525 + 0,9 + 0,35 = 3,13** (antes 4,05).
 
 ### Hechos verificados
 - **FASTER (Directiva (UE) 2025/50).** Hay que transponerla antes del 31 dic 2028 y se aplica desde el **1 ene 2030**; Francia podría transponerla en 2027 — [CACEIS](https://www.caceis.com/regulatory-environment/regulatory-watch/faster-faster-and-safer-relief-of-excess-withholding-taxes); [Société Générale](https://www.securities-services.societegenerale.com/en/insights/views/news/faster-entered-into-force-on-30-january-2025/)
@@ -137,7 +137,7 @@ Euros recuperables detectados y porcentaje de dividendos bien clasificados frent
 
 **Veredicto: KEEP WITH CHANGES.** Es el concepto con mejor encaje en el 15 % de audio y con GPTadvisor, que vende B2B, no tiene en su web ningún producto de idoneidad ni de voz y vende "auditoría en cada capa". El marco de ESMA lo respalda. Los cambios: presentarlo como módulo para una entidad regulada que sigue siendo la responsable del test; que la puntuación sea determinista y el LLM solo entreviste; y añadir el **test de conveniencia** (el que se aplica a la ejecución de órdenes sin asesoramiento, el caso del bróker de MyInvestor) además del de idoneidad (que se aplica a carteras gestionadas y asesoramiento).
 
-**Puntuación corregida:** Innovación 3,5 (hay perfiladores conductuales y onboarding con IA; voz más comprobación de comprensión con registro firmado no aparece en producción en España) · IA 4,5 · UX 4,5 · Implementación 4 · Presentación 4. **Ponderada: 1,05 + 0,675 + 0,675 + 1,2 + 0,4 = 4,00.**
+**Puntuación corregida:** Innovación 3,5 (hay perfiladores conductuales y onboarding con IA; voz más comprobación de comprensión con registro firmado no aparece en producción en España) - IA 4,5 - UX 4,5 - Implementación 4 - Presentación 4. **Ponderada: 1,05 + 0,675 + 0,675 + 1,2 + 0,4 = 4,00.**
 
 ### Hechos verificados
 - **Directrices de idoneidad de ESMA (ESMA35-43-3172).** Informe final del 23 sept 2022, aplicables desde el 3 oct 2023. Piden a las entidades "tomar medidas razonables y usar herramientas adecuadas" para que la información del cliente sea **fiable, exacta y coherente**. También cubren de forma expresa las herramientas automatizadas — [ESMA35-43-3172 (copia de FIN-FSA)](https://prod.finanssivalvonta.fi/globalassets/en/publications/supervision-releases/2023/esma35-43-3172_guidelines_on_certain_aspects_of_the_mifid_ii_suitability_requirements.pdf); [MFSA](https://www.mfsa.mt/wp-content/uploads/2022/09/esma35-43-3172_final_report_on_mifid_ii_guidelines_on_suitability-2.pdf)
@@ -177,7 +177,7 @@ Euros recuperables detectados y porcentaje de dividendos bien clasificados frent
 
 **Veredicto: DROP como producto; la función sobrevive.** El formato "dos voces debaten tus fuentes" existe desde septiembre de 2025 en **NotebookLM (formato Debate)**. Un debate sobre el plan concreto de un cliente acaba en veredicto, y eso es asesoramiento. Además depende al 100 % del MCP, cuyas condiciones prohíben integrarlo en apps. Lo que vale la pena conservar es "la voz escéptica con cada afirmación anclada a un backtest" como momento de 20 segundos dentro de Mandato 8 o de Idónea.
 
-**Puntuación corregida:** Innovación 2,5 · IA 4 · UX 3,5 · Implementación 4 · Presentación 4. **Ponderada: 0,75 + 0,6 + 0,525 + 1,2 + 0,4 = 3,48** (antes 4,1).
+**Puntuación corregida:** Innovación 2,5 - IA 4 - UX 3,5 - Implementación 4 - Presentación 4. **Ponderada: 0,75 + 0,6 + 0,525 + 1,2 + 0,4 = 3,48** (antes 4,1).
 
 ### Hechos verificados
 - **NotebookLM Audio Overviews** tiene cuatro formatos (Deep Dive, Brief, Critique y Debate) desde el 2 sept 2025, con "un debate formal entre dos presentadores" — [9to5Google](https://9to5google.com/2025/09/02/notebooklm-audio-overview-debate/); [ayuda de Google](https://support.google.com/notebooklm/answer/16212820)

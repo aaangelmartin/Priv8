@@ -1,4 +1,4 @@
-# Priv8 · entry points. Each path adds its own targets here (core, bridge, ...).
+# Priv8 - entry points. Each path adds its own targets here (core, bridge, ...).
 
 .PHONY: agent agent-web demo-b2b web web-install replay replay-fake demo test metrics events dictado dictado-install llamada-banco linea-alcor sin-protocolo video-sin-protocolo video-con-protocolo videos
 
@@ -39,11 +39,27 @@ mcp-web:
 mcp-android:
 	uv run python -m agent.server --android
 
+# The priv8-mcp bundle (dist/priv8-mcp-<version>.tar.gz) and the mcp.priv8.es site with it
+# (apps/mcp-site/dist), #157. Nothing is deployed: see docs/despliegue-subdominios.md.
+.PHONY: mcp-bundle mcp-site
+mcp-bundle:
+	scripts/build_mcp_bundle.sh
+
+mcp-site:
+	scripts/build_mcp_site.sh
+
 # The whole B2B demo ready to test (#137): starts the three web apps if they are not running,
 # Alba Core with the demo session already open (VITE_ALBA_SESION, dev only), then the agent
 # waiting for requests in the console (:5175) with .env if present. Ctrl-C stops it all.
 demo-b2b:
 	scripts/demo_b2b.sh
+
+# Panel de la demo en directo (#169): una página local en :5170 con un botón para B2B y otro
+# para B2C. Es lo mismo que el doble clic en «Demo Priv8.command».
+.PHONY: panel
+panel:
+	cd apps/panel && ([ -d node_modules ] || pnpm install) && pnpm -s build
+	uv run python scripts/panel.py
 
 # Alba Core (:5173), the mailbox (:5174) and the audit console (:5175). First time: make web-install.
 web:
@@ -72,13 +88,16 @@ demo:
 
 # Every test suite and the contract examples.
 test:
-	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics
+	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics data/test_bateria.py
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
 	node apps/console/src/alertas.test.mjs
 	node apps/console/src/tokens.test.mjs
 	node apps/console/src/frame.test.mjs
 	node apps/console/src/md.test.mjs
+	node apps/console/src/directo.test.mjs
+	node apps/console/src/vivo.test.mjs
+	node apps/android-8/dev/test_estados.mjs
 	node apps/erp-sim/src/sesion.test.mjs
 
 # B2B metrics with and without the protocol (local, no API). Writes metrics/out/b2b.json.

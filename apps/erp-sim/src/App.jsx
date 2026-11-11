@@ -12,9 +12,11 @@ import { cerrarSesion, entrarComo, sesionInicial, trasReset } from './sesion.js'
 
 const ERP = seed.erp
 const KEY = 'alba-core'
-// Sesión ya abierta de la demo (make demo-b2b, solo en desarrollo): ver sesion.js.
-// La copia de demo.priv8.es se compila con VITE_ALBA_DEMO=1 para abrir igual.
-const SESION_DEMO = ((import.meta.env.DEV || import.meta.env.VITE_ALBA_DEMO === '1') && import.meta.env.VITE_ALBA_SESION) || ''
+// Sesión ya abierta de la demo (make demo-b2b, solo en desarrollo): ver sesion.js. Una build
+// solo la lleva si se pide a propósito: VITE_ALBA_SESION_BUILD=1 (el paquete priv8-mcp, #157) o
+// VITE_ALBA_DEMO=1 (la copia de demo.priv8.es).
+const CON_SESION = import.meta.env.DEV || import.meta.env.VITE_ALBA_SESION_BUILD === '1' || import.meta.env.VITE_ALBA_DEMO === '1'
+const SESION_DEMO = (CON_SESION && import.meta.env.VITE_ALBA_SESION) || ''
 // Las rutas de la app son siempre /facturas, /login...; BASE es '' en la raíz y '/erp' en demo.priv8.es (BASE_PATH).
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 const enBase = (to) => BASE + to
