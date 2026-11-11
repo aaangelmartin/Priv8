@@ -381,6 +381,10 @@ body { position: relative; }
 /* pide una demo */
 .close-grid { display: grid; justify-items: center; }
 .close-grid .block-head { margin-bottom: clamp(28px, 4vw, 44px); }
+/* el cierre solo lleva titular y botón: mide lo que su contenido, no una pantalla */
+.block.close { height: auto; min-height: 0; padding-block: clamp(72px, 9vw, 120px); }
+.close-grid .block-head { margin-bottom: 0; }
+.close .cta { justify-content: center; margin-top: clamp(16px, 2.4vw, 28px); }
 .close-grid > .lead-form { width: min(560px, 100%); text-align: left; }
 .lead-form { background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .22); border-radius: var(--r); padding: clamp(22px, 3vw, 34px); display: grid; gap: 14px; backdrop-filter: blur(8px); }
 .lead-form label { display: grid; gap: 7px; font-size: .88rem; font-weight: 500; color: #dbe1ff; }
