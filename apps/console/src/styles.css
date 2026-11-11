@@ -865,7 +865,10 @@ mark.dato.escrito { background: var(--accent-soft); color: var(--ink) }
 .lado .ln-p { background: #fff; color: var(--band); box-shadow: inset 0 0 0 1.5px var(--line) }
 .lado .ln.k-accion .ln-p { background: var(--band); color: #fff; box-shadow: none }
 .lado .ln.k-observa .ln-p { background: var(--tok-bg); color: var(--tok-fg); box-shadow: none }
-.lado .ln.k-piensa .ln-p, .lado .ln.k-dice .ln-p, .lado .ln.k-encargo .ln-p, .lado .ln.pensando .ln-p { background: var(--band); color: #fff; box-shadow: none }
+.lado .ln.k-piensa .ln-p, .lado .ln.k-dice .ln-p, .lado .ln.pensando .ln-p { background: var(--band); color: #fff; box-shadow: none }
+/* el encargo es de la persona: la misma figura que «Lo que ves tú» */
+.lado .ln.k-encargo .ln-p { background: var(--mist, #EEF2F8); color: var(--ink); box-shadow: none }
+.ln.k-encargo .ln-p > svg { width: 15px; height: 15px }
 .lado .ln.k-oraculo .ln-p { background: #8fa2ff; color: #0b1b33; box-shadow: none }
 .lado .ln.t-seguro .ln-p { background: var(--ok); color: #fff; box-shadow: none }
 .lado .ln.t-aviso .ln-p { background: var(--warn); color: #fff; box-shadow: none }
