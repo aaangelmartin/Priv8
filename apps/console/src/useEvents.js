@@ -18,6 +18,7 @@ export const DEMO = PARAMS.has('demo') || FEED !== null
 
 const MAX_AUDIT = 500
 const MAX_CHAT = 200
+const MAX_LINEA = 300
 
 // Línea del chat cuando el núcleo bloquea algo (las razones están en audit.schema.json).
 const SIS_BLOQUEO = {
@@ -48,6 +49,8 @@ export function useEvents() {
   const [chat, setChat] = useState([])
   const [confirmaciones, setConfirmaciones] = useState({})
   const [session, setSession] = useState('b2b')
+  // Pantallas y eventos de auditoría en el orden en que llegan, para la pantalla de 8 en directo.
+  const [linea, setLinea] = useState([])
   const wsRef = useRef(null)
   const sendRef = useRef(null)
   const sessionRef = useRef('b2b')
@@ -59,6 +62,8 @@ export function useEvents() {
     let tries = 0
     const timers = []
     let nMsg = 0
+    let nLinea = 0
+    const alaLinea = (item) => setLinea((l) => [...l, { n: ++nLinea, ...item }].slice(-MAX_LINEA))
     const vistas = new Set() // lo que ya está en el chat: alarmas, confirmaciones y frases
     let anunciado = false // el fin del encargo ya tiene su línea
     let respuesta = null // respuesta final que espera su frase de voz
@@ -129,6 +134,7 @@ export function useEvents() {
       if (m.type === 'screen') {
         usarSesion(m.session)
         setScreen({ ...m, recibida: new Date() })
+        alaLinea({ k: 'screen', m })
         setValores((v) => ({ ...valoresDe(m.raw, m.observed), ...v }))
         const o = m.observed
         setEtiquetas((t) => {
@@ -147,6 +153,7 @@ export function useEvents() {
         const ev = { ...m.event, _rx: Date.now() } // _rx: hora local de llegada, para el tiempo del encargo
         usarSesion(ev.session)
         setAudit((a) => [...a, ev].slice(-MAX_AUDIT))
+        alaLinea({ k: 'audit', ev })
         addAlerts([alertaDeBloqueo(ev)])
         alChat(ev)
       } else if (m.type === 'confirm_request') {
@@ -246,5 +253,5 @@ export function useEvents() {
     setAlerts((prev) => prev.map((a) => (a.clave === clave ? { ...a, revisada: true } : a)))
   }, [])
 
-  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir }
+  return { status, screen, audit, pending, resolve, alerts, review, valores, etiquetas, enClaro, fin, chat, confirmaciones, session, pedir, linea }
 }

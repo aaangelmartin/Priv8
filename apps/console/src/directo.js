@@ -4,7 +4,13 @@
 // confirmaciones pendientes. El texto `detail` lo escribe el núcleo y puede cambiar: aquí
 // solo se mira con patrones amplios y siempre hay una salida por defecto.
 
-export const APP = { 'alba-core': 'Alba Core', inbox: 'Correo' }
+export const APP = {
+  'alba-core': 'Alba Core', inbox: 'Correo',
+  'es.priv8.banks.alcor': 'Banca Alcor', 'banca-alcor': 'Banca Alcor',
+  'es.priv8.banks.brezo': 'Brezo Banco', 'brezo-banco': 'Brezo Banco',
+  'es.priv8.banks.nimbo': 'Nimbo Bróker', 'nimbo-broker': 'Nimbo Bróker',
+  'es.priv8.ocho': '8',
+}
 export const nombreApp = (a) => APP[a] ?? a ?? ''
 
 const PANTALLA = {
@@ -16,6 +22,12 @@ const PANTALLA = {
   factura: 'factura',
   confirmacion: 'confirmación',
   inicio: 'inicio',
+  login: 'acceso',
+  movimientos: 'movimientos',
+  transferencia: 'transferencia',
+  revision: 'revisión',
+  autenticacion: 'autenticación',
+  resultado: 'resultado',
 }
 export const nombrePantalla = (s) => PANTALLA[s] ?? s ?? ''
 
@@ -131,7 +143,7 @@ export function estadoDe8({ audit, pending = [], status = 'conectado', etiquetas
     case 'held':
       return { modo: 'esperar', titulo: 'Esperando tu confirmación', detalle: null, tono: 'aviso' }
     case 'blocked':
-      return { modo: 'enfado', titulo: BLOQUEO[e.reason] ?? 'He bloqueado una acción', detalle: e.model_saw ?? null, tono: 'bloqueo' }
+      return { modo: 'enfado', titulo: BLOQUEO[e.reason] ?? 'He bloqueado una acción', detalle: e.detail || e.model_saw || null, tono: 'bloqueo' }
     case 'approval':
       return e.approved_by
         ? { modo: 'asentir', titulo: 'Aprobado. Sigo con el trámite', detalle: null, tono: 'seguro' }
