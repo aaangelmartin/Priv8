@@ -71,7 +71,10 @@ class SalidaTts(context: Context, private val enviar: (Float) -> Unit) {
         override fun run() {
             if (!hablando) return
             val medido = medir()
-            if (medido != null && medido > 0f) oido = true
+            if (medido != null && medido > 0f && !oido) {
+                oido = true
+                Log.i(TAG, "tts level: measured by Visualizer")
+            }
             val nivel = if (oido) medido ?: 0f else maxOf(medido ?: 0f, envolvente.paso())
             enviar(nivel)
             main.postDelayed(this, FRAME_MS)
