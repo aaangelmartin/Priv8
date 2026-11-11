@@ -156,6 +156,7 @@ cp .env.example .env
 | `PRIV8_CORE` | `real` (el núcleo de `core/`) o `fake` (simulado en memoria) | `real` |
 | `PRIV8_AUDIT` | Registro firmado; `off` lo deja solo en memoria | `audit/priv8.jsonl` |
 | `PRIV8_AUDIT_KEY` | Clave ed25519 del registro; se crea si no existe | `audit/priv8.key` |
+| `PRIV8_POLITICA_ESTRICTA` | `1` o vacía: modo estricto, al modelo solo llega lo que cubre una regla del sitio. `0`: permisivo, también el resto de la página filtrado por el detector (salvo en una política con `modo: estricto`). Ver [`core/README.md`](core/README.md#modo-estricto) | estricto |
 | `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` | Voz en la nube (ver [`voice/README.md`](voice/README.md)) | - |
 
 Cuando un encargo o la sesión llega a su límite, 8 para y lo dice en el chat de la consola. El tope total se pone en la Console de Anthropic, como límite de gasto del workspace de la clave. `make demo-b2b` lee el `.env` por su cuenta. Para el resto de comandos: `uv run --env-file .env ...`. Las variables de la llamada real, sin probar todavía, están en `.env.example`.

@@ -51,4 +51,17 @@ uv run pytest core/tests
 - **Auditoría.** Cada línea lleva `prev`, `hash` y `sig`; una línea alterada, quitada o reordenada rompe la cadena. Clave en `PRIV8_AUDIT_KEY` (por defecto `audit/priv8.key`, se crea si no existe, con la pública al lado). Registro en `PRIV8_AUDIT` (por defecto `audit/priv8.jsonl`); `PRIV8_AUDIT=off` lo deja solo en memoria.
 - **Canal de eventos.** Solo escucha en 127.0.0.1, porque el mensaje `screen` lleva la pantalla real. Acepta `approval_result`, `task_request` y `dictation_start` (Whisper en local, `voice/dictado.py`). Los fotogramas de la pantalla real van por un canal aparte que no pasa por la auditoría ni por el puente.
 - **Vista de 8.** `preview` clasifica una pantalla igual que `observe` sin mandarla a ningún sitio, y `mask_text` tapa solo lo sensible de un texto suelto. Los usa la vista de 8 del adaptador web (`adapters/web/vista.py`).
+- **Modo estricto o permisivo (#177).** Ver la sección siguiente. `core.modo(app)` dice el de cada app; cada `observe_sent` del registro lo lleva en `detail` («modo estricto - 12 textos sin regla fuera») y el inicio de cada encargo también.
 - El estado vive en el proceso y no se persiste.
+
+## Modo estricto
+
+Lo decide cada política (`modo: estricto` o `modo: permisivo`, `docs/contracts/policies.md`) y la variable `PRIV8_POLITICA_ESTRICTA` (`1` estricto, `0` permisivo). Gana el más estricto de los dos y, si ninguno dice nada, es estricto: es el modo por defecto, y el de la demo.
+
+**Qué recibe el modelo en modo estricto.** Solo el texto que cubre una regla escrita para ese elemento en la política del sitio: los datos ámbar como token (`‹IBAN_1-maestro›`), los rojos como `null`, y el texto verde que la regla declara legible (títulos, botones, menús y, en el correo, el cuerpo del mensaje), que además pasa por el detector. Un elemento marcado sin regla llega con su rol, su etiqueta y sus acciones, para poder tocarlo o escribir en él, pero sin su texto. El resto de la página (los textos sueltos `t1`, `t2`... del adaptador web) ni siquiera entra en la observación. Una dirección o un nombre poco común que el detector no reconozca no sale nunca, salvo dentro de un texto que una regla haya declarado legible; hoy, en las políticas del repositorio, solo el cuerpo del correo. En las apps de banca no hay ninguno: todas sus pantallas usan `sin_regla: ambar` y lo que no tiene regla sale como un token entero.
+
+**Qué recibe en modo permisivo (#154).** Además, cada texto visible de la página que no tiene regla, después de pasar por el detector (patrones validados, bóveda, nombres por contexto) y por el bloqueo final. El agente entiende mejor una página que no conoce, pero lo que el detector no reconozca sale en claro.
+
+**Por qué estricto es el modo por defecto para un banco.** El detector reduce el riesgo, pero no lo elimina: no hay detector que reconozca todas las direcciones o todos los nombres. En estricto la garantía no depende de él: lo que llega al modelo lo ha decidido una persona, regla a regla, en un archivo que se revisa y se versiona, y cada observación queda en el registro firmado con su modo. Es lo que permite sostener que el modelo solo ve tokens y la interfaz que la política declara. El modo permisivo queda para sitios sin datos sensibles o para escribir una política nueva, y nunca puede imponerse a una política que pida estricto.
+
+La vista de 8 (`adapters/web/vista.py`) sigue el mismo modo: en estricto, lo que no cubre una regla sale como marcador, porque tampoco llega al modelo.
