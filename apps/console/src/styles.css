@@ -686,22 +686,22 @@ mark.dato.escrito { background: var(--accent-soft); color: var(--ink) }
 .pantalla-dos .miradas-titulo { color: var(--ink) }
 .pantalla-dos .miradas-titulo span { color: var(--accent) }
 .dos-miradas > .dos-pantallas { flex: 1 }
-.mirada { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px }
+.mirada { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 4px }
 .mirada-pantalla { position: relative; flex: 1; min-height: 0; display: flex }
 .mirada-pantalla > .escenario { flex: 1 }
 .mirada-cab { display: flex; align-items: center; gap: 12px; padding: 8px 14px 8px 8px; border-radius: 18px; background: #fff; color: var(--ink);
   border: 2px solid transparent; min-width: 0 }
-.mirada-cab.t-tu { border-color: #f0c987 }
+.mirada-cab.t-tu { border-color: #fff }
 .mirada-cab.t-ocho { border-color: var(--accent) }
 .mirada-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center }
-.t-tu .mirada-ico { background: var(--warn-soft); color: var(--warn-text) }
+.t-tu .mirada-ico { background: var(--mist, #EEF2F8); color: var(--ink) }
 .t-tu .mirada-ico svg { width: 24px; height: 24px }
 .t-ocho .mirada-ico { background: var(--accent) }
 .t-ocho .mirada-ico > div, .t-ocho .mirada-ico svg { width: 34px; height: 34px; display: block; overflow: visible }
 .mirada-txt { display: grid; gap: 1px; min-width: 0 }
 .mirada-txt b { font: 700 clamp(1rem, .85rem + .4vw, 1.2rem)/1.15 var(--f-display); letter-spacing: -.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .mirada-txt span { font: 600 .8rem/1.2 var(--f-mono) }
-.t-tu .mirada-txt span { color: var(--warn-text) }
+.t-tu .mirada-txt span { color: var(--ink-2) }
 .t-ocho .mirada-txt span { color: var(--accent) }
 .mirada-nota { margin-left: auto; flex: none; font: 600 .72rem/1 var(--f-sans); color: var(--ink-2); background: var(--mist, #EEF2F8); padding: 6px 9px; border-radius: 999px; white-space: nowrap }
 @media (max-width: 1280px) { .mirada-nota { display: none } }
