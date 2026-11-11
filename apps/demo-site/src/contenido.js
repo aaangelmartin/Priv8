@@ -41,25 +41,24 @@ adb shell settings put secure enabled_accessibility_services \\
   es.priv8.ocho/.Priv8AccessibilityService
 adb shell settings put secure accessibility_enabled 1`;
 
-/* Córrelo en tu máquina: las mismas órdenes del README, cada una con su paso. `mode`: la cara de 8 en ese paso. */
-export const PASOS = [
-  { n: 1, mode: 'leer', title: 'Prepara', text: 'Python con uv; Node y pnpm para las apps web.',
+/* Córrelo en tu máquina (Priv8 para empresas): las mismas órdenes del README. */
+export const PASOS_EMPRESAS = [
+  { n: 1, title: 'Prepara', text: 'Python con uv; Node y pnpm para las apps web.',
     cmd: 'git clone https://github.com/aaangelmartin/Priv8\ncd Priv8 && uv sync && make web-install' },
-  { n: 2, mode: 'mirar', title: 'Sin clave', text: 'El núcleo real con respuestas grabadas del modelo. Al final, cero valores reales enviados.',
+  { n: 2, title: 'Sin clave', text: 'El núcleo real con las respuestas del modelo grabadas. Al final, cero valores reales enviados.',
     cmd: 'make demo' },
-  { n: 3, mode: 'pensar', title: 'Con tu clave', text: 'Alba Core, el correo y la consola en 127.0.0.1:5175. Pídele a 8 que registre la factura.',
-    cmd: 'cp .env.example .env\nmake demo-b2b' },
-  { n: 4, mode: 'escuchar', title: 'En el emulador', text: 'Un AVD de Android 14 llamado priv8. El script compila, instala y abre los puertos.',
-    cmd: 'scripts/movil.sh\nmake agent-android' },
+  { n: 3, title: 'En directo, con un botón', text: 'Con tu clave en .env, doble clic en Demo Priv8.command en macOS, o el panel desde la terminal.',
+    cmd: 'cp .env.example .env\nmake panel' },
 ];
 export const README_URL = `${README}ejecución`;
 
-/* Enlaces del final, sobre cobalto. */
+/* Enlaces del final: una fila de píldoras. */
 export const ENLACES = [
-  { title: 'Presentación', what: 'La del jurado.', href: 'https://priv8.es/pitch' },
-  { title: 'Repositorio', what: 'El código y el README para ejecutarlo.', href: REPO },
-  { title: 'priv8.es', what: 'Qué ve 8, cómo funciona y para quién es.', href: 'https://priv8.es' },
-  { title: 'mcp.priv8.es', what: 'Priv8 en tu asistente, con tu modelo y tu clave.', href: 'https://mcp.priv8.es' },
-  { title: 'Alba Core', what: 'El ERP simulado de la demo, para usarlo a mano.', href: '/erp/' },
-  { title: 'El correo', what: 'La bandeja simulada, con la factura del proveedor.', href: '/correo/' },
+  { title: 'Presentación', href: 'https://priv8.es/pitch' },
+  { title: 'priv8.es', href: 'https://priv8.es' },
+  { title: 'mcp.priv8.es', href: 'https://mcp.priv8.es' },
+  { title: 'Repositorio', href: REPO },
+  { title: 'Especificación', href: `${REPO}/blob/main/docs/SPEC.md` },
+  { title: 'Alba Core', href: '/erp/' },
+  { title: 'El correo', href: '/correo/' },
 ];
