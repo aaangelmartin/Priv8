@@ -193,7 +193,7 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     import sys
     from pathlib import Path
 
-    from adapters.web import WebAdapter
+    from adapters.web import WebAdapter, profile_dir
 
     mod = _load(module)
     data = Path(__file__).resolve().parent.parent / "data"
@@ -203,10 +203,15 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     mod.trust(known())
     from voice.call import make_on_call  # llamada de verificación al teléfono de la ficha (#23)
 
-    web = WebAdapter(start=start, on_call=make_on_call(session))
-    print("priv8: entra en Alba Core en la ventana de Chromium (usuario y clave de prueba en data/seed.json)", file=sys.stderr)
-    if not web.wait_until_logged_in("alba-core"):
-        raise TimeoutError("nadie entró en Alba Core en 5 minutos")
+    # Perfil persistente (.priv8/chromium): la sesión de Alba Core se recuerda entre ejecuciones,
+    # y con `make demo-b2b` el ERP ya abre con la sesión de la demo (#137). 8 nunca escribe la clave.
+    web = WebAdapter(start=start, on_call=make_on_call(session), profile=profile_dir())
+    if web.logged_in("alba-core"):
+        print("priv8: Alba Core ya tiene la sesión abierta", file=sys.stderr)
+    else:
+        print("priv8: entra en Alba Core en la ventana de Chromium (usuario y clave de prueba en data/seed.json)", file=sys.stderr)
+        if not web.wait_until_logged_in("alba-core"):
+            raise TimeoutError("nadie entró en Alba Core en 5 minutos")
     mod.connect(session, web)
     if events:
         importlib.import_module(f"{module}.server").start()

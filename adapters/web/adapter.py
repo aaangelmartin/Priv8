@@ -20,12 +20,14 @@ pasa por una cola.
 
 from __future__ import annotations
 
+import os
 import queue
 import re
 import threading
 import urllib.request
 from collections.abc import Callable
 from concurrent.futures import Future
+from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
@@ -50,6 +52,24 @@ def app_key(name: str, apps: dict[str, str]) -> str | None:
     n = "".join(c for c in n if c.isalnum())
     key = ALIASES.get(n)
     return key if key in apps else None
+
+
+# Perfil de Chromium que recuerda la sesión entre ejecuciones (#137), como el navegador de
+# un ordenador de la empresa. PRIV8_WEB_PROFILE=<carpeta> usa otra; "off", uno de usar y tirar.
+DEFAULT_PROFILE = Path(__file__).resolve().parents[2] / ".priv8" / "chromium"
+
+
+def profile_dir(env: dict[str, str] | None = None) -> Path | None:
+    """Carpeta del perfil persistente, o None si PRIV8_WEB_PROFILE=off."""
+    v = (os.environ if env is None else env).get("PRIV8_WEB_PROFILE", "").strip()
+    if v.lower() in ("off", "0", "no", "false"):
+        return None
+    return Path(v).expanduser() if v else DEFAULT_PROFILE
+
+
+def on_login_screen(url: str) -> bool:
+    """La app pide identificarse (su ruta es /login): la clave la escribe la persona."""
+    return urlparse(url).path.rstrip("/").endswith("/login")
 
 # Recorre el DOM y devuelve los elementos marcados con data-p8. Marca cada uno con
 # data-p8-ref para que perform() lo encuentre sin recalcular selectores.
@@ -148,7 +168,7 @@ class WebAdapter:
 
     def __init__(self, apps: dict[str, str] | None = None, start: str = "inbox", *,
                  headless: bool = False, on_call: Callable[[str], bool] | None = None,
-                 timeout_ms: int = 5000, slow_mo_ms: int = 0) -> None:
+                 timeout_ms: int = 5000, slow_mo_ms: int = 0, profile: str | Path | None = None) -> None:
         self.apps = dict(apps or APPS)
         if start not in self.apps:
             raise ValueError(f"app desconocida: {start}")
@@ -156,6 +176,7 @@ class WebAdapter:
         self.calls: list[str] = []
         self.seq = 0
         self._timeout = timeout_ms
+        self.profile = Path(profile) if profile else None  # None: contexto de usar y tirar
         self._jobs: queue.Queue[tuple[Callable[[], Any], Future] | None] = queue.Queue()
         self._ready: Future = Future()
         self._thread = threading.Thread(target=self._run, args=(start, headless, slow_mo_ms),
@@ -170,8 +191,7 @@ class WebAdapter:
 
         try:
             self._pw = sync_playwright().start()
-            self._browser = self._pw.chromium.launch(headless=headless, slow_mo=slow_mo_ms)
-            self._ctx = self._browser.new_context(viewport={"width": 1100, "height": 760}, locale="es-ES")
+            self._ctx = self._open_context(headless, slow_mo_ms)
             self._ctx.set_default_timeout(self._timeout)
             self._pages: dict[str, Any] = {}
             self.app = start
@@ -188,8 +208,28 @@ class WebAdapter:
                 fut.set_result(fn())
             except BaseException as e:  # noqa: BLE001
                 fut.set_exception(e)
-        self._browser.close()
+        self._ctx.close()
+        if self._browser is not None:
+            self._browser.close()
         self._pw.stop()
+
+    def _open_context(self, headless: bool, slow_mo_ms: int) -> Any:
+        """Con perfil, uno persistente: la sesión de Alba Core sigue en la siguiente ejecución.
+        Si el perfil está en uso (otro agente abierto), uno de usar y tirar."""
+        opts = {"viewport": {"width": 1100, "height": 760}, "locale": "es-ES"}
+        self._browser = None
+        if self.profile is not None:
+            try:
+                self.profile.mkdir(parents=True, exist_ok=True)
+                return self._pw.chromium.launch_persistent_context(
+                    str(self.profile), headless=headless, slow_mo=slow_mo_ms, **opts)
+            except Exception as e:  # noqa: BLE001
+                import sys
+                print(f"priv8: perfil de Chromium {self.profile} no disponible ({type(e).__name__}); "
+                      "sesión sin recordar", file=sys.stderr)
+                self.profile = None
+        self._browser = self._pw.chromium.launch(headless=headless, slow_mo=slow_mo_ms)
+        return self._browser.new_context(**opts)
 
     def _call(self, fn: Callable[[], Any]) -> Any:
         fut: Future = Future()
@@ -199,7 +239,9 @@ class WebAdapter:
     def _page(self, app: str) -> Any:
         page = self._pages.get(app)
         if page is None or page.is_closed():
-            page = self._ctx.new_page()
+            # El perfil persistente abre con una pestaña en blanco: se aprovecha.
+            libres = [p for p in self._ctx.pages if p.url == "about:blank" and p not in self._pages.values()]
+            page = libres[0] if libres else self._ctx.new_page()
             page.goto(self.apps[app] + HOME.get(app, "/"))
             self._pages[app] = page
         return page
@@ -308,7 +350,7 @@ class WebAdapter:
 
         def on_login() -> bool:
             page = self._page(app)
-            if "/login" in page.url:
+            if on_login_screen(self._settled_url(page)):
                 page.bring_to_front()
                 return True
             return False
@@ -320,6 +362,18 @@ class WebAdapter:
                 return True
             time.sleep(1)
         return False
+
+    def logged_in(self, app: str = "alba-core") -> bool:
+        """`app` ya tiene la sesión abierta (recordada en el perfil o la de la demo), sin esperar."""
+        return self._call(lambda: not on_login_screen(self._settled_url(self._page(app))))
+
+    def _settled_url(self, page: Any) -> str:
+        """URL una vez la app ha pintado: el ERP lleva a /login al arrancar si no hay sesión."""
+        try:
+            page.wait_for_selector("[data-p8]", timeout=self._timeout)
+        except Exception:  # noqa: BLE001  sin elementos marcados: vale la URL que haya
+            pass
+        return page.url
 
     def close(self) -> None:
         if self._thread.is_alive():
