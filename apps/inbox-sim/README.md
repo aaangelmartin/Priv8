@@ -14,6 +14,9 @@ pnpm dev          # http://127.0.0.1:5174
 | `/correo/9` | Lectura: `#de`, `#asunto`, `#cuerpo`, `#adjunto` y la vista previa del PDF (`#pdf-proveedor`, `#pdf-cif`, `#pdf-numero`, `#pdf-importe`), `#responder` | `correo.lectura` |
 | `/responder/9` | `#para`, `#texto`, `#enviar`; al enviar vuelve a la bandeja con `#aviso` «Respuesta enviada» | `correo.respuesta` |
 | `/enviados` | Respuestas enviadas | — |
+| `/carpeta/<nombre>` | Destacados, Pospuestos, Borradores y etiquetas (solo pantalla, sin `data-p8`) | — |
 | `/reset` | Vacía leídos y enviados | — |
+
+Aspecto de webmail moderno (#129): menú lateral, búsqueda, avatares, extractos, etiquetas y estrellas. Todo eso es pantalla para la persona y va sin `data-p8`; en las filas `.remitente` enseña el nombre y entrega la dirección al adaptador con `data-p8-text`, así que el snapshot no cambia.
 
 Mismo contrato con el adaptador web que el ERP (`apps/erp-sim/README.md`): solo entra en el snapshot lo que lleva `data-p8`. La vista previa del PDF sale hoy del seed; con #20 el texto se extraerá del PDF en local.
