@@ -7,26 +7,24 @@ import byLaaabs from './by-laaabs.svg';
    «Demo Priv8.command» con doble clic. Un botón prepara B2B y otro B2C; el servidor arranca cada pieza
    y esta página pregunta su estado cada segundo. Mismo sistema que la landing y mcp.priv8.es. */
 
-const CONSOLA = 'http://127.0.0.1:5175';
-
 const DEMOS = {
   b2b: {
     title: 'B2B',
     sub: 'Priv8 para empresas',
     text: 'Alba Core con la sesión abierta, el correo con la factura y 8 esperando el encargo en la consola.',
     piezas: [['alba', 'Alba Core'], ['correo', 'Correo'], ['consola', 'Consola'], ['agente', '8']],
-    links: [[CONSOLA, 'Abrir la consola'], ['http://127.0.0.1:5173', 'Alba Core'], ['http://127.0.0.1:5174', 'Correo']],
+    botones: [['consola', 'Abrir la consola'], ['pantallas', 'Ver las pantallas']],
     pedidos: ['Registra la factura de Suministros Lumen que ha llegado por correo'],
-    donde: 'Pídeselo a 8 en la consola.',
+    donde: 'La consola en una pantalla y Chromium, a pantalla completa, en la otra. Pídeselo a 8 en la consola.',
   },
   b2c: {
     title: 'B2C',
     sub: '8 en tu móvil',
     text: 'El emulador con la app Priv8 y los tres bancos, los puertos abiertos y 8 escuchando en el móvil.',
     piezas: [['emulador', 'Emulador'], ['puente', 'Puente'], ['consola', 'Consola'], ['agente', '8']],
-    links: [[CONSOLA, 'Abrir la consola']],
-    pedidos: ['¿Cuánto tengo entre mis bancos?', 'Pasa 200 € al bróker'],
-    donde: 'Díselo a 8 en la app Priv8 del emulador.',
+    botones: [['movil', 'Ver el móvil']],
+    pedidos: [],
+    donde: 'Háblale o escríbele a 8 en la app Priv8 del emulador.',
   },
 };
 
@@ -103,10 +101,10 @@ function Demo({ id, estado, onAccion, busy }) {
       {activo && fase === 'listo' && (
         <div className="listo">
           <div className="links">
-            {d.links.map(([href, t], i) => <a key={href} className={i === 0 ? 'btn btn-band' : 'btn btn-line'} href={href} target="_blank" rel="noopener">{t}</a>)}
+            {d.botones.map(([a, t], i) => <button key={a} type="button" className={i === 0 ? 'btn btn-band' : 'btn btn-line'} onClick={() => onAccion(a)}>{t}</button>)}
           </div>
           <p className="donde">{d.donde}</p>
-          <div className="pedidos">{d.pedidos.map((p) => <Pedido key={p} text={p} />)}</div>
+          {d.pedidos.length > 0 && <div className="pedidos">{d.pedidos.map((p) => <Pedido key={p} text={p} />)}</div>}
         </div>
       )}
       {activo && fase === 'error' && estado.motivo && <p className="motivo">{estado.motivo}</p>}
@@ -135,7 +133,6 @@ function Nav() {
         <span className="word">Priv8</span>
         <span className="badge">DEMO</span>
       </a>
-      <a className="pill" href={CONSOLA} target="_blank" rel="noopener">Consola</a>
     </nav>
   );
 }

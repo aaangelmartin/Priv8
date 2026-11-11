@@ -172,6 +172,46 @@ def trae_priv8() -> None:
         time.sleep(0.5)
 
 
+def osa(script: str) -> bool:
+    r = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=15)
+    if r.returncode:
+        apunta(f"macOS no dejó mover la ventana: {r.stderr.strip()} (Ajustes, Privacidad, Accesibilidad: permite Terminal)")
+    return r.returncode == 0
+
+
+def abre_consola() -> None:
+    """La consola en su propia ventana, sin barra del navegador, para llevarla a una pantalla."""
+    url = f"http://127.0.0.1:{PUERTOS['consola']}"
+    chrome = Path("/Applications/Google Chrome.app")
+    if sys.platform == "darwin" and chrome.exists():
+        subprocess.run(["open", "-na", str(chrome), "--args", f"--app={url}", "--new-window"], capture_output=True)
+    else:
+        webbrowser.open(url)
+
+
+def ve_pantallas() -> None:
+    """El Chromium de 8 (Alba Core y el correo) delante y a pantalla completa."""
+    try:
+        pid = subprocess.run(["pgrep", "-f", "ms-playwright/chromium-.*/Chromium"], capture_output=True,
+                             text=True).stdout.split()[0]
+    except IndexError:
+        apunta("no encuentro el Chromium de 8: prepara B2B primero")
+        return
+    osa(f"""tell application "System Events" to tell (first process whose unix id is {pid})
+  set frontmost to true
+  set w to first window whose name contains "Chromium"
+  perform action "AXRaise" of w
+  set value of attribute "AXFullScreen" of w to true
+end tell""")
+
+
+def ve_movil() -> None:
+    osa('tell application "System Events" to set frontmost of (first process whose name is "qemu-system-aarch64") to true')
+
+
+ENFOCA = {"consola": abre_consola, "pantallas": ve_pantallas, "movil": ve_movil}
+
+
 def fase(piezas: dict) -> str:
     modo = estado["modo"]
     if not modo:
@@ -231,6 +271,8 @@ class Handler(SimpleHTTPRequestHandler):
                 para("demo")
                 estado.update(modo=None, motivo="")
             apunta("parado")
+        elif accion in ("consola", "pantallas", "movil"):
+            threading.Thread(target=ENFOCA[accion], daemon=True).start()
         elif accion == "liberar":
             pid = quien_escucha(PUERTOS["agente"])
             if pid:
