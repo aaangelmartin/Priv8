@@ -5,6 +5,7 @@ import correo from './img/correo.jpg';
 import consola from './img/consola.jpg';
 import alarma from './img/alarma.jpg';
 import { QR } from './qr.js';
+import './annex.css';
 import pablo from './img/pablo.png';
 import angel from './img/angel.png';
 import alvaro from './img/alvaro.png';
