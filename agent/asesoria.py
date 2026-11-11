@@ -95,5 +95,5 @@ def declinar(core: Any, session: str) -> str:
     if voice is not None:
         voice.say(session, FRASE)
     core.audit.record({"session": session, "kind": "blocked", "reason": "asesoria", "model_saw": None,
-                       "detail": "8 ejecuta, no asesora · la petición no llega al modelo"})
+                       "detail": "8 ejecuta, no asesora - la petición no llega al modelo"})
     return FRASE

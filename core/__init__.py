@@ -113,7 +113,7 @@ def submit_task(session: str, text: str, via: str = "app") -> dict[str, Any]:
     toks = T.find(tokenize_text(session, text))
     _task_queue(session).put(text)
     record({"session": session, "kind": "task", "model_saw": None, "tokens": toks,
-            "detail": f"tarea recibida · {via} · {len(text)} caracteres"})
+            "detail": f"tarea recibida - {via} - {len(text)} caracteres"})
     return {"ok": True}
 
 

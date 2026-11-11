@@ -188,7 +188,7 @@ def main(argv: list[str] | None = None) -> None:
         if real:
             scene = a.scene or DEFAULT_SCENE
             mount_scene(a.session or scene, scene, simulated_persona=a.simulated_persona)
-            log.info("real core · scene %s on session %s", scene, a.session or scene)
+            log.info("real core - scene %s on session %s", scene, a.session or scene)
     except (RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
         sys.exit(f"priv8: {e}")
     server = build_server(core)
