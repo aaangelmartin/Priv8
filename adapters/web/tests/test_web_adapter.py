@@ -252,3 +252,12 @@ def test_ninguna_pantalla_suelta_datos_del_seed(web, core, app, path, screen):
     numeros.append(seed["correo"]["mensajes"][0]["adjunto"]["numero"])
     leaks += [n for n in numeros if n in sent]
     assert leaks == []
+
+
+def test_open_app_acepta_nombres_naturales():
+    from adapters.web.adapter import APPS, app_key
+    for n in ("Alba Core", "alba", "ERP", "albacore", "alba-core"):
+        assert app_key(n, APPS) == "alba-core"
+    for n in ("correo", "Bandeja", "inbox"):
+        assert app_key(n, APPS) == "inbox"
+    assert app_key("banco", APPS) is None
