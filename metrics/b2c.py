@@ -170,7 +170,7 @@ def table(r: dict[str, Any]) -> str:
             ("Figures and names by local voice", wo["local_voice_segments"], w["local_voice_segments"]),
             ("Tasks completed", wo["tasks_completed"], w["tasks_completed"])]
     out = [f"{a:<36}{b!s:>18}{c!s:>16}" for a, b, c in rows]
-    out.append(f"Utterances: {r['utterances']} · blocked by reason: "
+    out.append(f"Utterances: {r['utterances']} - blocked by reason: "
                + json.dumps(w["blocked_by_reason"], ensure_ascii=False))
     return "\n".join(out)
 

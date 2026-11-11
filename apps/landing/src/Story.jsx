@@ -70,7 +70,7 @@ const SEE = [
   { e: 'Sin Priv8', h: <>Un agente normal <span className="soft">lo ve todo.</span></>, l: 'Para usar una web, el agente manda la pantalla entera al proveedor del modelo: tu nombre, tu IBAN, tu saldo y tus movimientos. Nadie debería dejarle así sus cuentas.' },
   { e: 'Con Priv8', h: <>8 solo ve <span className="soft">tokens.</span></>, l: 'La misma pantalla y la misma tarea. El modelo sabe qué es cada campo y trabaja con él, pero recibe tokens. La tabla que los traduce se queda en tu máquina.' },
 ];
-/* 1 · Lo que ve un agente normal frente a lo que ve 8. Composición de la portada: 8 arriba, titular, pantalla debajo. */
+/* 1 - Lo que ve un agente normal frente a lo que ve 8. Composición de la portada: 8 arriba, titular, pantalla debajo. */
 export function SeeScene() {
   return (
     <Scene id="problema" screens={3} tone="paper" phases={2} label="Lo que ve la IA">
@@ -99,7 +99,7 @@ export function SeeScene() {
   );
 }
 
-/* 2 · Las cifras, una por pantalla. */
+/* 2 - Las cifras, una por pantalla. */
 const NUMS = [
   { n: '55%', t: 'de los bancos europeos encuestados ya usa IA generativa o agentes en procesos de cara al cliente.', s: 'EBA, seguimiento de la IA en banca, 2025', u: null, mode: 'curiosidad', say: 'Los agentes ya están dentro.' },
   { n: '52%', t: 'de los directivos pone la seguridad, la privacidad o el cumplimiento como primer freno para llevar agentes a producción.', s: 'Dynatrace, vía SecurityBrief', u: 'https://securitybrief.co.uk/story/security-fears-keep-half-of-agentic-ai-stuck-in-pilots', mode: 'duda', say: 'Y la mitad se queda en piloto.' },
@@ -125,7 +125,7 @@ export function NumbersScene() {
   );
 }
 
-/* 3 · Cómo funciona: las seis piezas del protocolo, una por pantalla. */
+/* 3 - Cómo funciona: las seis piezas del protocolo, una por pantalla. */
 const STEPS = [
   { h: <>Lee la pantalla <span className="soft">por dentro.</span></>, t: 'Nada de capturas: 8 lee la estructura de la pantalla, el DOM en la web y el árbol de accesibilidad en el móvil. Sabe qué es cada campo sin hacer una foto.', mode: 'leer', say: 'Leo la estructura, no la foto.' },
   { h: <>Cambia cada dato <span className="soft">por un token.</span></>, t: 'Antes de salir hacia el modelo, cada IBAN, nombre o importe se cambia por un token estable. Las claves, los PIN y los códigos ni siquiera salen.', mode: 'nove', say: 'Lo tengo, pero tapado.' },
@@ -189,7 +189,7 @@ export function HowScene() {
   );
 }
 
-/* 4 · El correo con trampa. */
+/* 4 - El correo con trampa. */
 export function TrapScene() {
   return (
     <Scene id="trampa" screens={4} phases={4} label="Un correo con trampa">

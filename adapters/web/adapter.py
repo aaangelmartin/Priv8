@@ -779,7 +779,7 @@ class WebAdapter:
                 self._sync_force = True
                 toks = {t for e in obs.get("elements", []) for t in e.get("tokens") or []}
                 url = raw.get("url") or ""
-                if any(re.match(r"‹IBAN_\d+[-·]correo›", t) for t in toks) and url not in self._sorpresas:
+                if any(re.match(r"‹IBAN_\d+[-\u00b7]correo›", t) for t in toks) and url not in self._sorpresas:
                     self._sorpresas.add(url)
                     self._sorpresa_at = time.monotonic()
                     self._decir("Este correo pide cambiar la cuenta de pago. Eso no lo aplico sin verificar.",

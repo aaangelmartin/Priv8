@@ -1,5 +1,5 @@
 {
-  "$comment": "Priv8 CUA · the only three tools the agent sees. Follows docs/contracts/tools.schema.json v1 (PR #58): input_schema is the contract's *_input with refs inlined. Claude rejects allOf/oneOf/anyOf at the top of input_schema, so the contract's conditional rules live in x-priv8-rules and only the server enforces them.",
+  "$comment": "Priv8 CUA - the only three tools the agent sees. Follows docs/contracts/tools.schema.json v1 (PR #58): input_schema is the contract's *_input with refs inlined. Claude rejects allOf/oneOf/anyOf at the top of input_schema, so the contract's conditional rules live in x-priv8-rules and only the server enforces them.",
   "contract": "docs/contracts/tools.schema.json",
   "tools": [
     {

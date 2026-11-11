@@ -105,7 +105,7 @@ class VerificationCall:
         t0 = time.perf_counter()
         core.record({"session": self.session, "kind": "call",
                      "model_saw": "llamada de verificación a la ficha del proveedor",
-                     "tokens": [], "detail": f"{self.numero} · {'live' if self.live else 'dry-run'}",
+                     "tokens": [], "detail": f"{self.numero} | {'live' if self.live else 'dry-run'}",
                      "ms": {"core": int((time.perf_counter() - t0) * 1000), "adapter": None, "model": None}})
         transcript = self._live_call() if self.live else self._dry_call()
         tokens_text = self._tokenize(transcript)

@@ -15,9 +15,9 @@ Resumen en texto de `docs/arquitectura.html`, que tiene los diagramas, los contr
 
 | Zona | Qué hay |
 |---|---|
-| Confianza · portátil | Un proceso Python: núcleo y bóveda como librería, servidor MCP y bucle del agente, eventos de la consola, puente Android, registro firmado. Adaptador web (Playwright) |
-| Confianza · emulador | APK de 8 (servicio de accesibilidad, app 8 con los ojos en un WebView, voz local) y apps de banca simuladas |
-| Confianza · navegador | ERP Alba Core, bandeja de correo, consola de auditoría |
+| Confianza - portátil | Un proceso Python: núcleo y bóveda como librería, servidor MCP y bucle del agente, eventos de la consola, puente Android, registro firmado. Adaptador web (Playwright) |
+| Confianza - emulador | APK de 8 (servicio de accesibilidad, app 8 con los ojos en un WebView, voz local) y apps de banca simuladas |
+| Confianza - navegador | ERP Alba Core, bandeja de correo, consola de auditoría |
 | Nube | API de Claude y ElevenLabs (voz y llamada por Twilio). Solo reciben tokens y frases sin datos |
 
 Antes de salir hacia la nube, el **bloqueo final** revisa cada petición: si un patrón sensible se escapa sin tokenizar, la petición no sale.
@@ -42,15 +42,15 @@ En Python, sin HTTP: `observe(session)`, `act(session, op, target, text)`, `orac
 
 ## Contratos (`docs/contracts/`, se fijan el martes 10 a las 14:00)
 
-Herramientas MCP `observe` / `act` / `oracle` · gramática de tokens · snapshot de pantalla (común a web y Android) · interfaz de adaptador `snapshot()` / `perform()` y puente Android · evento de auditoría · petición de confirmación · segmento de voz · políticas YAML por sitio. Los ejemplos están en `docs/arquitectura.html`. Un cambio lo aprueban Pablo (Camino 1) y quien lo consume.
+Herramientas MCP `observe` / `act` / `oracle` - gramática de tokens - snapshot de pantalla (común a web y Android) - interfaz de adaptador `snapshot()` / `perform()` y puente Android - evento de auditoría - petición de confirmación - segmento de voz - políticas YAML por sitio. Los ejemplos están en `docs/arquitectura.html`. Un cambio lo aprueban Pablo (Camino 1) y quien lo consume.
 
 ## Despliegue de la demo (puertos propuestos)
 
 | Proceso | Dónde | Puerto | Arranque |
 |---|---|---|---|
 | Proceso Priv8: núcleo, servidor MCP y agente | portátil | MCP 8701 | `make agent` |
-| · Eventos para la consola, mismo proceso | portátil | 8700 | — |
-| · Puente Android, mismo proceso | portátil ↔ emulador | 8765 (`adb reverse`) | — |
+| - Eventos para la consola, mismo proceso | portátil | 8700 | — |
+| - Puente Android, mismo proceso | portátil ↔ emulador | 8765 (`adb reverse`) | — |
 | ERP Alba Core | navegador | 5173 | `pnpm --filter erp-sim dev` |
 | Bandeja de correo | navegador | 5174 | `pnpm --filter inbox-sim dev` |
 | Consola de auditoría | navegador | 5175 | `pnpm --filter console dev` |
@@ -62,14 +62,14 @@ Datos inventados en `data/seed.json`: Banca Alcor, Brezo Banco, Nimbo Bróker, S
 ## Repositorio
 
 ```
-core/              Python · detector, tokens, bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo, auditoría · Camino 1
-agent/             Python · servidor MCP, adaptador al núcleo, bucle del agente, modo replay · Camino 3
-adapters/web/      Playwright · Camino 2
-adapters/android/  Kotlin · servicio de accesibilidad y puente · Camino 3
-apps/erp-sim/ apps/inbox-sim/ apps/console/   React + Vite · Camino 2 (correos de prueba: Camino 4)
-apps/android-8/    Kotlin · diseño y voz: Camino 3 · app y dictado: Camino 4
-apps/banks-sim/    Kotlin · Banca Alcor: Camino 3 · Brezo y Nimbo: Camino 4
-voice/             ElevenLabs y Twilio · Caminos 2 y 3
+core/              Python - detector, tokens, bóveda, políticas, procedencia, oráculo, ejecutor, confirmación, bloqueo, auditoría - Camino 1
+agent/             Python - servidor MCP, adaptador al núcleo, bucle del agente, modo replay - Camino 3
+adapters/web/      Playwright - Camino 2
+adapters/android/  Kotlin - servicio de accesibilidad y puente - Camino 3
+apps/erp-sim/ apps/inbox-sim/ apps/console/   React + Vite - Camino 2 (correos de prueba: Camino 4)
+apps/android-8/    Kotlin - diseño y voz: Camino 3 - app y dictado: Camino 4
+apps/banks-sim/    Kotlin - Banca Alcor: Camino 3 - Brezo y Nimbo: Camino 4
+voice/             ElevenLabs y Twilio - Caminos 2 y 3
 policies/  data/seed.json  metrics/  docs/contracts/  scripts/emu.sh
 ```
 

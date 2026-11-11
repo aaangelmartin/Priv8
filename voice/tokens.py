@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 
 # Delimiters written as escapes, as docs/contracts/token.md asks:
-# U+2039 ‹, U+00B7 ·, U+203A ›.
+# U+2039 ‹ and U+203A ›.
 TOKEN_RE = re.compile("\u2039([A-Z]+)_(\\d+)(?:-([a-z]+))?\u203a")
 
 # Any guillemet left in a cloud sentence means a token was malformed or

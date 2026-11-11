@@ -1,4 +1,4 @@
-# Políticas YAML por sitio · v1
+# Políticas YAML por sitio - v1
 
 Una política por app, en `policies/<app>.yaml`. El formato lo fija el Camino 1 (`core/policies.py`). Cada camino escribe las de sus pantallas: Álvaro `alba-core.yaml` e `inbox.yaml`, Ángel `banca-alcor.yaml`, Marco las de Brezo Banco y Nimbo Bróker.
 

@@ -148,7 +148,7 @@ Cinco conceptos. Los dos mejores combinan **voz activa** con evidencia firmada: 
     - UX 4: panel y semáforo claros.
     - Implementación 4: es factible y el banco ficticio está bajo control.
     - Presentación 5: llamadas en directo y "pillar" al bot.
-    - **Ponderada ≈ 0,3·4,5 + 0,15·5 + 0,15·4 + 0,3·4 + 0,1·5 = 4,40.**
+    - **Ponderada ≈ 0,3×4,5 + 0,15×5 + 0,15×4 + 0,3×4 + 0,1×5 = 4,40.**
 11. **Riesgos:**
     - La aplicabilidad exacta de los arts. 8 y 10 a las entidades financieras (art. 2.5, supletoriedad) **no está verificada**.
     - Llamadas automatizadas a terceros: hay riesgo legal y de términos de uso, así que el producto real exige el contrato del auditado.

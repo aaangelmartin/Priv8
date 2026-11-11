@@ -1,4 +1,4 @@
-/* Priv8 · app 8 · los ojos en pantalla completa y los eventos del núcleo (issue #39).
+/* Priv8 - app 8 - los ojos en pantalla completa y los eventos del núcleo (issue #39).
  *
  * Carga docs/ojos.html (copiado en el build, sin tocarlo) en un iframe, deja
  * visible solo el 8 grande y lo mueve con P8.poner() según estados.js.

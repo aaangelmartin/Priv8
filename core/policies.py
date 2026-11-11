@@ -1,4 +1,4 @@
-"""Políticas YAML por sitio · formato v1 (docs/contracts/policies.md).
+"""Políticas YAML por sitio - formato v1 (docs/contracts/policies.md).
 
 Una política dice, para una app, qué pantallas conoce, qué clase y tipo tiene
 cada elemento, a qué campo de destino corresponde y qué acciones son críticas.

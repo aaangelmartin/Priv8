@@ -152,8 +152,8 @@ def main() -> int:
         path = PUBLIC / f"{name}.json"
         path.write_text(json.dumps(feed, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
         fin = feed[-1]["msg"]
-        print(f"{path.relative_to(ROOT)}: {len(feed)} mensajes · {feed[-1]['at']:.1f} s · "
-              f"{fin['valores_al_modelo']} valores del seed al modelo · {fin['bloqueos']} bloqueos")
+        print(f"{path.relative_to(ROOT)}: {len(feed)} mensajes - {feed[-1]['at']:.1f} s - "
+              f"{fin['valores_al_modelo']} valores del seed al modelo - {fin['bloqueos']} bloqueos")
     return 0
 
 

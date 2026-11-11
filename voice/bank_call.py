@@ -408,10 +408,10 @@ class BankCall:
             raise ValueError("8 solo pulsa una tecla del menú que acaba de oír")
         self.dicho.append(tecla)
         etiqueta = dict(opciones)[tecla]
-        p = Paso("8", "", accion=f"tecla {tecla} · {etiqueta}")
+        p = Paso("8", "", accion=f"tecla {tecla} | {etiqueta}")
         self.pasos.append(p)
         self._print(p)
-        self._audit(f"menú: tecla {tecla} · {etiqueta}", model_saw=f"tecla {tecla}")
+        self._audit(f"menú: tecla {tecla} | {etiqueta}", model_saw=f"tecla {tecla}")
         return self.linea.pulsar(tecla)
 
     def _ceder(self, motivo: str, frase: str) -> dict[str, Any]:
@@ -420,7 +420,7 @@ class BankCall:
         p = Paso("8", "", accion="cede la llamada a la persona y se retira")
         self.pasos.append(p)
         self._print(p)
-        self._audit(f"cedida a la persona · {motivo}")
+        self._audit(f"cedida a la persona | {motivo}")
         return {"ok": True, "cedida": True, "motivo": motivo}
 
     def run(self) -> dict[str, Any]:
@@ -429,9 +429,9 @@ class BankCall:
         intent = intencion(objetivo_tok)
         if self.eco:
             print(f"  8 ve    objetivo: {objetivo_tok} → {intent}")
-        self._audit(f"inicio · {BANCO} {self.numero} · {intent} · "
-                    f"{'simulada' if getattr(self.linea, 'simulada', False) else 'real'} · "
-                    f"navegador {getattr(self.navegador, 'nombre', '?')} · voz {getattr(self.voz, 'nombre', '?')}",
+        self._audit(f"inicio | {BANCO} {self.numero} | {intent} | "
+                    f"{'simulada' if getattr(self.linea, 'simulada', False) else 'real'} | "
+                    f"navegador {getattr(self.navegador, 'nombre', '?')} | voz {getattr(self.voz, 'nombre', '?')}",
                     model_saw=f"llamar al banco: {objetivo_tok}")
         if objetivo_tok.startswith("[la persona dijo"):
             self._audit("el objetivo traía un dato que nunca sale: no se usa", kind="blocked", reason="rojo")
@@ -510,7 +510,7 @@ class LiveBankCall:
             raise RuntimeError("bloqueo final: el prompt de la llamada lleva datos")
         numero = self.env["PRIV8_BANCO_TEL"]
         core.record({"session": self.session, "kind": "call", "model_saw": f"llamar al banco: {objetivo_tok}",
-                     "tokens": T.find(objetivo_tok), "detail": f"inicio · {numero} · {intent} · live"})
+                     "tokens": T.find(objetivo_tok), "detail": f"inicio | {numero} | {intent} | live"})
         hdr = {"xi-api-key": self.env["ELEVENLABS_API_KEY"], "Content-Type": "application/json"}
 
         def req(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
@@ -534,7 +534,7 @@ class LiveBankCall:
                                       for t in conv.get("transcript", []))
                 tok = core.tokenize_text(self.session, transcript, origen="tercero")
                 core.record({"session": self.session, "kind": "call", "model_saw": None,
-                             "detail": f"fin · {conv.get('status')}"})
+                             "detail": f"fin | {conv.get('status')}"})
                 return {"ok": conv.get("status") == "done", "transcript_tokens": tok, "intencion": intent}
             time.sleep(5)
         raise TimeoutError("la llamada no terminó")
@@ -564,12 +564,12 @@ def main(argv: list[str] | None = None) -> int:
     if os.environ.get("PRIV8_LLAMADA_NAVEGADOR") == "claude" and os.environ.get("ANTHROPIC_API_KEY"):
         nav = NavegadorClaude()
     linea: Linea = LineaHttp(args.linea) if args.linea else LineaLocal()
-    print(f"8 llama a {BANCO} ({ivr_alcor.NUMERO}, línea simulada) · objetivo: {args.objetivo}")
+    print(f"8 llama a {BANCO} ({ivr_alcor.NUMERO}, línea simulada) | objetivo: {args.objetivo}")
     call = BankCall(args.objetivo, args.session, linea=linea, navegador=nav,
                     voz=voz_por_defecto(args.voz), eco=True)
     res = call.run()
-    print(f"\nResultado: {'cedida a la persona' if res['cedida'] else 'sin ceder'} · {res['motivo']}"
-          f" · intención {res['intencion']}")
+    print(f"\nResultado: {'cedida a la persona' if res['cedida'] else 'sin ceder'} | {res['motivo']}"
+          f" | intención {res['intencion']}")
     print("Auditoría (sin valores):")
     for e in core.AUDIT.events:
         if e["session"] == args.session:

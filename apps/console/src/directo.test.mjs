@@ -25,18 +25,18 @@ assert.deepEqual([pend.modo, pend.detalle], ['esperar', 'Registrar la factura �
 
 // El encargo: recibido, inicio, pasos, respuesta y fin.
 const audit = [
-  ev('task', { detail: 'tarea recibida · app · 22 caracteres' }, 1000),
-  ev('task', { detail: 'inicio · modelo · máx 20 pasos', model_saw: 'registrar factura' }, 1100),
-  ev('task', { detail: 'paso 1 · tool_use', model_saw: 'observe {}' }, 2000),
+  ev('task', { detail: 'tarea recibida | app | 22 caracteres' }, 1000),
+  ev('task', { detail: 'inicio | modelo | máx 20 pasos', model_saw: 'registrar factura' }, 1100),
+  ev('task', { detail: 'paso 1 | tool_use', model_saw: 'observe {}' }, 2000),
   ev('observe_sent', { app: 'alba-core', screen: 'factura.alta' }, 2100),
-  ev('task', { detail: 'paso 2 · tool_use', model_saw: 'act {"op": "type"}' }, 3000),
+  ev('task', { detail: 'paso 2 | tool_use', model_saw: 'act {"op": "type"}' }, 3000),
   ev('act', { model_saw: 'act type e7 ‹IMPORTE_1-positivo›' }, 3100),
 ]
 let t = tareaActual(audit)
 assert.deepEqual([t.inicio, t.pasos, t.terminada, t.encargo], [1000, 2, false, 'registrar factura'])
 assert.equal(estadoDe8({ audit: audit.slice(0, 2) }).modo, 'atencion')
 assert.equal(estadoDe8({ audit: audit.slice(0, 3) }).modo, 'pensar')
-const fin = [...audit, ev('task', { detail: 'paso 3 · end_turn', model_saw: 'He registrado ‹FACTURA_1-correo›.' }, 4000), ev('task', { detail: 'fin · paso 3' }, 4001)]
+const fin = [...audit, ev('task', { detail: 'paso 3 | end_turn', model_saw: 'He registrado ‹FACTURA_1-correo›.' }, 4000), ev('task', { detail: 'fin | paso 3' }, 4001)]
 t = tareaActual(fin)
 assert.deepEqual([t.pasos, t.terminada, t.fin, t.respuesta], [3, true, 4000, 'He registrado ‹FACTURA_1-correo›.'])
 const listo = estadoDe8({ audit: fin, ahora: 5000 })
@@ -44,10 +44,10 @@ assert.deepEqual([listo.modo, listo.detalle], ['listo', 'He registrado ‹FACTUR
 assert.equal(estadoDe8({ audit: fin, ahora: 60000 }).modo, 'mirar')
 assert.equal(estadoDe8({ audit: fin, ahora: 60000, feed: true }).modo, 'listo')
 // Un encargo nuevo empieza de cero.
-t = tareaActual([...fin, ev('task', { detail: 'tarea recibida · app · 9 caracteres' }, 9000)])
+t = tareaActual([...fin, ev('task', { detail: 'tarea recibida | app | 9 caracteres' }, 9000)])
 assert.deepEqual([t.inicio, t.pasos, t.terminada], [9000, 0, false])
 // Límite de pasos.
-assert.equal(estadoDe8({ audit: [...audit, ev('task', { detail: 'límite de pasos · 20' }, 5000)], ahora: 5001 }).modo, 'duda')
+assert.equal(estadoDe8({ audit: [...audit, ev('task', { detail: 'límite de pasos | 20' }, 5000)], ahora: 5001 }).modo, 'duda')
 
 // El feed grabado del trámite con protocolo acaba en «listo» con la respuesta de 8.
 const feed = JSON.parse(readFileSync(new URL('../public/con-protocolo.json', import.meta.url))).map((x) => x.msg).filter((m) => m.type === 'audit').map((m, i) => ({ ...m.event, _rx: i * 100 }))
