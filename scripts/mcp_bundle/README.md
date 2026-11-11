@@ -13,9 +13,7 @@ Más información en https://mcp.priv8.es y https://priv8.es.
 ## Uso
 
 ```bash
-./priv8-mcp instalar                                # dependencias de Python y Chromium, dentro de esta carpeta
-mkdir -p ~/priv8-prueba && cd ~/priv8-prueba        # la carpeta donde vas a abrir Claude Code
-claude mcp add priv8 -- ~/.priv8/mcp/priv8-mcp mcp  # cambia la ruta si lo tienes en otra carpeta
+curl -fsSL https://mcp.priv8.es/instalar.sh | bash   # todo: descarga, dependencias, Chromium y registro en Claude Code
 claude
 ```
 
@@ -30,7 +28,7 @@ Claude Code arranca Priv8 al abrir la sesión: sirve las tres apps en `127.0.0.1
 | `priv8-mcp demo` | Solo las tres apps, sin servidor MCP, para mirarlas |
 | `priv8-mcp comando` | La línea de `claude mcp add` para esta copia |
 
-Puertos: `PRIV8_ALBA_PORT`, `PRIV8_INBOX_PORT`, `PRIV8_CONSOLE_PORT` y `PRIV8_EVENTS_PORT` (5173, 5174, 5175 y 8700). Por ejemplo: `claude mcp add priv8 -e PRIV8_EVENTS_PORT=8790 -- ~/.priv8/mcp/priv8-mcp mcp`. `PRIV8_ABRIR_CONSOLA=0` no abre la consola.
+Puertos: `PRIV8_ALBA_PORT`, `PRIV8_INBOX_PORT`, `PRIV8_CONSOLE_PORT` y `PRIV8_EVENTS_PORT` (5173, 5174, 5175 y 8700). Por ejemplo: `claude mcp add --scope user priv8 -e PRIV8_EVENTS_PORT=8790 -- ~/.priv8/mcp/priv8-mcp mcp`. `PRIV8_ABRIR_CONSOLA=0` no abre la consola.
 
 ## Qué protege y qué no
 
@@ -42,4 +40,4 @@ Priv8 protege lo que el agente lee en la pantalla y lo que escribe en ella. Lo q
 - `apps/`: las tres apps ya construidas (no hace falta Node).
 - Al usarlo se crean `.venv/`, `navegadores/`, `.priv8/` (perfil de Chromium) y `audit/` (registro firmado y su clave, solo en tu ordenador).
 
-Para quitarlo: `claude mcp remove priv8` y `rm -rf ~/.priv8/mcp`.
+Para quitarlo: `claude mcp remove priv8 --scope user` y `rm -rf ~/.priv8/mcp`.

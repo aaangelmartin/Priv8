@@ -9,8 +9,11 @@
 #   3. Ejecuta `priv8-mcp instalar`: las dependencias de Python con uv en ~/.priv8/mcp/.venv y
 #      Chromium para Playwright en ~/.priv8/mcp/navegadores. Si uv no tiene Python 3.12, lo
 #      descarga a su propia caché.
-# No usa sudo, no toca tu configuración de Claude Code ni tu PATH y no pide ninguna clave.
-# Para quitarlo: claude mcp remove priv8 && rm -rf ~/.priv8/mcp
+#   4. Si `claude` está en el PATH y priv8 no está ya registrado, lo registra en Claude Code para
+#      tu usuario: claude mcp add --scope user priv8 -- ~/.priv8/mcp/priv8-mcp mcp
+#      (PRIV8_NO_REGISTRAR=1 se lo salta). Sin `claude`, imprime esa línea para que la ejecutes tú.
+# No usa sudo, no toca tu PATH y no pide ninguna clave. Se puede lanzar otra vez: actualiza.
+# Para quitarlo: claude mcp remove priv8 --scope user && rm -rf ~/.priv8/mcp
 #
 # PRIV8_MCP_URL cambia el origen (por ejemplo http://127.0.0.1:5301 para probar en local).
 set -euo pipefail
@@ -55,10 +58,60 @@ tar -xzf "$TMP/priv8-mcp.tar.gz" -C "$TMP/x"
 
 # Una versión anterior: se cambia el código y se conservan .venv, navegadores, .priv8 y audit.
 mkdir -p "$DEST"
-for old in agent core adapters voice policies data apps priv8-mcp README.md VERSION pyproject.toml uv.lock; do
+for old in agent core adapters voice policies data apps priv8-mcp README.md LICENSE VERSION pyproject.toml uv.lock; do
   rm -rf "${DEST:?}/$old"
 done
 cp -R "$TMP/x/priv8-mcp/." "$DEST/"
 say "Priv8 $(cat "$DEST/VERSION") en $DEST"
 
-"$DEST/priv8-mcp" instalar
+PRIV8_SIN_COMANDO=1 "$DEST/priv8-mcp" instalar
+
+# Registro en Claude Code, para tu usuario (vale en cualquier carpeta).
+LAUNCHER="$DEST/priv8-mcp"
+ADD=(claude mcp add --scope user priv8 -- "$LAUNCHER" mcp)
+line() { printf '%q ' "$@"; }
+# `claude mcp get` comprueba el servidor arrancándolo (y con él Chromium): se lee la configuración.
+registered() {
+  "$DEST/.venv/bin/python" -I - "$LAUNCHER" <<'PY'
+import json, os, sys
+d = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~")
+try:
+    cfg = json.load(open(os.path.join(d, ".claude.json"), encoding="utf-8"))
+except Exception:
+    print("no"); sys.exit()
+s = (cfg.get("mcpServers") or {}).get("priv8")
+print("no" if not s else "ours" if s.get("command") == sys.argv[1] else "other")
+PY
+}
+if [ "${PRIV8_NO_REGISTRAR:-0}" = 1 ]; then
+  reg=omitido
+elif ! command -v claude >/dev/null 2>&1; then
+  reg=sin_claude
+else
+  case "$(registered)" in
+    ours) reg=ya ;;
+    other) reg=otro ;;
+    *) if "${ADD[@]}" >/dev/null 2>&1; then reg=hecho; else reg=fallo; fi ;;
+  esac
+fi
+
+echo >&2
+case "$reg" in
+  hecho) say "registrado en Claude Code para tu usuario: $(line "${ADD[@]}")"
+         say "para deshacerlo: claude mcp remove priv8 --scope user" ;;
+  ya) say "Priv8 ya estaba registrado en Claude Code: no se ha tocado" ;;
+  otro) say "ya tienes otro servidor MCP llamado priv8 y no se ha cambiado. Para usar este:"
+        say "  claude mcp remove priv8 --scope user && $(line "${ADD[@]}")" ;;
+  fallo) say "no se pudo registrar en Claude Code. Ejecuta tú: $(line "${ADD[@]}")" ;;
+  sin_claude) say "no encuentro Claude Code (claude). Cuando lo tengas, ejecuta: $(line "${ADD[@]}")" ;;
+  omitido) say "sin registrar (PRIV8_NO_REGISTRAR=1). Para hacerlo: $(line "${ADD[@]}")" ;;
+esac
+cat >&2 <<EOF
+
+Listo. Abre Claude Code en cualquier carpeta (claude) y pídele:
+
+  Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen
+
+Se abren Chromium con el cursor de 8 y la consola de Priv8 en tu navegador: lo que haya
+que aprobar te espera ahí. Para quitarlo todo: claude mcp remove priv8 --scope user && rm -rf $DEST
+EOF

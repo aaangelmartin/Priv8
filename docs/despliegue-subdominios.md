@@ -21,7 +21,7 @@ El paquete lleva el código Python de Priv8 CUA (`core/`, `agent/`, `adapters/we
 2. Mantenerlo privado y aceptar que el código va dentro del paquete. Quitar o cambiar el enlace al repositorio.
 3. Proteger `mcp.priv8.es` con Cloudflare Access (correo del jurado). Entonces `curl` necesita un token de servicio: el instalador de una línea deja de valer tal cual.
 
-Tampoco hay `LICENSE` en el repositorio: sin ella, el código publicado no da permiso de uso a nadie. Si se publica, añadir una.
+El repositorio tiene licencia Apache 2.0 (`LICENSE`), y el paquete la lleva dentro.
 
 ## Opción A (recomendada): subida directa con Wrangler
 

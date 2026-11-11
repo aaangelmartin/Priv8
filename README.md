@@ -225,13 +225,11 @@ Después, pídele el trámite en lenguaje normal: «Usa priv8 para registrar en 
 Para quien quiera probarlo en su ordenador con su Claude Code, sin Node ni el repositorio (#157):
 
 ```bash
-curl -fsSL https://mcp.priv8.es/instalar.sh | bash          # Priv8 en ~/.priv8/mcp (uv y Chromium de Playwright)
-mkdir -p ~/priv8-prueba && cd ~/priv8-prueba
-claude mcp add priv8 -- ~/.priv8/mcp/priv8-mcp mcp
-claude                                                       # «Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen»
+curl -fsSL https://mcp.priv8.es/instalar.sh | bash   # Priv8 en ~/.priv8/mcp y registrado en Claude Code
+claude                                                # «Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen»
 ```
 
-`priv8-mcp mcp` arranca él mismo las tres apps ya construidas (si no están en marcha), Chromium y la consola: basta esa línea de `claude mcp add`. El paquete lo construye `scripts/build_mcp_bundle.sh` (`dist/priv8-mcp-<versión>.tar.gz`, solo archivos que sigue git, sin tests, `.env`, `audit/` ni `.priv8/`) y el sitio, `scripts/build_mcp_site.sh` (`apps/mcp-site`). Cómo se publica en Cloudflare Pages: `docs/despliegue-subdominios.md`.
+El instalador descarga el paquete, comprueba su SHA-256, instala las dependencias con uv y el Chromium de Playwright, y si encuentra `claude` y priv8 no está registrado ejecuta `claude mcp add --scope user priv8 -- ~/.priv8/mcp/priv8-mcp mcp` (se deshace con `claude mcp remove priv8 --scope user`; `PRIV8_NO_REGISTRAR=1` se lo salta). Se puede lanzar otra vez para actualizar. `priv8-mcp mcp` arranca él mismo las tres apps ya construidas (si no están en marcha), Chromium y la consola. El paquete lo construye `scripts/build_mcp_bundle.sh` (`dist/priv8-mcp-<versión>.tar.gz`, solo archivos que sigue git, sin tests, `.env`, `audit/` ni `.priv8/`) y el sitio, `scripts/build_mcp_site.sh` (`apps/mcp-site`). Cómo se publica en Cloudflare Pages: `docs/despliegue-subdominios.md`.
 
 ### Lo que Priv8 no protege aquí
 

@@ -48,11 +48,11 @@ say() { printf 'priv8: %s\n' "$*" >&2; }
 comando() {
   cat >&2 <<EOF
 
-Conecta Priv8 a Claude Code (en la carpeta donde vayas a abrirlo):
+Conecta Priv8 a Claude Code (para tu usuario, vale en cualquier carpeta):
 
-  claude mcp add priv8 -- "$ROOT/priv8-mcp" mcp
+  claude mcp add --scope user priv8 -- "$ROOT/priv8-mcp" mcp
 
-Después abre Claude Code en esa carpeta (claude) y pídele:
+Después abre Claude Code (claude) y pídele:
 
   Registra en Alba Core la factura que ha llegado por correo de Suministros Lumen
 
@@ -83,7 +83,7 @@ case "${1:-ayuda}" in
     say "2/2 Chromium para Playwright en $PLAYWRIGHT_BROWSERS_PATH (unos 130 MB de descarga la primera vez)"
     "$PY" -m playwright install --no-shell chromium
     say "listo: Priv8 $VERSION en $ROOT"
-    comando
+    [ "${PRIV8_SIN_COMANDO:-0}" = 1 ] || comando
     ;;
   mcp)
     need_venv
