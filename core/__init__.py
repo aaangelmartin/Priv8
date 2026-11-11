@@ -13,6 +13,7 @@ Y para quien monta el proceso:
     connect(session, adapter)       adaptador (web o puente Android) de la sesión
     tokenize_text(session, text)    orden de la persona → texto con tokens
     trust([(tipo, valor), ...])     valores de confianza (seed) que se buscan siempre
+    say(session, text)              frase fija sin datos al canal de eventos (voz cloud)
 
 Tareas que llegan mientras el agente corre (#47: app 8 o dictado con Whisper):
 
@@ -136,6 +137,24 @@ def record(event: dict[str, Any]) -> dict[str, Any]:
     stored = AUDIT.record(event)
     events.publish({"type": "audit", "event": stored})
     return stored
+
+
+_utterances = 0
+
+
+def say(session: str, text: str) -> dict[str, Any] | None:
+    """Frase fija sin datos (voice.schema.json, un solo segmento cloud) al canal de eventos.
+
+    Pasa el bloqueo final: si llevara un patrón sensible no se publica y devuelve None.
+    """
+    global _utterances
+    if not check(text)["allowed"]:
+        return None
+    _utterances += 1
+    utterance = {"utterance": f"u{_utterances}", "session": session,
+                 "segments": [{"voice": "cloud", "text": text}]}
+    events.publish({"type": "voice", "utterance": utterance})
+    return utterance
 
 
 CONFIRM = Confirmations(publish=events.publish, record=record)

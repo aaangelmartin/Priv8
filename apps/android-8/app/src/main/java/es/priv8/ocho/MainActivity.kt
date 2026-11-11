@@ -2,6 +2,7 @@ package es.priv8.ocho
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -9,24 +10,35 @@ import android.speech.RecognitionSupport
 import android.speech.RecognitionSupportCallback
 import android.speech.SpeechRecognizer
 import android.util.Log
+import android.view.GestureDetector
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager
 import android.widget.FrameLayout
 import es.priv8.ocho.confirm.ConfirmActivity
 import org.json.JSONObject
+import java.io.File
 
 /**
  * App 8: the eyes full screen, moved by the core's events (issue #39).
  * The app screens (conversation, "no puedo") come with the design of issue #36;
- * spoken confirmations are ConfirmActivity.
+ * spoken confirmations are ConfirmActivity. Touching the eyes dictates a
+ * task (#47), on the device only.
  */
 class MainActivity : Activity() {
 
     private lateinit var ojos: OjosView
     private lateinit var subtitulo: Subtitulo
     private lateinit var events: EventsClient
+    private lateinit var dictador: Dictador
+
+    /**
+     * The last dictated task, ready to send. Not sent yet: no message carries
+     * a task from the phone to the core (issue #47, contract pending).
+     */
+    private var tareaLista: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +60,26 @@ class MainActivity : Activity() {
             },
             onConnection = { ojos.conexion(it) },
         )
+        dictador = Dictador(
+            context = this,
+            onParcial = { subtitulo.mostrarTexto(it) },
+            onTarea = { tarea ->
+                tareaLista = tarea
+                subtitulo.mostrarTexto("«$tarea»")
+                Log.i(TAG_DICTADO, "task ready, not sent: no task message in the contract yet (#47)")
+            },
+            onAviso = { subtitulo.mostrarTexto(it, AVISO_MS) },
+        )
+        val toque = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                if (dictador.escuchando) dictador.parar() else dictador.escuchar()
+                return false
+            }
+        })
+        // The eyes keep their touches; the tap is only watched.
+        ojos.setOnTouchListener { _, e -> toque.onTouchEvent(e); false }
+        dictarSiSePide(intent)
+
         // Spoken confirmations listen for «confirmo» / «cancela». Without the
         // permission the confirmation screen falls back to its buttons.
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -67,7 +99,22 @@ class MainActivity : Activity() {
         super.onStop()
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        dictarSiSePide(intent)
+    }
+
+    /** For the emulator: `adb shell am start --activity-single-top -n es.priv8.ocho/.MainActivity --ez dictar true`. */
+    private fun dictarSiSePide(intent: Intent?) {
+        if (intent?.getBooleanExtra(EXTRA_DICTAR, false) != true) return
+        // Debug only: `--es audio prueba.pcm` reads files/prueba.pcm instead of the microphone.
+        val audio = intent.getStringExtra("audio")?.takeIf { BuildConfig.DEBUG }
+            ?.let { File(getExternalFilesDir(null), File(it).name) }?.takeIf { it.isFile }
+        window.decorView.post { dictador.escuchar(audio) }
+    }
+
     override fun onDestroy() {
+        dictador.destroy()
         subtitulo.ocultar()
         ojos.destroy()
         super.onDestroy()
@@ -109,5 +156,8 @@ class MainActivity : Activity() {
     private companion object {
         const val TAG = "Priv8Confirm"
         const val REQUEST_MIC = 1
+        const val TAG_DICTADO = "Priv8Dictado"
+        const val EXTRA_DICTAR = "dictar"
+        const val AVISO_MS = 4_000L
     }
 }
