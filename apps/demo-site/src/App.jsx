@@ -4,7 +4,7 @@ import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
 import { CASOS, VERTICALES, PASOS, MAS, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
 
-const SECCIONES = [['casos', 'Casos'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces'], ['equipo', 'Equipo']];
+const SECCIONES = [['casos', 'Casos'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
 
 /* Tamaños de lo que copió scripts/assemble.mjs. En `pnpm dev` no existe: no se enseñan tamaños ni avisos. */
@@ -116,58 +116,30 @@ function Hero() {
 
 /* La consola real dentro de la página, reproduciendo un caso. Se pinta a su tamaño de escritorio y se escala al
    ancho que haya: así se ve igual que en el portátil de la demo. */
-function Consola({ caso }) {
-  const ref = useRef(null);
-  const [w, setW] = useState(1200);
-  useLayoutEffect(() => {
-    const el = ref.current; if (!el) return undefined;
-    const medir = () => setW(el.clientWidth);
-    medir();
-    const ro = new ResizeObserver(medir); ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  const [bw, bh] = w < 1000 ? [1280, 860] : [1440, 900];
-  const k = w / bw;
-  return (
-    <div className="dconsola" ref={ref} style={{ height: Math.round(bh * k) }}>
-      <iframe key={caso.id} src={caso.href} title={`Consola de Priv8: ${caso.titulo}`} loading="lazy"
-        style={{ width: bw, height: bh, transform: `scale(${k})` }} />
-    </div>
-  );
-}
-
+/* Casos grabados: dos columnas, B2B y B2C; cada caso abre la consola real reproduciéndolo, en otra pestaña. */
 function Casos() {
-  const [vertical, setVertical] = useState('b2b');
-  const lista = CASOS.filter((c) => c.vertical === vertical);
-  const [id, setId] = useState(lista[0].id);
-  const caso = CASOS.find((c) => c.id === id) ?? lista[0];
-  const elegirVertical = (v) => { setVertical(v); setId(CASOS.find((c) => c.vertical === v).id); };
   return (
     <section id="casos" className="dblock" data-tone="paper" aria-labelledby="h-casos">
       <div className="wrap">
         <Head eyebrow="Casos grabados" title="La consola," soft="con todo dentro."
-          lead="La consola de verdad, reproduciendo sesiones grabadas: lo que ves tú junto a lo que ve el modelo, el razonamiento de 8, sus confirmaciones y sus alarmas. Elige un caso." />
-        <div className="dcasos">
-          <div className="dverticales" role="tablist" aria-label="Vertical">
-            {VERTICALES.map((v) => (
-              <button key={v.id} type="button" role="tab" aria-selected={vertical === v.id} onClick={() => elegirVertical(v.id)}>
-                <span className="dv-tag">{v.id.toUpperCase()}</span>
-                <span className="dv-txt"><b>{v.title}</b><span>{v.what}</span></span>
-              </button>
-            ))}
-          </div>
-          <div className="dchips" role="tablist" aria-label="Casos">
-            {lista.map((c) => (
-              <button key={c.id} type="button" role="tab" aria-selected={c.id === caso.id} className="dchip" onClick={() => setId(c.id)}>{c.titulo}</button>
-            ))}
-          </div>
-          <div className="dcaso-info" key={caso.id}>
-            {caso.pedido && <p className="dpedido"><span>Lo que pide la persona</span><b>«{caso.pedido}»</b></p>}
-            <p className="dque">{caso.que}</p>
-            <a className="dlink dabrir" href={caso.href} target="_blank" rel="noopener">Abrir a pantalla completa</a>
-          </div>
-          <Consola caso={caso} />
-          <p className="dnota-consola">Abajo, reproducir y pausar, velocidad y la barra para saltar a cualquier momento. Las pestañas Alarmas, Pantalla y Registro siguen la grabación. Datos ficticios de la demo.</p>
+          lead="Cada caso abre la consola real reproduciendo una sesión grabada: lo que ves tú junto a lo que ve el modelo, el razonamiento de 8, sus confirmaciones y sus alarmas." />
+        <div className="dlinks">
+          {VERTICALES.map((v) => (
+            <div key={v.id} className="dl-group">
+              <h3>{v.title}</h3>
+              <ul>
+                {CASOS.filter((c) => c.vertical === v.id).map((c) => (
+                  <li key={c.id}>
+                    <a className="dl-row" href={c.href} target="_blank" rel="noopener">
+                      <span className="dl-tag">{v.id.toUpperCase()}</span>
+                      <span className="dl-txt"><b>{c.titulo}</b><span>{c.pedido ? `«${c.pedido}»` : c.que}</span></span>
+                      <Flecha out />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -231,7 +203,7 @@ const Flecha = ({ out }) => (
 
 function Enlaces() {
   return (
-    <section id="enlaces" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-enlaces">
+    <section id="enlaces" className="dblock" data-tone="paper" aria-labelledby="h-enlaces">
       <div className="wrap">
         <Head eyebrow="Enlaces" title="Todo," soft="en una lista." />
         <div className="dlinks">
@@ -259,30 +231,6 @@ function Enlaces() {
   );
 }
 
-function Equipo({ archivos }) {
-  return (
-    <section id="equipo" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-equipo">
-      <div className="wrap">
-        <Head eyebrow="Equipo" title="Cuatro personas," soft="cuatro caminos." />
-        <ul className="dteam">
-          {EQUIPO.map((p) => {
-            const foto = archivos && archivos[`equipo/${p.user}.png`];
-            return (
-              <li key={p.user}>
-                {foto
-                  ? <img className="dface" src={`/equipo/${p.user}.png`} alt="" width="56" height="56" />
-                  : <span className="dface dinit" aria-hidden="true">{p.name.split(' ').map((w) => w[0]).join('')}</span>}
-                <div><b>{p.name}</b><span>{p.role}</span><a href={`https://github.com/${p.user}`} target="_blank" rel="noopener">@{p.user}</a></div>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-/* El pie de la web, igual: logo y frase, columnas, la firma de laaabs y el nombre grande con 8. */
 function Footer() {
   return (
     <footer className="foot" data-tone="paper">
@@ -324,10 +272,8 @@ export default function App() {
         <Casos />
         <Blend from="--paper" to="--mist" seed={2} />
         <Correlo archivos={archivos} />
+        <Blend from="--mist" to="--paper" seed={3} />
         <Enlaces />
-        <Blend from="--mist" to="--band" seed={3} />
-        <Equipo archivos={archivos} />
-        <Blend from="--band" to="--paper" seed={5} />
       </main>
       <Footer />
     </>
