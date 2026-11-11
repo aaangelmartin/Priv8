@@ -202,7 +202,8 @@ export function useEvents() {
         } })
         return true
       }
-      fetch(FEED ? `/${FEED}.json` : '/demo.json')
+      // BASE_URL es '/' en local y '/consola/' en demo.priv8.es (BASE_PATH al compilar).
+      fetch(`${import.meta.env.BASE_URL}${FEED ?? 'demo'}.json`)
         .then((r) => r.json())
         .then((msgs) => {
           // demo.json: un mensaje cada 700 ms para que se vea cómo se construye la pantalla.
