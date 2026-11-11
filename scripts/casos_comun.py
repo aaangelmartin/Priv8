@@ -50,7 +50,10 @@ def falta(msgs: list[dict[str, Any]], comprueba: list[str], *, estricto: bool = 
             return f"no hay bloqueo {c.split(':', 1)[1]}"
         if c == "oraculo" and not any(e.get("kind") == "oracle" for e in ev):
             return "no pregunta al oráculo"
-        if c == "pausa" and not any(p.get("paused") for p in pantallas):
+        # Una pausa antes de la política (la confirmación de 8, el foco en un campo rojo) no
+        # publica pantalla: queda en el registro como `paused`.
+        if c == "pausa" and not any(p.get("paused") for p in pantallas) and \
+                not any(e.get("kind") == "paused" for e in ev):
             return "8 no mira a otro lado en ninguna pantalla"
         if c == "rojo" and not any(el.get("cls") == "rojo" for p in pantallas for el in p.get("elements", [])):
             return "ninguna pantalla tiene un dato rojo"
