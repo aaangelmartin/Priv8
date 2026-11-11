@@ -352,6 +352,7 @@ class WebAdapter:
         self.p8_check: Callable[[str], dict[str, Any]] | None = None  # el bloqueo final del núcleo
         self.p8_mask: Callable[[str], list[list[Any]] | None] | None = None  # lo sensible de un texto
         self.p8_preview: Callable[[dict[str, Any]], dict[str, Any] | None] | None = None  # lo que vería el modelo
+        self.p8_modo: Callable[[str], str] | None = None  # modo de la política de la app (#177)
         self.preview_obs: dict[str, Any] | None = None
         self._leidas: set[str] = set()      # urls que 8 ya ha leído (curiosidad la primera vez)
         self._sorpresas: set[str] = set()   # urls donde ya se ha sorprendido por el cambio de cuenta
@@ -640,15 +641,22 @@ class WebAdapter:
         except Exception:  # noqa: BLE001
             extra = []
         secrets = secrets_of(raw, obs, self._valor, extra)
-        textos = page.evaluate(CENSOR_JS, {"fase": "textos"}) or {}
-        mascaras = {t: self._mascara(t, secrets) for t in textos.get("textos", [])}
+        # Modo estricto (#177): el texto sin regla no llega al modelo, así que en la vista de 8
+        # tampoco se ve (marcador), ni pasa por el detector. En permisivo, solo se tapa lo sensible.
+        estricto = self._estricto()
+        if estricto:
+            mascaras = {}
+        else:
+            textos = page.evaluate(CENSOR_JS, {"fase": "textos"}) or {}
+            mascaras = {t: self._mascara(t, secrets) for t in textos.get("textos", [])}
         args = {"fase": "copia", "ref": "data-p8-pv", "xattr": "data-p8-pvx", "obs": obs_map(obs),
-                "sel": sel if obs else {}, "over": dict(self._over), "mascaras": mascaras}
+                "sel": sel if obs else {}, "over": dict(self._over), "mascaras": mascaras,
+                "estricto": estricto, "sueltos": True}
         doc = page.evaluate(CENSOR_JS, args)
         if doc is None or not self._vista.write(doc, secrets, self.p8_check):
             # Algo no ha pasado el bloqueo final: otra vez, solo con lo que recibiría el modelo.
             # Si tampoco pasa, la vista se queda como estaba.
-            doc = page.evaluate(CENSOR_JS, {**args, "estricto": True})
+            doc = page.evaluate(CENSOR_JS, {**args, "estricto": True, "sueltos": False})
             if doc is not None:
                 self._vista.write(doc, secrets, self.p8_check)
         self.preview_obs = obs
@@ -657,6 +665,16 @@ class WebAdapter:
                                   "texto": "Aquí escribes tú: la clave o el código no llegan al modelo."}
                          if paused else None)
         self._vista.call("aviso", None if obs or self.p8_preview is None else "Pantalla sin regla: 8 no la lee")
+
+    def _estricto(self) -> bool:
+        """Modo de la política de la app abierta. Sin núcleo conectado no hay modelo al que
+        llegue nada y la vista tapa con el detector; si el núcleo falla, estricto."""
+        if self.p8_modo is None:
+            return False
+        try:
+            return self.p8_modo(self.app) != "permisivo"
+        except Exception:  # noqa: BLE001 - en duda, estricto
+            return True
 
     def _mascara(self, texto: str, secrets: set[str]) -> list[list[Any]] | None:
         """Lo sensible de un texto de interfaz: None si sale tal cual, o sus partes con tokens y
