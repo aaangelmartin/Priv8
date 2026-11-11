@@ -1,4 +1,8 @@
 # Bandeja de correo simulada (Camino 2). Todo lo que se lee aquí viene de un correo.
+#
+# Modo estricto (#177, el de por defecto): al modelo solo llega el texto que cubre una regla.
+# Las reglas verdes de títulos, botones y del cuerpo del correo son las que la tarea necesita
+# leer; el resto de la página (etiquetas, carpetas, avatares) no sale.
 version: 1
 app: inbox
 source: web
@@ -18,7 +22,7 @@ screens:
         tipo: FACTURA
         origen: correo
         extract: '\b([A-Z]{1,3}-\d{4}-\d{3,6})\b'
-      - {match: {sel_re: '^#(abrir-\d+|nav-bandeja|nav-enviados|aviso)$'}, cls: verde}
+      - {match: {sel_re: '^#(abrir-\d+|nav-bandeja|nav-enviados|aviso|bandeja-titulo)$'}, cls: verde}
   - id: correo.lectura
     url_re: /correo/
     origen: correo
@@ -40,6 +44,11 @@ screens:
       - {match: {sel: "#pdf-numero"}, cls: ambar, tipo: FACTURA, origen: correo}
       - {match: {sel: "#pdf-importe"}, cls: ambar, tipo: IMPORTE, origen: correo, rasgo_signo: true}
       - {match: {sel: "#responder"}, cls: verde}
+      # Cuerpo del correo: texto libre de un tercero que 8 tiene que leer (la factura, el cambio
+      # de cuenta). Es el único texto libre que sale en modo estricto, porque esta regla lo dice:
+      # el detector tokeniza IBAN, teléfonos, correos, importes y nombres con origen correo.
+      - {match: {sel: "#cuerpo"}, cls: verde}
+      - {match: {sel_re: '^#(nav-bandeja|nav-enviados)$'}, cls: verde}
       # Texto suelto de la página (#154): el nombre del remitente, tapado como en la bandeja.
       - {match: {sel: ".nombre"}, cls: ambar, tipo: PROVEEDOR, origen: correo}
   - id: correo.respuesta
@@ -61,4 +70,6 @@ screens:
         cls: verde
         critica: enviar
         resumen: ["#para"]
+      # Lo que escribe 8 (con tokens) y la interfaz del formulario.
+      - {match: {sel_re: '^#(texto|respuesta-titulo|descartar|nav-bandeja|nav-enviados)$'}, cls: verde}
       - {match: {sel: ".nombre"}, cls: ambar, tipo: PROVEEDOR, origen: correo}
