@@ -57,7 +57,7 @@ class FakePhone:
 
     def __init__(self, url: str = "ws://127.0.0.1:8765", *, answer: str | None = "ok",
                  answer_delay: float = 0.2, page: str = "inicio", app: str = ALCOR,
-                 after_confirm: str | None = None) -> None:
+                 after_confirm: str | None = None, otp_pause: int = 0) -> None:
         self.url = url
         self.answer = answer  # "ok", "no", or None (nobody answers)
         self.answer_delay = answer_delay
@@ -66,6 +66,10 @@ class FakePhone:
         # The app in front once 8's confirmation closes. On the AVD it can be 8's own screen
         # instead of the bank (the task below), so the core must bring the bank back.
         self.after_confirm = after_confirm
+        # Snapshots of the code screen (autenticacion, paused) before the person has typed it.
+        # 0 (tests): the code is already in. The recordings of scripts/casos_provisionales.py use 1
+        # so 8 is seen looking away while the person types the SMS code.
+        self.otp_pause = otp_pause
         self.form = {"iban": "", "beneficiario": "", "importe": "", "concepto": ""}
         self.seq = 0
         self.scrolled = False  # transferencia: scrolled down once
@@ -195,6 +199,11 @@ class FakePhone:
         if self.app != ALCOR:
             self.ids = set()
             return {**base, "app": self.app, "screen": None, "elements": []}
+        if self.page == "autenticacion" and self.otp_pause > 0:
+            self.otp_pause -= 1
+            els = self._autenticacion()
+            self.ids = {e["id"] for e in els}
+            return {**base, "app": ALCOR, "screen": "autenticacion", "elements": els}
         if self.page == "autenticacion":
             # The person types the OTP and confirms while 8 looks away.
             self.page = "resultado"
@@ -268,6 +277,32 @@ class FakePhone:
                 _el(16, "text", "id/cuenta_iban", "ES66 9100 0001 5140 8765 4321", parent=13),
                 _el(17, "button", "id/btn_transferir", "Hacer una transferencia", actions=["tap"]),
                 _el(18, "button", "id/btn_movimientos", "Ver movimientos", actions=["tap"])]
+
+    def _login(self) -> list[dict[str, Any]]:
+        """The login of Banca Alcor (page="login"): user and password are red, and Entrar is
+        the person's. Nothing here changes on a perform: the login is always the person's."""
+        return [_el(1, "other", "id/screen_login", parent=None),
+                _el(2, "heading", "id/banco_nombre", "Banca Alcor"),
+                _el(3, "text", "id/banco_lema", "Tu banco, en tu móvil"),
+                _el(4, "heading", "id/login_titulo", "Entra en tu cuenta"),
+                _el(5, "text", "id/usuario_label", "Usuario"),
+                _el(6, "textbox", "id/usuario", "angel.martin", "Usuario", actions=["tap", "type"]),
+                _el(7, "text", "id/clave_label", "Clave"),
+                _el(8, "textbox", "id/clave", "••••••••••", "Clave", actions=["tap", "type"], password=True),
+                _el(9, "button", "id/btn_entrar", "Entrar", actions=["tap"])]
+
+    def _autenticacion(self) -> list[dict[str, Any]]:
+        """The bank's code screen after Enviar (PSD2): the person types the SMS code."""
+        return [_el(1, "other", "id/screen_autenticacion", parent=None),
+                _el(2, "heading", "id/titulo", "Confirma la transferencia"),
+                _el(3, "text", "id/auth_texto", "Te hemos enviado un código por SMS."),
+                _el(4, "text", "id/auth_importe_label", "Importe"),
+                _el(5, "text", "id/auth_importe", self._eur()),
+                _el(6, "text", "id/otp_label", "Código SMS"),
+                _el(7, "textbox", "id/otp", None, "Código SMS", actions=["tap", "type"], password=True),
+                _el(8, "button", "id/btn_confirmar_otp", "Confirmar", actions=["tap"]),
+                _el(9, "button", "id/btn_huella", "Usar la huella", actions=["tap"]),
+                _el(10, "button", "id/btn_cancelar", "Cancelar", actions=["tap"])]
 
     def _otro_banco(self, nombre: str, alias: str, iban: str, saldo: str) -> list[dict[str, Any]]:
         """Inicio of Brezo Banco or Nimbo Bróker on the AVD: one account."""

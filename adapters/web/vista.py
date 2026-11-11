@@ -4,7 +4,7 @@ La consola ya no recibe píxeles de la pestaña real. El adaptador mantiene una 
 página, la *vista de 8*, en un Chromium aparte y sin ventana que el agente nunca navega:
 
     pestaña real ──(vista8.js: clona y censura la copia)──▶ HTML censurado
-        ──(bloqueo final: guard)──▶ página espejo ──(CDP Page.startScreencast)──▶ frame
+        ──(bloqueo final: guard)──▶ página espejo ──(captura, junto a la pestaña real)──▶ par
 
 1. vista8.js se ejecuta en la pestaña real (que ya tiene los valores) y trabaja sobre un
    clon: cada elemento data-p8 lleva el texto que leyó el modelo (tokens en lo ámbar,
@@ -228,7 +228,6 @@ class Vista8:
         self.writes = 0
         self.blocked = 0
         self.last_block: str | None = None
-        self._cdp: Any = None
 
     def write(self, doc: dict[str, Any], secrets: Iterable[str],
               check: Callable[[str], dict[str, Any]] | None = None) -> bool:
@@ -259,39 +258,12 @@ class Vista8:
     def html(self) -> str:
         return self.page.content()
 
-    def start_cast(self, on_frame: Callable[[str, int, int], None], quality: int, max_w: int, max_h: int) -> None:
-        if self._cdp is not None:
-            return
-        cdp = self._ctx.new_cdp_session(self.page)
-
-        def on(p: dict[str, Any]) -> None:
-            try:
-                cdp.send("Page.screencastFrameAck", {"sessionId": p["sessionId"]})
-            except Exception:  # noqa: BLE001
-                return
-            meta = p.get("metadata") or {}
-            on_frame(p["data"], int(meta.get("deviceWidth") or 0), int(meta.get("deviceHeight") or 0))
-
-        cdp.on("Page.screencastFrame", on)
-        cdp.send("Page.startScreencast", {"format": "jpeg", "quality": quality, "maxWidth": max_w, "maxHeight": max_h})
-        self._cdp = cdp
-
-    def stop_cast(self) -> None:
-        cdp, self._cdp = self._cdp, None
-        if cdp is None:
-            return
-        try:
-            cdp.send("Page.stopScreencast")
-            cdp.detach()
-        except Exception:  # noqa: BLE001
-            pass
-
-    @property
-    def casting(self) -> bool:
-        return self._cdp is not None
+    def captura(self, quality: int) -> bytes:
+        """JPEG de la página espejo tal como está (px CSS, del tamaño de la pestaña real). El
+        adaptador lo toma justo después del de la pestaña real: los dos forman un par (#187)."""
+        return self.page.screenshot(type="jpeg", quality=quality, scale="css", timeout=3000)
 
     def close(self) -> None:
-        self.stop_cast()
         try:
             self._ctx.close()
             self._browser.close()

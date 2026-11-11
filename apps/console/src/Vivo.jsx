@@ -59,11 +59,14 @@ export function useReproduccion(linea, valores) {
     const items = lineaRef.current
     const i = items.findIndex((x) => x.n >= r.next)
     if (i < 0) { r.busy = false; return }
-    const item = items[i]
+    let k = i
+    // Muy atrasada (un salto en la reproducción grabada, #187): lo viejo se aplica de golpe, sin animar.
+    while (items.length - 1 - k > 10) { aplicar(items[k]); k += 1 }
+    const item = items[k]
     r.next = item.n + 1
     r.busy = true
     aplicar(item)
-    const atraso = items.length - 1 - i
+    const atraso = items.length - 1 - k
     const d = duracion(item, valRef.current)
     r.timer = setTimeout(paso, atraso > 10 ? 30 : atraso > 4 ? d / 2.5 : d)
   }, [aplicar])
@@ -208,7 +211,7 @@ export function PantallaDe8({ rep, modo, valores, sin }) {
             </div>
           )}
           {obs?.paused && <p className="pausa-ventana">8 mira a otro lado: {obs.paused}</p>}
-          {els.map((el) => (
+          {els.filter((el) => !(el.role === 'other' && el.text == null && !el.label && el.cls !== 'rojo')).map((el) => (
             <Elemento key={el.id} el={el} r={reales.get(el.id) ?? {}} modo={modo} valores={valores} sin={sin}
               escrito={escrito[el.id]} marca={foco?.id === el.id ? foco.gesto : null} />
           ))}

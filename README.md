@@ -140,6 +140,7 @@ Desde el código: `make web`, `make mcp-web` y `claude mcp add --transport http 
 ```bash
 make llamada-banco                                  # 8 llama a la línea simulada de Banca Alcor
 make metrics                                        # métricas B2B y B2C con y sin protocolo
+make casos-provisionales                            # los casos de demo.priv8.es, grabados sin emulador ni API
 uv run python -m core.verify audit/replay.jsonl     # comprueba el registro firmado
 ```
 

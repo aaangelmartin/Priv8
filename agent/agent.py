@@ -402,7 +402,8 @@ async def _main(a: argparse.Namespace) -> int:
                 err(f"priv8: pide el encargo a 8 en la consola ({CONSOLE_URL})")
                 task = await _next_console_task(a.session)
         elif a.android:  # the emulator over the bridge; the person approves on the phone
-            bridge = ca.mount_android(a.session, simulated_persona=bool(a.simulated_persona))
+            bridge = ca.mount_android(a.session, simulated_persona=bool(a.simulated_persona),
+                                      wait_login=not a.en_login)
             if dictated:
                 err("priv8: dicta la tarea en el móvil")
                 task = await anyio.to_thread.run_sync(ca.next_dictated_task, a.session) or ""
@@ -525,6 +526,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--android", action="store_true",
                    help="PRIV8_CORE=real: drive the Android emulator through the bridge (ws :8765, apps/android-8); "
                         "without --task, wait for tasks dictated on the phone")
+    p.add_argument("--en-login", action="store_true",
+                   help="--android: start with the bank at its login and do not wait for the person to enter "
+                        "(the case where 8 sees a login and leaves it to the person, #187)")
     p.add_argument("--simulated-persona", action=argparse.BooleanOptionalAction, default=None,
                    help="a simulated person approves held actions (default: on with --replay, off live)")
     p.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)
