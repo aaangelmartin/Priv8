@@ -38,6 +38,8 @@ for (const sep of ['·', '-']) {
   assert.equal(lineaDe({ kind: 'task', detail: 'tarea recibida - app' }), null)
   assert.equal(lineaDe({ kind: 'task', detail: 'paso 3 - tool_use', model_saw: 'act {"op":"tap"}', ms: { model: 2100 } }).sub, 'act | 2,1 s')
   assert.equal(lineaDe({ kind: 'task', detail: 'paso 9 - end_turn', model_saw: `He registrado ${T('FACTURA_1|correo')}` }).tipo, 'dice')
+  // La respuesta final larga solo va entera en el chat.
+  assert.equal(lineaDe({ kind: 'task', detail: 'paso 9 - end_turn', model_saw: 'He registrado la factura.' }).texto, null)
   assert.equal(lineaDe({ kind: 'oracle', model_saw: `oracle compare ${T('IMPORTE_1|positivo')} ${T('IMPORTE_1|positivo')}`, detail: 'igual' }).sub, 'responde: igual')
 
   // Foco del cursor

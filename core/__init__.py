@@ -78,6 +78,19 @@ def connect(session: str, adapter: Adapter) -> None:
     if hasattr(adapter, "on_frame"):
         adapter.on_frame = lambda f, s=session: frame(s, f)
         adapter.watching = events.frame_watchers
+    # Vista de 8 y los ojos de 8 en la ventana (#154): el adaptador web censura su copia con
+    # lo que vio el modelo y pasa el mismo bloqueo final; todo dentro del proceso.
+    if hasattr(adapter, "on_core_event"):
+        vault = SESSIONS.get(session).vault
+        adapter.session = session
+        adapter.p8_render = vault.value
+        adapter.p8_render_text = vault.render
+        adapter.p8_secrets = lambda v=vault: [*v.values(), *(x for _, x in TRUSTED)]
+        adapter.p8_check = lambda text: check(text)
+        old = getattr(adapter, "_p8_unsubscribe", None)
+        if callable(old):
+            old()
+        adapter._p8_unsubscribe = events.subscribe(adapter.on_core_event)
 
 
 def trust(known: list[tuple[str, str]]) -> None:
@@ -115,7 +128,8 @@ def frame(session: str, f: dict[str, Any]) -> dict[str, Any] | None:
     fresh = bool(obs and obs.get("app") == f.get("app")
                  and all(seen.get(k) == v for k, v in where.items()))
     rects: list[dict[str, Any]] = []
-    if fresh:
+    vista = f.get("vista") == "8"  # web (#154): la vista de 8 ya viene censurada en el DOM, sin cajas
+    if fresh and not vista:
         boxes = f.get("boxes") or {}
         for el in obs.get("elements", []):
             b = boxes.get(el.get("id"))
@@ -133,6 +147,8 @@ def frame(session: str, f: dict[str, Any]) -> dict[str, Any] | None:
            "paused": (obs.get("paused") if fresh else None), "fresh": fresh,
            "w": int(f["w"]), "h": int(f["h"]), "mime": f.get("mime", "image/jpeg"),
            "img": f["img"], "rects": rects}
+    if vista:
+        msg["vista"] = "8"
     events.publish_frame(msg)  # solo local, como screen.raw
     return msg
 
@@ -237,6 +253,9 @@ def _perform_pending(p: Pending) -> dict[str, Any]:
         action["text"] = sess.vault.render(action["text"])
     if sess.adapter is None:
         return {"denied": "sin_regla", "detail": "la sesión no tiene adaptador conectado"}
+    note = getattr(sess.adapter, "note_action", None)
+    if callable(note):
+        note({k: v for k, v in p.action.items() if k in ("op", "target", "text")})
     res = sess.adapter.perform(action)
     record({"session": sess.id, "kind": "act", "confirm": p.request["id"], "approved_by": "persona",
             "model_saw": " ".join(x for x in ("act", p.action["op"], p.action.get("target"),

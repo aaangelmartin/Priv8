@@ -57,4 +57,14 @@ assert.ok(t.terminada && t.pasos === 18 && /registrado/.test(t.respuesta))
 // Frases de voz mixta.
 assert.equal(textoDeSegmentos([{ voice: 'cloud', text: 'Tienes' }, { voice: 'local', token: '‹IMPORTE_1-positivo›' }, { voice: 'cloud', text: '.' }]), 'Tienes ‹IMPORTE_1-positivo›.')
 
+// Lo que razona 8 antes de actuar (#154) no es su respuesta: el encargo sigue en curso.
+{
+  const t = tareaActual([
+    { kind: 'task', detail: 'inicio', model_saw: 'Registra la factura', _rx: 1 },
+    { kind: 'task', detail: 'paso 1 - razona', model_saw: '**Plan:** abro el correo', _rx: 2 },
+  ])
+  assert.equal(t.terminada, false)
+  assert.equal(t.respuesta, null)
+}
+
 console.log('directo: ok')

@@ -3,9 +3,10 @@ import { DEMO, FEED, SIN_PROTOCOLO, VERIFY_URL, WS_URL, useEvents } from './useE
 import { comentarioDe8 } from './alertas.js'
 import { partesDeToken } from './tokens.js'
 import { estadoDe8, mmss, nombreApp, nombrePantalla, tareaActual } from './directo.js'
-import { EnClaro, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
-import { PantallaDe8, Razonamiento, useReproduccion } from './Vivo.jsx'
-import { PantallaReal } from './PantallaReal.jsx'
+import { EnClaro, Md, Real, Tokens, Valor, hora, limpio, useAhora, useCalma } from './piezas.jsx'
+import { Razonamiento, useReproduccion } from './Vivo.jsx'
+import { PantallaViva, VistaWeb } from './Vista8.jsx'
+import { esVista8 } from './frame.js'
 import Eight from './eight/Eight.jsx'
 import ochoAvatar from '../../../brand/logo/8-reposo-cobalto.svg'
 
@@ -117,49 +118,49 @@ function Titular({ texto }) {
   return <>{texto.slice(0, i)} <span className="soft">{texto.slice(i + 3)}</span></>
 }
 
-function EnDirecto({ audit, pending, status, etiquetas, valores, enClaro, fin, ahora, rep, frame }) {
+// La pestaña «Lo que ve 8» a pantalla completa, con el mismo núcleo (?ws=) que esta consola.
+export function urlVista8() {
+  const p = new URLSearchParams(window.location.search)
+  p.set('vista', '8')
+  return `${window.location.pathname}?${p.toString()}`
+}
+
+function EnDirecto({ audit, pending, status, etiquetas, enClaro, fin, ahora, rep, frame }) {
   const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
-  const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}|${crudo.detalle ?? ''}`)
+  const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}`)
   const t = useMemo(() => tareaActual(audit), [audit])
   const bloqueos = audit.filter((x) => x.kind === 'blocked').length
   const segundos = t ? Math.max(0, Math.round(((t.terminada ? t.fin : ahora) - t.inicio) / 1000)) : 0
   const fondo = SIN_PROTOCOLO ? NOCHE : COBALTO
-  // Lo que ves (valores reales, solo en local) o lo que ve 8 (tokens). En las reproducciones, lo que ve 8.
-  const [modo, setModo] = useState(FEED ? 'ocho' : 'tu')
 
   return (
-    <section className={`directo ${FEED ? `modo ${SIN_PROTOCOLO ? 'sin' : 'con'}` : ''}`} aria-label="8 en directo">
+    <section className={`directo ${FEED ? `modo ${SIN_PROTOCOLO ? 'sin' : 'con'}` : ''}`} aria-label="Lo que ve 8, en directo">
       <header className="directo-cab" aria-live="polite">
         <Eight className="directo-eight" mode={e.modo} fg={BLANCO} cut={fondo} label={`8: ${e.titulo}`} />
         <div className="directo-texto">
           {FEED
             ? <p className="eyebrow modo-texto">{SIN_PROTOCOLO ? <>Sin protocolo <span className="clave">el modelo recibe los datos reales</span></> : <>Con Priv8 <span className="clave">el modelo solo recibe tokens</span></>}</p>
-            : <p className="eyebrow"><i className="vivo" aria-hidden="true" />En directo</p>}
-          <h2><Titular texto={e.titulo} /></h2>
-          {e.detalle && <p className="detalle"><Tokens text={limpio(e.detalle)} valores={valores} mostrar={modo === 'tu' ? 'real' : 'token'} /></p>}
+            : <p className="eyebrow"><i className="vivo" aria-hidden="true" />Lo que ve 8, en directo</p>}
+          <h2 title={e.titulo}><Titular texto={e.titulo} /></h2>
         </div>
         <span className="sp" />
-        <div className="directo-lado">
-          <div className="conmutador" role="tablist" aria-label="Qué se muestra">
-            <button role="tab" aria-selected={modo === 'tu'} onClick={() => setModo('tu')}>Lo que ves</button>
-            <button role="tab" aria-selected={modo === 'ocho'} onClick={() => setModo('ocho')}>{SIN_PROTOCOLO ? 'Lo que recibe el modelo' : 'Lo que ve 8'}</button>
-          </div>
-          {t && (
-            <span className="tarea" aria-label="Encargo actual">
-              <span>{t.terminada ? 'Terminado' : 'En curso'}</span>
-              <span>Paso {t.pasos}</span>
-              <span>{mmss(segundos)}</span>
-            </span>
-          )}
-        </div>
+        {t && (
+          <span className="tarea" aria-label="Encargo actual">
+            <span>{t.terminada ? 'Terminado' : 'En curso'}</span>
+            <span>Paso {t.pasos}</span>
+            <span>{mmss(segundos)}</span>
+          </span>
+        )}
+        {!DEMO && (
+          <a className="abrir" href={urlVista8()} target="_blank" rel="noopener noreferrer" title="Abre lo que ve 8 en otra pestaña, a pantalla completa">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Pantalla completa
+          </a>
+        )}
       </header>
 
-      <div className="directo-vivo">
-        {/* La pantalla real cuando el núcleo manda fotogramas; si no (reproducciones, sin núcleo), el esquema. */}
-        {frame && !DEMO
-          ? <PantallaReal frame={frame} rep={rep} modo={modo} valores={valores} />
-          : <PantallaDe8 rep={rep} modo={modo} valores={valores} sin={SIN_PROTOCOLO} />}
-        <Razonamiento rep={rep} modo={modo} valores={valores} />
+      <div className="directo-pantalla">
+        <PantallaViva frame={frame} rep={rep} demo={DEMO} sin={SIN_PROTOCOLO} />
       </div>
 
       {FEED && (
@@ -171,6 +172,33 @@ function EnDirecto({ audit, pending, status, etiquetas, valores, enClaro, fin, a
         </footer>
       )}
     </section>
+  )
+}
+
+// ?vista=8: solo lo que ve 8, de borde a borde, con una cabecera mínima.
+export function SoloVista() {
+  const { status, audit, pending, etiquetas, frame, linea, valores } = useEvents()
+  const ahora = useAhora()
+  const rep = useReproduccion(linea, valores)
+  const crudo = estadoDe8({ audit, pending, status, etiquetas, ahora, feed: !!FEED })
+  const e = useCalma(crudo, `${crudo.modo}|${crudo.titulo}`)
+  const [tono, texto] = CONEXION[status] ?? ['aviso', status]
+  useEffect(() => { document.title = 'Lo que ve 8 - Priv8' }, [])
+  return (
+    <div className="solo">
+      <header className="solo-cab" aria-live="polite">
+        <Eight className="solo-eight" mode={e.modo} fg={BLANCO} cut={NOCHE} label={`8: ${e.titulo}`} />
+        <b className="solo-marca">Lo que ve 8</b>
+        <span className="solo-estado" title={e.titulo}>{e.titulo}</span>
+        <span className="sp" />
+        <span className={`conexion t-${tono}`} role="status"><i aria-hidden="true" />{texto}</span>
+      </header>
+      <main className="solo-pantalla">
+        {!DEMO && esVista8(frame)
+          ? <VistaWeb frame={frame} cabecera={false} />
+          : <PantallaViva frame={frame} rep={rep} demo={DEMO} sin={SIN_PROTOCOLO} />}
+      </main>
+    </div>
   )
 }
 
@@ -246,7 +274,7 @@ function Mensaje({ m, confirmaciones, resolve, valores, ahora }) {
               ? m.segmentos.map((s, i) => (
                 <span key={i}>{i > 0 && !/^[.,;:!?)»]/.test(s.text ?? '') ? ' ' : ''}{s.token ? <Tokens text={s.token} valores={valores} mostrar="real" /> : s.text}</span>
               ))
-              : <Tokens text={m.texto} valores={valores} mostrar="real" />}
+              : <Md texto={m.texto} valores={valores} mostrar="real" />}
           </div>
           <span className="meta">8 | {hora(m.ts)}</span>
         </div>
@@ -581,8 +609,11 @@ export default function App() {
       <Barra status={status} vista={vista} ir={ir} avisos={avisos} />
       {vista === 'directo' && (
         <div className="vista-directo">
-          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} valores={valores} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} />
-          <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
+          <EnDirecto audit={audit} pending={pending} status={status} etiquetas={etiquetas} enClaro={enClaro} fin={fin} ahora={ahora} rep={rep} frame={frame} />
+          <aside className="lado" aria-label="Razonamiento y chat">
+            <Razonamiento rep={rep} />
+            <Chat chat={chat} confirmaciones={confirmaciones} resolve={resolve} pedir={pedir} status={status} session={session} valores={valores} ahora={ahora} />
+          </aside>
         </div>
       )}
       {vista === 'alarmas' && (

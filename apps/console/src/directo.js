@@ -64,7 +64,7 @@ export function tareaActual(audit) {
     if (e.kind === 'task') {
       const m = PASO.exec(d)
       if (m) t.pasos = Math.max(t.pasos, Number(m[1]))
-      if (e.model_saw && !ES_LLAMADA.test(e.model_saw)) {
+      if (e.model_saw && !ES_LLAMADA.test(e.model_saw) && !/razona/i.test(d)) {
         t.respuesta = e.model_saw
         t.terminada = true
         t.fin = t.fin ?? rx

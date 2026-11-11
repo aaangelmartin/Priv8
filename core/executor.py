@@ -77,6 +77,9 @@ def execute(sess: Session, op: str, target: str | None = None, text: str | None 
         action["text"] = sess.vault.render(text)  # valor real, solo en local
     if direction:
         action["direction"] = direction
+    note = getattr(sess.adapter, "note_action", None)
+    if callable(note):  # la vista de 8 (#154) enseña lo que escribió el modelo, con tokens
+        note({k: v for k, v in (("op", op), ("target", target), ("text", text)) if v is not None})
     result = sess.adapter.perform(action)
     if result.get("ok"):
         return {"ok": True}

@@ -1,6 +1,7 @@
 // Piezas compartidas de la consola: tokens, valores reales (solo en local) y relojes.
 import { useEffect, useRef, useState } from 'react'
 import { TOKEN_RE, alinear } from './tokens.js'
+import { bloques } from './md.js'
 
 // Los textos del núcleo usan «·» como separador; en la consola se ve « | ». Los tokens
 // (‹IBAN_1·correo›) no llevan espacios alrededor del punto y no se tocan.
@@ -25,6 +26,22 @@ export function Tokens({ text, valores, mostrar = 'token' }) {
     if (mostrar === 'ambos' && real) return <Valor key={i} tok={part} valores={valores} />
     return <Token key={i} tok={part} valores={valores} />
   })
+}
+
+// Texto del modelo con su markdown (negrita y listas), y los tokens en su chip.
+export function Md({ texto, valores, mostrar = 'token', className }) {
+  const parte = (p, i) => (p.b
+    ? <b key={i}><Tokens text={p.t} valores={valores} mostrar={mostrar} /></b>
+    : <Tokens key={i} text={p.t} valores={valores} mostrar={mostrar} />)
+  return (
+    <div className={`md ${className ?? ''}`}>
+      {bloques(texto).map((b, i) => {
+        if (b.tipo === 'p') return <p key={i}>{b.partes.map(parte)}</p>
+        const L = b.tipo === 'ol' ? 'ol' : 'ul'
+        return <L key={i}>{b.items.map((it, j) => <li key={j}>{it.map(parte)}</li>)}</L>
+      })}
+    </div>
+  )
 }
 
 export function Valor({ tok, valores }) {

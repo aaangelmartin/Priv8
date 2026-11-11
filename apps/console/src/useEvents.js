@@ -114,7 +114,7 @@ export function useEvents() {
           if (DEMO && e.model_saw) post({ k: 'tu', texto: e.model_saw, grabado: true })
           return
         }
-        if (e.model_saw && !ES_LLAMADA.test(e.model_saw)) {
+        if (e.model_saw && !ES_LLAMADA.test(e.model_saw) && !/razona/i.test(d)) {
           // La respuesta final de 8. En vivo llega también como frase de voz; si no llega, se pone esta.
           if (DEMO) post({ k: '8', texto: e.model_saw })
           else {

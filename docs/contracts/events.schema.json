@@ -91,6 +91,10 @@
           "description": "Las cajas son las de la última observación (misma app y url o pantalla).",
           "type": "boolean"
         },
+        "vista": {
+          "description": "\"8\": la imagen es la vista de 8 (#154), una página espejo censurada en el DOM antes de pintarse (cada valor ámbar con su token, cada rojo «nunca sale»); rects va vacío y la consola la enseña tal cual. Sin el campo, la imagen es la pantalla real (Android) y la consola no la enseña: pinta los elementos observados.",
+          "const": "8"
+        },
         "w": {
           "type": "integer",
           "minimum": 1
