@@ -18,6 +18,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowManager
 import android.widget.FrameLayout
 import es.priv8.ocho.confirm.ConfirmActivity
+import es.priv8.ocho.voz.VozMixta
 import org.json.JSONObject
 import java.io.File
 
@@ -111,11 +112,14 @@ class MainActivity : Activity() {
     override fun onStart() {
         super.onStart()
         events.start()
+        // «hablar» follows the level of what 8 says (#42), played by the service.
+        VozMixta.ojos = { nivel -> ojos.voz(nivel) }
     }
 
     override fun onStop() {
         // A dictation still listening would compete with the spoken confirmation's recognizer.
         dictador.parar()
+        VozMixta.ojos = null
         events.stop()
         super.onStop()
     }

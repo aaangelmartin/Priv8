@@ -2,7 +2,7 @@
 
 `MixedVoicePlayer.kt` plays one utterance of mixed voice on the phone: cloud segments as PCM streamed from ElevenLabs, local segments through `android.speech.tts.TextToSpeech` in es-ES, back to back, measuring the gap at every switch.
 
-It is a single self-contained source file. It lives here until `apps/android-8/` (branch `feat/android-skeleton`) is on main; then it moves to that app and this folder goes away.
+The file now lives in the app: `apps/android-8/app/src/main/java/es/priv8/ocho/voz/MixedVoicePlayer.kt`. `VozMixta.kt` next to it plays every `voice` message that reaches the accessibility service over the bridge. Until the core relays ElevenLabs PCM, cloud sentences are read by the local voice too. This README keeps the design notes.
 
 ## Requirements
 
