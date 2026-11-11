@@ -7,7 +7,7 @@ const Leak = ({ children }) => <span className="leak">{children}</span>;
 
 /* ---------------------------------------------------- 1 · qué recibe el modelo */
 const FIELDS = [
-  { k: 'Titular', real: 'Lucía Ferrer', tok: '‹NOMBRE_1·propio›', face: 'nove', tone: 'warn' },
+  { k: 'Titular', real: 'Ángel Martín', tok: '‹NOMBRE_1·propio›', face: 'nove', tone: 'warn' },
   { k: 'Cuenta nómina', real: 'ES43 9100 0001 5740 1234 5678', tok: '‹IBAN_1·propio›', face: 'nove', tone: 'warn', mono: true },
   { k: 'Saldo', real: '3.412,58 €', tok: '‹IMPORTE_1·positivo›', face: 'nove', tone: 'warn' },
   { k: 'Clave', real: 'Alcor-2026', shown: '••••••••••', tok: null, face: 'nuncasale', tone: 'bad', mono: true },

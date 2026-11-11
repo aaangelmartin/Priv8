@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from 'react';
    Donde pasa el cursor, o la lente que se mueve sola, cada dato se convierte en su token: lo que ve la IA.
    Los datos no tapan el texto: a la izquierda se apagan. */
 const DATA = [
-  ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'], ['3.412,58 €', '‹IMPORTE_1›'], ['Lucía Ferrer', '‹NOMBRE_1›'],
+  ['ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'], ['3.412,58 €', '‹IMPORTE_1›'], ['Ángel Martín', '‹NOMBRE_1›'],
   ['12345678Z', '‹DNI_1›'], ['1.180,00 €', '‹IMPORTE_2›'], ['B12345674', '‹CIF_1›'], ['Suministros Lumen', '‹NOMBRE_2›'],
   ['+34 600 000 000', '‹TELEFONO_1›'], ['ES71 9400 0007 0206 0223 3441', '‹IBAN_2›'], ['200,00 €', '‹IMPORTE_3›'],
-  ['lucia.ferrer@correo.es', '‹EMAIL_1›'], ['Talleres Norte', '‹NOMBRE_3›'], ['12.050,00 €', '‹IMPORTE_4›'],
-  ['4111 1111 1111 1111', 'nunca sale'], ['X1234567L', '‹NIE_1›'], ['ES08 9300 0001 0522 0033 4455', '‹IBAN_3›'],
+  ['angel.martin@correo.es', '‹EMAIL_1›'], ['Álvaro Carpintero', '‹NOMBRE_3›'], ['12.050,00 €', '‹IMPORTE_4›'],
+  ['4111 1111 1111 1111', 'nunca sale'], ['Marco Barroso', '‹NOMBRE_4›'], ['X1234567L', '‹NIE_1›'], ['Pablo Rojo', '‹NOMBRE_5›'], ['ES08 9300 0001 0522 0033 4455', '‹IBAN_3›'],
 ];
 
 const sstep = (v) => { const x = Math.min(1, Math.max(0, v)); return x * x * (3 - 2 * x); };

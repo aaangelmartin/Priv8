@@ -59,7 +59,7 @@ export function Spot({ mode = 'mirar', say = '', side = '', className = '' }) {
 }
 
 const ROWS = [
-  ['Titular', 'Lucía Ferrer', '‹NOMBRE_1›'],
+  ['Titular', 'Ángel Martín', '‹NOMBRE_1›'],
   ['Cuenta nómina', 'ES43 9100 0001 5740 1234 5678', '‹IBAN_1›'],
   ['Saldo', '3.412,58 €', '‹IMPORTE_1›'],
   ['Última transferencia', '1.180,00 € · Suministros Lumen', '‹IMPORTE_2› · ‹NOMBRE_2›'],

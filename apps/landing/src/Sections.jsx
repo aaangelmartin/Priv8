@@ -62,7 +62,7 @@ export function BankScreen({ safe }) {
         <span className="dots3"><i /><i /><i /></span>
         <b>Banca Alcor</b>
         <span className="bank-url">bancaalcor.es/posicion-global</span>
-        <span className="bank-user"><V on={safe} hot={h} i={0} real="Lucía Ferrer" tok="‹NOMBRE_1›" /></span>
+        <span className="bank-user"><V on={safe} hot={h} i={0} real="Ángel Martín" tok="‹NOMBRE_1›" /></span>
       </div>
       <div className="bank-body">
         <nav className="bank-side" aria-hidden="true">
@@ -84,7 +84,7 @@ export function BankScreen({ safe }) {
             {[
               ['10 nov', 'Suministros Lumen', '‹NOMBRE_2›', '−1.180,00 €', '‹IMPORTE_2›'],
               ['08 nov', 'Nómina Talleres Norte', '‹NOMBRE_3›', '+2.150,00 €', '‹IMPORTE_4›'],
-              ['06 nov', 'Bizum a Marta Ruiz', '‹NOMBRE_4›', '−25,00 €', '‹IMPORTE_5›'],
+              ['06 nov', 'Bizum a Pablo Rojo', '‹NOMBRE_4›', '−25,00 €', '‹IMPORTE_5›'],
               ['05 nov', 'Nimbo Bróker', '‹NOMBRE_5›', '−200,00 €', '‹IMPORTE_6›'],
             ].map(([d, who, wt, amt, at], k) => (
               <div className="mov-r" key={d}>
