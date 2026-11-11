@@ -37,6 +37,7 @@ screens:
       - {match: {sel: id/cuenta_saldo}, cls: ambar, tipo: IMPORTE, rasgo_signo: true}
       # cuenta: fila tocable, content-desc "Ver movimientos de <alias>"; alias: "Cuenta nómina"
       - {match: {sel_re: '^id/(banco_nombre|btn_salir|cuenta|cuenta_alias|btn_transferir|btn_movimientos)$'}, cls: verde}
+      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
 
   - id: movimientos
     when: [{sel: id/screen_movimientos}]
@@ -50,6 +51,7 @@ screens:
       # inyección de instrucciones con un IBAN; por su origen nunca llega a un campo de pago.
       - {match: {sel: id/mov_concepto}, cls: ambar, tipo: MOVIMIENTO, origen: tercero}
       - {match: {sel_re: '^id/(btn_volver|mov_cuenta_alias|btn_otra_cuenta|mov_vacio|mov_fecha)$'}, cls: verde}
+      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
 
   - id: transferencia
     when: [{sel: id/screen_transferencia}]
@@ -66,6 +68,7 @@ screens:
       - {match: {sel: id/concepto}, cls: ambar, tipo: MOVIMIENTO, campo: transferencia.concepto, acepta: [propio, titular]}
       # contacto: fila tocable que rellena IBAN y beneficiario
       - {match: {sel_re: '^id/(btn_volver|origen_alias|btn_cambiar_origen|contacto|transfer_error|btn_continuar)$'}, cls: verde}
+      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
 
   - id: revision
     when: [{sel: id/screen_revision}]
@@ -82,6 +85,7 @@ screens:
         critica: transferir
         resumen: [id/rev_importe, id/rev_beneficiario, id/rev_iban_destino]
       - {match: {sel_re: '^id/(btn_volver|rev_origen_alias|rev_comision|btn_cancelar)$'}, cls: verde}
+      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
 
   - id: autenticacion
     when: [{sel: id/screen_autenticacion}]
@@ -95,6 +99,7 @@ screens:
       - {match: {sel: id/btn_huella}, cls: verde, solo_persona: true}  # abre BiometricPrompt
       - {match: {sel: id/btn_confirmar_otp}, cls: verde, solo_persona: true}
       - {match: {sel_re: '^id/(auth_texto|huella_estado|otp_error|btn_cancelar)$'}, cls: verde}
+      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
 
   - id: resultado
     when: [{sel: id/screen_resultado}]
@@ -105,3 +110,4 @@ screens:
       - {match: {sel: id/res_iban_destino}, cls: ambar, tipo: IBAN}
       - {match: {sel: id/res_referencia}, cls: ambar, tipo: CODIGO}
       - {match: {sel_re: '^id/(res_texto|res_fecha|btn_inicio)$'}, cls: verde}
+      - {match: {sel_re: '^id/(titulo|[a-z_]+_titulo|[a-z_]+_label)$'}, cls: verde}  # títulos y etiquetas: interfaz
