@@ -125,7 +125,7 @@ export function estadoDe8({ audit, pending = [], status = 'conectado', etiquetas
       return {
         modo: 'leer',
         titulo: `Leyendo ${nombreApp(e.app)}${e.screen ? ` - ${nombrePantalla(e.screen)}` : ''}`,
-        detalle: c ? `${c.verde} visibles | ${c.ambar} tokenizados | ${c.rojo} nunca salen` : null,
+        detalle: c ? `${c.verde} visibles - ${c.ambar} tokenizados - ${c.rojo} nunca salen` : null,
         tono: 'neutro',
       }
     }

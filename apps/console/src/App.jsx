@@ -101,7 +101,7 @@ function Verificar() {
     <span className="verificar">
       {check && (
         <span className={`verificado ${check.ok ? 'ok' : 'mal'}`} role="status">
-          {check.ok ? `Registro íntegro | ${check.lines} líneas` : `Registro no válido: ${limpio(check.error)}`}
+          {check.ok ? `Registro íntegro - ${check.lines} líneas` : `Registro no válido: ${limpio(check.error)}`}
         </span>
       )}
       <button className="btn primario" onClick={verify} disabled={busy || DEMO} title={DEMO ? 'No disponible en la reproducción' : 'Comprueba la cadena de hashes y la firma'}>
@@ -330,7 +330,7 @@ function AlarmaFlotante({ alerts, ir, recogida: forzada = false }) {
     <aside className="alarma-flot" role="alert">
       <span className="alarma-flot-ico"><Icono n="alarma" /></span>
       <div>
-        <p className="alarma-flot-eti">Posible fraude{activas.length > 1 ? ` | ${activas.length} alarmas` : ''}</p>
+        <p className="alarma-flot-eti">Posible fraude{activas.length > 1 ? ` - ${activas.length} alarmas` : ''}</p>
         <b>{titulo.charAt(0).toUpperCase() + titulo.slice(1)}</b>
       </div>
       <button className="btn blanco" onClick={() => ir('alarmas')}>Ver</button>
@@ -476,7 +476,7 @@ function Confirmacion({ c, resolve, valores, ahora }) {
     <article className={`confirmacion e-${caducada ? 'caducada' : c.estado}`} aria-labelledby={`conf-${c.id}`}>
       <div className="fila-cab">
         <span className="etiqueta">{abierta ? 'Necesita tu confirmación' : c.estado === 'aprobada' ? 'Aprobada' : c.estado === 'rechazada' ? 'Rechazada' : 'Caducada'}</span>
-        <span className="meta">{c.kind} | {c.id}</span>
+        <span className="meta">{c.kind} - {c.id}</span>
         <span className="sp" />
         {abierta && <span className={`caduca ${quedan < 60 ? 'pronto' : ''}`}>Caduca en {mmss(quedan)}</span>}
       </div>
@@ -514,7 +514,7 @@ function Mensaje({ m, confirmaciones, resolve, valores, ahora }) {
     return (
       <li className="msg tu">
         <div className="burbuja">{m.grabado ? <Tokens text={m.texto} valores={valores} mostrar="real" /> : m.texto}</div>
-        <span className="meta">{m.grabado ? 'Encargo grabado' : 'Tú'} | {hora(m.ts)}</span>
+        <span className="meta">{m.grabado ? 'Encargo grabado' : 'Tú'} - {hora(m.ts)}</span>
       </li>
     )
   }
@@ -530,7 +530,7 @@ function Mensaje({ m, confirmaciones, resolve, valores, ahora }) {
               ))
               : <Md texto={m.texto} valores={valores} mostrar="real" />}
           </div>
-          <span className="meta">8 | {hora(m.ts)}</span>
+          <span className="meta">8 - {hora(m.ts)}</span>
         </div>
       </li>
     )
@@ -637,7 +637,7 @@ function Alarmas({ alerts, review, comentario, valores, compacta = false }) {
             <div className="alarma-c">
               <div className="fila-cab">
                 <span className="chip">{ETIQUETA[a.tipo]}</span>
-                <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` | ${nombrePantalla(a.pantalla)}` : ''} | {hora(a.ts)}</span>
+                <span className="meta">{nombreApp(a.app)}{a.pantalla ? ` - ${nombrePantalla(a.pantalla)}` : ''} - {hora(a.ts)}</span>
               </div>
               <b className="titulo">{a.titulo.replace(/^(Posible fraude|Bloqueado):\s*/i, '').replace(/^./, (c) => c.toUpperCase())}</b>
               {!compacta && <p><Tokens text={a.detalle} valores={valores} mostrar="ambos" /></p>}
@@ -698,7 +698,7 @@ function Pantalla({ screen, status, valores, frame, real, rep }) {
     <section className="panel pantalla" aria-label="Pantalla actual">
       <header className="sec-cab">
         <div>
-          <p className="eyebrow">Pantalla actual | {hora(screen.recibida)}</p>
+          <p className="eyebrow">Pantalla actual - {hora(screen.recibida)}</p>
           <h2>{nombreApp(obs.app)} <span className="soft">{nombrePantalla(obs.screen)}</span></h2>
         </div>
         <span className="sp" />
@@ -730,7 +730,7 @@ function Pantalla({ screen, status, valores, frame, real, rep }) {
             <div key={el.id} className={`fila e-${e.cls}`} role="row">
               <span className="elemento" role="cell">
                 <span className="nombre">{el.label ? <Tokens text={el.label} /> : <span className="rol-solo">{el.role}</span>}</span>
-                <span className="tecnico">{el.label ? `${el.role} | ${el.id}` : el.id}</span>
+                <span className="tecnico">{el.label ? `${el.role} - ${el.id}` : el.id}</span>
               </span>
               <span role="cell"><Celda largo={largo}><Real real={r.text} observado={el.text} /></Celda></span>
               <span role="cell"><Celda largo={largo}>{SIN_PROTOCOLO ? <EnClaro text={el.text} valores={el.claro} /> : <Tokens text={el.text} valores={valores} />}</Celda></span>
@@ -769,8 +769,8 @@ function describir(e, etiquetas) {
   switch (e.kind) {
     case 'observe_sent': {
       const titulo = `Lee ${nombreApp(e.app)} - ${nombrePantalla(e.screen)}`
-      if (e.claro != null) return { tono: e.claro ? 'bloqueo' : 'neutro', titulo, detalle: `Pantalla entera al modelo | ${e.claro} ${e.claro === 1 ? 'valor real' : 'valores reales'} en claro` }
-      return { tono: 'neutro', titulo, detalle: e.counts ? `${e.counts.verde} visibles | ${e.counts.ambar} tokenizados | ${e.counts.rojo} nunca salen` : null }
+      if (e.claro != null) return { tono: e.claro ? 'bloqueo' : 'neutro', titulo, detalle: `Pantalla entera al modelo - ${e.claro} ${e.claro === 1 ? 'valor real' : 'valores reales'} en claro` }
+      return { tono: 'neutro', titulo, detalle: e.counts ? `${e.counts.verde} visibles - ${e.counts.ambar} tokenizados - ${e.counts.rojo} nunca salen` : null }
     }
     case 'act': {
       const [, op, target, ...resto] = (e.model_saw ?? '').split(' ')
@@ -781,7 +781,7 @@ function describir(e, etiquetas) {
       return { tono: 'neutro', titulo: `${OP[op] ?? op}${donde ? ` «${donde}»` : target ? ` ${target}` : ''}`, detalle: texto || null }
     }
     case 'blocked': return { tono: 'bloqueo', titulo: `Bloqueado: ${e.reason ?? 'sin motivo'}`, detalle: d ?? e.model_saw, extra: e.model_saw && d ? e.model_saw : null }
-    case 'held': return { tono: 'aviso', titulo: 'Retenido hasta que confirmes', detalle: `${e.model_saw ?? ''} | ${e.confirm}` }
+    case 'held': return { tono: 'aviso', titulo: 'Retenido hasta que confirmes', detalle: `${e.model_saw ?? ''} - ${e.confirm}` }
     case 'approval': return e.approved_by ? { tono: 'seguro', titulo: `Aprobado por ${e.approved_by}`, detalle: e.confirm } : { tono: 'bloqueo', titulo: 'Rechazado', detalle: e.confirm }
     case 'task': {
       const detalle = e.model_saw || d
@@ -854,7 +854,7 @@ function Actividad({ audit, etiquetas, valores }) {
                 <div className="linea1">
                   <b>{d.titulo}</b>
                   <span className="sp" />
-                  <span className="meta">#{e.seq} | {hora(e.ts)}</span>
+                  <span className="meta">#{e.seq} - {hora(e.ts)}</span>
                 </div>
                 {d.detalle && <div className="detalle"><Tokens text={d.detalle} valores={valores} /></div>}
                 {d.extra && <div className="detalle mono"><Tokens text={d.extra} valores={valores} /></div>}

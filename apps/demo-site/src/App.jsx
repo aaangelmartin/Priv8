@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import Reproductor from './Movil.jsx';
-import { EMPRESAS, MOVIL, PASOS, APKS, INSTALAR, ENLACES, REPO, README_URL } from './contenido.js';
+import { EMPRESAS, MOVIL, PASOS_EMPRESAS, APKS, INSTALAR, ENLACES, REPO, README_URL } from './contenido.js';
 
-const SECCIONES = [['empresas', 'Para empresas'], ['movil', 'En el móvil'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces']];
+const SECCIONES = [['casos', 'Los casos'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
 
 /* Tamaños de lo que copió scripts/assemble.mjs. En `pnpm dev` no existe: no se enseñan tamaños ni avisos. */
@@ -73,10 +72,9 @@ function Nav() {
 }
 
 /* ---------------------------------------------------------------- piezas */
-function Head({ id, eyebrow, title, soft, lead }) {
+function Head({ id, title, soft, lead }) {
   return (
     <div className="block-head">
-      {eyebrow && <p className="eyebrow">{eyebrow}</p>}
       <h2 id={id}>{title} <span className="soft">{soft}</span></h2>
       {lead && <p className="lead">{lead}</p>}
     </div>
@@ -118,18 +116,18 @@ function Hero() {
       <Field />
       <div className="wrap hero-stage">
         <div className="hero-anchor dhero-eight"><Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8, el agente de Priv8" /></div>
-        <h1 id="h-hero"><span className="line">La demo, de verdad.</span></h1>
-        <p className="hero-sub">Cada caso, ejecutado entero con las apps y el núcleo reales, y grabado tal cual.</p>
+        <h1 id="h-hero"><span className="line">Míralo funcionar.</span><span className="soft line">Sin que la IA vea un dato.</span></h1>
+        <p className="hero-sub">Casos reales de Priv8 para empresas y Priv8 en el móvil, grabados de principio a fin.</p>
         <div className="cta">
           <a className="btn btn-white" href="#empresas">Priv8 para empresas</a>
-          <a className="btn btn-ghost" href="#movil">Priv8 en el móvil</a>
+          <a className="btn btn-white" href="#movil">Priv8 en el móvil</a>
         </div>
       </div>
     </section>
   );
 }
 
-/* Una tarjeta de caso: la captura real arriba, el título, una línea y el botón. */
+/* Una tarjeta de caso: la captura real a un lado, el título, una línea y el botón. */
 function Tarjeta({ c, onClick, activa, retrato }) {
   const cuerpo = (
     <>
@@ -138,8 +136,8 @@ function Tarjeta({ c, onClick, activa, retrato }) {
         <b className="ct-t">{c.titulo}</b>
         <span className="ct-l">{c.linea}</span>
         {c.nota && <span className="ct-nota">{c.nota}</span>}
+        <span className="more ct-ver">{activa ? 'Viéndolo' : 'Ver el caso'}</span>
       </span>
-      <span className="more ct-ver">{activa ? 'Viéndolo' : 'Ver el caso'}</span>
     </>
   );
   return (
@@ -151,15 +149,13 @@ function Tarjeta({ c, onClick, activa, retrato }) {
   );
 }
 
-function Empresas() {
+/* Cabecera de cada columna: el nombre de la vertical en Sora, con su segunda línea suave. */
+function ColHead({ id, title, soft, lead }) {
   return (
-    <section id="empresas" className="dblock" data-tone="paper" aria-labelledby="h-empresas">
-      <div className="wrap">
-        <Head id="h-empresas" eyebrow="Priv8 para empresas" title="El ERP y el correo de siempre." soft="8 solo ve tokens."
-          lead="Grabado en la consola real: las pantallas de Alba Core y del correo junto a lo que ve 8." />
-        <ul className="cts">{EMPRESAS.map((c) => <Tarjeta key={c.id} c={c} />)}</ul>
-      </div>
-    </section>
+    <div className="col-head rv-in">
+      <h3 id={id}>{title} <span className="soft">{soft}</span></h3>
+      {lead && <p className="col-lead">{lead}</p>}
+    </div>
   );
 }
 
@@ -173,95 +169,110 @@ function useGrabados() {
   return ok;
 }
 
-function Movil() {
-  const grabados = useGrabados();
-  const [sel, setSel] = useState(null);
-  const player = useRef(null);
-  if (!grabados || !grabados.length) return null;
-  const caso = grabados.find((c) => c.id === sel) ?? grabados[0];
-  const elegir = (id) => {
-    setSel(id);
-    requestAnimationFrame(() => player.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  };
+function ColEmpresas() {
   return (
-    <section id="movil" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-movil">
+    <div id="empresas" className="col" aria-labelledby="h-empresas">
+      <ColHead id="h-empresas" title="Priv8 para empresas." soft="El ERP y el correo de siempre."
+        lead="Grabado en la consola real: las pantallas de Alba Core y del correo junto a lo que ve 8." />
+      <ul className="cts">{EMPRESAS.map((c) => <Tarjeta key={c.id} c={c} />)}</ul>
+    </div>
+  );
+}
+
+function ColMovil() {
+  const grabados = useGrabados();
+  const hay = grabados && grabados.length > 0;
+  return (
+    <div id="movil" className="col" aria-labelledby="h-movil">
+      <ColHead id="h-movil" title="Priv8 en el móvil." soft="Tus bancos, por voz."
+        lead="Grabado en el emulador: el móvil junto a lo que recibe el modelo en cada momento." />
+      {hay && <ul className="cts">{grabados.map((c) => <Tarjeta key={c.id} c={c} />)}</ul>}
+      {grabados && !hay && <p className="col-lead">Esta build no trae grabaciones del móvil.</p>}
+    </div>
+  );
+}
+
+function Casos() {
+  return (
+    <section id="casos" className="dblock" data-tone="paper" aria-labelledby="h-casos">
       <div className="wrap">
-        <Head id="h-movil" eyebrow="Priv8 en el móvil" title="Tus bancos, por voz." soft="Sin ver las cuentas."
-          lead="Grabado en el emulador. A un lado el móvil; al otro, lo que recibe el modelo en ese momento." />
-        <ul className={`cts cts-${grabados.length}`}>{grabados.map((c) => <Tarjeta key={c.id} c={c} retrato activa={c.id === caso.id} onClick={() => elegir(c.id)} />)}</ul>
-        <div ref={player} className="mv-caja rv-in">
-          <div className="mv-cab">
-            <p className="mv-pedido">{caso.pedido}</p>
-          </div>
-          <Reproductor caso={caso} />
+        <Head id="h-casos" title="Dos verticales." soft="El mismo núcleo."
+          lead="Procesos de empresa sobre un ERP antiguo y tus bancos en el móvil, con las mismas piezas del protocolo." />
+        <div className="duo">
+          <ColEmpresas />
+          <ColMovil />
         </div>
       </div>
     </section>
   );
 }
 
-function Apps({ archivos }) {
+function Cmd({ cmd, label }) {
+  const [estado, go] = useCopiar(cmd);
   return (
-    <section id="apps" className="dblock" data-tone="paper" aria-labelledby="h-apps">
-      <div className="wrap">
-        <Head id="h-apps" eyebrow="Para el emulador" title="Las cuatro apps." soft="Datos inventados."
-          lead="Android 14. Instálalas y entra en cada banco con estos datos." />
-        <ul className="apks-lista rv-in">
-          {APKS.map((a) => {
-            const t = size(archivos, a.file);
-            const cuerpo = (
-              <>
-                <span className="apk-icono" style={a.color ? { background: a.color } : undefined}>
-                  {a.ocho ? <Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8" /> : <b>{a.title.charAt(0)}</b>}
-                </span>
-                <b className="apk-nombre">{a.title}</b>
-                {a.acceso
-                  ? <span className="apk-acceso"><span>Usuario {a.acceso[0]}</span><span>Clave {a.acceso[1]}</span><span>SMS {a.acceso[2]}</span></span>
-                  : <span className="apk-acceso"><span>{a.what}</span></span>}
-                <span className={`apk-baja${t.ok ? '' : ' off'}`}>{t.ok ? `Descargar${t.label ? ` ${t.label}` : ''}` : 'No incluida'}</span>
-              </>
-            );
-            return <li key={a.href}>{t.ok ? <a className="apk" href={a.href} download="">{cuerpo}</a> : <div className="apk is-off">{cuerpo}</div>}</li>;
-          })}
-        </ul>
-        <details className="dinstalar rv-in">
-          <summary>Instalarlas con adb</summary>
-          <pre className="dcmd"><code>{INSTALAR}</code></pre>
-        </details>
-      </div>
-    </section>
+    <div className="cmd">
+      <code>{cmd.split('\n').map((l, i) => <span key={i} className="cmd-l"><span className="cmd-prompt" aria-hidden="true">$</span>{l}</span>)}</code>
+      <button type="button" className={`copy copy-${estado}`} onClick={go} aria-label={`Copiar: ${label}`}>{etiquetaCopiar(estado)}</button>
+      <span className="sr" role="status" aria-live="polite">{estado === 'ok' ? 'Copiado al portapapeles' : ''}</span>
+    </div>
   );
 }
 
-function Paso({ n, title, text, cmd, mode }) {
-  const [estado, go] = useCopiar(cmd);
+function Paso({ n, title, text, cmd, children }) {
   return (
-    <li className="step step-row rv-in">
-      <div className="step-top">
-        <span className="step-n" aria-hidden="true">{n}</span>
-        <Eight className="step-eight" mode={estado === 'ok' ? 'listo' : mode} fg="#2D45D6" cut="#F4F6FD" label="8" />
-      </div>
-      <div className="step-body">
-        <h3>{title}</h3>
-        <p className="step-text">{text}</p>
-      </div>
-      <div className="cmd">
-        <code>{cmd.split('\n').map((l, i) => <span key={i} className="cmd-l"><span className="cmd-prompt" aria-hidden="true">$</span>{l}</span>)}</code>
-        <button type="button" className={`copy copy-${estado}`} onClick={go} aria-label={`Copiar el paso ${n}`}>{etiquetaCopiar(estado)}</button>
-        <span className="sr" role="status" aria-live="polite">{estado === 'ok' ? 'Copiado al portapapeles' : ''}</span>
+    <li className="paso">
+      <span className="paso-n" aria-hidden="true">{n}</span>
+      <div className="paso-body">
+        <h4>{title}</h4>
+        <p>{text}</p>
+        {children}
+        {cmd && <Cmd cmd={cmd} label={title} />}
       </div>
     </li>
   );
 }
 
-function Correlo() {
+function Apk({ a, archivos }) {
+  const t = size(archivos, a.file);
+  const cuerpo = (
+    <>
+      <span className="apk-cab">
+        <span className="apk-icono" style={a.color ? { background: a.color } : undefined}>
+          {a.ocho ? <Eight mode="mirar" fg="#FFFFFF" cut="#2D45D6" label="8" /> : <b>{a.title.charAt(0)}</b>}
+        </span>
+        <b className="apk-nombre">{a.title}</b>
+      </span>
+      {a.acceso
+        ? <span className="apk-acceso"><span>Usuario <b>{a.acceso[0]}</b></span><span>Clave <b>{a.acceso[1]}</b></span><span>SMS <b>{a.acceso[2]}</b></span></span>
+        : <span className="apk-acceso"><span>{a.what}</span></span>}
+      <span className={`apk-baja${t.ok ? '' : ' off'}`}>{t.ok ? `Descargar${t.label ? ` ${t.label}` : ''}` : 'No incluida'}</span>
+    </>
+  );
+  return <li>{t.ok ? <a className="apk" href={a.href} download="">{cuerpo}</a> : <div className="apk is-off">{cuerpo}</div>}</li>;
+}
+
+function Correlo({ archivos }) {
   return (
     <section id="correlo" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-correlo">
       <div className="wrap">
-        <Head id="h-correlo" eyebrow="Córrelo en tu máquina" title="Cuatro órdenes." soft="Las mismas de la demo."
-          lead="macOS o Linux, con uv y make. Para el móvil, Android Studio." />
-        <ol className="pasos">{PASOS.map((p) => <Paso key={p.n} {...p} />)}</ol>
-        <p className="more-row rv-in"><a className="more" href={README_URL} target="_blank" rel="noopener">Todo en el README</a></p>
+        <Head id="h-correlo" title="Córrelo tú." soft="Lo mismo que has visto."
+          lead="Datos inventados. Para empresas, macOS o Linux con uv y make; para el móvil, el emulador de Android Studio." />
+        <div className="duo duo-run">
+          <div className="col col-card rv-in" aria-labelledby="h-run-empresas">
+            <ColHead id="h-run-empresas" title="Para empresas." soft="En tu máquina." />
+            <ol className="pasos">{PASOS_EMPRESAS.map((p) => <Paso key={p.n} {...p} />)}</ol>
+            <p className="col-more"><a className="more" href={README_URL} target="_blank" rel="noopener">Todo en el README</a></p>
+          </div>
+          <div className="col col-card rv-in" aria-labelledby="h-run-movil">
+            <ColHead id="h-run-movil" title="En el móvil." soft="Las cuatro apps." />
+            <ol className="pasos">
+              <Paso n={1} title="Descárgalas" text="La app de 8 y los tres bancos, con su usuario, su clave y su código SMS.">
+                <ul className="apks-lista">{APKS.map((a) => <Apk key={a.href} a={a} archivos={archivos} />)}</ul>
+              </Paso>
+              <Paso n={2} title="Instálalas con adb" text="En un AVD de Android 14. La última orden activa el servicio de accesibilidad de 8." cmd={INSTALAR} />
+            </ol>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -271,14 +282,19 @@ function Enlaces() {
   return (
     <section id="enlaces" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-enlaces">
       <div className="wrap">
-        <Head id="h-enlaces" eyebrow="Enlaces" title="Lo demás," soft="aquí." />
-        <ul className="enl rv-in">
-          {ENLACES.map((l) => (
-            <li key={l.title}>
-              <a href={l.href} {...ext(l.href)}><b>{l.title}</b><span>{l.what}</span></a>
-            </li>
+        <Head id="h-enlaces" title="Lo demás." soft="A un clic." />
+        <div className="enl rv-in">
+          {ENLACES.map((g) => (
+            <div key={g.grupo} className="enl-g">
+              <h3 className="enl-h">{g.grupo}</h3>
+              <ul>
+                {g.items.map((l) => (
+                  <li key={l.title}><a href={l.href} {...ext(l.href)}><b>{l.title}</b><span>{l.note}</span></a></li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </section>
   );
@@ -322,16 +338,12 @@ export default function App() {
       <main>
         <Hero />
         <Blend from="--band" to="--paper" seed={1} overlay />
-        <Empresas />
+        <Casos />
         <Blend from="--paper" to="--mist" seed={2} />
-        <Movil />
-        <Blend from="--mist" to="--paper" seed={3} />
-        <Apps archivos={archivos} />
-        <Blend from="--paper" to="--mist" seed={4} />
-        <Correlo />
-        <Blend from="--mist" to="--band" seed={5} />
+        <Correlo archivos={archivos} />
+        <Blend from="--mist" to="--band" seed={3} />
         <Enlaces />
-        <Blend from="--band" to="--paper" seed={6} />
+        <Blend from="--band" to="--paper" seed={4} />
       </main>
       <Footer />
     </>

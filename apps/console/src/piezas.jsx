@@ -4,9 +4,9 @@ import { TOKEN_RE, alinear } from './tokens.js'
 import { bloques } from './md.js'
 import { SESION, ahoraMs } from './useEvents.js'
 
-// Los textos del núcleo usaban el punto medio (U+00B7) como separador; en la consola se ve « | ». Los tokens
+// Los textos del núcleo usaban el punto medio (U+00B7) como separador; en la consola se ve « - ». Los tokens
 // antiguos no llevan espacios alrededor del punto y no se tocan.
-export const limpio = (s) => (typeof s === 'string' ? s.replace(/\s\u00b7\s/g, ' | ') : s)
+export const limpio = (s) => (typeof s === 'string' ? s.replace(/\s\u00b7\s/g, ' - ') : s)
 
 export function Token({ tok, valores }) {
   const real = valores?.[tok]

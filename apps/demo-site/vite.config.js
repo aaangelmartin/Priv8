@@ -26,5 +26,6 @@ export default defineConfig({
     alias: { '@landing': fileURLToPath(new URL('../landing/src', import.meta.url)) },
     dedupe: ['react', 'react-dom'],
   },
+  build: { rollupOptions: { input: { main: fileURLToPath(new URL('./index.html', import.meta.url)), movil: fileURLToPath(new URL('./movil/index.html', import.meta.url)) } } },
   server: { fs: { allow: ['.', '../landing/src', '../console/src/iconos.jsx', '../../data/casos.json'] } },
 });
