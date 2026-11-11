@@ -95,3 +95,20 @@ export function Real({ real, observado }) {
   if (!trozos) return real
   return trozos.map((t, i) => (t.token ? <mark key={i} className="dato">{t.texto}</mark> : t.texto))
 }
+
+// La cara de 8 en pequeño (las líneas del razonamiento, las tarjetas): los dos huecos del 8 girado.
+//   abiertos: lo ve; pensar: mira arriba; cerrados: no mira (pausa, nunca sale); asteriscos: tokenizado.
+export function Ojos({ cara = 'abiertos', className = 'ojos' }) {
+  const ojo = (cx) => {
+    if (cara === 'cerrados') return <path key={cx} d={`M${cx - 8} 17q8 6 16 0`} fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+    if (cara === 'asteriscos') return <path key={cx} d={`M${cx} 8v16M${cx - 7} 12l14 8M${cx + 7} 12l-14 8`} fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+    const dy = cara === 'pensar' ? -3 : 0
+    return (
+      <g key={cx}>
+        <circle cx={cx} cy="16" r="10" fill="none" stroke="currentColor" strokeWidth="4.4" />
+        <circle cx={cx + (cara === 'pensar' ? 2 : 0)} cy={16 + dy} r="4" fill="currentColor" />
+      </g>
+    )
+  }
+  return <svg className={className} viewBox="0 0 46 32" aria-hidden="true">{ojo(12)}{ojo(34)}</svg>
+}
