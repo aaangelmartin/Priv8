@@ -113,13 +113,13 @@ function ProblemaB2B() {
   return (
     <div className="in split">
       <div className="col">
-        <Head eyebrow="El problema - empresas y bancos">Procesos que la IA ya sabe hacer. <span className="soft">No se automatizan.</span></Head>
+        <Head eyebrow="El problema - empresas y bancos"><span className="nw">Procesos que la IA ya sabe hacer.</span> <span className="soft nw">No se automatizan.</span></Head>
         <R d={3} className="screen">
           <div className="screen-bar"><i /><i /><i /><b>Alba Core</b><span>lo que recibiría la IA</span></div>
           {LUMEN.map(([k, v], i) => (
             <div className="srow" key={k} style={{ '--i': i }}><span className="k">{k}</span><span className="real">{v}</span></div>
           ))}
-          <div className="leak"><b>5</b><span>datos reales al proveedor del modelo</span><E mode="miedo" on="paper" className="e-leak" /></div>
+          <div className="leak"><b>5</b><span>datos reales al proveedor del modelo</span><E mode="miedo" on="bad" className="e-leak" /></div>
         </R>
         <R d={4} className="laws"><span>RGPD</span><span>Secreto bancario</span><span>SOC 2</span><em>no sería conforme</em></R>
       </div>
@@ -148,7 +148,7 @@ function ProblemaB2C() {
         <Stat d={6} n="+600.000" t="firmas de «Soy mayor, no idiota»: muchas personas no saben hacer sus gestiones en la app" s="elDiario.es, 2022" />
       </div>
       <div className="col">
-        <Head eyebrow="El problema - personas">Gestionar el banco cuesta. <span className="soft">Y ningún asistente puede con todos sin verlo todo.</span></Head>
+        <Head eyebrow="El problema - personas"><span className="nw">Gestionar el banco cuesta.</span> <span className="soft nw">Y ningún asistente puede con todos sin verlo todo.</span></Head>
         <div className="phones3">
           {BANKS.map(([b, a, c], i) => (
             <R d={3 + i} key={b} className="mini" style={{ '--d': 3 + i, '--bk': c }}>
@@ -177,7 +177,7 @@ const CAN = [
 function Podria() {
   return (
     <div className="in can">
-      <Head eyebrow="Para todos">Si la IA pudiera actuar <span className="soft">sin ver tus datos.</span></Head>
+      <Head eyebrow="Para todos"><span className="nw">Si la IA pudiera actuar</span> <span className="soft nw">sin ver tus datos.</span></Head>
       <div className="cangrid">
         {CAN.map(([w, t, k], i) => (
           <R d={3 + i * 0.5} key={t} className={'cancard ' + (w === 'Personas' ? 'p' : 'b')}>
@@ -208,7 +208,7 @@ const CLS = { ok: 'verde', tk: 'ámbar', no: 'rojo' };
 function Como1() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 1 de 5 - Qué ve el modelo">La misma pantalla, dos versiones. <span className="soft">Solo una sale de tu máquina.</span></Head>
+      <Head eyebrow="Cómo funciona - 3 de 5 - Qué sale al modelo"><span className="nw">La misma pantalla, dos versiones.</span> <span className="soft nw">Solo una sale de tu máquina.</span></Head>
       <R d={3} className="twin">
         <div className="tw-h"><span>Campo</span><span>Tu pantalla (real, en local)</span><span /><span>Lo que recibe el modelo</span><span>Clase y cómo se decide</span></div>
         {SCREEN.map(([k, v, t, c, why], i) => (
@@ -222,9 +222,9 @@ function Como1() {
         ))}
       </R>
       <div className="clases row">
-        <R d={6} className="clase ok"><b>Verde - se ve</b><span>Botones, etiquetas, títulos, menús. El modelo los necesita para moverse.</span></R>
-        <R d={6.4} className="clase tk"><b>Ámbar - se tokeniza</b><span>IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos. Hacen falta para el trámite, no su valor.</span></R>
-        <R d={6.8} className="clase no"><b>Rojo - nunca sale</b><span>Contraseñas, PIN, usuario, OTP, tarjeta completa. Llegan como null y ni entran en la bóveda.</span></R>
+        <R d={6} className="clase ok"><E mode="mirar" on="paper" className="e-clase" /><b>Verde - se ve</b><span>Botones, etiquetas, títulos, menús. El modelo los necesita para moverse.</span></R>
+        <R d={6.4} className="clase tk"><E mode="nove" on="paper" className="e-clase" /><b>Ámbar - se tokeniza</b><span>IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos. Hacen falta para el trámite, no su valor.</span></R>
+        <R d={6.8} className="clase no"><E mode="nuncasale" on="bad" className="e-clase" /><b>Rojo - nunca sale</b><span>Contraseñas, PIN, usuario, OTP, tarjeta completa. Llegan como null y ni entran en la bóveda.</span></R>
       </div>
       <Foot />
     </div>
@@ -248,7 +248,7 @@ const SURF = [
 function Captura() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 2 de 5 - Cómo capturamos">Leemos la estructura, no la imagen. <span className="soft">En la web y en el móvil.</span></Head>
+      <Head eyebrow="Cómo funciona - 1 de 5 - Cómo cogemos los datos"><span className="nw">Leemos la estructura, no la imagen.</span> <span className="soft nw">En la web y en el móvil.</span></Head>
       <div className="surf">
         {SURF.map((x, j) => (
           <R d={3 + j} key={x.tag} className="sf">
@@ -276,7 +276,7 @@ const PIPE = [
 function Como2() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 3 de 5 - Cómo se decide">Cada dato pasa cinco filtros. <span className="soft">Lo que no tiene regla, no sale.</span></Head>
+      <Head eyebrow="Cómo funciona - 2 de 5 - Cómo los filtramos"><span className="nw">Cada dato pasa cinco filtros.</span> <span className="soft nw">Lo que no tiene regla, no sale.</span></Head>
       <div className="pipe">
         {PIPE.map(([t, d], i) => (
           <R d={3 + i * 0.5} key={t} className={'pp' + (i === 4 ? ' last' : '')}><b>{i + 1}</b><h3>{t}</h3><p>{d}</p></R>
@@ -318,7 +318,7 @@ const ACT = ['El modelo pide act con un token', '¿Token de esta sesión?', '¿P
 function Como3() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 4 de 5 - Actuar sin ver">8 trabaja con tokens. <span className="soft">Tu máquina pone los valores.</span></Head>
+      <Head eyebrow="Cómo funciona - 4 de 5 - Cómo actúa sin ver"><span className="nw">8 trabaja con tokens.</span> <span className="soft nw">Tu máquina pone los valores.</span></Head>
       <R d={3} className="actflow">
         {ACT.map((s, i) => <span key={s} className="af rv" style={{ '--d': 3 + i * 0.3 }}><b>{i + 1}</b>{s}</span>)}
       </R>
@@ -336,7 +336,7 @@ function Como3() {
 function Como4() {
   return (
     <div className="in how">
-      <Head eyebrow="Cómo funciona - 5 de 5 - Control">Cuatro barreras que no dependen del modelo. <span className="soft">Y todo queda escrito.</span></Head>
+      <Head eyebrow="Cómo funciona - 5 de 5 - Control"><span className="nw">Cuatro barreras que no dependen del modelo.</span> <span className="soft nw">Y todo queda escrito.</span></Head>
       <div className="pzs four">
         <Pieza d={3} k="1 - Modo estricto" t="De serie, lo mínimo" ex="sin regla → no llega">Al modelo solo llega lo que cubre una regla del sitio. Un texto sin regla no sale, aunque el detector no lo reconozca.</Pieza>
         <Pieza d={4} k="2 - Bloqueo final" t="Si algo se escapa, no sale" ex="blocked: fuga">Cada petición al modelo o a la voz en la nube se revisa entera: patrones, datos rojos y cualquier valor de la bóveda. Falla cerrado.</Pieza>
@@ -359,7 +359,7 @@ const ROUTES = [
 function Arquitectura() {
   return (
     <div className="in arch">
-      <Head eyebrow="Arquitectura">Ocho piezas. <span className="soft">Ninguna depende de que el modelo obedezca.</span></Head>
+      <Head eyebrow="Arquitectura"><span className="nw">Ocho piezas.</span> <span className="soft nw">Ninguna depende de que el modelo obedezca.</span></Head>
       <div className="arch-row">
         <R d={3} className="trust">
           <p className="zone">Tu entorno de confianza - ve valores reales</p>
@@ -405,7 +405,7 @@ function Demo1() {
   if (HAS('b2c')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo - Priv8 en el móvil" chip="captura real">«¿Cuánto tengo entre mis bancos?» <span className="soft">8 suma sin ver la cifra.</span></Head>
+        <Head eyebrow="Demo - Priv8 en el móvil" chip="captura real"><span className="nw">«¿Cuánto tengo entre mis bancos?»</span> <span className="soft nw">8 suma sin ver la cifra.</span></Head>
         <div className="vrow rev">
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Recorre tus tres bancos</strong>Banca Alcor, Brezo Banco y Nimbo Bróker, por accesibilidad.</p></R>
@@ -465,7 +465,7 @@ function Demo2() {
   if (HAS('b2b')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo - Priv8 para empresas" chip="captura real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
+        <Head eyebrow="Demo - Priv8 para empresas" chip="captura real"><span className="nw">Una factura llega por correo.</span> <span className="soft nw">8 la registra sin ver los datos.</span></Head>
         <div className="vrow">
           <R d={3} className="vbox"><img className="clip" src={media('b2b.jpg')} alt="Captura real de la consola: 8 registra la factura en Alba Core con tokens y salta la alarma de posible fraude" /></R>
           <div className="vcaps">
@@ -481,7 +481,7 @@ function Demo2() {
   }
   return (
     <div className="in demo2">
-      <Head eyebrow="Demo - Priv8 para empresas" chip="consola real">Una factura llega por correo. <span className="soft">8 la registra sin ver los datos.</span></Head>
+      <Head eyebrow="Demo - Priv8 para empresas" chip="consola real"><span className="nw">Una factura llega por correo.</span> <span className="soft nw">8 la registra sin ver los datos.</span></Head>
       <div className="shots">
         <div className="scol">
           <Shot d={3} src={correo} alt="Correo de Suministros Lumen con la factura F-2026-0412 y un cambio de cuenta" title="Correo" z={1.6} x="-20%" y="-14%" />
@@ -506,7 +506,7 @@ function Demo2() {
 function Verticales() {
   return (
     <div className="in markets">
-      <Head eyebrow="Producto">Un núcleo, <span className="soft">dos productos.</span></Head>
+      <Head eyebrow="Producto"><span className="nw">Un núcleo,</span> <span className="soft nw">dos productos.</span></Head>
       <div className="mk">
         <R d={3} className="vcard">
           <p className="tag">B2B</p>
@@ -531,7 +531,7 @@ function Verticales() {
 function Foco() {
   return (
     <div className="in gtm">
-      <Head eyebrow="Negocio">Dos productos, <span className="soft">dos clientes.</span></Head>
+      <Head eyebrow="Negocio"><span className="nw">Dos productos,</span> <span className="soft nw">dos clientes.</span></Head>
       <div className="steps foco">
         <R d={3} className="gstep"><b className="gn">1</b><h3>En qué nos centramos</h3><span className="gs">B2B</span><p>Procesos de back office que hoy no se automatizan por protección de datos. Empezamos por cuentas a pagar.</p></R>
         <R d={4} className="gstep"><b className="gn">2</b><h3>Nuestro cliente</h3><span className="gs">quien paga</span><p>Bancos y brókers, departamentos financieros de empresas medianas y grandes, y quien construye agentes para ellos. Licencia por proceso.</p></R>
@@ -559,7 +559,7 @@ const MK = [
 function Mercados() {
   return (
     <div className="in markets">
-      <Head eyebrow="Mercado">Dos mercados, <span className="soft">un mismo núcleo.</span></Head>
+      <Head eyebrow="Mercado"><span className="nw">Dos mercados,</span> <span className="soft nw">un mismo núcleo.</span></Head>
       <div className="mk2">
         {MK.map((m, j) => (
           <R d={3 + j} key={m.tag} className="mcol">
@@ -611,7 +611,7 @@ function Table({ t, title, d }) {
 function Competencia() {
   return (
     <div className="in comp">
-      <Head eyebrow="Competencia">Otros enmascaran o enseñan. <span className="soft">8 hace el trámite sin ver.</span></Head>
+      <Head eyebrow="Competencia"><span className="nw">Otros enmascaran o enseñan.</span> <span className="soft nw">8 hace el trámite sin ver.</span></Head>
       <div className="tbls">
         <Table d={3} t={B2B_T} title="B2B" />
         <Table d={4} t={B2C_T} title="B2C" />
@@ -631,7 +631,7 @@ const GTM = [
 function Mercado() {
   return (
     <div className="in gtm">
-      <Head eyebrow="Cómo llegamos">Un piloto en empresas. <span className="soft">La app, directa a las personas.</span></Head>
+      <Head eyebrow="Cómo llegamos"><span className="nw">Un piloto en empresas.</span> <span className="soft nw">La app, directa a las personas.</span></Head>
       <div className="tl">
         <R d={2} className="tl-rail" />
         {GTM.map(([n, f, w, who, what, kpi, pay, ms], i) => (
@@ -661,7 +661,7 @@ const TEAM = [
 function Equipo() {
   return (
     <div className="in team">
-      <Head eyebrow="Equipo">Cuatro ingenieros, <span className="soft">cada uno con otra disciplina.</span></Head>
+      <Head eyebrow="Equipo"><span className="nw">Cuatro ingenieros,</span> <span className="soft nw">cada uno con otra disciplina.</span></Head>
       <div className="people">
         {TEAM.map(([n, gh, f, r, img], i) => (
           <R d={3 + i} key={n} className="person">
@@ -698,13 +698,13 @@ function Cierre() {
     <div className={'in cierre' + (show ? ' live' : '')}>
       {show && <Field />}
       {show && <div className="clean" />}
-      <div className="close3">
-        <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
-        <div className="cl-txt">
+      <div className="close4">
+        <div className="cl4-izq">
+          <E id={active ? 'hero-anchor' : undefined} className="e-hero rv" seq={[['alegria', 2200], ['mirar', 0]]} />
           <R d={1} as="h2"><span className="line">El agente hace el trámite.</span><span className="line soft">Los datos se quedan contigo.</span></R>
           <R d={2} className="cl-foot"><span className="cl-url">priv8.es</span><span className="cl-sub">demo.priv8.es - mcp.priv8.es</span></R>
         </div>
-        <R d={3} className="qr solo"><Qr rows={QR.web} label="Código QR a priv8.es" azul /><small>Escanea para abrir priv8.es</small></R>
+        <R d={3} className="qr solo cl4-qr"><Qr rows={QR.web} label="Código QR a priv8.es" azul /></R>
       </div>
     </div>
   );
@@ -779,6 +779,8 @@ const QA5 = [
     { t: 'flow', steps: [['Piloto', 'cuentas a pagar'], ['Reglas listas', 'ERP habituales'], ['App de 8', 'en las tiendas'], ['Certificaciones', 'ISO 27001, SOC 2']] }],
   ['¿Puede el equipo sacarlo?', 'Cuatro personas han construido en tres días el núcleo, la consola, el ERP simulado, tres bancos y la app Android, todo funcionando.',
     { t: 'nums', items: [['4', 'personas'], ['3', 'días'], ['3', 'bancos simulados']] }],
+  ['¿Lo podéis enseñar en directo?', 'Sí. Priv8 para empresas, entero: doble clic en Demo Priv8.command, «Preparar B2B», y 8 registra la factura en Alba Core y contesta al proveedor en vivo con Claude, mientras la consola enseña lo que ves tú y lo que ve el modelo. Priv8 en el móvil: «¿Cuánto tengo entre mis bancos?» en vivo en el emulador, con la cifra en la voz local. El resto de casos, grabados en demo.priv8.es.',
+    { t: 'flow', steps: [['Doble clic', 'Demo Priv8.command'], ['Preparar B2B', 'Alba Core, correo, consola'], ['En vivo', 'factura y respuesta'], ['Móvil', '¿Cuánto tengo?'] ] }],
   ['¿Funciona hoy?', 'Sí. Las grabaciones reales están publicadas y el servidor MCP lo conecta a tu asistente, con tu modelo y tu clave.',
     { t: 'toks', items: ['demo.priv8.es', 'mcp.priv8.es'], cap: 'Grabaciones reales y servidor MCP' }],
 ];
@@ -797,7 +799,7 @@ function Indice() {
   let k = -1;
   return (
     <div className="in qa">
-      <Head eyebrow="Anexo - Preguntas del jurado">Preguntas <span className="soft">y respuestas.</span></Head>
+      <Head eyebrow="Anexo - Preguntas del jurado"><span className="nw">Preguntas</span> <span className="soft nw">y respuestas.</span></Head>
       <div className="qindex">
         {GROUPS.map(([g, qa], j) => (
           <R d={3 + j * 0.5} key={g} className="qgroup">
@@ -891,9 +893,9 @@ export const SLIDES = [
   { id: 'empresas', tone: 'paper', C: ProblemaB2B },
   { id: 'personas', tone: 'paper', C: ProblemaB2C },
   { id: 'podria', tone: 'paper', C: Podria },
-  { id: 'como', tone: 'band', C: Como1 },
   { id: 'captura', tone: 'band', C: Captura },
   { id: 'como-2', tone: 'band', C: Como2 },
+  { id: 'como', tone: 'band', C: Como1 },
   { id: 'como-3', tone: 'band', C: Como3 },
   { id: 'como-4', tone: 'band', C: Como4 },
   { id: 'arquitectura', tone: 'band', C: Arquitectura },

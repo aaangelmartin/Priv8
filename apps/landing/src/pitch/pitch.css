@@ -420,12 +420,15 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .how3 { margin: auto 0; display: grid; grid-template-columns: 1.7fr 1fr; gap: 3cqw; align-items: center; }
 .flow2 { display: grid; grid-template-columns: 1fr 3.6cqw 1fr; align-items: center; gap: 1cqw; }
 .clases { display: grid; gap: 1cqw; }
-.clase { padding: 1.1cqw 1.3cqw; border-radius: 1.2cqw; background: rgba(255, 255, 255, .12); display: grid; gap: .35cqw; border-left: .45cqw solid var(--c); }
-.clase.ok { --c: #5FD39A; }
-.clase.tk { --c: #FFC46B; }
-.clase.no { --c: #FF8A7E; }
-.clase b { font: 700 1.45cqw/1.1 var(--f-display); letter-spacing: -.03em; }
-.clase span { font-size: 1.05cqw; line-height: 1.4; color: var(--on-band-2); }
+/* las tres clases: tarjetas blancas como las de la web, con la cara de 8 que les toca (ve, tokenizado, nunca sale) */
+.clase { padding: 1.3cqw 1.5cqw; border-radius: 1.4cqw; background: #fff; color: var(--ink); display: grid; grid-template-columns: 4.4cqw 1fr; column-gap: 1.2cqw; row-gap: .35cqw; align-items: center; box-shadow: 0 1cqw 2.6cqw rgba(5, 16, 31, .18); }
+.clase .e-clase { grid-row: 1 / span 2; width: 4.4cqw; }
+.clase .e-clase svg { width: 100%; height: auto; display: block; overflow: visible; }
+.clase.ok { --c: var(--ok-text, #18734c); }
+.clase.tk { --c: var(--warn-text); }
+.clase.no { --c: var(--bad-text); }
+.clase b { font: 700 1.45cqw/1.1 var(--f-display); letter-spacing: -.03em; color: var(--c); }
+.clase span { font-size: 1.05cqw; line-height: 1.4; color: var(--ink-2); }
 .clase code { justify-self: start; font: 600 .95cqw/1.4 var(--f-mono); background: rgba(255, 255, 255, .16); padding: .15cqw .5cqw; border-radius: .4cqw; }
 .how .foot-note { max-width: 86cqw; }
 .pzs { margin: auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6cqw; }
@@ -581,3 +584,17 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 .snap { display: grid; gap: .3cqw; padding: .7cqw .9cqw; border-radius: .8cqw; background: var(--night); }
 .snap small { font: 600 .75cqw/1 var(--f-mono); color: var(--soft-band); margin-bottom: .2cqw; }
 .snap code { font: 500 .88cqw/1.35 var(--f-mono); color: #fff; background: none; padding: 0; }
+
+/* cierre: a la izquierda todo apilado y centrado (8 grande, la frase, priv8.es); a la derecha el QR, del mismo alto */
+.close4 { position: relative; z-index: 1; height: 100%; display: grid; grid-template-columns: 1fr 33cqw; align-items: center; gap: 6cqw; padding: 0 7cqw; }
+.cl4-izq { display: grid; justify-items: center; text-align: center; gap: 2.2cqw; }
+.close4 .e-hero { width: 20cqw; margin: 0; }
+.cierre .close4 h2 { font-size: 3.5cqw; line-height: 1.05; justify-items: center; }
+.close4 .cl-foot { display: grid; justify-items: center; gap: .8cqw; }
+.close4 .cl-url { font: 700 2.6cqw/1 var(--f-display); letter-spacing: -.03em; color: #fff; }
+.close4 .cl-sub { font: 500 1.05cqw/1 var(--f-mono); color: var(--soft-band); }
+.close4 .cl4-qr { margin: 0; padding: 0; background: transparent; box-shadow: none; display: block; }
+.close4 .cl4-qr svg { width: 33cqw; height: 33cqw; display: block; }
+
+/* titular en dos líneas justas */
+.shead h2 .nw { display: block; white-space: nowrap; }
