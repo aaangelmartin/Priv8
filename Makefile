@@ -8,9 +8,10 @@ agent:
 	uv run python -m agent.agent --serve --task "$${TASK:-registrar factura}"
 
 # Live agent over the real Alba Core and mailbox (Playwright). Needs `make web` running
-# and ANTHROPIC_API_KEY. Held actions are approved from the audit console.
+# and ANTHROPIC_API_KEY. 8 takes each task from the audit console (:5175), answers there and
+# waits for the next one (Ctrl-C ends it); TASK runs first. Held actions are approved there too.
 agent-web:
-	uv run python -m agent.agent --web --task "$${TASK:-registrar factura}"
+	uv run python -m agent.agent --web $${TASK:+--task "$$TASK"}
 
 # Live agent on the Android emulator (B2C). First `scripts/movil.sh` (AVD, APKs, adb reverse
 # 8765 and 8700). The core serves the bridge on :8765 and the events on :8700; held actions
