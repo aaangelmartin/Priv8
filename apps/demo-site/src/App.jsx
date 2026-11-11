@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import Reproductor from './Movil.jsx';
 import { EMPRESAS, MOVIL, PASOS_EMPRESAS, APKS, INSTALAR, ENLACES, REPO, README_URL } from './contenido.js';
 
 const SECCIONES = [['casos', 'Los casos'], ['correlo', 'Córrelo tú'], ['enlaces', 'Enlaces']];
@@ -182,25 +181,12 @@ function ColEmpresas() {
 
 function ColMovil() {
   const grabados = useGrabados();
-  const [sel, setSel] = useState(null);
-  const player = useRef(null);
   const hay = grabados && grabados.length > 0;
-  const caso = hay ? (grabados.find((c) => c.id === sel) ?? grabados[0]) : null;
-  const elegir = (id) => {
-    setSel(id);
-    requestAnimationFrame(() => player.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-  };
   return (
     <div id="movil" className="col" aria-labelledby="h-movil">
       <ColHead id="h-movil" title="Priv8 en el móvil." soft="Tus bancos, por voz."
-        lead="Grabado en el emulador. A un lado el móvil; al otro, lo que recibe el modelo en ese momento." />
-      {hay && <ul className="cts">{grabados.map((c) => <Tarjeta key={c.id} c={c} retrato activa={c.id === caso.id} onClick={() => elegir(c.id)} />)}</ul>}
-      {hay && (
-        <div ref={player} className="mv-caja rv-in">
-          <div className="mv-cab"><p className="mv-pedido">{caso.pedido}</p></div>
-          <Reproductor caso={caso} />
-        </div>
-      )}
+        lead="Grabado en el emulador: el móvil junto a lo que recibe el modelo en cada momento." />
+      {hay && <ul className="cts">{grabados.map((c) => <Tarjeta key={c.id} c={c} />)}</ul>}
       {grabados && !hay && <p className="col-lead">Esta build no trae grabaciones del móvil.</p>}
     </div>
   );

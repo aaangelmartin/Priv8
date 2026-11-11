@@ -54,6 +54,7 @@ for (const id of [...SITIO.matchAll(/id: '(b2[bc]-[a-z-]+)'/g)].map((m) => m[1])
   if (id.startsWith('b2c') && existsSync(join(DIST, `movil/${id}.json`))) {
     archivos.push(JSON.parse(readFileSync(join(DIST, `movil/${id}.json`), 'utf8')).video);
   }
+  if (id.startsWith('b2c')) archivos.push('movil/index.html');
   for (const f of archivos) if (!existsSync(join(DIST, f))) throw new Error(`La web no trae ${f} (caso ${id})`);
 }
 

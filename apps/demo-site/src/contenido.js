@@ -16,14 +16,14 @@ export const EMPRESAS = [
     nota: 'Simula un modelo engañado por el correo.' },
 ].map((c) => ({ ...c, pedido: delCatalogo(c.id).pedido, href: `/consola/?feed=${delCatalogo(c.id).feed}`, img: `/casos/${c.id}.jpg` }));
 
-/* Priv8 en el móvil: cada caso es una grabación del emulador (vídeo) con lo que recibió el modelo en cada paso
+/* Priv8 en el móvil: cada caso abre /movil/?caso=<id> (src/PaginaMovil.jsx) y es una grabación del emulador (vídeo) con lo que recibió el modelo en cada paso
    (public/movil/<id>.json, scripts/grabar_movil_video.py). */
 export const MOVIL = [
   { id: 'b2c-saldo', titulo: '¿Cuánto tengo?', linea: 'Recorre los tres bancos y suma sin ver los saldos. La cifra la dice la voz del móvil.' },
   { id: 'b2c-broker', titulo: 'Pasa 200 € al bróker', linea: 'Prepara la transferencia, te pide confirmación y mira a otro lado mientras pones el código.' },
   { id: 'b2c-asesoria', titulo: '¿En qué invierto?', linea: 'No da consejo de inversión: la petición no llega al modelo.' },
   { id: 'b2c-clave', titulo: 'La clave nunca sale', linea: 'En la entrada del banco, usuario y clave no llegan al modelo. Entras tú.' },
-].map((c) => ({ ...c, pedido: delCatalogo(c.id).pedido, datos: `/movil/${c.id}.json`, img: `/movil/${c.id}.jpg` }));
+].map((c) => ({ ...c, pedido: delCatalogo(c.id).pedido, datos: `/movil/${c.id}.json`, href: `/movil/?caso=${c.id}`, img: `/movil/${c.id}.jpg` }));
 
 /* `acceso`: usuario, clave y código SMS inventados de cada banco simulado. */
 export const APKS = [
