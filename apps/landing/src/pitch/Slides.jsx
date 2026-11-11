@@ -14,7 +14,7 @@ import marco from './img/marco.png';
 /* Las diapositivas del pitch: 15 y el anexo de preguntas del jurado. */
 export const SlideCtx = createContext({ live: false, active: false, moving: false, phase: 'final', printing: false, n: '', annex: false });
 
-const COL = { band: { fg: '#FFFFFF', cut: '#2D45D6' }, paper: { fg: '#2D45D6', cut: '#FFFFFF' }, bad: { fg: '#C23A2E', cut: '#FBE5E3' } };
+const COL = { band: { fg: '#FFFFFF', cut: '#2D45D6' }, paper: { fg: '#2D45D6', cut: '#FFFFFF' }, bad: { fg: '#C23A2E', cut: '#FBE5E3' }, ok: { fg: '#1F8A5B', cut: '#FFFFFF' }, warn: { fg: '#A86400', cut: '#FFFFFF' }, badw: { fg: '#C23A2E', cut: '#FFFFFF' } };
 
 /* 8 vivo; solo se monta en la diapositiva que se ve (y en todas al imprimir) */
 function E({ mode = 'mirar', on = 'band', className = '', seq = null, id, look = null }) {
@@ -222,9 +222,9 @@ function Como1() {
         ))}
       </R>
       <div className="clases row">
-        <R d={6} className="clase ok"><E mode="mirar" on="paper" className="e-clase" /><b>Verde - se ve</b><span>Botones, etiquetas, títulos, menús. El modelo los necesita para moverse.</span></R>
-        <R d={6.4} className="clase tk"><E mode="nove" on="paper" className="e-clase" /><b>Ámbar - se tokeniza</b><span>IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos. Hacen falta para el trámite, no su valor.</span></R>
-        <R d={6.8} className="clase no"><E mode="nuncasale" on="bad" className="e-clase" /><b>Rojo - nunca sale</b><span>Contraseñas, PIN, usuario, OTP, tarjeta completa. Llegan como null y ni entran en la bóveda.</span></R>
+        <R d={6} className="clase ok"><E mode="mirar" on="ok" className="e-clase" /><b>Verde - se ve</b><span>Botones, etiquetas, títulos, menús. El modelo los necesita para moverse.</span></R>
+        <R d={6.4} className="clase tk"><E mode="nove" on="warn" className="e-clase" /><b>Ámbar - se tokeniza</b><span>IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos. Hacen falta para el trámite, no su valor.</span></R>
+        <R d={6.8} className="clase no"><E mode="nuncasale" on="badw" className="e-clase" /><b>Rojo - nunca sale</b><span>Contraseñas, PIN, usuario, OTP, tarjeta completa. Llegan como null y ni entran en la bóveda.</span></R>
       </div>
       <Foot />
     </div>
@@ -350,7 +350,16 @@ function Como4() {
 }
 
 /* ---------------------------------------------------------------- 5 arquitectura */
-const PIECES = ['Detector', 'Tokens y bóveda', 'Procedencia', 'Oráculo', 'Ejecutor', 'Tu «sí»', 'Bloqueo final', 'Registro firmado'];
+const PIECES = [
+  ['Detector', 'Reglas del sitio, patrones validados (IBAN, DNI, Luhn) y nombres: decide qué es cada dato.'],
+  ['Tokens y bóveda', 'Cambia el valor por ‹TIPO_n›. La tabla token-valor solo vive en tu máquina.'],
+  ['Procedencia', 'Recuerda de dónde viene cada valor: un IBAN del correo no entra en un pago.'],
+  ['Oráculo', 'Suma y compara sin revelar, con presupuesto de preguntas y respuestas por tramos.'],
+  ['Ejecutor', 'Escribe en pantalla el valor real del token que pide el modelo.'],
+  ['Tu «sí»', 'Registrar, transferir o enviar esperan tu confirmación.'],
+  ['Bloqueo final', 'Revisa cada petición que sale: si lleva un valor real, no sale.'],
+  ['Registro firmado', 'Qué recibió el modelo, qué se bloqueó y qué aprobaste, encadenado y firmado.'],
+];
 const ROUTES = [
   ['observe', ['pantalla', 'regla', 'detector', 'bóveda', 'bloqueo final', 'modelo']],
   ['act', ['modelo', 'token conocido', 'procedencia', 'tu «sí»', 'rehidratar', 'pantalla']],
@@ -365,9 +374,9 @@ function Arquitectura() {
           <p className="zone">Tu entorno de confianza - ve valores reales</p>
           <div className="ends"><span>Web: ERP y correo (Playwright, DOM)</span><span>Móvil (árbol de accesibilidad)</span></div>
           <div className="core">
-            <p className="core-h"><E mode="mirar" on="band" className="e-core" />Núcleo Priv8 - librería Python, en el mismo proceso</p>
+            <p className="core-h"><E mode="mirar" on="paper" className="e-core" />Núcleo Priv8 - librería Python, en el mismo proceso</p>
             <div className="pieces">
-              {PIECES.map((p, i) => <span key={p} className="piece rv" style={{ '--d': 4 + i * 0.5 }}><b>{i + 1}</b>{p}</span>)}
+              {PIECES.map(([p, t], i) => <span key={p} className="piece rv" style={{ '--d': 4 + i * 0.5 }}><b>{i + 1}</b><span><strong>{p}</strong><small>{t}</small></span></span>)}
             </div>
           </div>
           <div className="ends"><span>Consola de auditoría</span><span>App 8: renderizador y voz local</span></div>
@@ -405,7 +414,7 @@ function Demo1() {
   if (HAS('b2c')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo - Priv8 en el móvil" chip="captura real"><span className="nw">«¿Cuánto tengo entre mis bancos?»</span> <span className="soft nw">8 suma sin ver la cifra.</span></Head>
+        <Head eyebrow="Demo - Priv8 en el móvil" chip="en directo"><span className="nw">«¿Cuánto tengo entre mis bancos?»</span> <span className="soft nw">8 suma sin ver la cifra.</span></Head>
         <div className="vrow rev">
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Recorre tus tres bancos</strong>Banca Alcor, Brezo Banco y Nimbo Bróker, por accesibilidad.</p></R>
@@ -413,7 +422,6 @@ function Demo1() {
             <R d={6} className="scap"><b>3</b><p><strong>«Pasa 200 € al bróker»</strong>Lo prepara, mira a otro lado en tu huella y espera tu «sí».</p></R>
             <Links d={7} />
           </div>
-          <R d={3} className="vbox"><img className="clip" src={media('b2c.jpg')} alt="Captura real: 8 recorre tres bancos en el emulador Android y responde el total; el modelo solo ve tokens" /></R>
         </div>
         <Foot />
       </div>
@@ -465,9 +473,8 @@ function Demo2() {
   if (HAS('b2b')) {
     return (
       <div className="in demo2 vid">
-        <Head eyebrow="Demo - Priv8 para empresas" chip="captura real"><span className="nw">Una factura llega por correo.</span> <span className="soft nw">8 la registra sin ver los datos.</span></Head>
+        <Head eyebrow="Demo - Priv8 para empresas" chip="en directo"><span className="nw">Una factura llega por correo.</span> <span className="soft nw">8 la registra sin ver los datos.</span></Head>
         <div className="vrow">
-          <R d={3} className="vbox"><img className="clip" src={media('b2b.jpg')} alt="Captura real de la consola: 8 registra la factura en Alba Core con tokens y salta la alarma de posible fraude" /></R>
           <div className="vcaps">
             <R d={4} className="scap"><b>1</b><p><strong>Lee el correo y abre Alba Core</strong>Al modelo le llegan <Tok>‹CIF_1›</Tok> e <Tok>‹IMPORTE_1›</Tok>.</p></R>
             <R d={5} className="scap"><b>2</b><p><strong>Registra la factura</strong>El ejecutor escribe los valores reales y espera tu «sí», que queda firmado.</p></R>

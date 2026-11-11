@@ -598,3 +598,23 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 
 /* titular en dos líneas justas */
 .shead h2 .nw { display: block; white-space: nowrap; }
+
+/* arquitectura: cada pieza con su explicación */
+.arch .pieces { grid-template-columns: repeat(4, 1fr); gap: .7cqw; }
+.arch .piece { align-items: flex-start; padding: .8cqw .8cqw; }
+.arch .piece > span { display: grid; gap: .25cqw; }
+.arch .piece strong { font: 700 1cqw/1.15 var(--f-display); letter-spacing: -.01em; }
+.arch .piece small { font: 400 .78cqw/1.35 var(--f-body); color: var(--ink-2); }
+/* demos: solo los pasos y los enlaces para abrirla */
+.vid .vrow, .vid .vrow.rev { grid-template-columns: 1fr; max-width: 74cqw; }
+.vid .dlinks { grid-template-columns: 1fr 1fr; }
+/* cierre: el texto pegado a 8 y todo a la izquierda */
+.cl4-izq { justify-items: start; text-align: left; gap: 1.2cqw; }
+.cierre .close4 h2 { justify-items: start; }
+.close4 .cl-foot { justify-items: start; }
+/* arquitectura: las piezas ya lo cuentan; los caminos, fuera para que no pisen el pie */
+.arch .routes { display: none; }
+/* demos: los pasos justo debajo del titular */
+.vid .vrow { margin-top: 3cqw; align-content: start; align-items: start; }
+/* cierre: el texto pegado a 8, alineado a su borde izquierdo */
+.close4 .e-hero { margin: 0 0 -2.4cqw -1.6cqw; }
