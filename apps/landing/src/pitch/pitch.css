@@ -262,7 +262,7 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 .qcard h3 { font-size: 1.35cqw; line-height: 1.2; letter-spacing: -.03em; }
 .qcard p { font-size: 1.05cqw; line-height: 1.5; color: var(--ink-2); }
 .e-qa { position: absolute; right: 5.2cqw; top: 4.2cqw; width: 6cqw; }
-.annex .sfoot span:last-child { padding: .35cqw .7cqw; border-radius: 999px; background: var(--warn-soft); color: var(--warn-text); }
+
 
 /* ---------- transición: el scroll de la landing ---------- */
 /* Las dos diapositivas se mueven con JavaScript (Deck.jsx), pegadas y a píxeles enteros. Entre dos de distinto color
@@ -402,7 +402,7 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 /* cierre con dos QR grandes */
 .close2 { position: relative; z-index: 1; height: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 3cqw; padding: 0 5.2cqw; }
 .cl-left { display: grid; justify-items: start; text-align: left; }
-.cl-left .e-hero { width: 12cqw; }
+.cl-left .e-hero { width: 19cqw; margin-bottom: 1.6cqw; }
 .cierre .cl-left h2 { font-size: 4.2cqw; justify-items: start; }
 .cl-left .event { margin-top: 2cqw; }
 .qrs { display: grid; gap: 1.6cqw; }
@@ -439,7 +439,7 @@ html.printing .controls, html.printing .turn, html.printing .progress, html.prin
 
 /* ---------- v3: cierre con un solo QR ---------- */
 .cl-url { margin-top: 2.4cqw; font: 700 3.4cqw/1 var(--f-display); letter-spacing: -.04em; }
-.qr.solo { margin: 0; padding: 1.4cqw; border-radius: 2cqw; }
+.qr.solo { margin: 0; padding: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .qr.solo svg { width: 30cqw; height: 30cqw; display: block; }
 
 /* ---------- v3: anexo con índice ---------- */

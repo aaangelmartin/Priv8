@@ -56,7 +56,7 @@ function Foot() {
   return (
     <footer className="sfoot" aria-hidden="true">
       <span className="brand">Priv8</span>
-      <span>{annex ? `${n} - Preguntas del jurado` : n}</span>
+      <span>{n}</span>
     </footer>
   );
 }
@@ -586,12 +586,13 @@ function Equipo() {
 }
 
 /* ---------------------------------------------------------------- cierre */
-function Qr({ rows, label }) {
+/* azul: los módulos en blanco sobre el cobalto de la diapositiva (QR invertido, lo leen las cámaras de iOS y Android) */
+function Qr({ rows, label, azul = false }) {
   const n = rows.length;
   return (
     <svg viewBox={`-2 -2 ${n + 4} ${n + 4}`} shapeRendering="crispEdges" role="img" aria-label={label}>
-      <rect x="-2" y="-2" width={n + 4} height={n + 4} fill="#fff" />
-      {rows.map((r, y) => [...r].map((c, x) => (c === '1' ? <rect key={x + '-' + y} x={x} y={y} width="1.02" height="1.02" fill="#0b1b33" /> : null)))}
+      <rect x="-2" y="-2" width={n + 4} height={n + 4} fill={azul ? '#2d45d6' : '#fff'} />
+      {rows.map((r, y) => [...r].map((c, x) => (c === '1' ? <rect key={x + '-' + y} x={x} y={y} width="1.02" height="1.02" fill={azul ? '#fff' : '#0b1b33'} /> : null)))}
     </svg>
   );
 }
@@ -608,7 +609,7 @@ function Cierre() {
           <R d={1} as="h2"><span className="line">El agente hace el trámite.</span><span className="line soft">Los datos se quedan contigo.</span></R>
           <R d={2} as="p" className="cl-url">priv8.es</R>
         </div>
-        <R d={3} className="qr solo"><Qr rows={QR.web} label="Código QR a priv8.es" /></R>
+        <R d={3} className="qr solo"><Qr rows={QR.web} label="Código QR a priv8.es" azul /></R>
       </div>
     </div>
   );
