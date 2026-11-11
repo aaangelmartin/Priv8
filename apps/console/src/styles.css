@@ -135,6 +135,34 @@ mark.dato {
   padding: 0 3px; border-radius: 4px; box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--p8-aviso) 45%, transparent);
 }
 
+mark.fuga {
+  background: var(--p8-bloqueo-suave); color: var(--p8-bloqueo-texto); font-weight: 600;
+  padding: 0 3px; border-radius: 4px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--p8-bloqueo) 55%, transparent);
+}
+
+/* ------------------------------------------------------------ feeds: con y sin protocolo */
+.modo {
+  display: flex; align-items: center; gap: var(--p8-space-5); padding: var(--p8-space-4) var(--p8-space-5);
+  border-radius: var(--p8-radius-lg); border: 1px solid var(--p8-borde); background: var(--p8-superficie);
+}
+.modo .texto { flex: 1; min-width: 0; display: grid; gap: 4px }
+.modo h1 { font-size: 26px; line-height: 1.2 }
+.modo .sub { color: var(--p8-texto-2); font-size: 14px; max-width: 80ch }
+.modo .eyebrow { margin-bottom: 2px }
+.modo .ocho { width: 56px }
+.modo .contador { display: flex; align-items: center; gap: var(--p8-space-3); padding-left: var(--p8-space-5); border-left: 1px solid var(--p8-borde) }
+.modo .contador b { font: 700 48px/1 var(--p8-font-display); font-variant-numeric: tabular-nums; min-width: 1ch; text-align: right }
+.modo .contador span { font-size: 13px; line-height: 1.35; color: var(--p8-texto-2) }
+.modo.sin { background: var(--p8-bloqueo-suave); border-color: var(--p8-bloqueo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--p8-bloqueo) 18%, transparent) }
+.modo.sin h1, .modo.sin .contador b { color: var(--p8-bloqueo-texto) }
+.modo.sin .eyebrow, .modo.sin .sub, .modo.sin .contador span { color: var(--p8-texto) }
+.modo.sin .contador { border-left-color: color-mix(in srgb, var(--p8-bloqueo) 40%, transparent) }
+.modo.con { border-color: var(--c-cobalto-texto); box-shadow: 0 0 0 4px var(--c-cobalto-suave) }
+.modo.con h1 { color: var(--c-cobalto-texto) }
+.modo.con .contador b { color: var(--p8-seguro-texto) }
+.modo.con .contador.bloq b { color: var(--p8-bloqueo-texto) }
+.sin-protocolo .fila.e-bloqueo { background: color-mix(in srgb, var(--p8-bloqueo-suave) 45%, transparent) }
+
 /* ------------------------------------------------------------ confirmaciones */
 .pendientes { display: grid; gap: var(--p8-space-3) }
 .pendiente {
@@ -176,6 +204,9 @@ mark.dato {
   color: var(--p8-texto-2); font-size: 13px; background: var(--p8-superficie); border-radius: 0 var(--p8-radius-sm) var(--p8-radius-sm) 0;
   display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
 }
+.alarmas.compacta { padding: var(--p8-space-3) var(--p8-space-4) }
+.alarmas.compacta .sec-cab { margin-bottom: var(--p8-space-2) }
+.alarmas.compacta .alarma { padding-block: 8px }
 .alarma .btn.sec { background: var(--p8-superficie); padding: 6px 12px; font-size: 12px }
 .hecho { font: 600 12px var(--p8-font-mono); color: var(--p8-seguro-texto) }
 .chip {
@@ -265,6 +296,9 @@ mark.dato {
 }
 @media (max-width: 760px) {
   .producto { display: none }
+  .modo { flex-wrap: wrap; gap: var(--p8-space-3) }
+  .modo .contador { padding-left: 0; border-left: 0 }
+  .modo h1 { font-size: 21px }
   .fila { grid-template-columns: minmax(0, 1fr) auto; gap: 6px var(--p8-space-3) }
   .fila.cabecera { display: none }
   .fila > :nth-child(2), .fila > :nth-child(3) { grid-column: 1 / -1 }
