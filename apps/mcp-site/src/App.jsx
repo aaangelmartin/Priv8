@@ -150,7 +150,7 @@ function Hero() {
         </div>
         <h1 id="h-hero" aria-label={`Prueba Priv8 con tu asistente: ${ASISTENTES.map((a) => a.nombre).join(', ')}`}>
           <span className="line" aria-hidden="true">Prueba Priv8</span>
-          <span className="soft line" aria-hidden="true">con tu <Rotator /></span>
+          <span className="soft line" aria-hidden="true">con tu<Rotator /></span>
         </h1>
         <p className="hero-sub">Tu asistente hace un trámite en un ERP y un correo de prueba sin ver los datos.</p>
         <div className="hero-cmd"><HeroCmd /></div>
