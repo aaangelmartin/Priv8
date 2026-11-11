@@ -177,7 +177,7 @@ class ChatView(context: Context, private val onRespuesta: (Conversacion.Item.Con
         }
         val visibles = p.lineas.takeLast(MAX_LINEAS)
         val ocultas = p.lineas.size - visibles.size
-        if (ocultas > 0) col.addView(linea("y $ocultas pasos antes", Progreso.Tono.NORMAL, ultima = false, activo = false))
+        if (ocultas > 0) col.addView(linea(if (ocultas == 1) "y 1 paso antes" else "y $ocultas pasos antes", Progreso.Tono.NORMAL, ultima = false, activo = false))
         visibles.forEachIndexed { i, l ->
             col.addView(linea(l.texto, l.tono, ultima = i == visibles.lastIndex, activo = p.activo))
         }

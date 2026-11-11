@@ -89,6 +89,8 @@ class MainActivity : Activity() {
 
     private var empezado = false
 
+    private val alResultado: (JSONObject) -> Unit = { result -> conv = conv.evento(result) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -129,6 +131,8 @@ class MainActivity : Activity() {
         })
         // The eyes keep their touches; the tap is only watched. Tapping 8 still dictates.
         ojos.setOnTouchListener { _, e -> toque.onTouchEvent(e); false }
+        // An answer given on ConfirmActivity (voice or buttons) closes the card too.
+        ConfirmFlow.onResult = alResultado
         pintar()
         porIntent(intent)
 
@@ -167,6 +171,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
+        if (ConfirmFlow.onResult === alResultado) ConfirmFlow.onResult = null
         events.stop()
         dictador.destroy()
         chat.destroy()
@@ -332,7 +337,7 @@ class MainActivity : Activity() {
         }
         aviso.visibility = if (c.fase == Conversacion.Fase.SIN_CONEXION) View.VISIBLE else View.GONE
         sugerencias.visibility = when (c.fase) {
-            Conversacion.Fase.REPOSO, Conversacion.Fase.LISTO -> if (escuchando) View.GONE else View.VISIBLE
+            Conversacion.Fase.REPOSO, Conversacion.Fase.LISTO, Conversacion.Fase.SIN_CONEXION -> if (escuchando) View.GONE else View.VISIBLE
             else -> View.GONE
         }
         pintarComposer()

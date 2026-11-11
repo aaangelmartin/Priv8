@@ -126,7 +126,7 @@ data class Conversacion(
         return when (val e = Progreso.de(ev)) {
             null -> c
             Progreso.Efecto.Tarea -> c.paso(Progreso.Efecto.Paso("Me pongo con ello")).copy(trabajando = true)
-            is Progreso.Efecto.Paso -> c.paso(e)
+            is Progreso.Efecto.Paso -> c.paso(e).copy(trabajando = true) // 8 is at work, also after an answer
             is Progreso.Efecto.Bloqueo -> c.mas(Item.Bloqueo(c.id("b"), e.motivo, e.titulo, e.texto, e.tono))
         }
     }

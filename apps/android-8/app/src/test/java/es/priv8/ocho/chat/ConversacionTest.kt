@@ -104,9 +104,10 @@ class ConversacionTest {
 
     @Test fun aProgressLineAfterAnAnswerStartsANewGroup() {
         var c = inicio.evento(audit("oracle")).evento(enSesion(example("events.voice.json")))
-        c = c.evento(audit("task"))
+        c = c.evento(audit("paused", extra = arrayOf("detail" to "autenticacion")))
         assertEquals(2, c.pasos().size)
         assertTrue(c.pasos().last().activo)
+        assertEquals(Fase.TRABAJANDO, c.fase)
     }
 
     @Test fun confirmationCardWaitsAndClosesWithTheResult() {

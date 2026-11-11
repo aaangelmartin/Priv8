@@ -55,6 +55,13 @@ object ConfirmFlow {
     /** When each pending request arrived (elapsedRealtime), by fingerprint. */
     private val arrived = HashMap<String, Long>()
 
+    /**
+     * Every approval_result given on the phone (voice, ConfirmActivity's
+     * buttons, the conversation's card, or expiry), so app 8's card follows it
+     * even before the core echoes it on the events channel. Main thread.
+     */
+    var onResult: ((JSONObject) -> Unit)? = null
+
     /** The request on screen, or null. Main thread. */
     var active: ConfirmRequest? = null
         private set
@@ -191,6 +198,7 @@ object ConfirmFlow {
         val sent = sender?.invoke(result) == true
         val at = arrived.remove(request.fingerprint) ?: SystemClock.elapsedRealtime()
         answered.put(request, result, delivered = sent, receivedAt = at)
+        onResult?.invoke(result)
         val reason = result.optString("reason").ifEmpty { "-" }
         Log.i(TAG, "approval_result ${request.id}: ok=${result.getBoolean("ok")} via=${result.getString("via")} reason=$reason${if (sent) "" else " (NOT SENT: bridge down)"}")
         if (queue.isEmpty()) screen?.close() else next()
