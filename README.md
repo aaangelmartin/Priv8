@@ -42,6 +42,8 @@ En Windows, cada objetivo del `Makefile` es un `uv run ...` que se puede lanzar 
 
 ## Instalación
 
+<img alt="Tres pasos: uv sync y make web-install, la clave en .env, y doble clic en Demo Priv8.command" src="docs/img/uso-instalar.png" width="100%">
+
 ```bash
 uv sync             # Python y las dependencias exactas de uv.lock
 make web-install    # solo para la web en vivo: las tres apps web y Chromium
@@ -79,12 +81,9 @@ Al llegar a un límite, 8 para y lo dice en la consola. `make demo-b2b` lee el `
 
 ### 0. La demo en directo, con doble clic
 
-En macOS, doble clic en **`Demo Priv8.command`** (raíz del repositorio). Se abre un panel en http://127.0.0.1:5170:
+<img alt="El panel en 127.0.0.1:5170: Preparar B2B o B2C; con la demo lista, Abrir la consola, Ver las pantallas o Ver el móvil" src="docs/img/uso-panel.png" width="100%">
 
-| Botón | Qué deja listo | Después |
-|---|---|---|
-| Preparar B2B | Alba Core con sesión, correo, consola y 8 esperando | "Abrir la consola" y "Ver las pantallas" (Chromium a pantalla completa) |
-| Preparar B2C | App Priv8 y bancos instalados, emulador y 8 escuchando | "Ver el móvil" |
+En macOS, doble clic en **`Demo Priv8.command`** (o `make panel`). B2B: "Abrir la consola" y "Ver las pantallas". B2C: "Ver el móvil".
 
 Antes, una vez: `cp .env.example .env` con tu `ANTHROPIC_API_KEY`. Si macOS no lo abre: clic derecho, Abrir (o `chmod +x "Demo Priv8.command"` tras descomprimir el ZIP). Cerrar el Terminal lo para todo.
 
@@ -103,6 +102,8 @@ El núcleo real con respuestas del modelo grabadas. Al final, el número de peti
 
 ### 2. B2B en vivo
 
+<img alt="B2B: llega la factura al correo, Alba Core sin API, y 8 la registra con tokens mientras la persona aprueba en la consola" src="docs/img/uso-b2b.png" width="100%">
+
 ```bash
 make demo-b2b    # Alba Core :5173, correo :5174, consola :5175 y 8 esperando
 ```
@@ -110,6 +111,8 @@ make demo-b2b    # Alba Core :5173, correo :5174, consola :5175 y 8 esperando
 En http://127.0.0.1:5175, pídele a 8 «registrar factura» y aprueba lo retenido. Por partes: `make web` y `make agent-web` (entonces Alba Core pide `admin.alba` / `Alba-2026!`, y la clave la escribe la persona).
 
 ### 3. B2C en el emulador
+
+<img alt="B2C: se lo dices a 8, la cifra suena con la voz local mientras el modelo solo ve ‹SUMA_1›, y la transferencia la confirmas tú" src="docs/img/uso-b2c.png" width="100%">
 
 ```bash
 scripts/movil.sh             # compila, arranca el AVD, instala y abre los puertos
@@ -120,6 +123,8 @@ make agent-android           # Claude en vivo
 Detalle del emulador en [`apps/android-8/README.md`](apps/android-8/README.md). La huella, la clave y el código los pone la persona; 8 mira a otro lado.
 
 ### 4. Priv8 en tu Claude Code
+
+<img alt="Priv8 en Claude Code: una línea de instalación, Claude recibe solo tokens y lo irreversible se aprueba en la consola" src="docs/img/uso-claude.png" width="100%">
 
 ```bash
 curl -fsSL https://mcp.priv8.es/instalar.sh | bash    # sin clonar: paquete en ~/.priv8/mcp
