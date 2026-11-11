@@ -362,7 +362,11 @@ function describir(e, etiquetas) {
     case 'blocked': return { tono: 'bloqueo', titulo: `Bloqueado · ${e.reason ?? 'sin motivo'}`, detalle: e.detail ?? e.model_saw, extra: e.model_saw && e.detail ? e.model_saw : null }
     case 'held': return { tono: 'aviso', titulo: 'Retenido hasta que confirmes', detalle: `${e.model_saw ?? ''} · ${e.confirm}` }
     case 'approval': return e.approved_by ? { tono: 'seguro', titulo: `Aprobado por ${e.approved_by}`, detalle: e.confirm } : { tono: 'bloqueo', titulo: 'Rechazado', detalle: e.confirm }
-    case 'task': return { tono: 'cobalto', titulo: '8 informa', detalle: e.model_saw }
+    case 'task': {
+      // Desde #117 el evento final solo marca el fin («fin · paso N»), sin model_saw.
+      const detalle = e.model_saw || e.detail
+      return detalle ? { tono: 'cobalto', titulo: '8 informa', detalle } : null
+    }
     case 'paused': return { tono: 'aviso', titulo: 'En pausa', detalle: e.detail }
     case 'oracle': return { tono: 'neutro', titulo: 'Pregunta al oráculo', detalle: e.model_saw }
     default: return { tono: 'neutro', titulo: e.kind, detalle: e.model_saw ?? e.detail }
@@ -403,6 +407,7 @@ function Actividad({ audit, etiquetas, valores }) {
       <ol className="eventos">
         {lista.map((e) => {
           const d = describir(e, etiquetas)
+          if (!d) return null
           const ms = (e.ms?.core ?? 0) + (e.ms?.adapter ?? 0) + (e.ms?.model ?? 0)
           return (
             <li key={e.seq} className={`evento t-${d.tono}`}>
