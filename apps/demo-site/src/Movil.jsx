@@ -76,9 +76,9 @@ function Subtitulo({ v }) {
   if (!v) return <p className="mv-sub vacio" aria-hidden="true">&nbsp;</p>;
   return (
     <p className="mv-sub">
-      {(v.segmentos || []).map((s, i) => (s.voz === 'local' || s.token
-        ? <span key={i} className="mv-local"><span className="tok">{s.token || s.texto}</span><small>voz local</small></span>
-        : <span key={i}>{conTokens(s.texto)} </span>))}
+      {(v.segmentos || []).map((s, i) => ((s.voz ?? s.voice) === 'local' || s.token
+        ? <span key={i} className="mv-local"><span className="tok">{s.token || s.texto || s.text}</span><small>voz local</small></span>
+        : <span key={i}>{conTokens(s.texto ?? s.text)} </span>))}
     </p>
   );
 }
