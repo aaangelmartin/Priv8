@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://priv8.dev/contracts/events.schema.json",
   "title": "Canal de eventos del núcleo",
-  "description": "Mensajes del WebSocket ws://127.0.0.1:8700/events. Lo escuchan la consola de auditoría (Camino 2), la app 8 (Camino 4) y el bucle del agente (Camino 3). Es local: screen lleva valores reales para la mitad 'lo que ves' de la consola y nunca se escribe en el registro ni sale a la nube. approval_result es el único mensaje que los clientes envían al núcleo.",
+  "description": "Mensajes del WebSocket ws://127.0.0.1:8700/events. Lo escuchan la consola de auditoría (Camino 2), la app 8 (Camino 4) y el bucle del agente (Camino 3). Es local: screen lleva valores reales para la mitad 'lo que ves' de la consola y nunca se escribe en el registro ni sale a la nube. Los clientes envían al núcleo approval_result, task_request y dictation_start; dictation lleva la tarea en claro y por eso solo viaja por este canal local.",
   "oneOf": [
     {
       "description": "núcleo → clientes: cada línea nueva del registro.",
@@ -37,6 +37,39 @@
       }
     },
     { "$ref": "confirm.schema.json#/$defs/request" },
-    { "$ref": "confirm.schema.json#/$defs/approval_result" }
+    { "$ref": "confirm.schema.json#/$defs/approval_result" },
+    {
+      "description": "cliente → núcleo: tarea de la persona, ya en texto (dictada en el móvil con el reconocedor del dispositivo, o escrita). El núcleo la tokeniza antes de que llegue al modelo; la auditoría guarda sus tokens y su longitud, nunca el texto.",
+      "type": "object",
+      "required": ["type", "session", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "task_request" },
+        "session": { "$ref": "common.schema.json#/$defs/session" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    {
+      "description": "cliente → núcleo: la persona quiere dictar y el móvil no reconoce la voz (emulador). El núcleo graba el micrófono del portátil y lo transcribe con Whisper en local; el audio no sale del portátil.",
+      "type": "object",
+      "required": ["type", "session"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "dictation_start" },
+        "session": { "$ref": "common.schema.json#/$defs/session" }
+      }
+    },
+    {
+      "description": "núcleo → clientes: lo que entendió el dictado del portátil, para el subtítulo de la app 8. Lleva el texto real: solo viaja por este canal local y nunca se registra. Con error, text va vacío: no_disponible (sin Whisper o sin micrófono) o sin_voz (no se entendió nada).",
+      "type": "object",
+      "required": ["type", "session", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "dictation" },
+        "session": { "$ref": "common.schema.json#/$defs/session" },
+        "text": { "type": "string", "maxLength": 200 },
+        "error": { "enum": ["no_disponible", "sin_voz"] }
+      }
+    }
   ]
 }
