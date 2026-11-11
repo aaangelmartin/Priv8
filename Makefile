@@ -88,7 +88,7 @@ demo:
 
 # Every test suite and the contract examples.
 test:
-	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics data/test_bateria.py
+	uv run pytest agent/tests core/tests voice/tests adapters/web/tests adapters/android/tests metrics scripts/tests data/test_bateria.py
 	uv run python docs/contracts/validate.py
 	uv run python data/check_seed.py
 	node apps/console/src/alertas.test.mjs
