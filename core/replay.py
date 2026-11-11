@@ -33,7 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 REPLAY_LOG = ROOT / "audit" / "replay.jsonl"
 
 REPLAYS = ROOT / "core" / "replays"
-TITLES = {"b2b": "B2B · factura del proveedor", "b2c": "B2C · saldo y transferencia"}
+TITLES = {"b2b": "B2B - factura del proveedor", "b2c": "B2C - saldo y transferencia"}
 
 
 def say(msg: str = "") -> None:
@@ -45,7 +45,7 @@ def persona(session: str):
     def approve_pending() -> None:
         for req in core.pending(session):
             frase = " ".join(s.get("text") or s.get("token", "") for s in req["summary"])
-            say(f"    8 pide confirmación: «{frase}» · persona: «confirmo»")
+            say(f"    8 pide confirmación: «{frase}» - persona: «confirmo»")
             core.approve({"type": "approval_result", "id": req["id"], "ok": True, "via": "voz", "by": "persona"})
     return approve_pending
 
@@ -73,9 +73,9 @@ async def run_scene(name: str) -> dict:
     events = [e for e in core.AUDIT.events if e["session"] == session]
     kinds = {k: sum(1 for e in events if e["kind"] == k) for k in ("observe_sent", "act", "held", "approval", "blocked")}
     say(f"\n   8 dice (renderizado en local): {vault.render(result.final_text or '')}")
-    say(f"   estado={result.status} · pasos={result.steps} · peticiones al modelo={len(model.requests)} "
-        f"· con valores reales={len(leaks)}")
-    say("   auditoría: " + " · ".join(f"{k}={v}" for k, v in kinds.items()))
+    say(f"   estado={result.status} - pasos={result.steps} - peticiones al modelo={len(model.requests)} "
+        f"- con valores reales={len(leaks)}")
+    say("   auditoría: " + " - ".join(f"{k}={v}" for k, v in kinds.items()))
     say(f"   acciones reales en pantalla: {len(scene.log)}")
     return {"scene": name, "status": result.status, "leaks": len(leaks), **kinds}
 

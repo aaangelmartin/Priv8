@@ -116,9 +116,10 @@ Lee la configuración del `.env` (hace falta `ANTHROPIC_API_KEY`; el núcleo rea
 make web-install          # una vez: dependencias de las tres apps y Chromium
 make web                  # Alba Core :5173, correo :5174, consola :5175
 make agent-web            # en otra terminal; necesita ANTHROPIC_API_KEY
+make agent-web TASK="registrar factura"   # o con una primera tarea ya puesta
 ```
 
-Abre la consola en http://127.0.0.1:5175. Entra en Alba Core con `admin.alba` / `Alba-2026!` en la ventana de Chromium que abre el agente (la clave la escribe la persona, nunca 8). 8 lee el correo, registra la factura y la deja retenida: se aprueba desde la consola. La llamada a la ficha del proveedor va en modo simulado salvo que estén las variables de `voice/.env.example`.
+Abre la consola en http://127.0.0.1:5175. Entra en Alba Core con `admin.alba` / `Alba-2026!` en la ventana de Chromium que abre el agente (la clave la escribe la persona, nunca 8). El encargo se le pide a 8 desde la consola, por ejemplo «registrar factura». 8 lee el correo, registra la factura y la deja retenida: se aprueba desde la consola. La respuesta de 8 sale también en la consola, con tokens en lugar de datos. Después 8 espera el siguiente encargo; `Ctrl-C` lo para. La llamada a la ficha del proveedor va en modo simulado salvo que estén las variables de `voice/.env.example`.
 
 Métricas con y sin protocolo, sin claves: `make metrics`.
 

@@ -60,7 +60,7 @@ def test_la_auditoria_no_guarda_el_texto(core):
     saved = json.dumps({k: ev.get(k) for k in ("tokens", "detail", "model_saw", "reason")}, ensure_ascii=False)
     assert "200" not in saved and "bróker" not in saved
     assert any(t.startswith("‹IMPORTE_") for t in ev["tokens"])
-    assert ev["detail"] == "tarea recibida · app · 20 caracteres"
+    assert ev["detail"] == "tarea recibida - app - 20 caracteres"
     assert validator("audit.schema.json").is_valid(ev)
 
 

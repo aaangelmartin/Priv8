@@ -38,7 +38,19 @@ uv run python -m agent.agent --record agent/replays/nueva.json   # en vivo y gra
 uv run python -m agent.agent --replay FILE --audit-out audit.jsonl
 ```
 
-Opciones de `agent.agent`: `--task` (nombre de tarea o texto libre en español), `--max-steps` (20), `--session` (el nombre de la escena; `s1` con el núcleo falso), `--port` (8701), `--scene` y `--simulated-persona`. Sale con 0 si la tarea termina.
+Opciones de `agent.agent`: `--task` (nombre de tarea o texto libre en español), `--max-steps` (20), `--session` (el nombre de la escena; `s1` con el núcleo falso), `--port` (8701), `--scene`, `--web`, `--android` y `--simulated-persona`. Sale con 0 si la tarea termina.
+
+### Alba Core y el correo reales (`--web`, B2B)
+
+```bash
+make web                                   # Alba Core :5173, correo :5174, consola :5175
+make agent-web                             # 8 espera el encargo en la consola
+make agent-web TASK="registrar factura"    # primero esta tarea, después la consola
+```
+
+- **Encargos desde la consola.** Sin `--task`, el proceso espera la primera tarea de la consola (`task_request` en ws://127.0.0.1:8700/events, que el núcleo pasa a `core.next_task("b2b")`). Con `--task`, la ejecuta primero. El texto pasa por `core.tokenize_text` antes de llegar a Claude; un nombre de tarea como «registrar factura» se expande igual que con `--task`.
+- **Después de cada tarea.** La respuesta final va a la consola con `core.say` (texto con tokens, con el bloqueo final), el proceso espera a que la persona apruebe o rechace lo retenido y vuelve a esperar el siguiente encargo. `Ctrl-C` lo para.
+- **Replay.** Con `--replay` hace una sola tarea, como antes, y no espera encargos.
 
 ### Pantalla con el núcleo real
 

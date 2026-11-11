@@ -5,6 +5,7 @@
     python -m agent.agent --server-url http://127.0.0.1:8701/mcp
     python -m agent.agent --replay agent/replays/registrar_factura.json   # no API key
     python -m agent.agent --record out.json                     # live, and save a replay file
+    python -m agent.agent --web                                 # live, tasks from the audit console
     PRIV8_CORE=fake python -m agent.agent --replay agent/replays/registrar_factura.json
 
 With the real core (PRIV8_CORE=real, the default) the screen is a demo scene of
@@ -41,6 +42,7 @@ EFFORT = os.environ.get("PRIV8_EFFORT", "high")
 DEFAULT_MAX_STEPS = 20
 EXPECTED_TOOLS = {"observe", "act", "oracle"}
 REPLAY_FORMAT = "priv8-replay/1"
+CONSOLE_URL = "http://127.0.0.1:5175"  # the audit console (apps/console), where --web takes its tasks
 
 SYSTEM = """Eres 8, el agente de Priv8. Haces trámites en pantallas que no puedes ver en claro.
 
@@ -190,7 +192,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
 
     # Audit events follow audit.schema.json: the loop's own data goes in detail.
     audit({"session": session, "kind": "task", "model_saw": prompt if core.leak.check(prompt).ok else None,
-           "detail": f"inicio · {MODEL} · máx {max_steps} pasos · {', '.join(sorted(t['name'] for t in tools))}"})
+           "detail": f"inicio - {MODEL} - máx {max_steps} pasos - {', '.join(sorted(t['name'] for t in tools))}"})
 
     for step in range(1, max_steps + 1):
         # Final block: what is new in this request (system and tools on step 1).
@@ -199,7 +201,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
         if not verdict.ok:
             audit({"session": session, "kind": "blocked", "reason": "fuga",
                    "model_saw": "petición a Claude retenida",
-                   "detail": f"paso {step} · patrón: {', '.join(verdict.matched)}"})
+                   "detail": f"paso {step} - patrón: {', '.join(verdict.matched)}"})
             return AgentResult("blocked", step, tool_calls=calls)
 
         t0 = time.perf_counter()
@@ -208,7 +210,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
         except ReplayExhausted:
             raise
         except Exception as exc:  # live API errors: logged, loop ends
-            audit({"session": session, "kind": "task", "detail": f"paso {step} · error {type(exc).__name__}"})
+            audit({"session": session, "kind": "task", "detail": f"paso {step} - error {type(exc).__name__}"})
             return AgentResult("error", step, tool_calls=calls)
         model_ms = round((time.perf_counter() - t0) * 1000)
 
@@ -219,7 +221,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
         said = [f"{_get(u, 'name')} {json.dumps(_get(u, 'input'), ensure_ascii=False)}" for u in uses]
         audit({"session": session, "kind": "task", "model_saw": "; ".join(said) or text or None,
                "tokens": list(dict.fromkeys(tokens_in(" ".join(said) + " " + text))),
-               "detail": f"paso {step} · {stop}", "ms": {"model": model_ms}})
+               "detail": f"paso {step} - {stop}", "ms": {"model": model_ms}})
         say(f"[{step}] {stop}: " + ("; ".join(said) if said else text))
 
         if stop == "refusal":
@@ -232,7 +234,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
             continue
         if not uses:
             # the step event above already carries the final text: mark the end without repeating it
-            audit({"session": session, "kind": "task", "detail": f"fin · paso {step}"})
+            audit({"session": session, "kind": "task", "detail": f"fin - paso {step}"})
             return AgentResult("done", step, final_text=text, tool_calls=calls)
 
         results = []
@@ -246,7 +248,7 @@ async def run_agent(client: Client, model: ModelClient, core: Core, task: str, *
                             **({"is_error": True} if r.is_error else {})})
         messages.append({"role": "user", "content": results})
 
-    audit({"session": session, "kind": "task", "detail": f"límite de pasos · {max_steps}"})
+    audit({"session": session, "kind": "task", "detail": f"límite de pasos - {max_steps}"})
     return AgentResult("step_limit", max_steps, tool_calls=calls)
 
 
@@ -271,6 +273,11 @@ async def _main(a: argparse.Namespace) -> int:
     dictated = bool(a.android and not a.task_given and not a.replay)
     if dictated and not ca.has_dictation():
         raise ValueError("--android without --task needs dictated tasks (core.next_task, #47): pass --task")
+    # --web (live): the person asks 8 from the audit console (task_request on :8700), and after
+    # each run 8 waits for the next request there. --task runs first; --replay runs once.
+    console = bool(a.web and not a.replay and not a.server_url)
+    if console and not ca.has_dictation():
+        raise ValueError("--web needs console tasks (core.next_task, #47): pass --replay")
     core = default_core()  # PRIV8_CORE=real|fake, in this same process
     err = lambda s: print(s, file=sys.stderr)  # noqa: E731
 
@@ -291,6 +298,9 @@ async def _main(a: argparse.Namespace) -> int:
         persona = bool(a.replay) if a.simulated_persona is None else a.simulated_persona
         if a.web:  # Alba Core and the mailbox in Chromium; the person approves in the console
             mount_web(a.session)
+            if console and not a.task_given:
+                err(f"priv8: pide el encargo a 8 en la consola ({CONSOLE_URL})")
+                task = await _next_console_task(a.session)
         elif a.android:  # the emulator over the bridge; the person approves on the phone
             bridge = ca.mount_android(a.session, simulated_persona=bool(a.simulated_persona))
             if dictated:
@@ -328,23 +338,49 @@ async def _main(a: argparse.Namespace) -> int:
             await anyio.to_thread.run_sync(bridge.say, result.final_text)
         if not dictated:
             break
-        err(f"status={result.status} steps={result.steps} · esperando la siguiente tarea dictada")
+        err(f"status={result.status} steps={result.steps} - esperando la siguiente tarea dictada")
         said = await anyio.to_thread.run_sync(ca.next_dictated_task, a.session)
         if said is None:  # dictation closed
             break
         task = tokenize_task(a.session, said)  # dictated text is real: tokens before Claude
         result = await run_with(build_server(core))
 
-    if isinstance(model, AnthropicModel):
-        model.save_recording(task)
-    if a.audit_out:
-        Path(a.audit_out).write_text("".join(json.dumps(e, ensure_ascii=False) + "\n"
-                                             for e in core.audit.events), encoding="utf-8")  # type: ignore[attr-defined]
+    def save() -> None:
+        if isinstance(model, AnthropicModel):
+            model.save_recording(task)
+        if a.audit_out:
+            Path(a.audit_out).write_text("".join(json.dumps(e, ensure_ascii=False) + "\n"
+                                                 for e in core.audit.events), encoding="utf-8")  # type: ignore[attr-defined]
+
+    while console:  # --web: answer and approvals in the console, then the next request (until Ctrl-C)
+        save()
+        err(f"status={result.status} steps={result.steps}")
+        print(result.final_text, flush=True)
+        if result.final_text and core.voice is not None:
+            core.voice.say(a.session, result.final_text)  # tokens only; the core runs the final block
+        await anyio.to_thread.run_sync(_wait_for_approvals, a.session, err)
+        err("priv8: esperando el siguiente encargo en la consola")
+        said = await _next_console_task(a.session)
+        task = tokenize_task(a.session, TASKS.get(said.strip().lower(), said))
+        result = await run_with(build_server(core))
+
+    save()
     err(f"status={result.status} steps={result.steps}")
     print(result.final_text)
     if a.web:
         _wait_for_approvals(a.session, err)
     return 0 if result.status in ("done", "asesoria") else 1
+
+
+async def _next_console_task(session: str, poll_s: float = 1.0) -> str:
+    """The next task the person sent from the console (real text, it stays in this process).
+    Waits in short polls so that Ctrl-C is not stuck behind a blocked thread."""
+    from agent import core_adapter as ca
+
+    while True:
+        said = await anyio.to_thread.run_sync(ca.next_dictated_task, session, poll_s)
+        if said is not None:
+            return said
 
 
 def _wait_for_approvals(session: str, err: Any, timeout_s: float | None = None) -> None:
@@ -359,7 +395,7 @@ def _wait_for_approvals(session: str, err: Any, timeout_s: float | None = None) 
 
     end = time.monotonic() + (timeout_s if timeout_s is not None else EXPIRES_S + 10)
     if real.pending(session):
-        err("priv8: hay acciones retenidas; apruébalas o recházalas en la consola (http://127.0.0.1:5175)")
+        err(f"priv8: hay acciones retenidas; apruébalas o recházalas en la consola ({CONSOLE_URL})")
     while real.pending(session) and time.monotonic() < end:
         real.expire_due()
         time.sleep(1)
@@ -401,6 +437,9 @@ def main(argv: list[str] | None = None) -> int:
     except (RealCoreUnavailable, ValueError) as e:  # PRIV8_CORE wrong or core/ not ready
         print(f"priv8: {e}", file=sys.stderr)
         return 2
+    except KeyboardInterrupt:  # --web and --android wait for the next task until Ctrl-C
+        print("priv8: fin", file=sys.stderr)
+        return 0
 
 
 if __name__ == "__main__":
