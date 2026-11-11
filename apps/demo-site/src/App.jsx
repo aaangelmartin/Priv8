@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import Eight from '@landing/eight/Eight.jsx';
 import Field, { Blend } from '@landing/Field.jsx';
 import byLaaabs from '@landing/by-laaabs.svg';
-import { VIDEO_B2C, VIDEOS_B2B, PRUEBA_B2B, APKS, INSTALAR, ENLACES, VIVO, EQUIPO, REPO } from './contenido.js';
+import { VIDEO_B2C, VIDEOS_B2B, PRUEBA_B2B, APKS, INSTALAR, ENLACES, EQUIPO, REPO } from './contenido.js';
 
-const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['enlaces', 'Enlaces'], ['vivo', 'En vivo'], ['equipo', 'Equipo']];
+const SECCIONES = [['videos', 'Vídeos'], ['prueba', 'Pruébalo tú'], ['enlaces', 'Enlaces'], ['equipo', 'Equipo']];
 const ext = (href) => (/^https?:/.test(href) ? { target: '_blank', rel: 'noopener' } : {});
 
 /* Tamaños de lo que copió scripts/assemble.mjs. En `pnpm dev` no existe: no se enseñan tamaños ni avisos. */
@@ -110,22 +110,6 @@ function Row({ title, what, href, label, download, off }) {
   );
 }
 
-function Card({ c, archivos }) {
-  const s = size(archivos, c.file);
-  return (
-    <article className="dcard">
-      <header className="dcard-top"><span className="dcard-kind">{c.kind}</span><span className="dcard-time">{c.time}</span></header>
-      <h3>{c.title}</h3>
-      <p>{c.what}</p>
-      {c.cmd && <pre className="dcmd"><code>{c.cmd}</code></pre>}
-      <footer className="dcard-act">
-        {s.ok ? <a className="dbtn" href={c.href} {...ext(c.href)}>{c.cta || 'Ver en el README'}</a> : <span className="dbtn is-off">{s.label}</span>}
-        {s.ok && s.label && <span className="dsize">{s.label}</span>}
-      </footer>
-    </article>
-  );
-}
-
 /* ---------------------------------------------------------------- secciones */
 function Hero() {
   /* la portada de la web, con sus mismas clases y medidas (apps/landing .hero): mismo alto, márgenes, titular y 8 */
@@ -200,6 +184,12 @@ function Prueba({ archivos }) {
   );
 }
 
+const Flecha = ({ out }) => (
+  <svg className="dl-arrow" viewBox="0 0 24 24" aria-hidden="true">
+    <path d={out ? 'M8 16 16 8M9 8h7v7' : 'M5 12h13M13 6l6 6-6 6'} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 function Enlaces() {
   return (
     <section id="enlaces" className="dblock dblock-mist" data-tone="paper" aria-labelledby="h-enlaces">
@@ -207,16 +197,20 @@ function Enlaces() {
         <Head eyebrow="Enlaces" title="Todo," soft="en una lista." />
         <div className="dlinks">
           {ENLACES.map((g) => (
-            <div key={g.group}>
-              <p className="eyebrow">{g.group}</p>
+            <div key={g.group} className="dl-group">
+              <h3>{g.group}</h3>
               <ul>
-                {g.items.map((l) => (
-                  <li key={l.title}>
-                    {l.href
-                      ? <a href={l.href} {...ext(l.href)}><b>{l.title}</b><span>{l.note}</span></a>
-                      : <p className="is-off"><b>{l.title}</b><span>{l.pending}</span></p>}
-                  </li>
-                ))}
+                {g.items.map((l) => {
+                  const out = !!l.href && /^https?:/.test(l.href);
+                  const body = (<><span className="dl-tag">{l.tag}</span><span className="dl-txt"><b>{l.title}</b><span>{l.what}</span></span></>);
+                  return (
+                    <li key={l.title}>
+                      {l.href
+                        ? <a className="dl-row" href={l.href} {...ext(l.href)}>{body}<Flecha out={out} /></a>
+                        : <div className="dl-row is-off">{body}<span className="dl-soon">Próximamente</span></div>}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -226,21 +220,9 @@ function Enlaces() {
   );
 }
 
-function Vivo() {
-  return (
-    <section id="vivo" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-vivo">
-      <div className="wrap">
-        <Head eyebrow="En vivo" title="Con el agente de verdad," soft="en tu máquina."
-          lead="Usan Claude con una clave de API, así que no hay un agente alojado aquí: corren en el Mac de quien presenta, o en el tuyo." />
-        <div className="dgrid g4">{VIVO.map((c) => <Card key={c.title} c={c} />)}</div>
-      </div>
-    </section>
-  );
-}
-
 function Equipo({ archivos }) {
   return (
-    <section id="equipo" className="dblock" data-tone="paper" aria-labelledby="h-equipo">
+    <section id="equipo" className="dblock dblock-cobalt" data-tone="cobalt" aria-labelledby="h-equipo">
       <div className="wrap">
         <Head eyebrow="Equipo" title="Cuatro personas," soft="cuatro caminos." />
         <ul className="dteam">
@@ -261,20 +243,6 @@ function Equipo({ archivos }) {
   );
 }
 
-/* Cierre en cobalto antes del pie, como en la web: una frase y la acción principal. */
-function Cierre() {
-  return (
-    <section id="cierre" className="dblock dblock-cobalt dclose" data-tone="cobalt" aria-labelledby="h-cierre">
-      <div className="wrap">
-        <div className="dhead">
-          <h2 id="h-cierre">Empieza por los vídeos. <span className="soft">Después, pruébalo tú.</span></h2>
-          <div className="cta"><a className="btn btn-white" href="/consola/?feed=con-protocolo">Abrir la consola</a></div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* El pie de la web, igual: logo y frase, columnas, la firma de laaabs y el nombre grande con 8. */
 function Footer() {
   return (
@@ -290,7 +258,7 @@ function Footer() {
           </div>
           <nav className="foot-cols" aria-label="Pie">
             <div><b>Demo</b><a href="#videos">Vídeos</a><a href="#prueba">Pruébalo tú</a><a href="#enlaces">Enlaces</a></div>
-            <div><b>Más</b><a href="#vivo">En vivo</a><a href="#equipo">Equipo</a></div>
+            <div><b>Más</b><a href="#equipo">Equipo</a></div>
             <div><b>Fuera</b><a href="https://priv8.es">priv8.es</a><a href={REPO} target="_blank" rel="noopener">GitHub</a></div>
           </nav>
         </div>
@@ -319,12 +287,8 @@ export default function App() {
         <Blend from="--paper" to="--mist" seed={2} />
         <Enlaces />
         <Blend from="--mist" to="--band" seed={3} />
-        <Vivo />
-        <Blend from="--band" to="--paper" seed={5} />
         <Equipo archivos={archivos} />
-        <Blend from="--paper" to="--band" seed={7} />
-        <Cierre />
-        <Blend from="--band" to="--paper" seed={9} />
+        <Blend from="--band" to="--paper" seed={5} />
       </main>
       <Footer />
     </>

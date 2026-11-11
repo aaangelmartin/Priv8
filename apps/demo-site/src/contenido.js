@@ -1,7 +1,6 @@
 /* Todo lo que enlaza demo.priv8.es. Las rutas que empiezan por / las copia scripts/assemble.mjs en dist/ al compilar;
    `file` es la ruta que se busca en /archivos.json para enseñar el tamaño o avisar si falta en esta build. */
 export const REPO = 'https://github.com/aaangelmartin/Priv8';
-const README = `${REPO}/blob/main/README.md`;
 
 /* Vídeo de la demo B2C. Cuando exista, poner aquí su ruta sin extensión (con .mp4 y, si hay, .webm al lado), por
    ejemplo '/docs/entregables/video/b2c'; assemble.mjs ya copia docs/entregables/video entero. */
@@ -39,31 +38,26 @@ adb shell settings put secure accessibility_enabled 1`;
 /* La presentación del jurado la preparan Marco y Álvaro. Cuando esté publicada, poner aquí su dirección. */
 export const PRESENTACION_URL = null;
 
-/* Enlaces: todo en una lista, una línea cada uno. `video` apunta al MP4; `pending` sale como «próximamente». */
+/* Enlaces, en dos grupos. Cada uno: etiqueta corta, título, una línea y la dirección. `pending` sale en lugar del
+   enlace mientras no exista. */
 export const ENLACES = [
-  { group: 'Demo', items: [
-    { title: 'Vídeo B2B, sin protocolo', note: 'MP4, 39 s', href: '/docs/entregables/video/sin-protocolo.mp4' },
-    { title: 'Vídeo B2B, con Priv8 CUA', note: 'MP4, 41 s', href: '/docs/entregables/video/con-protocolo.mp4' },
-    { title: 'Vídeo B2C', note: 'MP4', href: VIDEO_B2C && `${VIDEO_B2C}.mp4`, pending: 'Pendiente de grabar' },
-    { title: 'Correo', note: '/correo/', href: '/correo/' },
-    { title: 'Alba Core', note: '/erp/', href: '/erp/' },
-    { title: 'Consola con protocolo', note: '/consola/', href: '/consola/?feed=con-protocolo' },
-    { title: 'Consola sin protocolo', note: '/consola/', href: '/consola/?feed=sin-protocolo' },
+  { group: 'La demo', items: [
+    { tag: 'Vídeo', title: 'B2B sin protocolo', what: 'El modelo recibe los datos reales. 39 s.', href: '/docs/entregables/video/sin-protocolo.mp4' },
+    { tag: 'Vídeo', title: 'B2B con Priv8 CUA', what: 'Solo tokens; el cambio de IBAN, bloqueado. 41 s.', href: '/docs/entregables/video/con-protocolo.mp4' },
+    { tag: 'Vídeo', title: 'B2C, 8 en el móvil', what: 'Por voz, en el emulador.', href: VIDEO_B2C && `${VIDEO_B2C}.mp4`, pending: true },
+    { tag: 'App', title: 'Correo', what: 'La bandeja con la factura del proveedor.', href: '/correo/' },
+    { tag: 'App', title: 'Alba Core', what: 'El ERP, con la sesión de la demo abierta.', href: '/erp/' },
+    { tag: 'App', title: 'Consola con protocolo', what: 'Lo que ve 8, en tokens.', href: '/consola/?feed=con-protocolo' },
+    { tag: 'App', title: 'Consola sin protocolo', what: 'La misma factura, en claro.', href: '/consola/?feed=sin-protocolo' },
   ] },
-  { group: 'Proyecto', items: [
-    { title: 'Repositorio', note: 'GitHub', href: REPO },
-    { title: 'Web', note: 'priv8.es', href: 'https://priv8.es' },
-    { title: 'Con tu Claude Code', note: 'mcp.priv8.es', href: 'https://mcp.priv8.es' },
-    { title: 'Presentación', href: PRESENTACION_URL, pending: 'Próximamente' },
+  { group: 'El proyecto', items: [
+    { tag: 'Código', title: 'Repositorio', what: 'GitHub, con el README para ejecutarlo.', href: REPO },
+    { tag: 'Web', title: 'priv8.es', what: 'Qué ve 8, cómo funciona y para quién es.', href: 'https://priv8.es' },
+    { tag: 'MCP', title: 'Con tu Claude Code', what: 'mcp.priv8.es, con tu modelo y tu clave.', href: 'https://mcp.priv8.es' },
+    { tag: 'Jurado', title: 'Presentación', what: 'La del jurado.', href: PRESENTACION_URL, pending: true },
   ] },
 ];
 
-export const VIVO = [
-  { kind: 'Sin claves', time: '1 min', title: 'Las dos escenas, grabadas', what: 'El núcleo real con respuestas grabadas, en la terminal.', cmd: 'make demo', href: `${README}#las-dos-escenas-de-la-demo-sin-claves` },
-  { kind: 'B2B en vivo', time: '10 min', title: 'ERP, correo y consola', what: 'Con Claude en vivo. Necesita ANTHROPIC_API_KEY.', cmd: 'make web-install\nmake demo-b2b', href: `${README}#b2b-en-vivo-erp-correo-y-consola` },
-  { kind: 'B2C en vivo', time: '15 min', title: '8 en el móvil', what: 'Emulador, cuatro apps y 8 por voz. Necesita ANTHROPIC_API_KEY.', cmd: 'scripts/movil.sh\nmake agent-android', href: `${README}#android-b2c` },
-  { kind: 'Claude Code', time: '10 min', title: 'Con tu Claude Code', what: 'Priv8 CUA como servidor MCP, con tu modelo y tu clave.', href: 'https://mcp.priv8.es', cta: 'Abrir mcp.priv8.es' },
-];
 
 export const EQUIPO = [
   { name: 'Ángel Martín', user: 'aaangelmartin', role: 'Agente, Android, voz y diseño' },
