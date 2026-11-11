@@ -1,4 +1,4 @@
-"""Gramática de tokens · docs/contracts/token.md.
+"""Gramática de tokens - docs/contracts/token.md.
 
 ‹TIPO_n-etiqueta›, con TIPO en mayúsculas, n desde 1 y etiqueta opcional
 (origen o rasgo). Aquí solo hay texto: los valores reales viven en vault.py.

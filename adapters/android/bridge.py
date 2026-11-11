@@ -378,8 +378,8 @@ class AndroidBridge:
             gap = msg.get("gap_ms") or {}
             await asyncio.to_thread(self.core.record, {
                 "session": self.session, "kind": "voice_out", "model_saw": None,
-                "detail": f"{msg['utterance']} · sonó en el móvil · ok={msg['ok']}"
-                          + (f" · hueco máx {gap['max']} ms" if "max" in gap else "")})
+                "detail": f"{msg['utterance']} | sonó en el móvil | ok={msg['ok']}"
+                          + (f" | hueco máx {gap['max']} ms" if "max" in gap else "")})
         elif kind == "event":
             ev = {k: msg[k] for k in ("kind", "app", "detail") if k in msg}
             self.device_events.append(ev)

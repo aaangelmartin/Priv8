@@ -1,3 +1,4 @@
+# Sistema
 .DS_Store
 priv8-handoff.zip
 
@@ -8,7 +9,18 @@ __pycache__/
 *.pyc
 *.egg-info/
 build/
+
+# Node y builds (apps web y paquete priv8-mcp de scripts/build_mcp_bundle.sh)
+node_modules/
+dist/
+.vite/
+
+# Claves y configuración local (.env.example sí se sube)
 .env
+.env.*
+!.env.example
+*.key
+*.pem
 
 # Copias de trabajo de los agentes
 .claude/worktrees/
@@ -21,6 +33,3 @@ metrics/out/
 
 # Perfil de Chromium del adaptador web (sesión recordada de Alba Core)
 .priv8/
-
-# Paquete priv8-mcp (scripts/build_mcp_bundle.sh)
-/dist/

@@ -5,7 +5,7 @@ import { mood } from './companion.js';
 const Tok = ({ children }) => <span className="tok">{children}</span>;
 const Leak = ({ children }) => <span className="leak">{children}</span>;
 
-/* ---------------------------------------------------- 1 · qué recibe el modelo */
+/* ---------------------------------------------------- 1 - qué recibe el modelo */
 const FIELDS = [
   { k: 'Titular', real: 'Ángel Martín', tok: '‹NOMBRE_1-propio›', face: 'nove', tone: 'warn' },
   { k: 'Cuenta nómina', real: 'ES43 9100 0001 5740 1234 5678', tok: '‹IBAN_1-propio›', face: 'nove', tone: 'warn', mono: true },
@@ -68,7 +68,7 @@ function ScreenDemo({ pal }) {
   );
 }
 
-/* ---------------------------------------------------- 2 · inyección en un correo */
+/* ---------------------------------------------------- 2 - inyección en un correo */
 const STEPS = [
   ['Abre el correo de Suministros Lumen', 'La factura F-2611 llega con un PDF adjunto.'],
   ['Lee la factura', 'Al modelo le llegan ‹CIF_1-proveedor› e ‹IMPORTE_2-factura›.'],
@@ -129,7 +129,7 @@ function InjectionDemo() {
   );
 }
 
-/* ---------------------------------------------------- 3 · oráculo con presupuesto */
+/* ---------------------------------------------------- 3 - oráculo con presupuesto */
 const BALANCE = 3412.58;
 function OracleDemo() {
   const [amount, setAmount] = useState(200);

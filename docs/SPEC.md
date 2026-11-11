@@ -1,4 +1,4 @@
-# Priv8 CUA · especificación v1
+# Priv8 CUA - especificación v1
 
 Priv8 CUA es un protocolo para que un agente de IA use pantallas sin ver los datos. Cada dato sensible se cambia por un token antes de llegar al modelo y solo vuelve a su valor real en local, al ejecutar. El agente completa el trámite; la cifra, el IBAN o el nombre no salen del entorno de confianza.
 
@@ -17,9 +17,9 @@ Todo lo que cruza de la zona de confianza a la nube pasa por el **bloqueo final*
 
 | Clase | Qué es | Qué recibe el modelo |
 |---|---|---|
-| **Rojo** · nunca sale | Contraseñas, PIN, usuario de acceso, códigos de un solo uso, tarjeta completa | `"text": null`. No entra en la bóveda |
-| **Ámbar** · se tokeniza | IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos | Un token: `‹IBAN_1-maestro›` |
-| **Verde** · libre | Botones, etiquetas, títulos, menús | El texto tal cual |
+| **Rojo** - nunca sale | Contraseñas, PIN, usuario de acceso, códigos de un solo uso, tarjeta completa | `"text": null`. No entra en la bóveda |
+| **Ámbar** - se tokeniza | IBAN, DNI, NIE, CIF, nombres, importes, teléfonos, correos, movimientos | Un token: `‹IBAN_1-maestro›` |
+| **Verde** - libre | Botones, etiquetas, títulos, menús | El texto tal cual |
 
 Un campo de contraseña es rojo siempre, diga lo que diga la política.
 

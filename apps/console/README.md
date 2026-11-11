@@ -1,4 +1,4 @@
-# Consola de auditoría (#21)
+# Consola de auditoría (`apps/console/`)
 
 App React + Vite que escucha `ws://127.0.0.1:8700/events` y muestra, en local. Usa la marca de `brand/` (tokens, logos, caras de 8) y las fuentes van empaquetadas, así que funciona sin red. Tiene el diseño de la web (`apps/landing`), solo en claro.
 

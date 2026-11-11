@@ -1,4 +1,4 @@
-# apps/android-8
+# App 8 para Android (`apps/android-8/`)
 
 App Android **Priv8** (paquete `es.priv8.ocho`): una actividad de arranque y el servicio de accesibilidad «Priv8» (`Priv8AccessibilityService`), que es el adaptador Android del núcleo. 8 es el nombre del agente dentro de la app.
 
@@ -138,7 +138,7 @@ Fuentes: Sora (incluida) en titulares y botones; el texto usa la sans del sistem
 | `audit` `held` | esperar |
 | `audit` `paused` | mirar a otro lado (`apartar`), hasta el siguiente evento |
 | `audit` `approval` | confirmado (`asentir`) o cancelado (`negar`) |
-| `audit` `blocked` | `rojo`: nunca sale · `asesoria`: no puedo · `destino`, `fuga`: enfado · `caducado`, `cancelado`: cancelado · resto: tristeza |
+| `audit` `blocked` | `rojo`: nunca sale - `asesoria`: no puedo - `destino`, `fuga`: enfado - `caducado`, `cancelado`: cancelado - resto: tristeza |
 | `audit` `call` | hablar |
 | `voice` | hablar, con una duración aproximada hasta que la voz mixta avise del final |
 | `confirm_request` | llamar (`atencion`) y luego esperar |

@@ -60,7 +60,7 @@ def test_sin_recuperar_dice_como_volver(core):
         obs = core.observe("s1")
         assert obs == {"denied": "sin_regla", "detail": "No hay política para esta pantalla. "
                        "Vuelve con act open_app alba-core o act open_app inbox."}
-        assert "·" not in obs["detail"]
+        assert "\u00b7" not in obs["detail"]
 
 
 def test_open_app_funciona_sin_pantalla_observada(core):
