@@ -21,7 +21,7 @@ El DNS de `priv8.es` está en Cloudflare.
 | `/correo/` | La bandeja de correo de la demo | `apps/inbox-sim` compilada con `BASE_PATH=/correo/` |
 | `/erp/` | Alba Core, con la sesión de la demo ya abierta | `apps/erp-sim` compilada con `BASE_PATH=/erp/`, `VITE_ALBA_DEMO=1` y `VITE_ALBA_SESION=admin.alba` |
 | `/equipo/` | Fotos de perfil de GitHub del equipo (sin red, iniciales) | Se descargan al compilar |
-| `/docs/entregables/video/` | Los vídeos de la demo. El PDF y las diapositivas actuales no se publican; la presentación del jurado se enlaza con `PRESENTACION_URL` (`src/contenido.js`) cuando exista | `docs/entregables/video/` |
+| `/docs/entregables/video/` | Los vídeos de la demo. El PDF y las diapositivas actuales no se publican; la presentación del jurado se enlaza con `PRESENTACION_URL` (`src/contenido.js`), que apunta a `priv8.es/pitch` | `docs/entregables/video/` |
 | `/apk/` | `priv8-8.apk`, `banca-alcor.apk`, `brezo-banco.apk`, `nimbo-broker.apk` | `./gradlew assembleDebug` en `apps/android-8` y `apps/banks-sim` |
 | `/archivos.json` | Tamaño de cada archivo, para las tarjetas | `scripts/assemble.mjs` |
 

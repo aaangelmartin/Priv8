@@ -4,7 +4,7 @@
 
 > Visa y Google resolvieron cómo paga un agente. Priv8 resuelve qué ve mientras trabaja.
 
-**[Web](https://priv8.es)** | **[Demo en el navegador](https://demo.priv8.es)** | **[Priv8 en tu Claude Code](https://mcp.priv8.es)** | **[Especificación](docs/SPEC.md)** | **Presentación** (pendiente)
+**[Web](https://priv8.es)** | **[Demo en el navegador](https://demo.priv8.es)** | **[Priv8 en tu Claude Code](https://mcp.priv8.es)** | **[Especificación](docs/SPEC.md)** | **[Presentación](https://priv8.es/pitch/)** ([PDF](docs/entregables/priv8-presentacion.pdf))
 
 Hackfinance, Madrid Engineering Week 2026. Los datos, bancos y empresas de la demo son inventados.
 
