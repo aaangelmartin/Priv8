@@ -118,7 +118,11 @@ class Priv8AccessibilityService : AccessibilityService() {
                 // While the person authenticates, a system dialog is open or
                 // 8 is asking for a confirmation, the agent does not touch
                 // the screen: nothing it could tap there is its business.
+                // One exception: with 8's own screen in front (not a confirmation), the core
+                // may open another app, so 8 can go from talking to the person to the bank
+                // and back after a confirmation. Nothing on 8's screen is touched.
                 val held = rootInActiveWindow?.let(::currentPause)
+                    ?.takeUnless { it == Pause.OWN_APP && op == "open_app" }
                 val outcome = if (held != null) Performer.NOT_ALLOWED else performWithTimeout(op, target, text, direction)
                 lastPerformAt = SystemClock.uptimeMillis()
                 val result = JSONObject().put("type", "result").put("id", id)
