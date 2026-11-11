@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">8</string>
-    <string name="a11y_label">8 - Priv8</string>
+    <string name="app_name">Priv8</string>
+    <string name="a11y_label">Priv8</string>
     <string name="a11y_description">8 lee la estructura de la pantalla para hacer trámites. Los datos sensibles se sustituyen por tokens antes de llegar al modelo.</string>
-    <string name="main_text">8 está instalado. Activa el servicio de accesibilidad «8 - Priv8» en Ajustes › Accesibilidad.</string>
+    <string name="main_text">Priv8 está instalado. Activa el servicio de accesibilidad «Priv8» en Ajustes › Accesibilidad.</string>
 </resources>
