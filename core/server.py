@@ -1,8 +1,13 @@
 """WebSocket de eventos del núcleo: ws://127.0.0.1:8700/events (events.schema.json).
 
 Reenvía a cada cliente (consola de auditoría, app 8) lo que publica
-core.events: audit, screen, voice, confirm_request y approval_result. Lo único
-que acepta de los clientes es approval_result, que pasa a core.approve.
+core.events: audit, screen, voice, confirm_request, approval_result y dictation.
+De los clientes acepta:
+
+    approval_result    pasa a core.approve
+    task_request       la tarea de la persona (dictada en el móvil): core.submit_task
+    dictation_start    graba el micro del portátil y lo transcribe con Whisper en
+                       local (voice/dictado.py); devuelve dictation y encola la tarea
 
 Solo escucha en 127.0.0.1: el mensaje screen lleva la pantalla real.
 
@@ -14,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import threading
 
 from starlette.applications import Starlette
@@ -37,6 +43,35 @@ ALLOWED_ORIGINS = {"http://127.0.0.1:5175", "http://localhost:5175",
                    "http://127.0.0.1:8710"}  # consola y vista previa de la app 8 en navegador
 
 
+SESSION_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")  # common.schema.json#/$defs/session
+
+
+def _session(data: dict) -> str | None:
+    s = data.get("session")
+    return s if isinstance(s, str) and SESSION_RE.match(s) else None
+
+
+def _dictate(session: str) -> None:
+    """dictation_start, en su propio hilo: grabar y transcribir tarda segundos."""
+    from voice import dictado
+    dictado.dictate(session)
+
+
+def handle_client(data: dict) -> None:
+    """Un mensaje de un cliente (se llama fuera del bucle de eventos)."""
+    kind = data.get("type")
+    if kind == "approval_result":
+        core.approve(data)
+    elif kind == "task_request":
+        session, text = _session(data), data.get("text")
+        if session and isinstance(text, str):
+            core.submit_task(session, text, via="app")
+    elif kind == "dictation_start":
+        session = _session(data)
+        if session:
+            threading.Thread(target=_dictate, args=(session,), name="priv8-dictado", daemon=True).start()
+
+
 async def events_ws(ws: WebSocket) -> None:
     origin = ws.headers.get("origin")
     if origin is not None and origin not in ALLOWED_ORIGINS:
@@ -58,8 +93,8 @@ async def events_ws(ws: WebSocket) -> None:
     try:
         while True:
             data = json.loads(await ws.receive_text())
-            if data.get("type") == "approval_result":
-                await asyncio.to_thread(core.approve, data)
+            if isinstance(data, dict):
+                await asyncio.to_thread(handle_client, data)
     except (WebSocketDisconnect, ValueError):
         pass
     finally:
