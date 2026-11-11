@@ -18,17 +18,12 @@ export default function Field() {
     const ctx = cv.getContext('2d');
     let still = false;
     try { still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin preferencia */ }
-    let W = 0, H = 0, dpr = 1, items = [], raf = 0, ptr = null, lastPtr = -1e9, visible = true, quiet = [];
+    let W = 0, H = 0, dpr = 1, items = [], raf = 0, ptr = null, lastPtr = -1e9, visible = true;
     const ROW = 34;
     const build = () => {
       const r = cv.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
       W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
-      /* en pantallas estrechas el campo se ve entero salvo detrás del texto: guardamos dónde está el texto */
-      const cr = cv.getBoundingClientRect();
-      quiet = W < 700 ? ['#h-hero', '.hero-sub', '.hero .cta'].map((q) => document.querySelector(q)).filter(Boolean).map((el) => {
-        const r = el.getBoundingClientRect(); return { t: r.top - cr.top - 30, b: r.bottom - cr.top + 24 };
-      }) : [];
       items = []; let k = 0;
       for (let y = 0; y < H + ROW * 2; y += ROW) {
         let x = -((y / ROW) * 53) % 180;
@@ -41,8 +36,6 @@ export default function Field() {
       }
     };
     const onMove = (e) => { const r = cv.getBoundingClientRect(); ptr = { x: e.clientX - r.left, y: e.clientY - r.top }; lastPtr = performance.now(); };
-    /* en el móvil no hay cursor: el dedo hace de lente mientras toca */
-    const onTouch = (e) => { const t = e.touches && e.touches[0]; if (t) onMove(t); };
     const io = new IntersectionObserver((en) => { visible = en[0].isIntersecting; });
     io.observe(cv);
     const draw = (now) => {
@@ -54,11 +47,9 @@ export default function Field() {
       /* sin cursor, la lente da vueltas alrededor de 8, como si mirase a su alrededor */
       const an = document.getElementById('hero-anchor'); const ar = an ? an.getBoundingClientRect() : null; const cr = cv.getBoundingClientRect();
       const ax = ar ? ar.left - cr.left + ar.width / 2 : W / 2, ay = ar ? ar.top - cr.top + ar.height / 2 : H * 0.3;
-      const narrowW = W < 700;
-      /* en el móvil la lente recorre la parte de arriba y la de abajo, donde el campo se ve */
-      const lx = auto ? (narrowW ? W / 2 + Math.cos(now / 2100) * W * 0.42 : ax + Math.cos(now / 2600) * Math.min(W * 0.36, 520)) : ptr.x;
-      const ly = auto ? (narrowW ? (Math.sin(now / 5200) > 0 ? ay : H - 110) + Math.sin(now / 2100) * 70 : ay + Math.sin(now / 2600) * Math.min(H * 0.22, 180)) : ptr.y;
-      const R = narrowW ? 120 : Math.min(220, Math.max(140, W * 0.13));
+      const lx = auto ? ax + Math.cos(now / 2600) * Math.min(W * 0.36, 520) : ptr.x;
+      const ly = auto ? ay + Math.sin(now / 2600) * Math.min(H * 0.22, 180) : ptr.y;
+      const R = Math.min(220, Math.max(140, W * 0.13));
       ctx.font = '500 13px "IBM Plex Mono", ui-monospace, monospace';
       ctx.textBaseline = 'middle';
       for (const it of items) {
@@ -67,14 +58,9 @@ export default function Field() {
         const cx = it.x + it.w / 2, dx = cx - lx, dy = y - ly, near = Math.sqrt(dx * dx + dy * dy) < R;
         it.t += ((near ? 1 : 0) - it.t) * 0.12;
         const off = Math.abs(cx - W / 2) / (W / 2);
-        /* en pantallas estrechas el texto ocupa todo el ancho: el campo se apaga solo detrás del texto */
-        let fade;
-        if (narrowW) {
-          const under = quiet.some((q) => y > q.t && y < q.b);
-          fade = (under ? 0.06 : 0.85) * Math.min(1, y / 90);
-        } else {
-          fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90);
-        }
+        /* en pantallas estrechas el texto ocupa casi todo el ancho: el campo se queda muy tenue para no taparlo */
+        const narrow = W < 700 ? 0.35 : 1;
+        const fade = Math.min(1, Math.max(0.1, (off - 0.22) * 2.4)) * Math.min(1, y / 90) * narrow;
         if (it.t > 0.5) {
           ctx.fillStyle = `rgba(255,255,255,${0.95 * fade})`;
           /* el token se escribe centrado donde estaba el dato: se tokeniza en su sitio, sin moverse */
@@ -90,11 +76,9 @@ export default function Field() {
     build();
     window.addEventListener('resize', build);
     window.addEventListener('pointermove', onMove, { passive: true });
-    window.addEventListener('touchstart', onTouch, { passive: true });
-    window.addEventListener('touchmove', onTouch, { passive: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
     raf = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', build); window.removeEventListener('pointermove', onMove); window.removeEventListener('touchstart', onTouch); window.removeEventListener('touchmove', onTouch); };
+    return () => { cancelAnimationFrame(raf); io.disconnect(); window.removeEventListener('resize', build); window.removeEventListener('pointermove', onMove); };
   }, []);
   return <canvas ref={ref} className="field" aria-hidden="true" />;
 }

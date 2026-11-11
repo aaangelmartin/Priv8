@@ -1182,11 +1182,14 @@ html.landed .in-1 { transition-delay: .1s; } html.landed .in-2 { transition-dela
   .tcap-r { justify-items: center; }
 }
 
-/* ================= v9: hero en móvil con su campo de datos ================= */
-/* el campo se apaga él solo detrás del texto (Field.jsx); el velo central ya no hace falta en el móvil */
+/* ================= v9: hero en móvil igual que las zonas azules ================= */
+/* el mismo fondo de datos de la página, quieto, y el centro limpio con el mismo velo que el resto de zonas cobalto */
 @media (max-width: 700px) {
-  .hero::after { background: linear-gradient(180deg, rgba(45, 69, 214, 0) 0%, rgba(45, 69, 214, 0) 100%); }
+  .hero { background: transparent; }
+  .hero .field { display: none; }
+  .hero::after { background: radial-gradient(ellipse 72% 74% at 50% 52%, var(--band) 52%, rgba(45, 69, 214, 0) 92%); }
 }
+
 /* "Qué ve": las dos versiones apiladas en el mismo hueco; título y texto siempre juntos */
 .see-stack { display: grid; width: 100%; }
 .see-v { grid-area: 1 / 1; display: grid; gap: 14px; align-content: start; justify-items: start; opacity: 0; visibility: hidden; transform: translateY(14px); filter: blur(6px); transition: opacity .5s var(--ease), transform .6s var(--ease), filter .5s ease, visibility 0s linear .5s; }
