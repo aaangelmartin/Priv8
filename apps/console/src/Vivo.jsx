@@ -280,7 +280,9 @@ function Aparece({ texto, valores, mostrar, vivo, alCrecer }) {
 }
 
 // Las líneas en las que habla o piensa 8 llevan su cara; las demás, el icono de lo que hace.
-const OJOS = { piensa: 'pensar', dice: 'abiertos', encargo: 'abiertos', pausa: 'cerrados' }
+const OJOS = { piensa: 'pensar', dice: 'abiertos', pausa: 'cerrados' }
+// El encargo lo pide la persona, no 8: va con la misma figura que «Lo que ves tú».
+const PERSONA = <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="currentColor" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" fill="currentColor" /></svg>
 
 // Lo que ve 8: los tokens tal cual, sin el valor local ni siquiera al pasar por encima.
 export function Razonamiento({ rep }) {
@@ -322,7 +324,7 @@ export function Razonamiento({ rep }) {
             <li key={l.n} className={`ln t-${l.tono} k-${l.tipo}`}>
               <span className="ln-t">{l.t != null ? mmssMs(l.t) : ''}</span>
               <i className="ln-p" aria-hidden="true">
-                {OJOS[l.tipo] ? <Ojos cara={OJOS[l.tipo]} /> : ico ? <Icono n={ico} /> : null}
+                {l.tipo === 'encargo' ? PERSONA : OJOS[l.tipo] ? <Ojos cara={OJOS[l.tipo]} /> : ico ? <Icono n={ico} /> : null}
               </i>
               <div className="ln-c">
                 <b>{l.titulo}</b>
