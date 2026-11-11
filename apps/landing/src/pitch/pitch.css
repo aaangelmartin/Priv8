@@ -263,12 +263,26 @@ code { font: 600 .92em/1.4 var(--f-mono); background: var(--tok-bg); color: var(
 .annex .sfoot span:last-child { padding: .35cqw .7cqw; border-radius: 999px; background: var(--warn-soft); color: var(--warn-text); }
 
 /* ---------- transición de píxeles ---------- */
-.wipe { position: absolute; inset: 0; z-index: 20; display: grid; grid-template-columns: repeat(32, 1fr); grid-template-rows: repeat(18, 1fr); pointer-events: none; }
-.wipe i { background: var(--c); border-radius: 30%; transform: scale(0); }
-.wipe.cover i { animation: px-in .26s var(--ease) both; animation-delay: var(--dl); }
-.wipe.reveal i { transform: scale(1.1); animation: px-out .26s var(--ease) both; animation-delay: var(--dl); }
-@keyframes px-in { from { transform: scale(0); border-radius: 50%; } to { transform: scale(1.1); border-radius: 4%; } }
-@keyframes px-out { from { transform: scale(1.1); border-radius: 4%; } to { transform: scale(0); border-radius: 50%; } }
+/* transición: la de la landing al hacer scroll. La que entra sube (o baja) con el borde de píxeles por delante;
+   la que sale se desplaza un tercio, más despacio, como el fondo de la página. */
+.slide.sale, .slide.entra { visibility: visible; will-change: transform; animation-duration: .95s; animation-timing-function: cubic-bezier(.65, 0, .2, 1); animation-fill-mode: both; }
+.slide.entra { z-index: 3; overflow: visible; }
+.slide.sale { z-index: 2; }
+.slide.entra.adelante { animation-name: entra-abajo; }
+.slide.entra.atras { animation-name: entra-arriba; }
+.slide.sale.adelante { animation-name: sale-arriba; }
+.slide.sale.atras { animation-name: sale-abajo; }
+@keyframes entra-abajo { from { transform: translateY(calc(100% + 60px)); } to { transform: none; } }
+@keyframes entra-arriba { from { transform: translateY(calc(-100% - 60px)); } to { transform: none; } }
+@keyframes sale-arriba { from { transform: none; } to { transform: translateY(-32%); } }
+@keyframes sale-abajo { from { transform: none; } to { transform: translateY(32%); } }
+/* el borde de píxeles va pegado por fuera de la que entra, en su color */
+.borde { position: absolute; left: 0; right: 0; bottom: 100%; pointer-events: none; line-height: 0; }
+.borde.abajo { bottom: auto; top: 100%; transform: scaleY(-1); }
+.borde .blend { width: 100%; margin: 0 !important; }
+.borde .blend svg { display: block; }
+/* el contenido de la que entra espera a que llegue */
+.slide.entra .rv { animation-delay: calc(var(--d, 0) * 110ms + 560ms); }
 
 .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 5; background: transparent; }
 .progress i { display: block; height: 100%; background: var(--soft-band); transition: width .6s var(--ease); }
@@ -309,10 +323,10 @@ html.printing .stage { container-type: normal; width: 100vw; aspect-ratio: auto;
 html.printing .slide { position: relative; inset: auto; width: 100vw; height: 56.25vw; visibility: visible; break-after: page; page-break-after: always; }
 html.printing #d-anexo-2 { break-after: auto; page-break-after: auto; }
 html.printing .rv, html.printing .morph, html.printing .srow .real, html.printing .row2 i.yes, html.printing .chip::before { animation: none !important; }
-html.printing .controls, html.printing .turn, html.printing .progress, html.printing .wipe { display: none; }
+html.printing .controls, html.printing .turn, html.printing .progress, html.printing .borde { display: none; }
 @media print {
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .controls, .turn, .progress, .wipe { display: none !important; }
+  .controls, .turn, .progress, .borde { display: none !important; }
 }
 /* pantallas bajas (móvil en horizontal): mandos más pequeños */
 @media (max-height: 520px) { .controls { transform: translateX(-50%) scale(.78); transform-origin: 50% 100%; } .deck.idle .controls { transform: translate(-50%, 12px) scale(.78); } }

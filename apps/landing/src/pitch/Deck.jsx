@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { SLIDES, SlideCtx } from './Slides.jsx';
+import { Blend } from '../Field.jsx';
 
 /* Pase de diapositivas: teclado, clic y deslizar; contador, crono y pantalla completa (f).
-   Cada diapositiva mide 16:9 y se ajusta a la ventana. Al cambiar de color, la transición de píxeles de la landing
-   cubre la pantalla con el color de la siguiente; con el mismo color, solo entran los elementos uno detrás de otro. */
+   Cada diapositiva mide 16:9 y se ajusta a la ventana. La transición es la de la landing al hacer scroll: la
+   siguiente sube desde abajo con el borde de píxeles (Blend) por delante, en su color, y la anterior se va un poco
+   hacia arriba. Hacia atrás, al revés. Solo transform, con la curva de la landing. */
+const PASO_MS = 950;
 
 const MAIN = SLIDES.filter((s) => !s.annex).length;
-const TONE_BG = { band: '#2d45d6', paper: '#ffffff' };
-const COLS = 32, ROWS = 18;
+const TONE_VAR = { band: '--band', paper: '--paper' };
 
 function still() {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
@@ -24,17 +26,6 @@ export function label(i) {
   return `${i + 1} / ${MAIN}`;
 }
 
-/* La rejilla de la transición: cada cuadrado con su retraso, más tarde cuanto más abajo, como la de la landing. */
-function useCells() {
-  return useMemo(() => {
-    let sd = 20261112;
-    const rnd = () => { sd = (sd * 9301 + 49297) % 233280; return sd / 233280; };
-    const out = [];
-    for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) out.push(Math.round(((y / ROWS) * 0.6 + rnd() * 0.4) * 300));
-    return out;
-  }, []);
-}
-
 function fmt(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -42,7 +33,7 @@ function fmt(ms) {
 
 export default function Deck() {
   const [idx, setIdx] = useState(fromHash);
-  const [wipe, setWipe] = useState(null);
+  const [move, setMove] = useState(null);
   const [printing, setPrinting] = useState(() => document.documentElement.classList.contains('printing'));
   const [t0, setT0] = useState(null);
   const [now, setNow] = useState(Date.now());
@@ -50,7 +41,6 @@ export default function Deck() {
   const busy = useRef(false);
   const idxRef = useRef(idx);
   idxRef.current = idx;
-  const cells = useCells();
 
   const go = useCallback((n) => {
     const to = Math.max(0, Math.min(SLIDES.length - 1, n));
@@ -58,11 +48,11 @@ export default function Deck() {
     if (to === from || busy.current) return;
     setT0((v) => v ?? Date.now());
     history.replaceState(null, '', `#${to + 1}`);
-    if (still() || SLIDES[to].tone === SLIDES[from].tone) { setIdx(to); return; }
+    if (still()) { setIdx(to); return; }
     busy.current = true;
-    setWipe({ color: TONE_BG[SLIDES[to].tone], phase: 'cover' });
-    setTimeout(() => { setIdx(to); setWipe({ color: TONE_BG[SLIDES[to].tone], phase: 'reveal' }); }, 520);
-    setTimeout(() => { setWipe(null); busy.current = false; }, 1080);
+    setMove({ from, to, dir: to > from ? 1 : -1 });
+    setIdx(to);
+    setTimeout(() => { setMove(null); busy.current = false; }, PASO_MS);
   }, []);
   const next = useCallback(() => go(idxRef.current + 1), [go]);
   const prev = useCallback(() => go(idxRef.current - 1), [go]);
@@ -139,19 +129,22 @@ export default function Deck() {
       <div className="stage" onPointerDown={onPointerDown} onPointerUp={onPointerUp} role="region" aria-roledescription="presentación" aria-label="Presentación de Priv8">
         {SLIDES.map((S, i) => {
           const on = i === idx;
+          const sale = move && i === move.from;
+          const entra = move && i === move.to;
+          const paso = move ? (move.dir > 0 ? ' adelante' : ' atras') : '';
           return (
-            <SlideCtx.Provider key={S.id} value={{ live: on || printing, active: on && !printing, printing, n: label(i), annex: !!S.annex }}>
-              <section className={`slide s-${S.tone}${on ? ' on' : ''}${S.annex ? ' annex' : ''}`} aria-hidden={!on && !printing} aria-roledescription="diapositiva" aria-label={label(i)} id={`d-${S.id}`}>
+            <SlideCtx.Provider key={S.id} value={{ live: on || printing || !!sale, active: on && !printing, printing, n: label(i), annex: !!S.annex }}>
+              <section className={`slide s-${S.tone}${on ? ' on' : ''}${S.annex ? ' annex' : ''}${sale ? ' sale' + paso : ''}${entra ? ' entra' + paso : ''}`} aria-hidden={!on && !printing} aria-roledescription="diapositiva" aria-label={label(i)} id={`d-${S.id}`}>
+                {entra && (
+                  <div className={`borde${move.dir > 0 ? '' : ' abajo'}`} aria-hidden="true">
+                    <Blend from={TONE_VAR[SLIDES[move.from].tone]} to={TONE_VAR[S.tone]} seed={i + 3} overlay />
+                  </div>
+                )}
                 <S.C />
               </section>
             </SlideCtx.Provider>
           );
         })}
-        {wipe && (
-          <div className={`wipe ${wipe.phase}`} style={{ '--c': wipe.color }} aria-hidden="true">
-            {cells.map((d, i) => <i key={i} style={{ '--dl': `${d}ms` }} />)}
-          </div>
-        )}
         <div className="progress" aria-hidden="true"><i style={{ width: `${(Math.min(idx + 1, MAIN) / MAIN) * 100}%` }} /></div>
       </div>
       <nav className="controls" aria-label="Mandos de la presentación">
