@@ -70,7 +70,7 @@ export function Movil({ pal }) {
             <div className="chat" aria-live="polite">
               {scene === 'cuanto' && (<>
                 <p className="bubble me">¿Cuánto tengo entre mis bancos?</p>
-                <p className="bubble eight">Entre tus cuentas tienes 15.462,58 €.<span className="local">La cifra la dice la voz del móvil. Al modelo solo le llegó ‹SUMA_1›.</span></p>
+                <p className="bubble eight">Entre tus tres bancos tienes 17.977,98 €.<span className="local">La cifra la dice la voz del móvil. Al modelo solo le llegó ‹SUMA_1›.</span></p>
               </>)}
               {scene === 'pasa' && (<>
                 <p className="bubble me">Pasa 200 € al bróker.</p>
@@ -85,7 +85,7 @@ export function Movil({ pal }) {
               </>)}
               {scene === 'fondo' && (<>
                 <p className="bubble me">¿En qué fondo lo meto?</p>
-                <p className="bubble eight">Eso sería asesorarte y no lo hago. Si eliges un fondo, lo preparo.</p>
+                <p className="bubble eight">Eso sería asesorarte y no puedo hacerlo. Si eliges tú el fondo, lo preparo.</p>
               </>)}
             </div>
             {scene === 'pasa' && !answer && (
