@@ -20,7 +20,7 @@ export function useSeen(threshold = 0.3) {
 /* Un dato de pantalla que pasa de su valor real a su token con un glitch: las letras se revuelven una a una
    y se asientan en el nuevo texto. `on` = enseñar el token. `hot` = marcar el valor real como dato expuesto. */
 const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789‹›_·#*%';
-function V({ real, tok, on, i = 0, hot = false }) {
+export function V({ real, tok, on, i = 0, hot = false }) {
   const target = on ? tok : real;
   const [txt, setTxt] = useState(target);
   const [settled, setSettled] = useState(true);
