@@ -32,6 +32,11 @@ const CARPETAS = [
 ]
 const CARPETAS_2 = [{ slug: 'borradores', nombre: 'Borradores', icono: 'file' }]
 
+// Las rutas de la app son siempre /bandeja, /correo/1...; BASE es '' en la raíz y '/correo' en demo.priv8.es (BASE_PATH).
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
+const enBase = (to) => BASE + to
+const sinBase = (p) => (BASE && p.startsWith(BASE) ? p.slice(BASE.length) || '/' : p)
+
 function load() {
   try {
     return JSON.parse(localStorage.getItem(KEY)) || {}
@@ -48,14 +53,14 @@ function save(state) {
 }
 
 function usePath() {
-  const [path, setPath] = useState(location.pathname)
+  const [path, setPath] = useState(sinBase(location.pathname))
   useEffect(() => {
-    const on = () => setPath(location.pathname)
+    const on = () => setPath(sinBase(location.pathname))
     addEventListener('popstate', on)
     return () => removeEventListener('popstate', on)
   }, [])
   const go = (to) => {
-    history.pushState(null, '', to)
+    history.pushState(null, '', enBase(to))
     setPath(to)
     scrollTo(0, 0)
   }
@@ -194,7 +199,7 @@ export default function App() {
 
   if (path === '/reset') {
     save({})
-    location.replace('/bandeja')
+    location.replace(enBase('/bandeja'))
     return null
   }
 
@@ -221,7 +226,7 @@ export default function App() {
       <header className="cabecera">
         <div className="cabecera-izq">
           <IconButton icon="menu" title="Menú principal" onClick={() => setMenu(!menu)} />
-          <a href="/bandeja" className="logo" onClick={navegar('/bandeja')}>
+          <a href={enBase('/bandeja')} className="logo" onClick={navegar('/bandeja')}>
             <span className="logo-marca" aria-hidden="true">
               <svg viewBox="0 0 32 32" width="30" height="30">
                 <rect x="2" y="6" width="28" height="20" rx="5" fill="var(--acento)" />
@@ -256,29 +261,29 @@ export default function App() {
           <Icon name="pencil" />
           Redactar
         </button>
-        <a href="/bandeja" id="nav-bandeja" data-p8="link" className={activa === 'recibidos' ? 'activo' : ''} onClick={navegar('/bandeja')}>
+        <a href={enBase('/bandeja')} id="nav-bandeja" data-p8="link" className={activa === 'recibidos' ? 'activo' : ''} onClick={navegar('/bandeja')}>
           <Icon name="inbox" fill={false} />
           <span className="nav-nombre">Recibidos</span> <span className="cuenta">{noLeidos}</span>
         </a>
         {CARPETAS.map((c) => (
-          <a key={c.slug} href={`/carpeta/${c.slug}`} className={activa === c.slug ? 'activo' : ''} onClick={navegar(`/carpeta/${c.slug}`)}>
+          <a key={c.slug} href={enBase(`/carpeta/${c.slug}`)} className={activa === c.slug ? 'activo' : ''} onClick={navegar(`/carpeta/${c.slug}`)}>
             <Icon name={c.icono} />
             <span className="nav-nombre">{c.nombre}</span>
           </a>
         ))}
-        <a href="/enviados" id="nav-enviados" data-p8="link" className={activa === 'enviados' ? 'activo' : ''} onClick={navegar('/enviados')}>
+        <a href={enBase('/enviados')} id="nav-enviados" data-p8="link" className={activa === 'enviados' ? 'activo' : ''} onClick={navegar('/enviados')}>
           <Icon name="send" />
           <span className="nav-nombre">Enviados</span>
         </a>
         {CARPETAS_2.map((c) => (
-          <a key={c.slug} href={`/carpeta/${c.slug}`} className={activa === c.slug ? 'activo' : ''} onClick={navegar(`/carpeta/${c.slug}`)}>
+          <a key={c.slug} href={enBase(`/carpeta/${c.slug}`)} className={activa === c.slug ? 'activo' : ''} onClick={navegar(`/carpeta/${c.slug}`)}>
             <Icon name={c.icono} />
             <span className="nav-nombre">{c.nombre}</span>
           </a>
         ))}
         <p className="lateral-titulo">Etiquetas</p>
         {ETIQUETAS.map((e) => (
-          <a key={e.slug} href={`/carpeta/${e.slug}`} className={activa === e.slug ? 'activo' : ''} onClick={navegar(`/carpeta/${e.slug}`)}>
+          <a key={e.slug} href={enBase(`/carpeta/${e.slug}`)} className={activa === e.slug ? 'activo' : ''} onClick={navegar(`/carpeta/${e.slug}`)}>
             <span className="punto" style={{ background: e.color }} aria-hidden="true" />
             <span className="nav-nombre">{e.nombre}</span>
           </a>
@@ -331,7 +336,7 @@ function Fila({ m, leido, destacado, alternarEstrella, go, p8 }) {
         <Icon name="star" size={18} fill={destacado} />
       </button>
       <a
-        href={`/correo/${m.id}`}
+        href={enBase(`/correo/${m.id}`)}
         {...(p8 ? { id: `abrir-${m.id}`, 'data-p8': 'link', 'data-p8-label': `Abrir correo ${m.id}`, 'data-p8-text': '' } : {})}
         onClick={(e) => {
           e.preventDefault()
@@ -457,7 +462,7 @@ function Lectura({ msg, go, update, state, alternarEstrella }) {
     if (!leidos.includes(msg.id)) update({ leidos: [...leidos, msg.id], aviso: null })
   }, [msg.id]) // eslint-disable-line react-hooks/exhaustive-deps
   const a = msg.adjunto
-  const href = a ? `/${a.archivo}` : null
+  const href = a ? enBase(`/${a.archivo}`) : null
   const bytes = usePdfSize(href)
   const destacado = (state.destacados || []).includes(msg.id)
   return (
