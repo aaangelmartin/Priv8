@@ -28,7 +28,7 @@ dev = [
 package = false
 
 [tool.pytest.ini_options]
-testpaths = ["agent/tests", "core/tests", "voice/tests", "adapters/web/tests", "metrics/tests"]
+testpaths = ["agent/tests", "core/tests", "voice/tests", "adapters/web/tests", "adapters/android/tests", "metrics/tests"]
 # `agent` and `core` are packages at the repo root.
 pythonpath = ["."]
 asyncio_mode = "auto"

@@ -250,6 +250,7 @@ async def _main(a: argparse.Namespace) -> int:
     from agent.server import DEFAULT_HOST, build_server, default_core, serve_http
 
     from agent.core_adapter import DEFAULT_SCENE, core_choice, mount_scene, mount_web, tokenize_task
+    from agent import core_adapter as ca
 
     real = core_choice() == "real"
     if a.scene and not real:
@@ -258,6 +259,12 @@ async def _main(a: argparse.Namespace) -> int:
         raise ValueError("--web needs PRIV8_CORE=real: the fake core has its own screen")
     if a.scene and a.web:
         raise ValueError("--scene and --web are exclusive: a demo scene or the real web apps")
+    if a.android and (not real or a.scene or a.web or a.server_url):
+        raise ValueError("--android needs PRIV8_CORE=real, in this process, without --scene or --web")
+    # --android without --task: the person dictates each task on the phone (core.next_task, #47).
+    dictated = bool(a.android and not a.task_given and not a.replay)
+    if dictated and not ca.has_dictation():
+        raise ValueError("--android without --task needs dictated tasks (core.next_task, #47): pass --task")
     core = default_core()  # PRIV8_CORE=real|fake, in this same process
     err = lambda s: print(s, file=sys.stderr)  # noqa: E731
 
@@ -268,7 +275,8 @@ async def _main(a: argparse.Namespace) -> int:
         task = a.task_given or model.task or task
     else:
         model = AnthropicModel(record_to=Path(a.record) if a.record else None)
-    a.session = a.session or ((a.scene or DEFAULT_SCENE) if real else "s1")
+    a.session = a.session or (ca.ANDROID_SESSION if a.android else (a.scene or DEFAULT_SCENE) if real else "s1")
+    bridge = None
 
     if real and not a.server_url:
         # The real core reads the screen through an adapter: here, a demo scene in this process.
@@ -277,6 +285,11 @@ async def _main(a: argparse.Namespace) -> int:
         persona = bool(a.replay) if a.simulated_persona is None else a.simulated_persona
         if a.web:  # Alba Core and the mailbox in Chromium; the person approves in the console
             mount_web(a.session)
+        elif a.android:  # the emulator over the bridge; the person approves on the phone
+            bridge = ca.mount_android(a.session, simulated_persona=bool(a.simulated_persona))
+            if dictated:
+                err("priv8: dicta la tarea en el móvil")
+                task = await anyio.to_thread.run_sync(ca.next_dictated_task, a.session) or ""
         else:
             mount_scene(a.session, a.scene or DEFAULT_SCENE, simulated_persona=persona)
         # What the person asked goes to Claude with their data as tokens of this session.
@@ -301,6 +314,19 @@ async def _main(a: argparse.Namespace) -> int:
             finally:
                 stop.set()
     else:
+        result = await run_with(build_server(core))
+
+    while bridge is not None:  # --android: approvals and the answer go to the phone
+        await anyio.to_thread.run_sync(lambda: ca.wait_for_approvals(a.session, log=err))
+        if result.status == "done" and result.final_text:
+            await anyio.to_thread.run_sync(bridge.say, result.final_text)
+        if not dictated:
+            break
+        err(f"status={result.status} steps={result.steps} · esperando la siguiente tarea dictada")
+        said = await anyio.to_thread.run_sync(ca.next_dictated_task, a.session)
+        if said is None:  # dictation closed
+            break
+        task = tokenize_task(a.session, said)  # dictated text is real: tokens before Claude
         result = await run_with(build_server(core))
 
     if isinstance(model, AnthropicModel):
@@ -328,6 +354,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--web", action="store_true",
                    help="PRIV8_CORE=real: drive the real Alba Core and mailbox (apps/erp-sim, apps/inbox-sim) "
                         "with Playwright instead of a demo scene")
+    p.add_argument("--android", action="store_true",
+                   help="PRIV8_CORE=real: drive the Android emulator through the bridge (ws :8765, apps/android-8); "
+                        "without --task, wait for tasks dictated on the phone")
     p.add_argument("--simulated-persona", action=argparse.BooleanOptionalAction, default=None,
                    help="a simulated person approves held actions (default: on with --replay, off live)")
     p.add_argument("--max-steps", type=int, default=DEFAULT_MAX_STEPS)

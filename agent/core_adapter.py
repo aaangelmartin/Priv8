@@ -200,6 +200,98 @@ def mount_web(session: str, *, start: str = "inbox", module: str = CORE_MODULE,
     return web
 
 
+ANDROID_SESSION = "b2c"
+ANDROID_START_APP = "es.priv8.banks.alcor"
+
+
+def mount_android(session: str = ANDROID_SESSION, *, start_app: str | None = ANDROID_START_APP,
+                  simulated_persona: bool = False, module: str = CORE_MODULE, events: bool = True,
+                  device_timeout: float = 120, login_timeout: float = 300, bridge: Any = None) -> Any:
+    """Serve the Android bridge (:8765) and connect the phone to `session` in the real core.
+
+    The emulator's accessibility service (apps/android-8) connects as the client; run
+    `scripts/movil.sh` first so `adb reverse` opens 8765 and 8700. Held actions go to the
+    phone as spoken confirmations (render_values, then confirm_request), and the events
+    WebSocket (:8700) starts so app 8 moves its eyes and shows what it says. With
+    `simulated_persona` (replays, tests) a simulated person approves instead of the phone.
+
+    Before the agent starts, the harness (not the agent) opens `start_app` and waits until
+    the person is past its login: the login is always the person's.
+    """
+    import sys
+    from pathlib import Path
+
+    from adapters.android.bridge import AndroidBridge
+
+    mod = _load(module)
+    data = Path(__file__).resolve().parent.parent / "data"
+    sys.path.insert(0, str(data))
+    from check_seed import known
+
+    mod.trust(known())
+    say = lambda m: print(f"priv8: {m}", file=sys.stderr, flush=True)  # noqa: E731
+    if bridge is None:
+        bridge = AndroidBridge(session, core=mod, push_confirms=not simulated_persona).start()
+    if events:
+        importlib.import_module(f"{module}.server").start()
+    if simulated_persona:
+        def approve_pending() -> None:
+            for req in mod.pending(session):
+                mod.approve({"type": "approval_result", "id": req["id"], "ok": True,
+                             "via": "pantalla", "by": "persona"})
+        bridge.before_snapshot = approve_pending
+    say("esperando al móvil en ws://127.0.0.1:8765 (scripts/movil.sh abre adb reverse)")
+    if not bridge.wait_for_device(device_timeout):
+        bridge.stop()
+        raise TimeoutError(f"ningún móvil se conectó al puente en {device_timeout:.0f} s")
+    if start_app:
+        bridge.open_app(start_app)
+        say("si la app pide entrar, hazlo en el emulador: el login siempre es de la persona")
+        past_login = lambda raw: (raw.get("app") == start_app and raw.get("screen") not in (None, "login")  # noqa: E731
+                                  and not mod.pause_before_policy(raw))
+        if not bridge.wait_for_screen(past_login, login_timeout):
+            bridge.stop()
+            raise TimeoutError(f"nadie entró en {start_app} en {login_timeout:.0f} s")
+    mod.connect(session, bridge)
+    return bridge
+
+
+def wait_for_approvals(session: str, timeout_s: float = 300, module: str = CORE_MODULE,
+                       log: Any = None) -> bool:
+    """Keeps the process (core, bridge) up while held actions wait for the person, who
+    answers on the phone. True when nothing is pending any more."""
+    import time
+
+    mod = _load(module)
+    say = log or (lambda *_: None)
+    if mod.pending(session):
+        say("priv8: hay acciones retenidas; 8 las está pidiendo en el móvil")
+    end = time.monotonic() + timeout_s
+    while mod.pending(session) and time.monotonic() < end:
+        mod.expire_due()
+        time.sleep(0.5)
+    if mod.pending(session):
+        say("priv8: sin respuesta de la persona; las acciones retenidas no se ejecutan")
+        return False
+    return True
+
+
+def has_dictation(module: str = CORE_MODULE) -> bool:
+    """Whether the core receives dictated tasks (core.next_task, issue #47)."""
+    return callable(getattr(_load(module), "next_task", None))
+
+
+def next_dictated_task(session: str, timeout: float | None = None, module: str = CORE_MODULE) -> str | None:
+    """The next task the person dictated for `session` (app 8 or Whisper, task_request on
+    :8700), real text that stays local; None on timeout. Raises NotImplementedError while
+    the core has no `next_task` (issue #47)."""
+    fn = getattr(_load(module), "next_task", None)
+    if not callable(fn):
+        raise NotImplementedError("el núcleo aún no recibe tareas dictadas (core.next_task, #47): usa --task")
+    task = fn(session, timeout)
+    return None if task is None else str(task)
+
+
 def tokenize_task(session: str, text: str, module: str = CORE_MODULE) -> str:
     """What the person asked, with their data replaced by tokens of `session`, before it goes to Claude."""
     return str(_load(module).tokenize_text(session, text))
