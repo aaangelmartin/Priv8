@@ -97,6 +97,8 @@ class AndroidBridge:
         self.before_snapshot: Callable[[], None] | None = None  # simulated person, as in core/scenes.py
         # How long say() waits for app 8's events channel to reconnect once it is in front.
         self.present_wait = 6.0
+        # How long say() waits for voice.done (the phone has finished saying it).
+        self.voice_wait = 30.0
         # How long say() waits for the person to finish a login or the bank's code first.
         self.person_wait = 180.0
 
@@ -460,8 +462,10 @@ class AndroidBridge:
                     while self.core.events.count() <= before and time.monotonic() < end:
                         time.sleep(0.2)
         utt = self.core.say(self.session, text)
-        if utt is not None:  # let the events channel and the phone get it before the process ends
-            end = time.monotonic() + self.present_wait
+        if utt is not None and self.connected:
+            # Until the phone has said it (voice.done), so the subtitle and the voice are not
+            # cut when the process ends. A phone that never answers costs voice_wait.
+            end = time.monotonic() + self.voice_wait
             while utt["utterance"] not in self.voice_done and time.monotonic() < end:
                 time.sleep(0.1)
         return utt
